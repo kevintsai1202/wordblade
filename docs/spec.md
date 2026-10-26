@@ -31,6 +31,7 @@
 | D20 | 追加功能（2026-10-26 追加） | 一鍵去贅詞、發佈包（標題／說明／章節／縮圖）、逐字高亮字幕＋重配錄音卡拉 OK 模式、局部放大（含路徑關鍵幀）、片段變速（demo 要用）、定格、轉場（§5.16～§5.20）；依 §2 的取捨順序做 |
 | D21 | 網頁版＋Windows 版（2026-10-26 追加） | 兩版同時做、共用同一套介面、TS 核心、沙盒與閘道。**效能優先，執行環境只有 CPU**（使用者電腦沒有獨立顯卡、最多有內顯；Zeabur 伺服器也沒有 GPU）：Windows 版是主力，重運算走原生程式（ffmpeg、onnxruntime）；網頁版給評審試用與短片剪輯（§5.21） |
 | D22 | 範例專案（2026-10-26 追加） | 內附範例專案、一鍵開啟：2 分鐘片段，逐字稿、遮罩、AI 導演建議、Vibe 2D／3D 特效都預先算好；評審在網頁版不用權杖、不花額度就能看完整流程（§5.22） |
+| D23 | 伺服器（2026-10-26 追加） | **伺服器只跑 AI 服務**（Spring AI 閘道＋它的 PostgreSQL），不做任何媒體處理；剪輯、代理檔、聲音分離、匯出全部在使用者端。網頁版是靜態檔案，放 Cloudflare Pages，不佔 AI 伺服器（§5.21） |
 | D18 | 音訊（2026-10-26 追加） | AI 音效獨立生成（P1）；AI 音樂先做 WebAudio 版（P1），Meta MusicGen 列 P2（權重 CC-BY-NC，只限黑客松使用）；AI 重生語音升為 P2（Fish Audio，樣本取分離後的人聲）；人聲／音樂／音效三軌拆分與 Meta Demucs 先實測，分不出來就維持兩軌（§5.6、§5.14、§5.15） |
 
 **Q1～Q7（開發者 2026-10-26 回覆「照建議」，以下「建議」欄即為決定）**
@@ -38,7 +39,7 @@
 | # | 問題 | 建議 | 理由 |
 | --- | --- | --- | --- |
 | Q1 | 剪輯邏輯放哪一邊 | **TypeScript 核心**（時間軸模型、改字即剪、字幕斷句、ffmpeg 濾鏡圖組裝都是純函式），Rust 只負責啟動 ffmpeg／ffprobe、讀寫檔案、背景工作 | 邏輯集中在一種語言、Vitest 測得快；Rust 層薄，Tauri 新手也容易維護 |
-| Q2 | 閘道部署在哪 | Zeabur 新開一個 `wordblade` 專案（閘道＋PostgreSQL） | 和其他產品的服務、資料庫完全分開 |
+| Q2 | 閘道部署在哪 | Zeabur 新開一個 `wordblade` 專案，只放閘道＋PostgreSQL（D23：伺服器只跑 AI 服務） | 和其他產品的服務、資料庫完全分開 |
 | Q3 | 使用者怎麼取得閘道權杖 | **邀請碼**：我產生一批權杖（存 SHA-256），評審與試用者在設定頁貼上即可；不做 Google 登入 | 10 天內做完；評審不必註冊 |
 | Q4 | 每人每日額度初值 | ASR 60 分鐘、LLM 1,000,000 tokens、AI 導演 3 次（每次素材 ≤ 30 分鐘）、SAM 1,800 格、Muse Image 20 張、TTS 5 分鐘、MusicGen 5 分鐘；10/27 量完影片輸入的 token 後再校正（review 時從 200,000 調高：AI 導演看影片很吃 token） | 夠剪一支 60 分鐘的課加幾段遮罩與特效；全站另設每日總量上限防爆量 |
 | Q5 | 素材格式 | 影片：H.264／AAC 的 MP4、MOV 直接用；其他格式（含 ProRes 4444 等帶透明的）匯入時產生預覽用代理檔（不透明轉 H.264、帶透明轉 VP9 透明 WebM），輸出一律用原檔。圖片：PNG、JPG、WebP。聲音：WAV、MP3、M4A | WebView2 只能直接播 H.264 與 VP9；代理檔讓預覽順、原檔保住輸出畫質 |
@@ -458,7 +459,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 | 麥克風錄音 | `getUserMedia` | 同左 |
 | 建議片長 | ≤ 10 分鐘 | 不限 |
 
-- 部署：靜態網站放在 Zeabur 的 `wordblade` 專案（和閘道同一個專案），網址例如 `wordblade.zeabur.app`；閘道要開放這個網域的 CORS。
+- 部署：網頁版是建置出來的靜態檔案，放 **Cloudflare Pages**（免費、全球 CDN、可以用 `_headers` 設 COOP／COEP），網址例如 `wordblade.pages.dev`；不放 Zeabur，AI 伺服器只跑閘道（D23）。閘道要開放這個網域的 CORS。範例專案的影片與專案檔也一起放在 Pages（或 R2）。
 - WebCodecs、OffscreenCanvas、File System Access 需要的安全標頭（COOP／COEP，用來開 WASM 多執行緒）一起設好。
 - 伺服器沒有 GPU，所以 MusicGen、Demucs 這類要 GPU 的模型不能放 Zeabur，只能用 Modal／Baseten（合作夥伴額度）或不做。
 
@@ -525,7 +526,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 
 | 日期 | 內容 |
 | --- | --- |
-| 10/27 | 專案骨架：Tauri 2＋React＋Vite（同一份程式出網頁版與 Windows 版，`Engine` 介面）、ffmpeg sidecar、安裝檔打包跑通一次、網頁版部署到 Zeabur、素材庫與 540p 代理檔；閘道骨架與部署；**效能量測**（§5.21 的三項）；**只做會影響架構的實測**：沒有 same-origin 的 iframe 裡建 Worker 與 WebGL2、Tauri IPC 傳 1080p 畫格的速度、Spring AI 能不能送影片 `Media` 與 `json_schema` 結構化輸出、ffmpeg 版本與 H.264 編碼器、麥克風錄音 |
+| 10/27 | 專案骨架：Tauri 2＋React＋Vite（同一份程式出網頁版與 Windows 版，`Engine` 介面）、ffmpeg sidecar、安裝檔打包跑通一次、網頁版部署到 Cloudflare Pages、素材庫與 540p 代理檔；閘道骨架與部署；**效能量測**（§5.21 的三項）；**只做會影響架構的實測**：沒有 same-origin 的 iframe 裡建 Worker 與 WebGL2、Tauri IPC 傳 1080p 畫格的速度、Spring AI 能不能送影片 `Media` 與 `json_schema` 結構化輸出、ffmpeg 版本與 H.264 編碼器、麥克風錄音 |
 | 10/28 | 多軌時間軸模型、拖曳、修邊、漣漪剪輯、熱鍵、復原；多軌合成預覽與 Web Audio 混音 |
 | 10/29 | **核心①**：沙盒、2D 插件與範本、預覽；Vibe特效 2D（閘道 `/v1/ai/vibe`、錯誤回饋重寫） |
 | 10/30 | **核心②**：3D 插件（three.js）、3D 範本（螢幕在桌上、吉祥物）、env 互動（當格畫面、定位點）；Vibe特效 3D；3D 場景與「用說的」 |
