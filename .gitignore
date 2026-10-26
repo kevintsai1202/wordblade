@@ -1,0 +1,25 @@
+# 相依套件與建置產物
+node_modules/
+dist/
+target/
+src-tauri/target/
+src-tauri/binaries/
+*.log
+
+# 本機設定與祕密（金鑰只放閘道的環境變數）
+.env
+.env.*
+!.env.example
+
+# 測試與輸出
+output/
+coverage/
+test-results/
+playwright-report/
+
+# 編輯器與系統
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
