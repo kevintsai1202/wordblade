@@ -21,6 +21,6 @@ Built for the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/m
 
 ## Architecture
 
-Tauri 2 desktop app (React 19 + TypeScript) with a local FFmpeg engine. AI calls go through a small Spring AI gateway that holds the API keys and per-user quotas.
+One codebase, two shells: a Windows desktop app (Tauri 2, with native FFmpeg and ONNX Runtime for speed on CPU-only machines) and a web app for Chrome/Edge (WebCodecs) with a one-click sample project, so anyone can try it without installing anything. React 19 + TypeScript. AI calls go through a small Spring AI gateway that holds the API keys and per-user quotas.
 
 The design draws on the author's earlier experience building video tools.
