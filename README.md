@@ -8,7 +8,7 @@ Built for the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/m
 
 ## What it does
 
-- **Media pool and multi-track timeline**: import videos, images, music and sound effects; main track, overlay tracks (picture-in-picture, alpha video) and audio tracks with auto-ducked music.
+- **Media pool and multi-track timeline**: import videos, images, music and sound effects; main track, overlay tracks (picture-in-picture, alpha video) and audio tracks with auto-ducked music. Split any clip's audio into vocals and background music on-device (MDX-Net ONNX).
 - **Resolve-style editing**: ripple timeline, DaVinci Resolve shortcuts (J/K/L, I/O, Ctrl+B, ripple delete, frame step, undo/redo), and transcript-driven cutting.
 - **Fast subtitles**: Muse Voice Transcribe, word-level timing rebuilt from the audio, readable subtitle lines (tuned for English), SRT or burned-in.
 - **Privacy masking**: type what to hide; SAM 3.1 segments and tracks it; mosaic, blur or solid fill.
