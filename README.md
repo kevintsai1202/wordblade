@@ -9,11 +9,11 @@ Built for the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/m
 ## What it does
 
 - **Resolve-style editing**: ripple timeline, DaVinci Resolve shortcuts (J/K/L, I/O, Ctrl+B, ripple delete, frame step, undo/redo), and transcript-driven cutting.
-- **Fast subtitles**: Muse Voice Transcribe, word-level timing rebuilt from the audio, readable subtitle lines, SRT or burned-in, Traditional Chinese.
+- **Fast subtitles**: Muse Voice Transcribe, word-level timing rebuilt from the audio, readable subtitle lines (tuned for English), SRT or burned-in.
 - **Privacy masking**: type what to hide; SAM 3.1 segments and tracks it; mosaic, blur or solid fill.
 - **AI proofreading**: Muse Spark flags mis-heard terms and repeated phrases.
 - **Voice fixes**: re-voice a mis-spoken phrase in your own voice (Fish Audio).
-- **Export**: MP4 with hardware encoders, SRT, Final Cut Pro 7 XML.
+- **Export**: MP4 with hardware encoders and SRT.
 
 ## Architecture
 
