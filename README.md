@@ -13,7 +13,7 @@ Built for the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/m
 - **Fast subtitles**: Muse Voice Transcribe, word-level timing rebuilt from the audio, readable subtitle lines (tuned for English), SRT or burned-in.
 - **Privacy masking**: type what to hide; SAM 3.1 segments and tracks it; mosaic, blur or solid fill.
 - **AI proofreading**: Muse Spark flags mis-heard terms and repeated phrases.
-- **Voice fixes**: re-voice a mis-spoken phrase in your own voice (Fish Audio).
+- **AI audio**: sound effects and background music written by Muse Spark as Web Audio code and rendered on-device; re-voice a mis-spoken phrase in your own voice (Fish Audio).
 - **Effects**: animation plugins run in a sandbox; **Vibe effects** where Muse Spark writes a new animation plugin from one sentence (and an optional frame); **3D effects in three.js** that Muse Spark can write and that react to your video (screen-on-a-desk scenes, mascots that point at what SAM found), with camera moves you can describe in words; transitions.
 - **Export**: MP4 with hardware encoders and SRT.
 
