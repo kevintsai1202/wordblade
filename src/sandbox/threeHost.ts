@@ -62,8 +62,15 @@ export class ThreeHost {
     const created = (async () => {
       const [base] = await Promise.all([loadBase(), this.ready()]);
       const harness = (await import("./threeHarness.js?raw")).default;
-      const port = await this.frame!.startWorker(`3d:${effectId}`, `${base}\n;\n${code}\n;\n${harness}`);
-      const channel = await WorkerChannel.open(port, () => this.kill(effectId), FIRST_TIMEOUT);
+      const workerId = `3d:${effectId}`;
+      // 插件程式從第幾行開始（語法錯的行號換算成插件自己的行號，回饋給 Vibe特效的模型）
+      const offset = `${base}\n;\n`.split("\n").length - 1;
+      const loadError = new Promise<never>((_, reject) => {
+        this.frame!.onWorkerError(workerId, (message, line, column) =>
+          reject(new PluginError(message.replace(/^Uncaught /, ""), "compile", line ? line - offset : null, column)));
+      });
+      const port = await this.frame!.startWorker(workerId, `${base}\n;\n${code}\n;\n${harness}`);
+      const channel = await Promise.race([WorkerChannel.open(port, () => this.kill(effectId), FIRST_TIMEOUT), loadError]);
       return { channel, code, warm: false };
     })();
     this.slots.set(effectId, created);
@@ -73,6 +80,7 @@ export class ThreeHost {
 
   /** 終止某個特效的 Worker（逾時或插件換了） */
   private kill(effectId: string) {
+    this.frame?.onWorkerError(`3d:${effectId}`, null);
     const s = this.slots.get(effectId);
     this.slots.delete(effectId);
     this.frame?.killWorker(`3d:${effectId}`);

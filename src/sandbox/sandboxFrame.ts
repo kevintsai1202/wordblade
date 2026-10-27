@@ -18,12 +18,16 @@ interface CtrlMessage {
   id?: string;
   port?: MessagePort;
   message?: string;
+  line?: number | null;
+  column?: number | null;
 }
 
 /** 沙盒 iframe */
 export class SandboxFrame {
   private iframe: HTMLIFrameElement | null = null;
   private ctrl: MessagePort | null = null;
+  /** Worker 的未捕捉錯誤：Worker id → 處理函式 */
+  private readonly errorHandlers = new Map<string, (message: string, line: number | null, column: number | null) => void>();
   /** 等待中的控制訊息 */
   private readonly waiters: { pred: (d: CtrlMessage) => boolean; resolve: (d: CtrlMessage) => void }[] = [];
 
@@ -70,7 +74,11 @@ export class SandboxFrame {
 
   /** 控制通道收到訊息：叫醒符合條件的等待者 */
   private onCtrl(d: CtrlMessage) {
-    if (d.type === "worker-error") console.error(`plugin worker ${d.id} error:`, d.message);
+    if (d.type === "worker-error") {
+      const handler = this.errorHandlers.get(d.id ?? "");
+      if (handler) handler(d.message ?? "error", d.line ?? null, d.column ?? null);
+      else console.error(`plugin worker ${d.id} error:`, d.message);
+    }
     for (const w of [...this.waiters]) {
       if (w.pred(d)) {
         this.waiters.splice(this.waiters.indexOf(w), 1);
@@ -85,6 +93,12 @@ export class SandboxFrame {
       const timer = setTimeout(() => reject(new Error("Plugin sandbox handshake timed out")), BOOT_TIMEOUT);
       this.waiters.push({ pred, resolve: (d) => { clearTimeout(timer); resolve(d); } });
     });
+  }
+
+  /** 指定某個 Worker 的未捕捉錯誤處理（例如插件語法錯）；null 取消 */
+  onWorkerError(id: string, handler: ((message: string, line: number | null, column: number | null) => void) | null) {
+    if (handler) this.errorHandlers.set(id, handler);
+    else this.errorHandlers.delete(id);
   }
 
   /** 在 iframe 裡建一個 Worker，回傳它的資料通道 */

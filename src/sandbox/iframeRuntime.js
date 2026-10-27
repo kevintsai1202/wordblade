@@ -30,7 +30,8 @@
     const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
     const w = new Worker(url);
     workers.set(id, w);
-    w.onerror = (e) => ctrl.postMessage({ type: 'worker-error', id, message: String(e.message || e) });
+    // 載入或執行時的未捕捉錯誤（例如插件語法錯）：帶行號回報，父頁換算成插件程式的行號
+    w.onerror = (e) => { e.preventDefault(); ctrl.postMessage({ type: 'worker-error', id, message: String(e.message || e), line: e.lineno || null, column: e.colno || null }); };
     const mc = new MessageChannel();
     w.postMessage({ type: 'port', port: mc.port1 }, [mc.port1]);
     ctrl.postMessage({ type: 'worker-port', id, port: mc.port2 }, [mc.port2]);

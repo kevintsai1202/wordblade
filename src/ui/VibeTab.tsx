@@ -5,6 +5,7 @@ import { DEFAULT_EFFECT_SECONDS, TEMPLATES, templateEffect, type Template } from
 import type { PluginService } from "../anim/pluginService";
 import { GatewayClient, GatewayError, loadSettings, saveSettings, type GatewaySettings } from "../ai/gateway";
 import { runVibe, type VibeProgress } from "../ai/vibe";
+import { runVibe3d } from "../ai/vibe3d";
 import { TEMPLATES_3D, builtinPlugins3D, template3DEffect, type Template3D } from "../three/builtins";
 import { captureFrame } from "./capture";
 import { FPS, type Action } from "./state";
@@ -41,6 +42,8 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
   const [showSettings, setShowSettings] = useState(() => !loadSettings().token);
   const [description, setDescription] = useState("");
   const [attachFrame, setAttachFrame] = useState(true);
+  /** 2D（原專案直譯器的插件）或 3D（three.js 插件，疊在影片上） */
+  const [dimension, setDimension] = useState<"2d" | "3d">("2d");
   const [progress, setProgress] = useState<VibeProgress | null>(null);
   const [consentAsked, setConsentAsked] = useState(false);
 
@@ -80,11 +83,14 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
     setError(null);
     setProgress({ stage: "writing", round: 1 });
     try {
-      const builtins = await plugins.builtins();
-      const outcome = await runVibe(new GatewayClient(settings), plugins.host, builtins, {
-        description: description.trim(), screenshot: attachFrame ? captureFrame() : null, start: playhead, duration: DEFAULT_EFFECT_SECONDS,
+      const input = {
+        description: description.trim(), screenshot: attachFrame ? captureFrame() : null, start: playhead, duration: dimension === "3d" ? 4 : DEFAULT_EFFECT_SECONDS,
         box: { cx: 0.5, cy: 0.5, w: 0.3, h: 0.2 }, aspect: 16 / 9, fps: FPS, effectId: newEffectId(),
-      }, setProgress);
+      };
+      const gateway = new GatewayClient(settings);
+      const outcome = dimension === "3d"
+        ? await runVibe3d(gateway, plugins.three, input, setProgress)
+        : await runVibe(gateway, plugins.host, await plugins.builtins(), input, setProgress);
       if (outcome.ok) {
         dispatch({ type: "commit", edits: [{ kind: "addEffect", effect: outcome.effect, plugins: outcome.plugins }] });
         dispatch({ type: "selectEffect", effectId: outcome.effect.id });
@@ -126,6 +132,8 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
         ))}
       </div>
       <div className="vibe-actions">
+        <label><input type="radio" name="vibe-dim" data-testid="vibe-2d" checked={dimension === "2d"} disabled={busy} onChange={() => setDimension("2d")} /> 2D</label>
+        <label><input type="radio" name="vibe-dim" data-testid="vibe-3d" checked={dimension === "3d"} disabled={busy} onChange={() => setDimension("3d")} /> 3D</label>
         <label><input type="checkbox" checked={attachFrame} onChange={(e) => setAttachFrame(e.target.checked)} /> Attach current frame</label>
         <span className="spacer" />
         <button data-testid="vibe-generate" disabled={busy || !description.trim() || !settings.token} onClick={() => void generate()}>

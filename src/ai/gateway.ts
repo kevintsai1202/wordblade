@@ -1,6 +1,7 @@
 // 閘道用戶端（spec §6）：網址與邀請權杖存在這台電腦（localStorage；權杖不寫進專案檔、不印 log）。
 // 目前用到 Vibe特效的三個端點；之後 ASR、AI 導演等照同樣方式加。
 import type { VibeResult } from "./vibe";
+import type { Vibe3dResult } from "./vibe3d";
 
 /** 預設閘道（Zeabur，D23） */
 export const DEFAULT_GATEWAY = "https://wordblade-api.zeabur.app";
@@ -83,8 +84,8 @@ export class GatewayClient {
   }
 
   /** 開始 Vibe特效，回傳工作 id */
-  async startVibe(body: { description: string; screenshot: string | null; duration: number; fps: number; width: number; box: { x: number; y: number; w: number; h: number } }): Promise<string> {
-    const { jobId } = await this.call<{ jobId: string }>("/v1/ai/vibe", { method: "POST", body: JSON.stringify(body) });
+  async startVibe(body: { description: string; screenshot: string | null; duration: number; fps: number; width: number; box: { x: number; y: number; w: number; h: number } }, dimension: "2d" | "3d" = "2d"): Promise<string> {
+    const { jobId } = await this.call<{ jobId: string }>(dimension === "3d" ? "/v1/ai/vibe3d" : "/v1/ai/vibe", { method: "POST", body: JSON.stringify(body) });
     return jobId;
   }
 
@@ -99,8 +100,18 @@ export class GatewayClient {
   }
 
   /** 沙盒試跑不過：送錯誤續跑 */
-  async feedbackVibe(jobId: string, errors: VibeError[]): Promise<void> {
-    await this.call<void>(`/v1/ai/vibe/${encodeURIComponent(jobId)}/feedback`, { method: "POST", body: JSON.stringify({ errors }) });
+  async feedbackVibe(jobId: string, errors: VibeError[], dimension: "2d" | "3d" = "2d"): Promise<void> {
+    await this.call<void>(`/v1/ai/${dimension === "3d" ? "vibe3d" : "vibe"}/${encodeURIComponent(jobId)}/feedback`, { method: "POST", body: JSON.stringify({ errors }) });
+  }
+
+  /** 等 Vibe特效 3D 的工作離開 running */
+  async waitVibe3d(jobId: string): Promise<{ status: "running" | "done" | "failed"; round: number; result: Vibe3dResult | null; error: string | null }> {
+    for (let i = 0; i < 180; i++) {
+      const view = await this.call<{ status: "running" | "done" | "failed"; round: number; result: Vibe3dResult | null; error: string | null }>(`/v1/ai/vibe3d/${encodeURIComponent(jobId)}`);
+      if (view.status !== "running") return view;
+      await sleep(1000);
+    }
+    throw new GatewayError("The AI took too long. Try again.", 0);
   }
 
   /** 開始「用說的」（板子運鏡），回傳工作 id */

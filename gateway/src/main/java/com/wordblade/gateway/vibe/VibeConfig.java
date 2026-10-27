@@ -40,4 +40,14 @@ public class VibeConfig {
         return new VibeJobs(model, new VibeParser(JsonMapper.builder().build()), vibeExecutor,
                 (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/vibe", m, in, out, 0));
     }
+
+    /** Vibe特效 3D 的工作管理（three.js 插件；同樣用 Muse Wonder） */
+    @Bean
+    Vibe3dJobs vibe3dJobs(ChatClient.Builder chat, GatewayProperties props, UsageService usage, ExecutorService vibeExecutor) throws IOException {
+        String prompt = new ClassPathResource("vibe/system-prompt-3d.txt").getContentAsString(StandardCharsets.UTF_8);
+        var memory = MessageWindowChatMemory.builder().chatMemoryRepository(new InMemoryChatMemoryRepository()).maxMessages(20).build();
+        AiModel model = new SpringAiModel(chat.build(), memory, prompt, props.models().wonder(), "medium");
+        return new Vibe3dJobs(model, new Vibe3dParser(JsonMapper.builder().build()), vibeExecutor,
+                (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/vibe3d", m, in, out, 0));
+    }
 }

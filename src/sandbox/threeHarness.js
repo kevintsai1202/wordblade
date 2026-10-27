@@ -5,7 +5,8 @@
 //   function update(t, env)                     每格更新（t 是區段內秒數）
 //   const pure = true;                          選填：畫面只由 t 決定（不在 update 之間累積狀態），跳格時不必從頭推
 // env：width、height（畫格像素）、duration、fps、frame、t、progress、params、box（0～1）、rand(i)（固定種子）、
-//      frameTexture（當格畫面的貼圖：NoColorSpace、不翻轉）、frameMaterial()（原樣貼當格畫面的材質，已處理上下顛倒與色彩）。
+//      frameTexture（當格畫面的貼圖：NoColorSpace、不翻轉）、frameMaterial()（原樣貼當格畫面的材質，已處理上下顛倒與色彩）、
+//      toWorld(x, y, z = 0)（畫面座標 0～1、y 往下 → 世界座標：用目前鏡頭算 z 平面上的點，對準目標框用）。
 // 協定同 2D harness：render {frame, fps, duration, width, height, params, box, background?} → ImageBitmap；vet {…} → {lit}。
 (function (g) {
   'use strict';
@@ -70,6 +71,17 @@
     inst = null;
   }
 
+  /** 畫面座標（0～1、y 往下）→ 世界座標：鏡頭往 z 平面投射（鏡頭可以移動、轉向） */
+  function toWorld(x, y, z) {
+    const camera = inst ? inst.camera : null;
+    if (!camera) return new THREE.Vector3();
+    camera.updateMatrixWorld();
+    const ndc = new THREE.Vector3(x * 2 - 1, 1 - y * 2, 0.5).unproject(camera);
+    const dir = ndc.sub(camera.position).normalize();
+    const k = ((z || 0) - camera.position.z) / (dir.z || -1e-6);
+    return camera.position.clone().add(dir.multiplyScalar(k));
+  }
+
   /** 這一格的 env */
   function envOf(d, frame) {
     const t = frame / d.fps;
@@ -77,7 +89,7 @@
       width: d.width, height: d.height, duration: d.duration, fps: d.fps, frame, t,
       progress: d.duration > 0 ? Math.min(1, t / d.duration) : 1,
       params: d.params || {}, box: d.box || { cx: 0.5, cy: 0.5, w: 0.3, h: 0.2 },
-      rand: rand(d.seed || 1), frameTexture, frameMaterial,
+      rand: rand(d.seed || 1), frameTexture, frameMaterial, toWorld,
     };
   }
 
