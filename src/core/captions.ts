@@ -42,6 +42,8 @@ export interface Caption {
   start: Seconds;
   end: Seconds;
   lines: string[];
+  /** 每一行的詞 id（逐字高亮用；和 lines 一一對應） */
+  lineWordIds: string[][];
   wordIds: string[];
 }
 
@@ -189,6 +191,7 @@ export function buildCaptions(project: Project): Caption[] {
     start: g[0].start,
     end: g[g.length - 1].end,
     lines: sentenceLines(g, overrides).map((line) => line.map((w) => w.text).join(" ")),
+    lineWordIds: sentenceLines(g, overrides).map((line) => line.map((w) => w.id)),
     wordIds: g.map((w) => w.id),
   }));
   // 顯示時間：至少 1 秒、閱讀速度不超過每秒 17 字元，但不超過 7 秒、不蓋到下一段

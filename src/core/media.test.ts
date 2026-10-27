@@ -30,3 +30,14 @@ describe("setMediaWords", () => {
     expect(p.words.some((w) => w.mediaId === "m1")).toBe(true);
   });
 });
+
+describe("setCaptionStyle", () => {
+  it("改字幕樣式（部分欄位），可以復原", () => {
+    const p = makeProject();
+    const next = applyEdits(p, [{ kind: "setCaptionStyle", style: { preset: "box", karaoke: "fill" } }]);
+    expect(next.captionStyle).toMatchObject({ preset: "box", karaoke: "fill", size: 0.055 });
+    const again = applyEdits(next, [{ kind: "setCaptionStyle", style: { size: 0.07 } }]);
+    expect(again.captionStyle).toMatchObject({ preset: "box", size: 0.07 });
+    expect(p.captionStyle).toBeUndefined();
+  });
+});

@@ -8,6 +8,9 @@ import type { Media, Project, Seconds } from "../core/model";
 import { audioPlan } from "./framePlan";
 import { layerPlan } from "./layerPlan";
 import { GlCompositor } from "./glCompositor";
+import { CaptionLayer } from "../captions/captionLayer";
+import { DEFAULT_CAPTION_STYLE } from "../captions/captionLayout";
+import type { Caption, TimelineWord } from "../core/captions";
 
 /** 播放中，元素時間和該有的素材時間差超過這個值（秒）才重新對齊，避免一直跳 */
 const PLAY_DRIFT: Seconds = 0.15;
@@ -30,6 +33,10 @@ export class PreviewPlayer {
   private effects: EffectRenderer | null = null;
   /** 特效的格率 */
   private fps = 30;
+  /** 字幕（燒進畫面的那一層，§5.4、D37）與它要的詞時間 */
+  private captions: Caption[] = [];
+  private captionWords: TimelineWord[] = [];
+  private readonly captionLayer: CaptionLayer;
 
   /**
    * @param canvas 預覽畫布
@@ -38,6 +45,14 @@ export class PreviewPlayer {
    */
   constructor(private readonly canvas: HTMLCanvasElement, private readonly mediaUrl: (media: Media) => string, private readonly onFrameReady: () => void) {
     this.compositor = new GlCompositor(canvas);
+    // 字型（中文分塊）載好時重畫目前這一格
+    this.captionLayer = new CaptionLayer(canvas.width, canvas.height, onFrameReady);
+  }
+
+  /** 換字幕（專案的詞或斷點變了就重算後交進來） */
+  setCaptions(captions: Caption[], words: TimelineWord[]) {
+    this.captions = captions;
+    this.captionWords = words;
   }
 
   /** 換專案（編輯後）；不在專案裡的片段元素釋放掉 */
@@ -164,6 +179,10 @@ export class PreviewPlayer {
       if (el.readyState >= 2) this.compositor.draw(el, layer.rect, layer.opacity);
       below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : "0"}`;
     }
+
+    // 字幕畫在最上層（預覽與匯出同一個 CaptionLayer）
+    const captionCanvas = this.captionLayer.render(this.captions, this.captionWords, t, project.captionStyle ?? DEFAULT_CAPTION_STYLE, width, height);
+    if (captionCanvas) this.compositor.draw(captionCanvas, { x: 0, y: 0, w: 1, h: 1 }, 1);
 
     const graph = currentAudioGraph();
     for (const voice of audioPlan(project, t)) {

@@ -1,12 +1,15 @@
 import { defineConfig } from "@playwright/test";
 
-// 介面測試：React 跑在瀏覽器（網頁版 Engine），先建置再用 vite preview 起靜態伺服器
+// 介面測試：React 跑在瀏覽器（網頁版 Engine），先建置再用 vite preview 起靜態伺服器。
+// 預設 4173；被別的程式佔用時用環境變數 WORDBLADE_E2E_PORT 換（實機 ASR 測試的閘道 CORS 只放行 4173，換 port 時不跑那支）。
+const port = Number(process.env.WORDBLADE_E2E_PORT ?? 4173);
+
 export default defineConfig({
   testDir: "e2e",
-  use: { baseURL: "http://localhost:4173" },
+  use: { baseURL: `http://localhost:${port}` },
   webServer: {
-    command: "pnpm build && pnpm preview --port 4173 --strictPort",
-    url: "http://localhost:4173",
+    command: `pnpm build && pnpm preview --port ${port} --strictPort`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: false,
     timeout: 120_000,
   },

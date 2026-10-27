@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, type Dispatch } from "react";
 import { ensureAudioGraph } from "../audio/audioGraph";
 import { duckingCurve } from "../audio/ducking";
-import type { Caption } from "../core/captions";
+import { timelineWords, type Caption } from "../core/captions";
 import type { Project } from "../core/model";
 import { EffectRenderer } from "../anim/effectRenderer";
 import type { PluginService } from "../anim/pluginService";
@@ -68,6 +68,13 @@ export function PreviewPane(props: {
     });
   }, [project]);
 
+  // 字幕交給播放器畫進合成畫面（詞的時間供逐字高亮）
+  const captionWords = useMemo(() => timelineWords(project), [project]);
+  useEffect(() => {
+    playerRef.current?.setCaptions(captions, captionWords);
+    if (!latest.current.playing) playerRef.current?.render(latest.current.playhead, false, latest.current.rate);
+  }, [captions, captionWords]);
+
   /** 配樂壓低曲線：專案或音量包絡變了才重算（§5.13） */
   const duck = useMemo(() => duckingCurve(project, library.envelopes), [project, library.envelopes]);
   useEffect(() => { playerRef.current?.setDuckCurve(duck); }, [duck]);
@@ -93,15 +100,14 @@ export function PreviewPane(props: {
     return () => cancelAnimationFrame(frame);
   }, [playing, rate, dispatch]);
 
-  /** 播放頭所在的字幕 */
+  /** 播放頭所在的字幕（畫面上的字幕由合成器畫；這裡只放進 data-caption 給測試與輔助工具讀） */
   const caption = captions.find((c) => playhead >= c.start && playhead < c.end);
   return (
     <section className="preview">
       <div className="viewer">
         <div className="frame" ref={frameRef}>
-          <canvas ref={canvasRef} width={PREVIEW_WIDTH} height={PREVIEW_HEIGHT} data-testid="preview-canvas" />
+          <canvas ref={canvasRef} width={PREVIEW_WIDTH} height={PREVIEW_HEIGHT} data-testid="preview-canvas" data-caption={caption?.lines.join(" ") ?? ""} />
           {selectedEffect && !playing && <BoxOverlay effect={selectedEffect} frame={frameRef.current} dispatch={dispatch} />}
-          {caption && <div className="burned-caption">{caption.lines.map((l, i) => <div key={i}>{l}</div>)}</div>}
         </div>
       </div>
       <div className="transport">

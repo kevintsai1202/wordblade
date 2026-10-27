@@ -1,5 +1,6 @@
 // 素材庫與新專案（spec §4、§5.13）：純函式。素材的規格由 Engine 讀好（ffprobe／mediabunny）後當普通資料傳進來。
 import { produce } from "immer";
+import { DEFAULT_CAPTION_STYLE, type CaptionStyle } from "../captions/captionLayout";
 import type { Media, Project, Seconds, Track, Word } from "./model";
 
 /** 圖片素材的「長度」：圖片沒有長度，給一個夠長的值讓修邊可以拉長 */
@@ -60,5 +61,12 @@ export function setMediaWords(project: Project, mediaId: string, words: Word[]):
   return produce(project, (draft) => {
     draft.words = [...draft.words.filter((w) => w.mediaId !== mediaId), ...[...words].sort((a, b) => a.start - b.start)];
     draft.captionBreaks = draft.captionBreaks.filter((b) => !removed.has(b.wordId));
+  });
+}
+
+/** 改字幕樣式（只給要改的欄位，其他沿用目前的或預設的） */
+export function setCaptionStyle(project: Project, style: Partial<CaptionStyle>): Project {
+  return produce(project, (draft) => {
+    draft.captionStyle = { ...DEFAULT_CAPTION_STYLE, ...(draft.captionStyle ?? {}), ...style };
   });
 }

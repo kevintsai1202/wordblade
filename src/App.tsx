@@ -16,6 +16,7 @@ import { VibeTab } from "./ui/VibeTab";
 import { InspectorTab } from "./ui/InspectorTab";
 import { ExportTab } from "./ui/ExportTab";
 import { TranscribePanel } from "./ui/TranscribePanel";
+import { CaptionStyleTab } from "./ui/CaptionStyleTab";
 import "./App.css";
 
 /** 網址帶 ?demo=1 就直接開示範專案（e2e 用）；否則開空專案 */
@@ -105,6 +106,7 @@ function App() {
             media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
             vibe: <VibeTab plugins={plugins} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} />,
+            style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
             inspector: <InspectorTab project={project} effectId={state.selectedEffectId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
           }}

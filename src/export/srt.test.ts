@@ -10,8 +10,8 @@ describe("srt", () => {
 
   it("每段編號、起訖、各行文字，段落之間空一行（CRLF）", () => {
     const text = toSrt([
-      { id: "a", start: 1, end: 2.5, lines: ["Hello there,", "world"], wordIds: [] },
-      { id: "b", start: 3, end: 4, lines: ["Again"], wordIds: [] },
+      { id: "a", start: 1, end: 2.5, lines: ["Hello there,", "world"], lineWordIds: [], wordIds: [] },
+      { id: "b", start: 3, end: 4, lines: ["Again"], lineWordIds: [], wordIds: [] },
     ]);
     expect(text).toBe("1\r\n00:00:01,000 --> 00:00:02,500\r\nHello there,\r\nworld\r\n\r\n2\r\n00:00:03,000 --> 00:00:04,000\r\nAgain\r\n");
   });

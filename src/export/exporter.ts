@@ -8,6 +8,9 @@ import { GlCompositor } from "../compositor/glCompositor";
 import type { Media, Project } from "../core/model";
 import type { ExportTarget } from "../engine/Engine";
 import { clipFrames, type ExportPlan } from "./exportPlan";
+import { CaptionLayer, loadCaptionFonts } from "../captions/captionLayer";
+import { DEFAULT_CAPTION_STYLE } from "../captions/captionLayout";
+import type { Caption, TimelineWord } from "../core/captions";
 
 /** 匯出進度 */
 export interface ExportProgress {
@@ -29,6 +32,8 @@ export interface ExportJob {
   audio?: (audioSource: AudioSampleSource, signal: AbortSignal) => Promise<void>;
   /** 聲音編碼：aac 或 opus（呼叫端用 canEncodeAudio 選好） */
   audioCodec?: "aac" | "opus";
+  /** 燒進畫面的字幕（樣式在 project.captionStyle；none 時不畫） */
+  captions?: { captions: Caption[]; words: TimelineWord[] };
   onProgress?: (p: ExportProgress) => void;
   signal?: AbortSignal;
 }
@@ -78,6 +83,10 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
   const effectErrors = new Map<string, string>();
   const canvas = new OffscreenCanvas(plan.width, plan.height);
   const compositor = new GlCompositor(canvas);
+  // 字幕：開始前把要用到的字型（中文分塊）全部載好，第一格就用對的字型
+  const captionLayer = job.captions?.captions.length ? new CaptionLayer(plan.width, plan.height) : null;
+  if (captionLayer) await loadCaptionFonts(job.captions!.captions.map((c) => c.lines.join(" ")));
+  const captionStyle = project.captionStyle ?? DEFAULT_CAPTION_STYLE;
 
   /** 每支素材一個 Input（同一支素材的多個片段共用） */
   const inputs = new Map<string, Input>();
@@ -185,6 +194,9 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
         }
       }
       for (const sample of samples.values()) sample.close();
+      // 字幕畫在最上層（和預覽同一個 CaptionLayer）
+      const captionCanvas = captionLayer?.render(job.captions!.captions, job.captions!.words, t, captionStyle, plan.width, plan.height);
+      if (captionCanvas) compositor.draw(captionCanvas, { x: 0, y: 0, w: 1, h: 1 }, 1);
 
       await videoSource.add(t, 1 / plan.fps);
       job.onProgress?.({ frame: i + 1, total: plan.frames });

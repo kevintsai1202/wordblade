@@ -48,10 +48,6 @@ button:disabled { opacity: 0.4; cursor: default; }
   background: #000; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center;
 }
 .frame canvas { width: 100%; height: 100%; display: block; }
-.burned-caption {
-  position: absolute; bottom: 6%; left: 0; right: 0; text-align: center;
-  font-size: clamp(12px, 2.2vw, 28px); font-weight: 600; text-shadow: 0 0 4px #000, 0 0 2px #000;
-}
 .transport { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px; border-top: 1px solid var(--line); background: var(--panel); }
 
 .edit-panel { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-left: 1px solid var(--line); }

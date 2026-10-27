@@ -4,7 +4,7 @@ import { EffectRenderer } from "../anim/effectRenderer";
 import type { PluginService } from "../anim/pluginService";
 import { duckingCurve } from "../audio/ducking";
 import type { Envelope } from "../audio/envelope";
-import type { Caption } from "../core/captions";
+import { timelineWords, type Caption } from "../core/captions";
 import type { Project } from "../core/model";
 import type { Engine } from "../engine/Engine";
 import { mixAudio } from "../export/audioMix";
@@ -59,6 +59,7 @@ export function ExportTab({ project, captions, engine, plugins, envelopes }: {
         project, plan, target, effects, audioCodec,
         source: (m) => engine.exportSource(m),
         audio: (audioSource, signal) => mixAudio({ project, duration: plan.duration, source: (m) => engine.exportSource(m), audioSource, duck, signal }),
+        captions: { captions, words: timelineWords(project) },
         onProgress: (p) => setStatus({ kind: "running", frame: p.frame, total: p.total, startedAt }),
         signal: abort.signal,
       });

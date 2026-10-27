@@ -3,7 +3,8 @@
 // 歷史存的是整份專案的快照；timeline 的函式用 Immer 做結構共享，快照之間沒改到的部分是同一個物件。
 import { addEffect, deleteEffect, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
 import type { CameraKey, Effect, Plugin, Project, Seconds, Word } from "./model";
-import { setMediaWords } from "./media";
+import { setCaptionStyle, setMediaWords } from "./media";
+import type { CaptionStyle } from "../captions/captionLayout";
 import { cutByWords, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip } from "./timeline";
 
 /** 一個編輯動作 */
@@ -21,7 +22,8 @@ export type Edit =
   | { kind: "deleteEffect"; effectId: string }
   | { kind: "setEffectParams"; effectId: string; params: Record<string, unknown> }
   | { kind: "setCameraKeys"; effectId: string; keys: CameraKey[] }
-  | { kind: "setWords"; mediaId: string; words: Word[] };
+  | { kind: "setWords"; mediaId: string; words: Word[] }
+  | { kind: "setCaptionStyle"; style: Partial<CaptionStyle> };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -40,6 +42,7 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "setEffectParams": return setEffectParams(project, edit.effectId, edit.params);
     case "setCameraKeys": return setEffectCameraKeys(project, edit.effectId, edit.keys);
     case "setWords": return setMediaWords(project, edit.mediaId, edit.words);
+    case "setCaptionStyle": return setCaptionStyle(project, edit.style);
   }
 }
 
