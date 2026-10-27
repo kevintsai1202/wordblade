@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
 // Muse ASR 實機測試（spec §5.2）：連真的閘道與 Muse Voice Transcribe（會花錢，約 US$0.18／小時音訊），只在設了環境變數時跑：
@@ -8,8 +8,11 @@ import path from "node:path";
 // 量「句子起點」的誤差（§5.2 的驗收是詞級、真人錄音，這裡只是 TTS、句級的近似）。結果寫到 output/asr-live.json。
 const gateway = process.env.WORDBLADE_LIVE_GATEWAY;
 const token = process.env.WORDBLADE_LIVE_TOKEN;
-const SAMPLE = path.join(import.meta.dirname, "..", "samples", "lecture-a.en.mp4");
-const SRT = SAMPLE.replace(/\.mp4$/, ".srt");
+// 素材可用 WORDBLADE_ASR_SAMPLE 換（例如模擬的 D30 短片 samples/demo-2min.mp4，旁邊有 .truth.json 時另外比對語助詞與重講）
+const SAMPLE = process.env.WORDBLADE_ASR_SAMPLE ?? path.join(import.meta.dirname, "..", "samples", "lecture-a.en.mp4");
+const SRT = SAMPLE.replace(/(\.en)?\.mp4$/, (m) => m.replace(".mp4", ".srt"));
+const TRUTH = SAMPLE.replace(/\.mp4$/, ".truth.json");
+const BASE = path.basename(SAMPLE, ".mp4");
 
 test.skip(!gateway || !token, "沒有設 WORDBLADE_LIVE_GATEWAY／WORDBLADE_LIVE_TOKEN");
 
@@ -39,9 +42,14 @@ test("Muse ASR 實機：英文 TTS 講課片轉錄，字幕句子起點對 SRT �
   await page.getByTestId("import-media").click();
   await (await chooser).setFiles(SAMPLE);
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 120_000 });
-  await page.locator(".media-item", { hasText: "lecture-a" }).dblclick();
+  await page.locator(".media-item", { hasText: BASE }).dblclick();
   await page.locator('[data-tab="transcript"]').click();
   await expect(page.getByTestId("transcribe-start")).toBeEnabled({ timeout: 120_000 });
+  // 閘道回的原始 turns 一起存下來（診斷詞級時間用）
+  const raw: unknown[] = [];
+  page.on("response", async (res) => {
+    if (res.url().endsWith("/v1/asr") && res.ok()) raw.push(await res.json());
+  });
   const t0 = Date.now();
   await page.getByTestId("transcribe-start").click();
   await expect(page.locator('[data-testid="transcribe-status"], [data-testid="transcribe-error"]')).toHaveCount(1, { timeout: 280_000 });
@@ -69,13 +77,27 @@ test("Muse ASR 實機：英文 TTS 講課片轉錄，字幕句子起點對 SRT �
   }
   const abs = errors.map((e) => Math.abs(e.caption - e.srt)).sort((a, b) => a - b);
   const mean = abs.reduce((a, b) => a + b, 0) / Math.max(1, abs.length);
+  // 有正確答案時：語助詞保留了幾個（逐字稿裡 um／uh／you know 的次數對講稿）、重講的句子有沒有轉出來
+  let fillers: Record<string, { expected: number; found: number }> | null = null;
+  let retakeFound: boolean | null = null;
+  if (existsSync(TRUTH)) {
+    const truth = JSON.parse(readFileSync(TRUTH, "utf8")) as { fillers: { word: string }[] };
+    const all = " " + parsed.map((c) => c.text).join(" ").toLowerCase().replace(/[^\p{L}\s']/gu, " ") + " ";
+    fillers = {};
+    for (const word of ["um", "uh", "you know"]) {
+      fillers[word] = { expected: truth.fillers.filter((f) => f.word === word).length, found: all.split(` ${word} `).length - 1 };
+    }
+    retakeFound = all.includes("say that again");
+  }
   const result = {
+    sample: BASE, fillers, retakeFound,
     seconds, status, warning, captions: parsed.length, srtCues: srt.length, matched: errors.length,
     meanStartError: Number(mean.toFixed(3)), medianStartError: Number((abs[Math.floor(abs.length / 2)] ?? 0).toFixed(3)),
-    p90StartError: Number((abs[Math.floor(abs.length * 0.9)] ?? 0).toFixed(3)), errors,
+    p90StartError: Number((abs[Math.floor(abs.length * 0.9)] ?? 0).toFixed(3)), errors, captionList: parsed, raw,
   };
   mkdirSync(path.join(import.meta.dirname, "..", "output"), { recursive: true });
   writeFileSync(path.join(import.meta.dirname, "..", "output", "asr-live.json"), JSON.stringify(result, null, 2));
+  if (fillers) console.log(`語助詞（找到／講稿）：${Object.entries(fillers).map(([w, v]) => `${w} ${v.found}/${v.expected}`).join("、")}；重講句${retakeFound ? "有" : "沒有"}轉出來`);
   console.log(`ASR 實機：${seconds.toFixed(1)} 秒，${status}；SRT ${srt.length} 句、對上 ${errors.length} 句，起點誤差平均 ${result.meanStartError} 秒、中位數 ${result.medianStartError}、p90 ${result.p90StartError}${warning ? `；${warning}` : ""}`);
   await page.screenshot({ path: "output/ui-shots/asr-live.png" });
   expect(errors.length).toBeGreaterThan(srt.length / 2);

@@ -1,0 +1,114 @@
+<!doctype html>
+<!-- 模擬範例短片的「螢幕」（scripts/demo-sample/make.mjs 用 Playwright 逐格截圖）：仿 VS Code 的檔案樹、分頁、編輯器與終端機。
+     renderAt(t) 依時間軸把畫面畫成時間 t 的樣子（決定性：同一個 t 一定同一個畫面），回傳畫面內容的簽章，簽章沒變就不必重截。 -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1920px; height: 1080px; background: #1e1e1e; color: #d4d4d4; font: 15px/1.5 "Segoe UI", sans-serif; display: grid; grid-template-columns: 48px 260px 1fr; grid-template-rows: 32px 1fr 24px; overflow: hidden; }
+  #title { grid-column: 1 / 4; background: #323233; color: #ccc; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  #activity { background: #333; }
+  #sidebar { background: #252526; padding: 8px 0; }
+  #sidebar h4 { margin: 4px 16px 8px; font-size: 11px; letter-spacing: 1px; color: #bbb; }
+  .file { padding: 2px 24px; font-size: 14px; color: #ccc; }
+  .file.active { background: #37373d; color: #fff; }
+  #main { display: grid; grid-template-rows: 36px 1fr 360px; min-width: 0; }
+  #tabs { background: #252526; display: flex; }
+  .tab { padding: 8px 18px; font-size: 13px; color: #999; background: #2d2d2d; border-right: 1px solid #252526; }
+  .tab.active { background: #1e1e1e; color: #fff; border-top: 2px solid #0078d4; }
+  #editor { font: 20px/1.6 Consolas, "Cascadia Mono", monospace; padding: 12px 0; overflow: hidden; white-space: pre; }
+  .line { display: flex; }
+  .ln { width: 64px; text-align: right; padding-right: 20px; color: #858585; flex: none; }
+  .kw { color: #c586c0; } .str { color: #ce9178; } .fn { color: #dcdcaa; } .key { color: #9cdcfe; } .cm { color: #6a9955; }
+  .cursor { display: inline-block; width: 2px; height: 1.2em; background: #aeafad; vertical-align: text-bottom; }
+  #terminal { background: #181818; border-top: 1px solid #333; font: 19px/1.5 Consolas, "Cascadia Mono", monospace; padding: 8px 16px; white-space: pre; overflow: hidden; }
+  #terminal .head { font: 12px "Segoe UI", sans-serif; color: #ccc; letter-spacing: 1px; margin-bottom: 6px; }
+  #terminal.focus .head { color: #fff; border-bottom: 1px solid #0078d4; display: inline-block; }
+  .prompt { color: #4ec9b0; }
+  #status { grid-column: 1 / 4; background: #007acc; color: #fff; font-size: 12px; display: flex; align-items: center; padding: 0 12px; gap: 24px; }
+</style>
+</head>
+<body>
+  <div id="title">notes-cli — Visual Studio Code</div>
+  <div id="activity"></div>
+  <div id="sidebar"><h4>EXPLORER — NOTES-CLI</h4><div id="files"></div></div>
+  <div id="main">
+    <div id="tabs"></div>
+    <div id="editor"></div>
+    <div id="terminal"></div>
+  </div>
+  <div id="status"><span>main</span><span id="pos"></span><span>UTF-8</span><span>JavaScript</span></div>
+<script>
+  /** 時間軸（make.mjs 注入）：{ files, initial, events: [{ start, end, actions }] } */
+  let TL = null;
+
+  /** 跳脫 HTML */
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  /** 很簡單的語法上色（關鍵字、字串、函式、.env 的鍵；金鑰本身包一層 #api-key 方便量位置） */
+  function highlight(file, text) {
+    if (file === ".env") return esc(text).replace(/^([A-Z_]+)=(.*)$/, '<span class="key">$1</span>=<span class="str" id="api-key">$2</span>');
+    if (file === "notes.md") return esc(text).replace(/^(#.*)$/, '<span class="kw">$1</span>');
+    return esc(text)
+      .replace(/('[^']*'?)/g, '<span class="str">$1</span>')
+      .replace(/\b(import|from|const|await|new)\b/g, '<span class="kw">$1</span>')
+      .replace(/\b(readFileSync|create|log)\b/g, '<span class="fn">$1</span>');
+  }
+
+  /** 時間 t 的狀態：各檔案內容、終端機文字、目前焦點 */
+  function stateAt(t) {
+    const files = { ...TL.initial };
+    for (const f of TL.files) files[f] ??= "";
+    let terminal = "";
+    let focus = "terminal";
+    /** 最後開過的檔案（焦點在終端機時編輯器仍顯示它） */
+    let lastFile = "notes.md";
+    let typingIn = null;
+    for (const ev of TL.events) {
+      if (t < ev.start) break;
+      const k = Math.min(1, (t - ev.start) / Math.max(0.2, ev.end - ev.start));
+      for (const a of ev.actions) {
+        if (a.open) focus = a.open;
+        if (a.open && a.open !== "terminal") lastFile = a.open;
+        if (a.type) {
+          for (const [target, text] of Object.entries(a.type)) {
+            const shown = text.slice(0, Math.round(text.length * k));
+            if (target === "terminal") {
+              // 終端機一行一個指令，前面加提示字元
+              terminal += shown.split("\n").map((l) => "$ " + l).join("\n") + (k >= 1 ? "\n" : "");
+            } else files[target] += shown;
+            if (k < 1) typingIn = target;
+          }
+        }
+        if (a.erase) {
+          for (const [target, n] of Object.entries(a.erase)) files[target] = files[target].slice(0, files[target].length - Math.round(n * k));
+        }
+        if (a.out && t >= ev.end) terminal += a.out.join("\n") + "\n";
+      }
+    }
+    return { files, terminal, focus, typingIn, lastFile };
+  }
+
+  /** 把畫面畫成時間 t；回傳簽章 */
+  window.renderAt = (t) => {
+    const s = stateAt(t);
+    const file = s.focus === "terminal" ? s.lastFile : s.focus;
+    document.getElementById("files").innerHTML = TL.files.map((f) => `<div class="file${f === file && s.focus !== "terminal" ? " active" : ""}">${f}</div>`).join("");
+    document.getElementById("tabs").innerHTML = TL.files.filter((f) => f === file || s.files[f]).slice(0, 3).map((f) => `<div class="tab${f === file ? " active" : ""}">${f}</div>`).join("");
+    const lines = s.files[file].split("\n");
+    if (lines.length > 1 && lines[lines.length - 1] === "" && s.typingIn !== file) lines.pop();
+    document.getElementById("editor").innerHTML = lines.map((l, i) => `<div class="line"><span class="ln">${i + 1}</span><span>${highlight(file, l)}${s.typingIn === file && i === lines.length - 1 ? '<span class="cursor"></span>' : ""}</span></div>`).join("");
+    const term = s.terminal.split("\n").slice(-12).map((l) => l.startsWith("$ ") ? `<span class="prompt">notes-cli $</span> ${esc(l.slice(2))}` : esc(l)).join("\n");
+    const termEl = document.getElementById("terminal");
+    termEl.className = s.focus === "terminal" ? "focus" : "";
+    termEl.innerHTML = `<div class="head">TERMINAL</div>\n${term}${s.focus === "terminal" ? '<span class="cursor"></span>' : ""}`;
+    document.getElementById("pos").textContent = `Ln ${lines.length}`;
+    return document.body.innerHTML.length + ":" + document.body.innerHTML.slice(-400) + document.getElementById("editor").innerHTML.length;
+  };
+
+  /** 注入時間軸 */
+  window.setTimeline = (tl) => { TL = tl; };
+</script>
+</body>
+</html>
