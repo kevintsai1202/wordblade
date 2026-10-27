@@ -35,7 +35,15 @@ function hasConsent(): boolean {
 }
 
 /** Vibe FX 頁籤 */
-export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginService; playhead: number; dispatch: Dispatch<Action> }) {
+export function VibeTab({ plugins, playhead, range, dispatch }: {
+  plugins: PluginService;
+  playhead: number;
+  /** 時間軸選的範圍：有就用它的起訖（照字導字演：先框選再加特效），沒有就放在播放頭、用預設長度 */
+  range?: { start: number; end: number } | null;
+  dispatch: Dispatch<Action>;
+}) {
+  /** 新特效的起點與長度（fallback：沒有範圍時的預設長度） */
+  const placement = (fallback: number) => (range ? { start: range.start, duration: range.end - range.start } : { start: playhead, duration: fallback });
   /** 沙盒、閘道或 AI 的錯誤訊息（固定文字，不顯示模型寫的文字） */
   const [error, setError] = useState<string | null>(null);
   const [settings, setSettings] = useState<GatewaySettings>(loadSettings);
@@ -52,7 +60,8 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
     try {
       const builtins = await plugins.builtins();
       const used = template.layers.map((l) => builtins.get(l.component)!);
-      const effect = templateEffect(template, (id) => builtins.get(id)!.hash, newEffectId(), playhead);
+      const at = placement(DEFAULT_EFFECT_SECONDS);
+      const effect = templateEffect(template, (id) => builtins.get(id)!.hash, newEffectId(), at.start, at.duration);
       dispatch({ type: "commit", edits: [{ kind: "addEffect", effect, plugins: used }] });
       dispatch({ type: "selectEffect", effectId: effect.id });
       setError(null);
@@ -65,7 +74,8 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
   const add3D = async (template: Template3D) => {
     try {
       const plugin = (await builtinPlugins3D()).get(template.componentId)!;
-      const effect = template3DEffect(template, plugin, newEffectId(), playhead);
+      const at = placement(template.duration);
+      const effect = template3DEffect(template, plugin, newEffectId(), at.start, at.duration);
       dispatch({ type: "commit", edits: [{ kind: "addEffect", effect, plugins: [plugin] }] });
       dispatch({ type: "selectEffect", effectId: effect.id });
       setError(null);
@@ -84,7 +94,7 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
     setProgress({ stage: "writing", round: 1 });
     try {
       const input = {
-        description: description.trim(), screenshot: attachFrame ? captureFrame() : null, start: playhead, duration: dimension === "3d" ? 4 : DEFAULT_EFFECT_SECONDS,
+        description: description.trim(), screenshot: attachFrame ? captureFrame() : null, ...placement(dimension === "3d" ? 4 : DEFAULT_EFFECT_SECONDS),
         box: { cx: 0.5, cy: 0.5, w: 0.3, h: 0.2 }, aspect: 16 / 9, fps: FPS, effectId: newEffectId(),
       };
       const gateway = new GatewayClient(settings);
@@ -169,7 +179,7 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
       </ul>
 
       <h3 className="section-title">Templates</h3>
-      <p className="muted">Click to add at the playhead. Drag the chip on the timeline to move or trim it.</p>
+      <p className="muted" data-testid="vibe-placement">{range ? `Adds over the selected range (${(range.end - range.start).toFixed(1)} s).` : "Click to add at the playhead (Shift+drag on the timeline to choose a range first)."} Drag the chip on the timeline to move or trim it.</p>
       <ul className="template-grid">
         {TEMPLATES.map((t) => (
           <li key={t.id}>

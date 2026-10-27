@@ -135,11 +135,11 @@ export function builtinPlugins3D(): Promise<Map<string, Plugin>> {
 }
 
 /** 3D 範本 → 時間軸特效（參數＝元件預設值＋範本的值） */
-export function template3DEffect(template: Template3D, plugin: Plugin, id: string, start: number): Effect {
+export function template3DEffect(template: Template3D, plugin: Plugin, id: string, start: number, duration: number = template.duration): Effect {
   const component = plugin.component as unknown as Component3D;
   const defaults = Object.fromEntries(Object.entries(component.params).map(([k, d]) => [k, d.default]));
   return {
-    id, kind: component.effectKind, start, end: start + template.duration, pluginId: plugin.hash, anchorIds: [],
+    id, kind: component.effectKind, start, end: start + duration, pluginId: plugin.hash, anchorIds: [],
     params: {
       title: template.title, template: template.id, params: { ...defaults, ...template.params },
       // 疊加的 3D 特效（吉祥物）有目標框，和 2D 特效一樣可以在預覽上拖

@@ -115,7 +115,14 @@ function rulerStep(pxPerSecond: number): number {
 }
 
 /** 下方多軌時間軸（D33）：工具列、尺規、各軌片段、特效標籤、字幕軌、播放頭 */
-export function Timeline({ state, dispatch, captions, library }: { state: AppState; dispatch: Dispatch<Action>; captions: Caption[]; library: Library }) {
+export function Timeline({ state, dispatch, captions, library, onRangeAction }: {
+  state: AppState;
+  dispatch: Dispatch<Action>;
+  captions: Caption[];
+  library: Library;
+  /** 範圍動作列的「放大」「特效」（照字導字演：先框選時間，再從範圍建立） */
+  onRangeAction?: (kind: "zoom" | "effect") => void;
+}) {
   const project = state.history.present;
   const { pxPerSecond, playhead } = state;
   const duration = projectDuration(project);
@@ -123,6 +130,27 @@ export function Timeline({ state, dispatch, captions, library }: { state: AppSta
   const trackRows = useMemo(() => rows(project), [project]);
   const step = rulerStep(pxPerSecond);
   const ticks = Array.from({ length: Math.floor(width / pxPerSecond / step) + 1 }, (_, i) => i * step);
+
+  /**
+   * Shift＋按住軌道拖曳：以播放頭為錨點拉出範圍（照字導字演）；按下的位置立刻成為另一端，繼續拖就延伸。
+   * 在 capture 階段處理並停止傳遞，才不會變成拖片段或特效。
+   */
+  const onCanvasDownCapture = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || !e.shiftKey || (e.target as HTMLElement).closest(".range-actions")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const canvas = e.currentTarget;
+    const anchor = playhead;
+    const at = (clientX: number) => Math.max(0, (clientX - canvas.getBoundingClientRect().left) / pxPerSecond);
+    dispatch({ type: "setRange", start: anchor, end: at(e.clientX) });
+    const move = (ev: MouseEvent) => dispatch({ type: "setRange", start: anchor, end: at(ev.clientX) });
+    const up = () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
 
   /** 點尺規或空白處：移動播放頭 */
   const seekAt = (clientX: number, el: HTMLElement) => {
@@ -288,7 +316,7 @@ export function Timeline({ state, dispatch, captions, library }: { state: AppSta
           ))}
         </div>
         <div className="track-scroll">
-          <div className="track-canvas" style={{ width }}>
+          <div className="track-canvas" style={{ width }} onMouseDownCapture={onCanvasDownCapture}>
             <div className={`ruler${scrubEl ? " scrubbing" : ""}`} onMouseDown={onRulerDown} title="Drag to scrub">
               {ticks.map((t) => (
                 <span key={t} className="tick" style={{ left: t * pxPerSecond }}>{formatTimecode(t).slice(3, 8)}</span>
@@ -331,6 +359,19 @@ export function Timeline({ state, dispatch, captions, library }: { state: AppSta
                   ))}
               </div>
             ))}
+            {state.range && (
+              <>
+                <div className="range-overlay" data-testid="range-overlay" style={{ left: state.range.start * pxPerSecond, width: (state.range.end - state.range.start) * pxPerSecond }} />
+                {/* 範圍上方的動作列：先框選時間再建立（照字導字演） */}
+                <div className="range-actions" data-testid="range-actions" style={{ left: state.range.start * pxPerSecond }} onMouseDown={(e) => e.stopPropagation()}>
+                  <button type="button" data-testid="range-zoom" title="Zoom into part of the frame for this range" onClick={() => onRangeAction?.("zoom")}>🔍 Zoom</button>
+                  <button type="button" data-testid="range-effect" title="Add an effect for this range" onClick={() => onRangeAction?.("effect")}>✨ Effect</button>
+                  <button type="button" data-testid="range-delete" title="Cut this range (Delete)" onClick={() => dispatch({ type: "deleteRange" })}>✂ Delete</button>
+                  <button type="button" data-testid="range-cancel" title="Clear the range (Esc)" onClick={() => dispatch({ type: "clearRange" })}>✕</button>
+                  <span className="muted">{formatTimecode(state.range.end - state.range.start).slice(3)}</span>
+                </div>
+              </>
+            )}
             <div className="playhead" style={{ left: playhead * pxPerSecond }} />
           </div>
         </div>

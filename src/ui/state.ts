@@ -25,6 +25,10 @@ export interface AppState {
   rate: number;
   /** 試聽：播到這個時間自動停（null：不限） */
   stopAt?: Seconds | null;
+  /** 時間軸上選的範圍（Shift＋拖曳或 I／O；時間軸秒）：放大、特效、刪除都從它建立（照字導字演） */
+  range?: { start: Seconds; end: Seconds } | null;
+  /** 按了 I 但還沒有範圍時記住的入點（再按 O 才成為範圍） */
+  markIn?: Seconds | null;
 }
 
 /** 介面動作 */
@@ -38,6 +42,10 @@ export type Action =
   | { type: "deleteSelected" }
   | { type: "zoom"; pxPerSecond: number }
   | { type: "play"; rate: number; stopAt?: Seconds }
+  | { type: "setRange"; start: Seconds; end: Seconds }
+  | { type: "clearRange" }
+  | { type: "markIn"; time: Seconds }
+  | { type: "deleteRange" }
   | { type: "pause" }
   | { type: "tick"; time: Seconds }
   | { type: "importMedia"; media: Media[] }
@@ -46,7 +54,7 @@ export type Action =
 
 /** 從一份專案建立初始狀態 */
 export function initialState(project: Project): AppState {
-  return { history: createHistory(project), playhead: 0, selectedClipId: null, selectedEffectId: null, pxPerSecond: 20, playing: false, rate: 1 };
+  return { history: createHistory(project), playhead: 0, selectedClipId: null, selectedEffectId: null, pxPerSecond: 20, playing: false, rate: 1, range: null, markIn: null };
 }
 
 /** 成片長度：所有片段與特效最晚的終點（只有特效、還沒放影片時也要能預覽） */
@@ -99,6 +107,22 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, history: amend(state.history, (p) => patchMedia(p, action.id, action.patch)) };
     case "load":
       return { ...initialState(action.project), pxPerSecond: state.pxPerSecond };
+    case "setRange": {
+      // 起訖排序；長度不到一格當作沒有範圍
+      const start = roundTime(Math.max(0, Math.min(action.start, action.end)));
+      const end = roundTime(Math.max(action.start, action.end));
+      return { ...state, range: end - start >= 1 / FPS ? { start, end } : null, markIn: null };
+    }
+    case "markIn":
+      return { ...state, markIn: roundTime(action.time) };
+    case "clearRange":
+      return { ...state, range: null, markIn: null };
+    case "deleteRange": {
+      // 漣漪刪掉範圍（§4 跨軌規則），播放頭停在範圍起點
+      if (!state.range) return state;
+      const { start, end } = state.range;
+      return withValidSelection({ ...state, history: commit(state.history, [{ kind: "rippleDelete", a: start, b: end }]), range: null, playhead: start });
+    }
     case "tick": {
       // 播放中推進播放頭；走到片尾（前進）或片頭（倒退）就停在那裡
       const max = projectDuration(state.history.present);
@@ -176,9 +200,16 @@ export function keyToAction(e: KeyInput, state: AppState): Action | null {
   if (key === "k") return { type: "pause" };
   if (key === "l") return { type: "play", rate: state.playing && state.rate > 0 ? Math.min(8, state.rate * 2) : 1 };
   if (key === "j") return { type: "play", rate: state.playing && state.rate < 0 ? Math.max(-8, state.rate * 2) : -1 };
+  // 範圍：I 設入點、O 設出點（另一端沿用目前範圍，沒有就從播放頭開始）；Esc 取消
+  if (key === "i") return state.range && state.range.end > state.playhead ? { type: "setRange", start: state.playhead, end: state.range.end } : { type: "markIn", time: state.playhead };
+  if (key === "o") return { type: "setRange", start: state.range?.start ?? state.markIn ?? state.playhead, end: state.playhead };
   switch (e.key) {
+    case "Escape":
+      return state.range || state.markIn != null ? { type: "clearRange" } : null;
     case "Delete":
     case "Backspace":
+      // 有範圍時刪掉範圍（照字導字演），否則刪選取的片段或特效
+      if (state.range) return { type: "deleteRange" };
       return state.selectedClipId || state.selectedEffectId ? { type: "deleteSelected" } : null;
     case "ArrowRight":
       return { type: "seek", time: state.playhead + 1 / FPS };

@@ -181,3 +181,8 @@ button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor
 .zoom-keys { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .zoom-keys li { display: flex; align-items: center; gap: 8px; }
 .zoom-keys input[type="number"] { width: 4em; }
+
+/* 時間軸範圍選取（Shift＋拖曳）與上方的動作列 */
+.range-overlay { position: absolute; top: 22px; bottom: 0; background: rgba(255, 212, 0, 0.13); border-left: 1px solid #ffd400; border-right: 1px solid #ffd400; pointer-events: none; z-index: 6; }
+.range-actions { position: absolute; top: 24px; z-index: 11; display: flex; gap: 4px; align-items: center; background: #2a2d35; border: 1px solid #ffd400; border-radius: 4px; padding: 2px 4px; white-space: nowrap; }
+.range-actions button { padding: 1px 6px; font-size: 12px; }

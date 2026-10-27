@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 /** 右側編輯面板的頁籤，依 §5.13（D33）分四組，組之間畫分隔線 */
 const TAB_GROUPS: { id: string; label: string }[][] = [
@@ -12,9 +12,15 @@ const TAB_GROUPS: { id: string; label: string }[][] = [
  * 右側編輯面板（D33）。
  * tabs：由 App 組好的頁籤內容（頁籤 id → 內容，例如 transcript、media、vibe；transcriptTools 放在逐字稿上方）；initialTab：一開始打開的頁籤（空專案先開素材頁籤）
  */
-export function EditPanel({ tabs, initialTab }: { tabs: Record<string, ReactNode>; initialTab: string }) {
+export function EditPanel({ tabs, initialTab, request }: {
+  tabs: Record<string, ReactNode>;
+  initialTab: string;
+  /** 外面要求切到某個頁籤（seq 每次要求加一，同一個頁籤也能再切一次） */
+  request?: { tab: string; seq: number } | null;
+}) {
   /** 目前打開的頁籤 */
   const [tab, setTab] = useState(initialTab);
+  useEffect(() => { if (request) setTab(request.tab); }, [request]);
   const current = TAB_GROUPS.flat().find((t) => t.id === tab)!;
   return (
     <aside className="edit-panel">

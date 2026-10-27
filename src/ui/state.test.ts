@@ -185,3 +185,43 @@ describe("試聽：播到 stopAt 自動停", () => {
     expect(s.playing).toBe(true);
   });
 });
+
+describe("時間軸範圍選取（Shift＋拖曳、I／O）", () => {
+  it("setRange 會排序起訖；長度 0 視為沒有範圍；clearRange 清掉", () => {
+    let s = initialState(makeProject());
+    s = reducer(s, { type: "setRange", start: 5, end: 2 });
+    expect(s.range).toEqual({ start: 2, end: 5 });
+    s = reducer(s, { type: "setRange", start: 3, end: 3 });
+    expect(s.range).toBeNull();
+    s = reducer(s, { type: "setRange", start: 1, end: 4 });
+    s = reducer(s, { type: "clearRange" });
+    expect(s.range).toBeNull();
+  });
+
+  it("I 設入點、O 設出點（以播放頭為準）；Esc 清掉範圍", () => {
+    let s = initialState(makeProject());
+    s = reducer(s, { type: "seek", time: 2 });
+    s = reducer(s, keyToAction({ key: "i", ctrlKey: false, shiftKey: false }, s)!);
+    s = reducer(s, { type: "seek", time: 6 });
+    s = reducer(s, keyToAction({ key: "o", ctrlKey: false, shiftKey: false }, s)!);
+    expect(s.range).toEqual({ start: 2, end: 6 });
+    // 出點設在入點前面：入出點對調
+    s = reducer(s, { type: "seek", time: 1 });
+    s = reducer(s, keyToAction({ key: "o", ctrlKey: false, shiftKey: false }, s)!);
+    expect(s.range).toEqual({ start: 1, end: 2 });
+    expect(keyToAction({ key: "Escape", ctrlKey: false, shiftKey: false }, s)).toEqual({ type: "clearRange" });
+  });
+
+  it("有範圍時 Delete 漣漪刪掉範圍並清掉範圍；換專案時範圍清掉", () => {
+    let s = initialState(makeProject());
+    s = reducer(s, { type: "setRange", start: 2, end: 4 });
+    const action = keyToAction({ key: "Delete", ctrlKey: false, shiftKey: false }, s)!;
+    expect(action).toEqual({ type: "deleteRange" });
+    s = reducer(s, action);
+    expect(s.range).toBeNull();
+    expect(projectDuration(s.history.present)).toBe(28);
+    s = reducer(s, { type: "setRange", start: 1, end: 3 });
+    s = reducer(s, { type: "load", project: makeProject() });
+    expect(s.range).toBeNull();
+  });
+});

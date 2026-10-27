@@ -43,6 +43,9 @@ function App() {
   const { library, importSources, enqueuePrepare, reset } = useMediaLibrary(engine, dispatch);
   /** AI 預覽中的特效設定（「用說的」的提議，還沒寫進專案；預覽畫面用它） */
   const [aiPreview, setAiPreview] = useState<{ effectId: string; params: Record<string, unknown> } | null>(null);
+  /** 要求右側面板切到某個頁籤（範圍動作列的「特效」「放大」） */
+  const [tabRequest, setTabRequest] = useState<{ tab: string; seq: number } | null>(null);
+  const openTab = (tab: string) => setTabRequest((r) => ({ tab, seq: (r?.seq ?? 0) + 1 }));
   /** 局部放大：正在預覽上選範圍（Zoom 頁籤的 Pick region） */
   const [zoomPicking, setZoomPicking] = useState(false);
   const zoomClip = zoomableClip(project, state.selectedClipId);
@@ -116,10 +119,11 @@ function App() {
       <main className="workspace">
         <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId} onZoomPick={zoomPicking && zoomClip ? onZoomPick : null} onZoomCancel={() => setZoomPicking(false)} dispatch={dispatch} />
         <EditPanel
+          request={tabRequest}
           initialTab={START_WITH_DEMO ? "transcript" : "media"}
           tabs={{
             media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
-            vibe: <VibeTab plugins={plugins} playhead={state.playhead} dispatch={dispatch} />,
+            vibe: <VibeTab plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
             zoom: <ZoomTab project={project} clipId={state.selectedClipId} playhead={state.playhead} picking={zoomPicking} onPicking={setZoomPicking} dispatch={dispatch} />,
@@ -129,7 +133,7 @@ function App() {
           }}
         />
       </main>
-      <Timeline state={state} dispatch={dispatch} captions={captions} library={library} />
+      <Timeline state={state} dispatch={dispatch} captions={captions} library={library} onRangeAction={(kind) => openTab(kind === "effect" ? "vibe" : "zoom")} />
       <footer className="status-bar">
         Space play · J / K / L reverse / stop / forward · Click to select · Delete ripple delete · Ctrl+B split at playhead · Ctrl+Z / Ctrl+Shift+Z undo / redo · ← → frame · ↑ ↓ edit points · Ctrl+wheel zoom
       </footer>
