@@ -1,5 +1,6 @@
 package com.wordblade.gateway.vibe;
 
+import com.wordblade.gateway.ai.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -14,7 +15,7 @@ import tools.jackson.databind.json.JsonMapper;
 class VibeJobsTest {
 
     /** 假模型：依序回預先排好的回應，並記下每次收到的使用者訊息與有沒有附圖 */
-    static class FakeModel implements VibeModel {
+    static class FakeModel implements AiModel {
         final Deque<String> replies = new ArrayDeque<>();
         final List<String> userTexts = new ArrayList<>();
         final List<Boolean> withImage = new ArrayList<>();
@@ -47,7 +48,7 @@ class VibeJobsTest {
     void 首輪成功_帶截圖_記用量() {
         model.replies.add(OK);
         String id = jobs.start(7, request("data:image/png;base64,iVBORw0KGgo="));
-        VibeJobs.View v = jobs.view(7, id);
+        VibeJobs.View<VibeParser.Parsed> v = jobs.view(7, id);
         assertThat(v.status()).isEqualTo("done");
         assertThat(v.round()).isEqualTo(1);
         assertThat(v.result().mode()).isEqualTo("params");
@@ -61,7 +62,7 @@ class VibeJobsTest {
         model.replies.add(BAD);
         model.replies.add(OK);
         String id = jobs.start(7, request("data:image/png;base64,iVBORw0KGgo="));
-        VibeJobs.View v = jobs.view(7, id);
+        VibeJobs.View<VibeParser.Parsed> v = jobs.view(7, id);
         assertThat(v.status()).isEqualTo("done");
         assertThat(v.round()).isEqualTo(2);
         assertThat(model.withImage).containsExactly(true, false);
@@ -74,11 +75,11 @@ class VibeJobsTest {
         model.replies.add(OK);
         model.replies.add(OK);
         String id = jobs.start(7, request(null));
-        jobs.feedback(7, id, List.of(new VibeError("smoke", 0, "畫太慢", 2, 1)));
+        jobs.feedback(7, id, List.of(new AiError("smoke", 0, "畫太慢", 2, 1)));
         assertThat(model.userTexts.get(1)).contains("components[0] 畫太慢");
-        jobs.feedback(7, id, List.of(new VibeError("blank", 0, "沒畫東西", null, null)));
+        jobs.feedback(7, id, List.of(new AiError("blank", 0, "沒畫東西", null, null)));
         assertThat(jobs.view(7, id).round()).isEqualTo(3);
-        assertThatThrownBy(() -> jobs.feedback(7, id, List.of(new VibeError("blank", 0, "x", null, null))))
+        assertThatThrownBy(() -> jobs.feedback(7, id, List.of(new AiError("blank", 0, "x", null, null))))
                 .isInstanceOf(VibeJobs.TooManyRoundsException.class);
     }
 
@@ -88,7 +89,7 @@ class VibeJobsTest {
         model.replies.add(BAD);
         model.replies.add(BAD);
         String id = jobs.start(7, request(null));
-        VibeJobs.View v = jobs.view(7, id);
+        VibeJobs.View<VibeParser.Parsed> v = jobs.view(7, id);
         assertThat(v.status()).isEqualTo("failed");
         assertThat(v.error()).isEqualTo("invalid-response");
     }

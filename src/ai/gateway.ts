@@ -102,4 +102,25 @@ export class GatewayClient {
   async feedbackVibe(jobId: string, errors: VibeError[]): Promise<void> {
     await this.call<void>(`/v1/ai/vibe/${encodeURIComponent(jobId)}/feedback`, { method: "POST", body: JSON.stringify({ errors }) });
   }
+
+  /** 開始「用說的」（板子運鏡），回傳工作 id */
+  async startPlane3d(body: { description: string; screenshot: string | null; length: number; width: number; height: number; current: Record<string, unknown> }): Promise<string> {
+    const { jobId } = await this.call<{ jobId: string }>("/v1/ai/plane3d", { method: "POST", body: JSON.stringify(body) });
+    return jobId;
+  }
+
+  /** 等「用說的」工作離開 running */
+  async waitPlane3d(jobId: string): Promise<{ status: "running" | "done" | "failed"; round: number; result: { refusal: string | null; proposal: Record<string, unknown> | null } | null; error: string | null }> {
+    for (let i = 0; i < 120; i++) {
+      const view = await this.call<{ status: "running" | "done" | "failed"; round: number; result: { refusal: string | null; proposal: Record<string, unknown> | null } | null; error: string | null }>(`/v1/ai/plane3d/${encodeURIComponent(jobId)}`);
+      if (view.status !== "running") return view;
+      await sleep(1000);
+    }
+    throw new GatewayError("The AI took too long. Try again.", 0);
+  }
+
+  /** 「用說的」的提議檢查不過：送錯誤續跑 */
+  async feedbackPlane3d(jobId: string, errors: VibeError[]): Promise<void> {
+    await this.call<void>(`/v1/ai/plane3d/${encodeURIComponent(jobId)}/feedback`, { method: "POST", body: JSON.stringify({ errors }) });
+  }
 }

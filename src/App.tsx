@@ -2,6 +2,7 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import { ensureAudioGraph } from "./audio/audioGraph";
 import { buildCaptions } from "./core/captions";
 import { emptyProject } from "./core/media";
+import { setEffectParams } from "./core/effects";
 import { PluginService } from "./anim/pluginService";
 import { createEngine } from "./engine/createEngine";
 import { demoProject } from "./ui/demoProject";
@@ -32,6 +33,16 @@ function App() {
   /** 字幕由逐字稿算出（D26），專案一變就重算 */
   const captions = useMemo(() => buildCaptions(project), [project]);
   const { library, importSources, enqueuePrepare, reset } = useMediaLibrary(engine, dispatch);
+  /** AI 預覽中的特效設定（「用說的」的提議，還沒寫進專案；預覽畫面用它） */
+  const [aiPreview, setAiPreview] = useState<{ effectId: string; params: Record<string, unknown> } | null>(null);
+  /** 預覽畫面看到的專案：有 AI 預覽時套上提議 */
+  const shownProject = useMemo(() => {
+    if (!aiPreview) return project;
+    const effect = project.effects.find((e) => e.id === aiPreview.effectId);
+    return effect ? setEffectParams(project, effect.id, { ...effect.params, params: aiPreview.params }) : project;
+  }, [project, aiPreview]);
+  // 選取的特效換了就結束 AI 預覽
+  useEffect(() => { if (aiPreview && aiPreview.effectId !== state.selectedEffectId) setAiPreview(null); }, [state.selectedEffectId, aiPreview]);
   /** 標題列的狀態訊息（例如找不到示範素材） */
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -82,7 +93,7 @@ function App() {
         <button disabled title="Export — coming soon">Export</button>
       </header>
       <main className="workspace">
-        <PreviewPane project={project} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId} dispatch={dispatch} />
+        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId} dispatch={dispatch} />
         <EditPanel
           captions={captions}
           playhead={state.playhead}
@@ -91,7 +102,7 @@ function App() {
           tabs={{
             media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
             vibe: <VibeTab plugins={plugins} playhead={state.playhead} dispatch={dispatch} />,
-            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} dispatch={dispatch} />,
+            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
           }}
         />
       </main>

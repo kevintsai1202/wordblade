@@ -1,4 +1,4 @@
-package com.wordblade.gateway.vibe;
+package com.wordblade.gateway.ai;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +20,7 @@ import org.springframework.util.MimeType;
  * 回應用 JSON 模式（response_format json_object；回應裡的 params 是開放物件，嚴格 json_schema 表達不了）。
  * 對話歷史存在 ChatMemory（以工作 id 為對話 id）。截圖只在第一輪送：存進記憶的是不含圖的文字版，續跑不重送截圖（原專案做法）。
  */
-public class SpringAiVibeModel implements VibeModel {
+public class SpringAiModel implements AiModel {
 
     private final ChatClient chat;
     private final ChatMemory memory;
@@ -35,7 +35,7 @@ public class SpringAiVibeModel implements VibeModel {
      * @param model        模型 ID（WORDBLADE_MODEL_WONDER）
      * @param reasoning    推理深度
      */
-    public SpringAiVibeModel(ChatClient chat, ChatMemory memory, String systemPrompt, String model, String reasoning) {
+    public SpringAiModel(ChatClient chat, ChatMemory memory, String systemPrompt, String model, String reasoning) {
         this.chat = chat;
         this.memory = memory;
         this.systemPrompt = systemPrompt;

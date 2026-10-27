@@ -2,6 +2,9 @@
 // 表單依插件的參數定義（原專案 anim_runtime 的參數型別）自動產生；每次改動是一筆可復原的編輯（setEffectParams）。
 // 文字與數字在離開欄位或按 Enter 時才送出，避免打一個字就留一筆歷史。
 import { useEffect, useState, type Dispatch } from "react";
+import { GatewayClient, GatewayError, loadSettings } from "../ai/gateway";
+import { runPlane3d, type BoardParams } from "../ai/plane3d";
+import { captureFrame } from "./capture";
 import manifest from "../anim/anim_api_manifest.json";
 import { displayOf, type Component, type ParamDef } from "../anim/library";
 import type { Effect, Project } from "../core/model";
@@ -74,10 +77,17 @@ function ParamField({ name, def, label, labels, value, onChange }: { name: strin
 }
 
 /** Inspector 頁籤 */
-export function InspectorTab({ project, effectId, dispatch }: { project: Project; effectId: string | null; dispatch: Dispatch<Action> }) {
+export function InspectorTab({ project, effectId, dispatch, preview, onPreview }: {
+  project: Project;
+  effectId: string | null;
+  dispatch: Dispatch<Action>;
+  /** AI 預覽中的設定（還沒寫進專案） */
+  preview: { effectId: string; params: Record<string, unknown> } | null;
+  onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void;
+}) {
   const effect: Effect | undefined = project.effects.find((e) => e.id === effectId);
   if (!effect) return <p className="muted placeholder">Select an effect on the timeline to edit it.</p>;
-  if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} dispatch={dispatch} />;
+  if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} dispatch={dispatch} preview={preview?.effectId === effect.id ? preview.params : null} onPreview={onPreview} />;
   const box = effect.params.box as Box;
   const layers = (effect.params.layers ?? []) as Layer[];
 
@@ -118,8 +128,74 @@ export function InspectorTab({ project, effectId, dispatch }: { project: Project
   );
 }
 
+/** 「用說的」同意說明的鍵 */
+const PLANE3D_CONSENT = "wordblade.consent.plane3d";
+
+/**
+ * 「用說的」（spec §5.8，只有漂浮的板子）：一句話 → AI 提議板子的運鏡 → 預覽（不寫進專案）→ Apply 寫入（一筆可復原的編輯）或 Discard。
+ */
+function DescribeMove({ effect, current, preview, onPreview, dispatch }: { effect: Effect; current: BoardParams; preview: Record<string, unknown> | null; onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void; dispatch: Dispatch<Action> }) {
+  const [text, setText] = useState("");
+  const [attach, setAttach] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
+  const settings = loadSettings();
+
+  /** 送出：第一次先問同意 */
+  const propose = async (agreed = false) => {
+    let ok = agreed;
+    try { ok ||= localStorage.getItem(PLANE3D_CONSENT) === "yes"; } catch { /* 讀不到就問 */ }
+    if (!ok) { setConsent(true); return; }
+    setBusy(true);
+    setError(null);
+    try {
+      const outcome = await runPlane3d(new GatewayClient(settings), {
+        description: text.trim(), screenshot: attach ? captureFrame() : null, current, length: effect.end - effect.start, width: 1920, height: 1080,
+      });
+      if (outcome.ok) onPreview({ effectId: effect.id, params: outcome.params });
+      else setError(outcome.message);
+    } catch (e) {
+      setError(e instanceof GatewayError ? e.message : `Something went wrong: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <fieldset className="param-group" data-testid="describe-move">
+      <legend>Describe the move (AI)</legend>
+      {preview ? (
+        <div className="vibe-actions">
+          <span>Previewing the AI's move.</span>
+          <span className="spacer" />
+          <button data-testid="move-apply" onClick={() => { dispatch({ type: "commit", edits: [{ kind: "setEffectParams", effectId: effect.id, params: { ...effect.params, params: preview } }] }); onPreview(null); }}>Apply</button>
+          <button data-testid="move-discard" onClick={() => onPreview(null)}>Discard</button>
+        </div>
+      ) : (
+        <>
+          <textarea className="vibe-input" rows={2} maxLength={300} value={text} disabled={busy} data-testid="move-description" placeholder="e.g. Swing in from the right, then float gently" onChange={(e) => setText(e.target.value)} />
+          <div className="vibe-actions">
+            <label><input type="checkbox" checked={attach} onChange={(e) => setAttach(e.target.checked)} /> Attach current frame</label>
+            <span className="spacer" />
+            <button data-testid="move-propose" disabled={busy || !text.trim() || !settings.token} onClick={() => void propose()}>{busy ? "Thinking" : "Propose"}</button>
+          </div>
+          {!settings.token && <p className="muted">Set the invite token in Vibe FX, AI settings first.</p>}
+        </>
+      )}
+      {consent && (
+        <div className="consent" data-testid="move-consent">
+          <p>Your description{attach ? " and the current frame" : ""} will be sent to the WordBlade AI service and Meta Muse Spark (a Contributor model, which may use the content for training).</p>
+          <button onClick={() => { try { localStorage.setItem(PLANE3D_CONSENT, "yes"); } catch { /* 只在這次有效 */ } setConsent(false); void propose(true); }}>Agree and continue</button> <button onClick={() => setConsent(false)}>Cancel</button>
+        </div>
+      )}
+      {error && <p className="error" data-testid="move-error">{error}</p>}
+    </fieldset>
+  );
+}
+
 /** 3D 特效的設定：依 3D 元件的參數定義產生表單；關鍵幀這類複雜參數先唯讀顯示（用「用說的」或範本改） */
-function Inspector3D({ project, effect, dispatch }: { project: Project; effect: Effect; dispatch: Dispatch<Action> }) {
+function Inspector3D({ project, effect, dispatch, preview, onPreview }: { project: Project; effect: Effect; dispatch: Dispatch<Action>; preview: Record<string, unknown> | null; onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void }) {
   const plugin = project.plugins.find((p) => p.hash === effect.pluginId);
   const component = plugin?.component as { name?: string; params?: Record<string, ParamDef> } | undefined;
   const values = ((effect.params as { params?: Record<string, unknown> }).params ?? {}) as Record<string, unknown>;
@@ -137,6 +213,7 @@ function Inspector3D({ project, effect, dispatch }: { project: Project; effect: 
             ? <label key={key} className="param-field" data-param={key}><span>{def.label ?? key}</span><code className="muted">{JSON.stringify(values[key] ?? def.default)?.slice(0, 120)}</code></label>
             : <ParamField key={key} name={key} def={def} label={def.label ?? key} labels={def.labels} value={values[key]} onChange={(v) => set(key, v)} />)}
       </fieldset>
+      {(component as { id?: string } | undefined)?.id === "floating-board" && <DescribeMove effect={effect} current={values} preview={preview} onPreview={onPreview} dispatch={dispatch} />}
     </div>
   );
 }

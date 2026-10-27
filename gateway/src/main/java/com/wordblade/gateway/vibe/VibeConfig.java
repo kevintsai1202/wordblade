@@ -1,5 +1,6 @@
 package com.wordblade.gateway.vibe;
 
+import com.wordblade.gateway.ai.*;
 import com.wordblade.gateway.config.GatewayProperties;
 import com.wordblade.gateway.usage.UsageService;
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class VibeConfig {
         String prompt = new ClassPathResource("vibe/system-prompt.txt").getContentAsString(StandardCharsets.UTF_8);
         // 每個工作最多 3 輪＝6 則訊息，視窗留寬一點
         var memory = MessageWindowChatMemory.builder().chatMemoryRepository(new InMemoryChatMemoryRepository()).maxMessages(20).build();
-        VibeModel model = new SpringAiVibeModel(chat.build(), memory, prompt, props.models().wonder(), "medium");
+        AiModel model = new SpringAiModel(chat.build(), memory, prompt, props.models().wonder(), "medium");
         return new VibeJobs(model, new VibeParser(JsonMapper.builder().build()), vibeExecutor,
                 (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/vibe", m, in, out, 0));
     }

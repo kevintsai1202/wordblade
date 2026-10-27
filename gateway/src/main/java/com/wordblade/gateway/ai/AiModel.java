@@ -1,7 +1,7 @@
-package com.wordblade.gateway.vibe;
+package com.wordblade.gateway.ai;
 
 /** 呼叫模型的一輪對話（實作用 Spring AI ChatClient＋ChatMemory；測試用假模型）。 */
-public interface VibeModel {
+public interface AiModel {
 
     /** 截圖 */
     record Image(String mimeType, byte[] bytes) {}

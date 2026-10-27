@@ -1,5 +1,6 @@
 package com.wordblade.gateway.vibe;
 
+import com.wordblade.gateway.ai.*;
 import com.wordblade.gateway.auth.TokenAuthInterceptor;
 import com.wordblade.gateway.auth.TokenService.TokenInfo;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ public class VibeController {
     static final int MAX_SCREENSHOT = 2_000_000;
 
     /** 桌面回饋的本體 */
-    public record FeedbackBody(List<VibeError> errors) {}
+    public record FeedbackBody(List<AiError> errors) {}
 
     private final VibeJobs jobs;
 
@@ -50,7 +51,7 @@ public class VibeController {
 
     /** 工作狀態與結果 */
     @GetMapping("/v1/ai/vibe/{jobId}")
-    public VibeJobs.View view(@PathVariable String jobId, HttpServletRequest req) {
+    public VibeJobs.View<VibeParser.Parsed> view(@PathVariable String jobId, HttpServletRequest req) {
         return jobs.view(token(req).id(), jobId);
     }
 

@@ -1,5 +1,6 @@
 package com.wordblade.gateway.vibe;
 
+import com.wordblade.gateway.ai.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -49,26 +50,26 @@ public class VibeParser {
         this.json = json;
     }
 
-    /** 解析並檢查；不合格丟 VibeSchemaException（帶要回饋給模型的錯誤） */
+    /** 解析並檢查；不合格丟 AiSchemaException（帶要回饋給模型的錯誤） */
     public Parsed parse(String text) {
         JsonNode v = jsonObject(text);
         if (v.path("refused").asBoolean(false)) {
             String code = v.path("code").asString("");
             return new Parsed(REFUSAL_CODES.contains(code) ? code : "off-topic", null, null, List.of(), "");
         }
-        List<VibeError> errors = new ArrayList<>();
+        List<AiError> errors = new ArrayList<>();
         String mode = v.path("mode").asString("");
         if (!MODES.contains(mode)) errors.add(schema("mode 只能是 " + String.join("、", List.of("params", "compose", "modify", "new"))));
 
         JsonNode rawComps = v.path("components");
         if (!rawComps.isMissingNode() && !rawComps.isNull() && (!rawComps.isArray() || rawComps.size() > MAX_COMPONENTS)) {
-            throw new VibeSchemaException(List.of(schema("components 要是陣列、最多 " + MAX_COMPONENTS + " 個")));
+            throw new AiSchemaException(List.of(schema("components 要是陣列、最多 " + MAX_COMPONENTS + " 個")));
         }
         List<ObjectNode> comps = new ArrayList<>();
         for (int i = 0; rawComps.isArray() && i < rawComps.size(); i++) {
             JsonNode c = rawComps.get(i);
             if (!c.isObject()) {
-                errors.add(new VibeError("schema", i, "components[" + i + "] 要是物件", null, null));
+                errors.add(new AiError("schema", i, "components[" + i + "] 要是物件", null, null));
                 continue;
             }
             ObjectNode out = json.createObjectNode();
@@ -84,14 +85,14 @@ public class VibeParser {
         JsonNode anim = v.path("anim");
         if (!anim.isObject()) {
             errors.add(schema("缺少 anim 物件"));
-            throw new VibeSchemaException(errors);
+            throw new AiSchemaException(errors);
         }
         ArrayNode layers = items(anim, "layers", errors);
         ArrayNode sounds = items(anim, "sounds", errors);
         if (layers.isEmpty() && sounds.isEmpty()) errors.add(schema("anim.layers、anim.sounds 要是陣列、各 ≤ " + MAX_ITEMS + " 個、至少有一個"));
         checkRefs(layers, "layers", comps.size(), errors);
         checkRefs(sounds, "sounds", comps.size(), errors);
-        if (!errors.isEmpty()) throw new VibeSchemaException(errors);
+        if (!errors.isEmpty()) throw new AiSchemaException(errors);
 
         ObjectNode outAnim = json.createObjectNode();
         String title = anim.path("title").asString("").replaceAll("[\\x00-\\x1f\\x7f]", "");
@@ -103,7 +104,7 @@ public class VibeParser {
     }
 
     /** 取 anim 的 layers／sounds 陣列（沒有就是空陣列；不是陣列或太多就記錯誤） */
-    private ArrayNode items(JsonNode anim, String key, List<VibeError> errors) {
+    private ArrayNode items(JsonNode anim, String key, List<AiError> errors) {
         JsonNode n = anim.path(key);
         if (n.isMissingNode() || n.isNull()) return json.createArrayNode();
         if (!n.isArray() || n.size() > MAX_ITEMS) {
@@ -114,7 +115,7 @@ public class VibeParser {
     }
 
     /** 圖層／音效的 component 要是 "#n"（n 小於新插件數）或內建插件 id */
-    private static void checkRefs(ArrayNode items, String key, int compCount, List<VibeError> errors) {
+    private static void checkRefs(ArrayNode items, String key, int compCount, List<AiError> errors) {
         for (int i = 0; i < items.size(); i++) {
             JsonNode item = items.get(i);
             String ref = item.path("component").asString("");
@@ -131,11 +132,11 @@ public class VibeParser {
         if (v == null) {
             int a = t.indexOf('{');
             int b = t.lastIndexOf('}');
-            if (a < 0 || b <= a) throw new VibeSchemaException(List.of(new VibeError("json", null, "回應不是 JSON 物件", null, null)));
+            if (a < 0 || b <= a) throw new AiSchemaException(List.of(new AiError("json", null, "回應不是 JSON 物件", null, null)));
             v = tryRead(t.substring(a, b + 1));
-            if (v == null) throw new VibeSchemaException(List.of(new VibeError("json", null, "回應的 JSON 格式錯誤", null, null)));
+            if (v == null) throw new AiSchemaException(List.of(new AiError("json", null, "回應的 JSON 格式錯誤", null, null)));
         }
-        if (!v.isObject()) throw new VibeSchemaException(List.of(new VibeError("json", null, "回應要是 JSON 物件", null, null)));
+        if (!v.isObject()) throw new AiSchemaException(List.of(new AiError("json", null, "回應要是 JSON 物件", null, null)));
         return v;
     }
 
@@ -149,7 +150,7 @@ public class VibeParser {
     }
 
     /** 結構錯誤 */
-    private static VibeError schema(String message) {
-        return new VibeError("schema", null, message, null, null);
+    private static AiError schema(String message) {
+        return new AiError("schema", null, message, null, null);
     }
 }

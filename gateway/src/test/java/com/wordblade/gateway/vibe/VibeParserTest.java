@@ -1,5 +1,6 @@
 package com.wordblade.gateway.vibe;
 
+import com.wordblade.gateway.ai.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -40,26 +41,26 @@ class VibeParserTest {
     @Test
     void 不是JSON_回饋json階段的錯誤() {
         assertThatThrownBy(() -> parser.parse("Sure! Here is your effect."))
-                .isInstanceOf(VibeSchemaException.class)
-                .satisfies(e -> assertThat(((VibeSchemaException) e).errors()).extracting(VibeError::stage).containsExactly("json"));
+                .isInstanceOf(AiSchemaException.class)
+                .satisfies(e -> assertThat(((AiSchemaException) e).errors()).extracting(AiError::stage).containsExactly("json"));
     }
 
     @Test
     void 結構錯誤_mode_圖層數_引用() {
         assertThatThrownBy(() -> parser.parse("{\"refused\": false, \"mode\": \"magic\", \"anim\": {\"layers\": [], \"sounds\": []}, \"components\": []}"))
-                .isInstanceOf(VibeSchemaException.class)
-                .satisfies(e -> assertThat(((VibeSchemaException) e).errors()).extracting(VibeError::message)
+                .isInstanceOf(AiSchemaException.class)
+                .satisfies(e -> assertThat(((AiSchemaException) e).errors()).extracting(AiError::message)
                         .anyMatch(m -> m.contains("mode")).anyMatch(m -> m.contains("至少")));
         assertThatThrownBy(() -> parser.parse("{\"refused\": false, \"mode\": \"compose\", \"anim\": {\"layers\": [{\"component\": \"#3\"}]}, \"components\": []}"))
-                .isInstanceOf(VibeSchemaException.class)
-                .satisfies(e -> assertThat(((VibeSchemaException) e).errors().get(0).message()).contains("layers[0]"));
+                .isInstanceOf(AiSchemaException.class)
+                .satisfies(e -> assertThat(((AiSchemaException) e).errors().get(0).message()).contains("layers[0]"));
     }
 
     @Test
     void 回饋文字_依階段排序_最多12則_帶位置() {
         String text = VibeFeedback.text(List.of(
-                new VibeError("smoke", 0, "畫太慢", 3, 5),
-                new VibeError("json", null, "回應不是 JSON 物件", null, null)));
+                new AiError("smoke", 0, "畫太慢", 3, 5),
+                new AiError("json", null, "回應不是 JSON 物件", null, null)));
         assertThat(text).startsWith("上一版有以下錯誤");
         assertThat(text.indexOf("[json]")).isLessThan(text.indexOf("[smoke]"));
         assertThat(text).contains("components[0] 畫太慢（第 3 行第 5 欄）");

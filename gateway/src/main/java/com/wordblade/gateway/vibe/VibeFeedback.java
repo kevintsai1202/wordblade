@@ -1,5 +1,6 @@
 package com.wordblade.gateway.vibe;
 
+import com.wordblade.gateway.ai.*;
 import java.util.Comparator;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public final class VibeFeedback {
     private VibeFeedback() {}
 
     /** 組回饋文字 */
-    public static String text(List<VibeError> errors) {
+    public static String text(List<AiError> errors) {
         StringBuilder sb = new StringBuilder("上一版有以下錯誤，請修正後回傳完整的新 JSON（同樣格式，不要解釋）：");
         errors.stream()
                 .sorted(Comparator.comparingInt(e -> ORDER.contains(e.stage()) ? ORDER.indexOf(e.stage()) : 99))

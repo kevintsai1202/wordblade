@@ -6,6 +6,7 @@ import type { PluginService } from "../anim/pluginService";
 import { GatewayClient, GatewayError, loadSettings, saveSettings, type GatewaySettings } from "../ai/gateway";
 import { runVibe, type VibeProgress } from "../ai/vibe";
 import { TEMPLATES_3D, builtinPlugins3D, template3DEffect, type Template3D } from "../three/builtins";
+import { captureFrame } from "./capture";
 import { FPS, type Action } from "./state";
 
 /** Vibe特效的範例描述（點一下填進輸入框；都是 10/27 實測一輪就做得出來的） */
@@ -30,17 +31,6 @@ function hasConsent(): boolean {
   } catch {
     return false;
   }
-}
-
-/** 截目前預覽這一格（縮成 960 寬的 JPEG data URL） */
-function captureFrame(): string | null {
-  const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="preview-canvas"]');
-  if (!canvas) return null;
-  const out = document.createElement("canvas");
-  out.width = 960;
-  out.height = Math.round((960 * canvas.height) / canvas.width);
-  out.getContext("2d")!.drawImage(canvas, 0, 0, out.width, out.height);
-  return out.toDataURL("image/jpeg", 0.8);
 }
 
 /** Vibe FX 頁籤 */

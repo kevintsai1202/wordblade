@@ -1,4 +1,4 @@
-package com.wordblade.gateway.vibe;
+package com.wordblade.gateway.ai;
 
 /**
  * 一則要回饋給模型的錯誤（原專案 anim_ai 的錯誤格式）。
@@ -9,4 +9,4 @@ package com.wordblade.gateway.vibe;
  * @param line      行（編譯、執行錯誤才有）
  * @param column    欄
  */
-public record VibeError(String stage, Integer component, String message, Integer line, Integer column) {}
+public record AiError(String stage, Integer component, String message, Integer line, Integer column) {}

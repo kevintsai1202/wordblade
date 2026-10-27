@@ -1,0 +1,56 @@
+{
+  "keys": {
+    "rx": [
+      -80,
+      80
+    ],
+    "ry": [
+      -80,
+      80
+    ],
+    "rz": [
+      -180,
+      180
+    ],
+    "size": [
+      0.15,
+      1.5
+    ],
+    "px": [
+      -1,
+      1
+    ],
+    "py": [
+      -1,
+      1
+    ]
+  },
+  "float": {
+    "rx": [
+      0,
+      15
+    ],
+    "ry": [
+      0,
+      15
+    ],
+    "period": [
+      1,
+      10
+    ]
+  },
+  "maxKeys": 20,
+  "eases": [
+    "inOut",
+    "linear",
+    "in",
+    "out"
+  ],
+  "backgrounds": [
+    "studio",
+    "grid",
+    "blur",
+    "color"
+  ],
+  "edgeRamp": 0.6
+}
