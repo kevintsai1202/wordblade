@@ -4,6 +4,7 @@
 // 匯出時（10/31）改用 renderFrame 逐格 await，結果和預覽同一套。
 import type { Effect, Plugin, Project } from "../core/model";
 import { PluginError, type SandboxHost } from "../sandbox/sandboxHost";
+import type { ThreeHost } from "../sandbox/threeHost";
 
 /** 畫格的請求內容（不含特效本身） */
 export interface FrameRequest {
@@ -43,11 +44,19 @@ export class EffectRenderer {
   /** 特效有沒有圖層讀下層畫面（依參數快取） */
   private readonly bgCache = new Map<string, boolean | undefined>();
 
-  /** @param onFrame 新畫格回來時呼叫（讓預覽重畫） */
-  constructor(private readonly host: SandboxHost, private readonly onFrame: () => void) {}
+  /** 3D 插件的程式：插件雜湊 → 程式碼 */
+  private readonly code3D = new Map<string, string>();
 
-  /** 把專案裡還沒送進沙盒的插件送進去 */
+  /**
+   * @param host 2D 沙盒
+   * @param three 3D 沙盒
+   * @param onFrame 新畫格回來時呼叫（讓預覽重畫）
+   */
+  constructor(private readonly host: SandboxHost, private readonly three: ThreeHost, private readonly onFrame: () => void) {}
+
+  /** 把專案裡還沒送進沙盒的插件送進去（2D 送進直譯器驗證；3D 只記住程式，畫的時候才建 Worker） */
   async syncPlugins(plugins: Plugin[]): Promise<void> {
+    for (const p of plugins) if (p.kind === "3d") this.code3D.set(p.hash, String(p.component.code ?? ""));
     const fresh = plugins.filter((p) => p.kind === "2d" && !this.sent.has(p.hash));
     if (!fresh.length) return;
     for (const p of fresh) this.sent.add(p.hash);
@@ -56,6 +65,8 @@ export class EffectRenderer {
 
   /** 這個特效有沒有圖層要讀下層畫面（要的話預覽才把畫面讀回送進去）；回傳 undefined 表示還在問沙盒 */
   usesBackground(effect: Effect): boolean | undefined {
+    // 3D 一律要當格畫面（場景把它當貼圖）
+    if (effect.kind !== "anim2d") return true;
     const key = JSON.stringify(effect.params);
     if (!this.bgCache.has(key)) {
       this.bgCache.set(key, undefined);
@@ -69,23 +80,34 @@ export class EffectRenderer {
 
   /** 直接要一格（匯出用：逐格 await；background 是下層畫面，會轉移進沙盒） */
   renderFrame(effect: Effect, req: FrameRequest, background: ImageBitmap | null = null): Promise<ImageBitmap> {
+    if (effect.kind !== "anim2d") {
+      const code = this.code3D.get(effect.pluginId);
+      if (code === undefined) {
+        background?.close();
+        return Promise.reject(new PluginError("Missing 3D plugin", "load", null, null));
+      }
+      const p = effect.params as { params?: Record<string, unknown>; box?: unknown };
+      return this.three.render(effect.id, code, { ...req, params: p.params ?? {}, box: p.box ?? null, seed: 1 }, background);
+    }
     return this.host.request<ImageBitmap>("render", { instance: instanceOf(effect), ...req, background }, background ? [background] : []);
   }
 
   /**
    * 預覽：回傳目前能畫的畫格（可能是上一格），並在需要時送出新的請求。
    * snapshot：截下層畫面（合成器剛畫完影片層時同步呼叫 createImageBitmap）；只有這個特效讀 bg、而且真的要送請求時才呼叫，
-   * 沒用到 bg 的特效不讀回，省 18～36 ms。
+   * 沒用到 bg 的特效不讀回，省 18～36 ms。belowKey：下層畫面的狀態（PreviewPlayer 依畫過的圖層組）。
    */
-  frameFor(effect: Effect, req: FrameRequest, snapshot: (() => Promise<ImageBitmap>) | null): ImageBitmap | null {
-    const key = `${JSON.stringify(effect.params)}|${req.frame}|${req.duration}|${req.width}x${req.height}`;
+  frameFor(effect: Effect, req: FrameRequest, snapshot: (() => Promise<ImageBitmap>) | null, belowKey = ""): ImageBitmap | null {
+    // 讀下層畫面的特效：下層的內容（各影片的時間、載好沒）也算進鍵，下層換了（例如影片剛載好）就要重畫
+    const uses = this.usesBackground(effect);
+    const key = `${JSON.stringify(effect.params)}|${req.frame}|${req.duration}|${req.width}x${req.height}${uses ? `|${belowKey}` : ""}`;
     let slot = this.slots.get(effect.id);
     if (!slot) {
       slot = { key: "", bitmap: null, inflight: null, wanted: null, error: null };
       this.slots.set(effect.id, slot);
     }
     if (slot.key !== key && slot.inflight !== key && slot.wanted?.key !== key) {
-      const background = snapshot && this.usesBackground(effect) ? snapshot() : null;
+      const background = snapshot && uses ? snapshot() : null;
       if (slot.inflight) {
         // 前一個還沒回來：只記住最新要的那一格，被取代的截圖釋放掉
         void slot.wanted?.background?.then((b) => b.close());
@@ -126,9 +148,10 @@ export class EffectRenderer {
     return this.slots.get(effectId)?.error ?? null;
   }
 
-  /** 專案換了：不在專案裡的特效畫格釋放掉 */
+  /** 專案換了：不在專案裡的特效畫格與 3D Worker 釋放掉 */
   prune(project: Project) {
     const ids = new Set(project.effects.map((e) => e.id));
+    this.three.prune(ids);
     for (const [id, slot] of this.slots) {
       if (ids.has(id)) continue;
       slot.bitmap?.close();

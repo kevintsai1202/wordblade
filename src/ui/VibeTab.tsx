@@ -5,6 +5,7 @@ import { DEFAULT_EFFECT_SECONDS, TEMPLATES, templateEffect, type Template } from
 import type { PluginService } from "../anim/pluginService";
 import { GatewayClient, GatewayError, loadSettings, saveSettings, type GatewaySettings } from "../ai/gateway";
 import { runVibe, type VibeProgress } from "../ai/vibe";
+import { TEMPLATES_3D, builtinPlugins3D, template3DEffect, type Template3D } from "../three/builtins";
 import { FPS, type Action } from "./state";
 
 /** Vibe特效的範例描述（點一下填進輸入框；都是 10/27 實測一輪就做得出來的） */
@@ -60,6 +61,19 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
       const used = template.layers.map((l) => builtins.get(l.component)!);
       const effect = templateEffect(template, (id) => builtins.get(id)!.hash, newEffectId(), playhead);
       dispatch({ type: "commit", edits: [{ kind: "addEffect", effect, plugins: used }] });
+      dispatch({ type: "selectEffect", effectId: effect.id });
+      setError(null);
+    } catch (e) {
+      setError(String(e instanceof Error ? e.message : e));
+    }
+  };
+
+  /** 3D 範本 → 特效（3D 場景蓋住 V1），加在播放頭 */
+  const add3D = async (template: Template3D) => {
+    try {
+      const plugin = (await builtinPlugins3D()).get(template.componentId)!;
+      const effect = template3DEffect(template, plugin, newEffectId(), playhead);
+      dispatch({ type: "commit", edits: [{ kind: "addEffect", effect, plugins: [plugin] }] });
       dispatch({ type: "selectEffect", effectId: effect.id });
       setError(null);
     } catch (e) {
@@ -143,6 +157,18 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
           <button type="submit" data-testid="vibe-save-settings">Save</button>
         </form>
       )}
+
+      <h3 className="section-title">3D scenes</h3>
+      <ul className="template-grid">
+        {TEMPLATES_3D.map((t) => (
+          <li key={t.id}>
+            <button className="template-card" data-template={t.id} onClick={() => void add3D(t)} title={t.name}>
+              <span className="template-title">{t.title}</span>
+              <span className="muted">{t.name}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
 
       <h3 className="section-title">Templates</h3>
       <p className="muted">Click to add at the playhead. Drag the chip on the timeline to move or trim it.</p>

@@ -12,6 +12,7 @@ const ISOLATION_HEADERS = { "Cross-Origin-Opener-Policy": "same-origin", "Cross-
 export default defineConfig(() => ({
   plugins: [react(), samplesPlugin()],
 
+
   // 單元測試只跑 src（e2e、spikes、gateway 各有自己的測試）
   test: { include: ["src/**/*.test.ts"] },
 

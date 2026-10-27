@@ -49,7 +49,7 @@ export function PreviewPane(props: {
       if (!p) requestAnimationFrame(() => playerRef.current?.render(latest.current.playhead ?? t, false, r));
     };
     const player = new PreviewPlayer(canvasRef.current!, (m) => engine.mediaUrl(m), redraw);
-    const effects = new EffectRenderer(plugins.host, redraw);
+    const effects = new EffectRenderer(plugins.host, plugins.three, redraw);
     player.setEffectRenderer(effects, FPS);
     playerRef.current = player;
     effectsRef.current = effects;
