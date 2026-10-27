@@ -2,9 +2,10 @@
 # 跑 e2e/asr-live.spec.ts（samples/lecture-a.en.mp4 轉錄、字幕起點對 SRT）→ 收掉閘道與資料庫。
 # 金鑰從 repo 的 .env 讀進這個行程的環境變數，不印出、不寫檔；權杖明文也只放環境變數。
 # 用法（repo 根目錄，PowerShell 7）：pwsh scripts/asr/live-local.ps1 [-Sample samples/demo-2min.mp4]
+#   -MaxSegment 每段最長幾秒（預設由程式決定）
 #   -Sample 換素材（預設 samples/lecture-a.en.mp4）；素材旁有 .truth.json（scripts/demo-sample/make.mjs 產生）時另外比對語助詞與重講
 # 紀錄：logs/asr-live.log（閘道的輸出另存 logs/asr-live-gateway.log）；結果：output/asr-live.json
-param([string]$Sample)
+param([string]$Sample, [int]$MaxSegment)
 $ErrorActionPreference = 'Stop'
 
 $Root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
@@ -62,13 +63,14 @@ try {
   $env:WORDBLADE_LIVE_GATEWAY = "http://localhost:$Port"
   $env:WORDBLADE_LIVE_TOKEN = $token
   if ($Sample) { $env:WORDBLADE_ASR_SAMPLE = (Resolve-Path $Sample).Path }
+  if ($MaxSegment) { $env:WORDBLADE_ASR_MAX_SEGMENT = "$MaxSegment" }
   Push-Location $Root
   pnpm playwright test e2e/asr-live.spec.ts 2>&1 | ForEach-Object { Write-Log $_ }
   Pop-Location
   $usage = docker exec $Db psql -U wordblade -d wordblade -t -c "SELECT route, COUNT(*), SUM(units) FROM usage_log GROUP BY route" | Out-String
   Write-Log "用量：$($usage.Trim())"
 } finally {
-  Remove-Item Env:WORDBLADE_LIVE_TOKEN, Env:WORDBLADE_LIVE_GATEWAY, Env:WORDBLADE_ASR_SAMPLE, Env:META_API_KEY -ErrorAction SilentlyContinue
+  Remove-Item Env:WORDBLADE_LIVE_TOKEN, Env:WORDBLADE_LIVE_GATEWAY, Env:WORDBLADE_ASR_SAMPLE, Env:WORDBLADE_ASR_MAX_SEGMENT, Env:META_API_KEY -ErrorAction SilentlyContinue
   if ($gateway) { Stop-Process -Id $gateway.Id -ErrorAction SilentlyContinue }
   docker stop $Db *> $null
   Write-Log '已收掉閘道與臨時資料庫'

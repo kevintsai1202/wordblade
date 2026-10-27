@@ -1,0 +1,51 @@
+{
+ "note": "2026-10-27 Muse ASR 對 samples/demo-2min.mp4（模擬 D30 短片）每段 60 秒的結果：turns 已換成素材時間（秒）",
+ "maxSegment": 60,
+ "turns": [
+  {
+   "text": "Hey everyone, in this short video, I'm going to build a tiny command line tool that summarizes your meeting notes with an AI model. It takes um about two minutes so let's jump right in. Here's the kind of notes I mean just a few bullet points from our weekly sync nothing fancy um just plain markdown that anyone on the team can write.",
+   "start": 0.38,
+   "end": 21.58
+  },
+  {
+   "text": "First I'll create a new folder and install two packages the OpenAI client and Dendov. Okay that's done.",
+   "start": 21.74,
+   "end": 29.42
+  },
+  {
+   "text": "Next, I'll open the .env file and paste my API key here. You know, you should never hard code a key in your source code. And please don't share it on screen like I just did.",
+   "start": 30.3,
+   "end": 41.74
+  },
+  {
+   "text": "Now let's write the main script. We load the key with dondov and read the notes file from the first argument. Then we call the chat endpoint with with the wrong sorry let me say that again. Then we call the chat completions endpoint with the model name and a short system prompt.",
+   "start": 42.64,
+   "end": 59.519999999999996
+  },
+  {
+   "text": "Finally we print the summary.",
+   "start": 59.92,
+   "end": 62
+  },
+  {
+   "text": "Let's try it on a real meeting. real meeting. And there it is three bullet points and a list of action items. That took about four seconds which is fast fast enough for me. One more One more thing if the file is missing the script crashes with a pretty ugly stack trace.",
+   "start": 62.879999999999995,
+   "end": 80.08
+  },
+  {
+   "text": "So let's So let's add a small error handler that prints a friendly message instead.",
+   "start": 80.08,
+   "end": 83.44
+  },
+  {
+   "text": "And now, when I run it again with the wrong file file name, we get one clear line. Let me quickly recap. We installed two packages, stored the key in a .env file, and called the chat completions endpoint with our notes. In the next video, I'll add streaming, so the summary shows up word by word.",
+   "start": 83.93,
+   "end": 103.53
+  },
+  {
+   "text": "Thanks for watching watching, and, you know, see you next time.",
+   "start": 103.53,
+   "end": 107.13000000000001
+  }
+ ]
+}

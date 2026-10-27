@@ -31,7 +31,7 @@ describe("transcribeMedia", () => {
       return { transcript: `part ${wav[0]}`, audioDurationMs: 0, turns: [{ transcript: `part ${wav[0]}`, startMs: 1000, endMs: 3000, speaker: "0" }] };
     };
     const progress: number[] = [];
-    const result = await transcribeMedia(media, e, extract, send, (p) => progress.push(p.done), { parallel: 2 });
+    const result = await transcribeMedia(media, e, extract, send, (p) => progress.push(p.done), { parallel: 2, maxSegment: 180 });
     expect(asked).toHaveLength(3);
     expect(maxInFlight).toBeLessThanOrEqual(2);
     expect(result.segments).toBe(3);

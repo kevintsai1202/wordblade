@@ -1,7 +1,8 @@
 // 詞級時間重建（spec §5.2 步驟 3）：Muse ASR 的 DIARIZATION 只有 turn 級起訖，這裡用音量包絡補出每個詞的時間。
 // 1. 包絡找出有聲段（門檻依整支素材的音量分布，短於 0.25 秒的停頓合併）；
 // 2. turn 的文字切成詞（英文以空白分、標點黏前一個詞；中日文逐字）；
-// 3. 詞依字數比例分配在有聲段上（停頓不分給任何詞），跨過停頓的詞界吸附到停頓兩側，頭尾吸附到實際開口與收尾。
+// 3. 每個有聲段分到一串連續的詞（動態規劃，讓各段長度與詞數推估的長度最吻合），段內依字數比例分配；
+//    停頓不分給任何詞，所以詞的頭尾自然落在實際開口與收尾。
 import type { Envelope } from "../audio/envelope";
 import type { Seconds, Word } from "../core/model";
 
@@ -86,46 +87,64 @@ function weight(word: string): number {
   return Math.max(1, bare.length + (CJK.test(bare) ? 0 : 1));
 }
 
-/** 把 n 個詞依權重放到有聲段上，回傳每個詞的起訖 */
-function place(tokens: string[], segs: Voiced[]): Voiced[] {
-  const n = tokens.length;
-  const weights = tokens.map(weight);
-  const total = weights.reduce((a, b) => a + b, 0);
-  /** cum[j]：第 j 個詞界的位置（0～1） */
-  const cum = [0];
-  for (const w of weights) cum.push(cum[cum.length - 1] + w / total);
-  const lengths = segs.map((s) => s.end - s.start);
-  const L = lengths.reduce((a, b) => a + b, 0);
-  // 停頓 k（第 k 段與第 k+1 段之間）的位置；吸附到最接近、還沒用過的詞界
-  const snapped = new Map<number, number>();
-  let acc = 0;
-  let lastJ = 0;
-  for (let k = 0; k < segs.length - 1; k++) {
-    acc += lengths[k] / L;
-    let bestJ = -1;
-    for (let j = lastJ + 1; j < n; j++) if (bestJ < 0 || Math.abs(cum[j] - acc) < Math.abs(cum[bestJ] - acc)) bestJ = j;
-    if (bestJ < 0) break;
-    snapped.set(bestJ, k);
-    lastJ = bestJ;
-  }
-  /** 位置 f（0～1）在有聲段上的時間 */
-  const at = (f: number): Seconds => {
-    let x = f * L;
-    for (let k = 0; k < segs.length; k++) {
-      if (x <= lengths[k] || k === segs.length - 1) return segs[k].start + Math.min(x, lengths[k]);
-      x -= lengths[k];
+/**
+ * 決定每個有聲段分到哪些詞（動態規劃）：每段分到一串連續的詞（可以是 0 個，例如換氣、雜音），
+ * 讓「段的實際長度」與「這些詞依平均語速該有的長度」的差距平方和（÷ 段長）最小。
+ * 回傳 bounds：第 i 段分到詞 [bounds[i], bounds[i+1])。
+ * 原本「整個 turn 依字數比例攤、停頓吸附到最近的詞界」在長 turn（Muse 實測一個 turn 85 秒、幾乎沒有標點）會一路累積誤差，
+ * 句首提早 1～2.7 秒；改成整體最佳化後各段各自對齊。
+ */
+function assign(weights: number[], lengths: number[]): number[] {
+  const n = weights.length;
+  const m = lengths.length;
+  const prefix = [0];
+  for (const w of weights) prefix.push(prefix[prefix.length - 1] + w);
+  /** 語速：每秒幾個權重單位 */
+  const rate = prefix[n] / lengths.reduce((a, b) => a + b, 0);
+  /** 第 i 段放詞 [k, j) 的代價 */
+  const cost = (i: number, k: number, j: number) => {
+    const diff = lengths[i] - (prefix[j] - prefix[k]) / rate;
+    return (diff * diff) / Math.max(lengths[i], 0.05);
+  };
+  // best[i][j]：前 i 段放了前 j 個詞的最小代價；from[i][j]：第 i 段從哪個詞開始
+  const best = Array.from({ length: m + 1 }, () => new Float64Array(n + 1).fill(Infinity));
+  const from = Array.from({ length: m + 1 }, () => new Int32Array(n + 1));
+  best[0][0] = 0;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 0; j <= n; j++) {
+      for (let k = 0; k <= j; k++) {
+        if (best[i - 1][k] === Infinity) continue;
+        const c = best[i - 1][k] + cost(i - 1, k, j);
+        if (c < best[i][j]) {
+          best[i][j] = c;
+          from[i][j] = k;
+        }
+      }
     }
-    return segs[segs.length - 1].end;
-  };
-  /** 詞界 j 的時間（side：這個詞界是某個詞的結尾或下一個詞的開頭） */
-  const boundary = (j: number, side: "start" | "end"): Seconds => {
-    if (j === 0) return segs[0].start;
-    if (j === n) return segs[segs.length - 1].end;
-    const k = snapped.get(j);
-    if (k !== undefined) return side === "end" ? segs[k].end : segs[k + 1].start;
-    return at(cum[j]);
-  };
-  return tokens.map((_, i) => ({ start: boundary(i, "start"), end: boundary(i + 1, "end") }));
+  }
+  const bounds = new Array<number>(m + 1);
+  bounds[m] = n;
+  for (let i = m; i > 0; i--) bounds[i - 1] = from[i][bounds[i]];
+  return bounds;
+}
+
+/** 把詞放到有聲段上：先用 assign 決定每段分到哪些詞，段內再依字數比例分配；回傳每個詞的起訖 */
+function place(tokens: string[], segs: Voiced[]): Voiced[] {
+  const weights = tokens.map(weight);
+  const lengths = segs.map((s) => s.end - s.start);
+  const bounds = segs.length > 1 ? assign(weights, lengths) : [0, tokens.length];
+  const out: Voiced[] = new Array(tokens.length);
+  for (let i = 0; i < segs.length; i++) {
+    const [k, j] = [bounds[i], bounds[i + 1]];
+    const total = weights.slice(k, j).reduce((a, b) => a + b, 0);
+    let acc = 0;
+    for (let w = k; w < j; w++) {
+      const start = segs[i].start + (lengths[i] * acc) / total;
+      acc += weights[w];
+      out[w] = { start, end: segs[i].start + (lengths[i] * acc) / total };
+    }
+  }
+  return out;
 }
 
 /** 秒數取到毫秒 */

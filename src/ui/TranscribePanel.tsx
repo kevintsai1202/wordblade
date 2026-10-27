@@ -14,6 +14,16 @@ const CONSENT_KEY = "wordblade.consent.asr";
 /** 涵蓋率低於這個值就提醒可能漏段 */
 const LOW_COVERAGE = 0.9;
 
+/** 每段最長幾秒：預設由 transcribeMedia 決定；實測時可用 localStorage `wordblade.asr.maxSegment` 改 */
+function maxSegment(): number | undefined {
+  try {
+    const v = Number(localStorage.getItem("wordblade.asr.maxSegment"));
+    return v > 0 ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** 讀同意狀態 */
 function hasConsent(): boolean {
   try {
@@ -54,7 +64,12 @@ export function TranscribePanel({ project, engine, envelopes, dispatch }: { proj
         (m, s, e) => engine.extractAsrAudio(m, s, e),
         (wav) => gateway.transcribe(wav),
         (p) => set({ kind: "running", ...p }),
+        { maxSegment: maxSegment() },
       );
+      // 實測腳本（e2e/asr-live.spec.ts）讀 Muse 的原始 turns：只在 localStorage `wordblade.debug` 為 "1" 時放到 window
+      try {
+        if (localStorage.getItem("wordblade.debug") === "1") (window as unknown as { __wordbladeAsr?: unknown }).__wordbladeAsr = { mediaId: media.id, segments: result.segments, turns: result.turns };
+      } catch { /* 沒有 localStorage 就略過 */ }
       dispatch({ type: "commit", edits: [{ kind: "setWords", mediaId: media.id, words: result.words }] });
       const seconds = ((performance.now() - started) / 1000).toFixed(1);
       set({

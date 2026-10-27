@@ -241,7 +241,9 @@
 - 桌面（`src/asr/`）：`splitAtSilence` 依音量包絡在無聲處切成 ≤ 180 秒的段（比 §5.2 原訂的 9 分鐘短：每段十幾秒就回來、3 段平行更快，也避開代理逾時）；`Engine.extractAsrAudio` 抽 16 kHz 單聲道 WAV（Windows 版 Rust `asr_pcm` 用 ffmpeg 出 s16le 再補檔頭，網頁版 mediabunny 解碼＋盒狀濾波降取樣）；`transcribeMedia` 最多 3 段平行、503 重試；`turnsToWords` 依包絡重建詞級時間（標點黏前一個詞、中日文逐字、跨過停頓的詞界吸附到停頓兩側）；`coverage` 算 turns 涵蓋多少有聲時間，低於 90% 在介面提醒可能漏段。結果用 `setWords` 寫進專案（一筆可復原的編輯，指到舊詞的字幕斷點一起刪掉）。
 - 介面：逐字稿頁籤上方每支有聲素材一顆 Transcribe（第一次問上傳同意；素材還在算音量包絡時停用）。完整的逐字稿面板 11/1 做。
 - 實測（`pwsh scripts/asr/live-local.ps1`：本機閘道＋臨時資料庫＋一次性權杖，跑 `e2e/asr-live.spec.ts`）：`samples/lecture-a.en.mp4`（282 秒英文 TTS）切 2 段、26.4 秒轉完、559 詞、沒有漏段提醒；字幕句子起點對 SRT 的誤差（20 句對上 13 句）平均 0.109 秒、中位數 0.062、p90 0.133。這是 TTS、句級的近似；§5.2 的詞級 ≤ 0.15 秒驗收等 D30 的真人錄影。閒置的 1 秒靜音 Muse 會幻聽出「Yeah」。
-- 還沒做：keywords 從講稿抽術語（介面還沒有講稿輸入）、DELTA 校正（等真人錄影量誤差再決定）。
+- **每段 60 秒**（10/27 實測後由 180 秒改）：詞級時間的誤差主要跟 Muse 一個 turn 多長有關——每段 180 秒時 Muse 回了一個 85 秒、幾乎沒有標點的 turn，句首一致提早 1.5～2.3 秒（依字數比例攤時間，縮寫字如 OpenAI、dotenv 唸得比字數長，被吞掉的 uh 也讓後面整批往前；改成動態規劃分配也救不回來，因為只有 turn 的頭尾是錨點）；60 秒時 turn 最長約 21 秒，模擬短片 25 句第一個詞的起點平均誤差 0.19 秒、中位數 0.06、19 句在 0.3 秒內；30 秒切點太多反而 0.36 秒。lecture-a 改 60 秒後 15.4 秒轉完（原 26.4 秒）、句子起點平均誤差 0.057 秒。詞分配改成動態規劃（每個有聲段分到一串連續的詞，讓段長與詞數推估的長度最吻合）。回歸測試：`src/asr/demoAlignment.test.ts`（真實 Muse 回應＋真實音量包絡＋正確答案）。
+- **模擬 D30 短片**（`node scripts/demo-sample/make.mjs`，108 秒英文 TTS＋仿 VS Code 螢幕錄影，附 `demo-2min.truth.json`）的 Muse 實測：**uh 全被吞掉（0/3）**、um 留 2～3/4、you know 2/2——§5.16 一鍵去贅詞**一定要**做「有聲音卻沒有對應文字的短片段」的聲音退路，不能只靠 ASR 文字；講錯重講的句子有轉出來。Muse 會**疊字**（takes takes、on on、a a、is is、line line、next next，TTS 沒有疊），不要自動合併（真人的「with, with the wrong」是真的），留給改字即剪與 AI 導演處理；長 turn 幾乎沒有標點，字幕斷句靠停頓；`dotenv` 被聽成 Daemdov／Dondov，是 keywords 的實際用途。
+- 還沒做：keywords 從講稿抽術語（介面還沒有講稿輸入）、DELTA 校正（詞級 ≤ 0.15 秒的驗收等真人錄影；做不到時走 DELTA）。
 
 ### 5.3 SAM 3.1 遮罩（P1-5）
 

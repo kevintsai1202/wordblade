@@ -25,13 +25,18 @@ export interface TranscribeResult {
   segments: number;
   /** turns 涵蓋了多少比例的有聲時間（低於 0.9 要提醒使用者可能漏段） */
   coverage: number;
+  /** Muse 回的各段話（已換成素材時間；診斷與回歸測試用） */
+  turns: Turn[];
 }
 
 /** 選項 */
 export interface TranscribeOptions {
   /** 同時送幾段（spec：最多 3） */
   parallel?: number;
-  /** 每段最長幾秒 */
+  /**
+   * 每段最長幾秒（預設 60）：詞級時間的誤差主要跟 Muse 一個 turn 多長有關，段越長 turn 越長
+   * （2026-10-27 實測：180 秒時一個 turn 85 秒、句首誤差 1.5～2.3 秒；60 秒平均 0.19 秒；30 秒切點太多反而 0.36 秒）
+   */
   maxSegment?: number;
   /** 閘道忙時重試的等待基數（毫秒） */
   retryDelayMs?: number;
@@ -50,7 +55,9 @@ export async function transcribeMedia(
   options: TranscribeOptions = {},
 ): Promise<TranscribeResult> {
   const parallel = options.parallel ?? 3;
-  const segments = splitAtSilence(env, media.duration, options.maxSegment ?? 180);
+  const max = options.maxSegment ?? 60;
+  // 在上限前 1/3 的範圍內找無聲處（最多 30 秒）
+  const segments = splitAtSilence(env, media.duration, max, Math.min(30, max / 3));
   const turns: Turn[][] = segments.map(() => []);
   let next = 0;
   let done = 0;
@@ -86,5 +93,5 @@ export async function transcribeMedia(
   await Promise.all(Array.from({ length: Math.min(parallel, segments.length) }, worker));
 
   const all = turns.flat().sort((a, b) => a.start - b.start);
-  return { words: turnsToWords(media.id, all, env), segments: segments.length, coverage: coverage(all, env, 0, media.duration) };
+  return { words: turnsToWords(media.id, all, env), segments: segments.length, coverage: coverage(all, env, 0, media.duration), turns: all };
 }
