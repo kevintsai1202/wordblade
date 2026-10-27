@@ -17,6 +17,7 @@ import { InspectorTab } from "./ui/InspectorTab";
 import { ExportTab } from "./ui/ExportTab";
 import { TranscribePanel } from "./ui/TranscribePanel";
 import { CaptionStyleTab } from "./ui/CaptionStyleTab";
+import { TranscriptTab } from "./ui/TranscriptTab";
 import "./App.css";
 
 /** 網址帶 ?demo=1 就直接開示範專案（e2e 用）；否則開空專案 */
@@ -52,7 +53,8 @@ function App() {
   // Resolve 風格熱鍵；焦點在輸入框時不攔
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // 焦點在輸入框時不攔；元件自己處理過的鍵（例如逐字稿的 Delete 剪字）也不攔
+      if (e.defaultPrevented || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       const action = keyToAction(e, state);
       if (action) {
         e.preventDefault();
@@ -98,13 +100,11 @@ function App() {
       <main className="workspace">
         <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId} dispatch={dispatch} />
         <EditPanel
-          captions={captions}
-          playhead={state.playhead}
-          dispatch={dispatch}
           initialTab={START_WITH_DEMO ? "transcript" : "media"}
           tabs={{
             media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
             vibe: <VibeTab plugins={plugins} playhead={state.playhead} dispatch={dispatch} />,
+            transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,

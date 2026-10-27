@@ -64,6 +64,12 @@ button:disabled { opacity: 0.4; cursor: default; }
 .transcript li:hover { background: var(--panel-2); }
 .transcript li.active { background: #263248; box-shadow: inset 3px 0 var(--accent); }
 .transcript .timecode { color: var(--muted); flex: none; }
+.transcript:focus { outline: none; }
+.transcript .word { border-radius: 3px; padding: 0 1px; }
+.transcript .word:hover { background: #2e3440; }
+.transcript .word.playing { color: var(--accent); }
+.transcript .word.selected { background: #3d5a99; color: #fff; }
+.transcript .word-edit { font: inherit; min-width: 8em; padding: 0 2px; }
 
 /* 下方時間軸 */
 .timeline { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-top: 1px solid var(--line); }

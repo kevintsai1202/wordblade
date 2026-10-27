@@ -5,6 +5,7 @@
 //    停頓不分給任何詞，所以詞的頭尾自然落在實際開口與收尾。
 import type { Envelope } from "../audio/envelope";
 import type { Seconds, Word } from "../core/model";
+import { CJK, tokenize } from "../core/text";
 
 /** 一段話（素材時間） */
 export interface Turn {
@@ -24,10 +25,8 @@ const MIN_SILENCE: Seconds = 0.25;
 /** 短於這個長度的有聲段捨去（雜音） */
 const MIN_VOICED: Seconds = 0.1;
 
-/** 中日韓文字（逐字成詞） */
-const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
-/** 標點（黏到前一個詞） */
-const PUNCT = /^[\p{P}\p{S}]+$/u;
+// 分詞放在 core/text.ts（改字即剪也要用），這裡沿用並轉出
+export { tokenize };
 
 /** 有聲的門檻：依整支素材的音量分布（底噪 10 百分位與音量 95 百分位之間的 15%），至少 0.005 */
 export function levelThreshold(env: Envelope): number {
@@ -60,25 +59,6 @@ export function voicedSegments(env: Envelope, a: Seconds, b: Seconds, threshold:
     else merged.push({ ...v });
   }
   return merged.filter((v) => v.end - v.start >= MIN_VOICED);
-}
-
-/** 文字切成詞：英文以空白分，標點黏前一個詞（開頭的標點黏後一個）；中日韓逐字 */
-export function tokenize(text: string): string[] {
-  // 先拆出單字：中日韓字元各自一個，其他連續的非空白字元一個
-  const pieces = text.match(new RegExp(`${CJK.source}|[^\\s${CJK.source.slice(1, -1)}]+`, "gu")) ?? [];
-  const out: string[] = [];
-  let lead = "";
-  for (const p of pieces) {
-    if (PUNCT.test(p)) {
-      if (out.length) out[out.length - 1] += p;
-      else lead += p;
-      continue;
-    }
-    out.push(lead + p);
-    lead = "";
-  }
-  if (lead && out.length) out[out.length - 1] += lead;
-  return out;
 }
 
 /** 詞的權重：去掉標點後的字數（至少 1），英文加 1 當作字間空白 */

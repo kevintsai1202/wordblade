@@ -30,6 +30,8 @@ const UNITS = new Set(["mb", "gb", "kb", "tb", "%", "s", "ms", "px", "fps", "hz"
 /** 換算到時間軸的詞 */
 export interface TimelineWord {
   id: string;
+  /** 詞所在的 V1 片段（同一支素材放兩次時，同一個詞 id 會出現兩次，用它區分） */
+  clipId?: string;
   text: string;
   start: Seconds;
   end: Seconds;
@@ -62,6 +64,7 @@ export function timelineWords(project: Project): TimelineWord[] {
       if (w.mediaId !== clip.mediaId || w.start < clip.srcIn || w.start >= clip.srcOut) continue;
       out.push({
         id: w.id,
+        clipId: clip.id,
         text: w.text,
         start: sourceToTimeline(clip, w.start)!,
         end: sourceToTimeline(clip, Math.min(w.end, clip.srcOut))!,

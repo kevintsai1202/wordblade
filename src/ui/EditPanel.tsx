@@ -1,6 +1,4 @@
-import { useState, type Dispatch, type ReactNode } from "react";
-import type { Caption } from "../core/captions";
-import { formatTimecode, type Action } from "./state";
+import { useState, type ReactNode } from "react";
 
 /** 右側編輯面板的頁籤，依 §5.13（D33）分四組，組之間畫分隔線 */
 const TAB_GROUPS: { id: string; label: string }[][] = [
@@ -10,25 +8,11 @@ const TAB_GROUPS: { id: string; label: string }[][] = [
   [{ id: "export", label: "Export" }, { id: "publish", label: "Publish Kit" }],
 ];
 
-/** 逐字稿頁籤：依字幕分段列出，點一段把播放頭移過去，播放頭所在的那段高亮 */
-function TranscriptTab({ captions, playhead, dispatch }: { captions: Caption[]; playhead: number; dispatch: Dispatch<Action> }) {
-  return (
-    <ol className="transcript">
-      {captions.map((c) => (
-        <li key={c.id} className={playhead >= c.start && playhead < c.end ? "active" : ""} onClick={() => dispatch({ type: "seek", time: c.start })}>
-          <span className="timecode">{formatTimecode(c.start).slice(3)}</span>
-          <span className="caption-text">{c.lines.join(" ")}</span>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 /**
  * 右側編輯面板（D33）。
- * tabs：由 App 組好的頁籤內容（頁籤 id → 內容，例如 media、vibe；transcriptTools 放在逐字稿上方）；initialTab：一開始打開的頁籤（空專案先開素材頁籤）
+ * tabs：由 App 組好的頁籤內容（頁籤 id → 內容，例如 transcript、media、vibe；transcriptTools 放在逐字稿上方）；initialTab：一開始打開的頁籤（空專案先開素材頁籤）
  */
-export function EditPanel({ captions, playhead, dispatch, tabs, initialTab }: { captions: Caption[]; playhead: number; dispatch: Dispatch<Action>; tabs: Record<string, ReactNode>; initialTab: string }) {
+export function EditPanel({ tabs, initialTab }: { tabs: Record<string, ReactNode>; initialTab: string }) {
   /** 目前打開的頁籤 */
   const [tab, setTab] = useState(initialTab);
   const current = TAB_GROUPS.flat().find((t) => t.id === tab)!;
@@ -46,7 +30,7 @@ export function EditPanel({ captions, playhead, dispatch, tabs, initialTab }: { 
       </nav>
       <div className="tab-pane">
         {tab === "transcript"
-          ? <>{tabs.transcriptTools}<TranscriptTab captions={captions} playhead={playhead} dispatch={dispatch} /></>
+          ? <>{tabs.transcriptTools}{tabs.transcript}</>
           : tabs[tab] ?? <p className="muted placeholder">{current.label} — coming soon</p>}
       </div>
     </aside>
