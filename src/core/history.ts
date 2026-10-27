@@ -1,8 +1,8 @@
 // 編輯與復原／重做（spec §4）：編輯是資料（Edit），commit 一次可以帶多個編輯但只留一筆歷史，
 // 例如「去贅詞 Remove all」、AI 導演採用一條建議，都只要一次 Ctrl+Z（§5.11、§5.16）。
 // 歷史存的是整份專案的快照；timeline 的函式用 Immer 做結構共享，快照之間沒改到的部分是同一個物件。
-import { addEffect, deleteEffect, moveEffect, setEffectParams, trimEffect } from "./effects";
-import type { Effect, Plugin, Project, Seconds } from "./model";
+import { addEffect, deleteEffect, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
+import type { CameraKey, Effect, Plugin, Project, Seconds } from "./model";
 import { cutByWords, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip } from "./timeline";
 
 /** 一個編輯動作 */
@@ -18,7 +18,8 @@ export type Edit =
   | { kind: "moveEffect"; effectId: string; start: Seconds }
   | { kind: "trimEffect"; effectId: string; edge: "in" | "out"; t: Seconds }
   | { kind: "deleteEffect"; effectId: string }
-  | { kind: "setEffectParams"; effectId: string; params: Record<string, unknown> };
+  | { kind: "setEffectParams"; effectId: string; params: Record<string, unknown> }
+  | { kind: "setCameraKeys"; effectId: string; keys: CameraKey[] };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -35,6 +36,7 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "trimEffect": return trimEffect(project, edit.effectId, edit.edge, edit.t);
     case "deleteEffect": return deleteEffect(project, edit.effectId);
     case "setEffectParams": return setEffectParams(project, edit.effectId, edit.params);
+    case "setCameraKeys": return setEffectCameraKeys(project, edit.effectId, edit.keys);
   }
 }
 

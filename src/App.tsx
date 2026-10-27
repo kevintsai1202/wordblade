@@ -102,7 +102,7 @@ function App() {
           tabs={{
             media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
             vibe: <VibeTab plugins={plugins} playhead={state.playhead} dispatch={dispatch} />,
-            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
+            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
           }}
         />
       </main>

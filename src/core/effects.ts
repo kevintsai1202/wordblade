@@ -1,6 +1,6 @@
 // 特效區段的編輯（spec §5.7、§4 Effect）：純函式，用 Immer 做結構共享；都可以復原（history 的 Edit）。
 import { produce } from "immer";
-import type { Effect, Plugin, Project, Seconds } from "./model";
+import type { CameraKey, Effect, Plugin, Project, Seconds } from "./model";
 import { roundTime } from "./time";
 
 /** 特效最短長度（秒） */
@@ -52,6 +52,13 @@ export function deleteEffect(project: Project, id: string): Project {
 export function setEffectParams(project: Project, id: string, params: Record<string, unknown>): Project {
   return editEffect(project, id, (e) => {
     e.params = params;
+  });
+}
+
+/** 換掉 3D 場景的鏡頭關鍵幀（spec §5.8；依時間排序，t 是相對區段開頭的秒數） */
+export function setEffectCameraKeys(project: Project, id: string, keys: CameraKey[]): Project {
+  return editEffect(project, id, (e) => {
+    e.cameraKeys = [...keys].sort((a, b) => a.t - b.t);
   });
 }
 

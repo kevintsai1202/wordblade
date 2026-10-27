@@ -142,3 +142,78 @@ test("吉祥物：走到目標框旁邊；拖目標框，吉祥物跟著換位�
   await expect.poll(async () => (await orange()).x, { timeout: 30_000 }).toBeGreaterThan(before.x + 0.15);
   await page.screenshot({ path: "output/ui-shots/three-mascot.png" });
 });
+
+/** 匯入 talk.mp4 放上 V1，再從 Vibe 頁籤加一個 3D 範本 */
+async function sceneWithVideo(page: Page, template: string) {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/");
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByTestId("import-media").click();
+  await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
+  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
+  await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
+  await page.locator('[data-tab="vibe"]').click();
+  await page.locator(`[data-template="${template}"]`).click();
+  await expect(page.locator(".effect-chip")).toHaveCount(1);
+}
+
+/** 預覽畫面裡「教室牆面」（米白：亮、紅略高於藍）像素的比例 */
+async function wallRatio(page: Page): Promise<number> {
+  return page.getByTestId("preview-canvas").evaluate((c: HTMLCanvasElement) => {
+    const p = document.createElement("canvas");
+    p.width = 160;
+    p.height = 90;
+    const ctx = p.getContext("2d")!;
+    ctx.drawImage(c, 0, 0, 160, 90);
+    const d = ctx.getImageData(0, 0, 160, 90).data;
+    let hit = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const [r, g, b] = [d[i], d[i + 1], d[i + 2]];
+      if (r > 170 && g > 160 && b > 130 && r - b > 8 && r - b < 70) hit++;
+    }
+    return hit / (160 * 90);
+  });
+}
+
+test("教室黑板與攝影棚：同一個 3D 場景元件換場景，Inspector 可以切換", async ({ page }) => {
+  test.setTimeout(120_000);
+  await sceneWithVideo(page, "classroom-board");
+  // 中段（2 秒）：看得到教室的米白牆
+  await page.locator(".ruler").click({ position: { x: 40, y: 5 } });
+  await expect.poll(() => wallRatio(page), { timeout: 60_000 }).toBeGreaterThan(0.08);
+  await page.screenshot({ path: "output/ui-shots/three-classroom.png" });
+  // Inspector 換成攝影棚：米白牆不見，換成暗色背景
+  await page.locator(".effect-chip").click();
+  await page.locator('[data-tab="inspector"]').click();
+  await page.locator('[data-param="scene"] select').selectOption("studio");
+  await expect.poll(() => wallRatio(page), { timeout: 30_000 }).toBeLessThan(0.01);
+  await expect.poll(() => woodRatio(page), { timeout: 30_000 }).toBeLessThan(0.02);
+  await page.screenshot({ path: "output/ui-shots/three-studio.png" });
+});
+
+test("鏡頭關鍵幀：在播放頭加一個關鍵幀、把鏡頭推到螢幕前；刪掉回到預設運鏡", async ({ page }) => {
+  test.setTimeout(120_000);
+  await sceneWithVideo(page, "desk-reveal");
+  await page.locator(".ruler").click({ position: { x: 40, y: 5 } });
+  await expect.poll(() => woodRatio(page), { timeout: 60_000 }).toBeGreaterThan(0.1);
+
+  await page.locator(".effect-chip").click();
+  await page.locator('[data-tab="inspector"]').click();
+  const editor = page.getByTestId("camera-keys");
+  await editor.getByTestId("camera-key-add").click();
+  const key = editor.locator('[data-key-index="0"]');
+  await expect(key).toHaveCount(1);
+  // 關鍵幀時間＝播放頭（區段從 0 秒開始）
+  expect(Number(await key.locator('[data-key-field="t"]').inputValue())).toBeGreaterThan(1);
+  // 鏡頭擺到螢幕正前方 2.8 單位、看螢幕中心：螢幕填滿畫面，看不到桌子
+  await key.locator('[data-key-field="position-1"]').fill("1.25");
+  await key.locator('[data-key-field="position-2"]').fill("2.8");
+  await key.locator('[data-key-field="target-1"]').fill("1.25");
+  await expect.poll(() => woodRatio(page), { timeout: 30_000 }).toBeLessThan(0.02);
+  await page.screenshot({ path: "output/ui-shots/three-camera-keys.png" });
+
+  // 刪掉關鍵幀：回到預設運鏡，又看得到桌子
+  await editor.getByTestId("camera-key-delete").click();
+  await expect(editor.locator(".camera-key")).toHaveCount(0);
+  await expect.poll(() => woodRatio(page), { timeout: 30_000 }).toBeGreaterThan(0.1);
+});

@@ -139,6 +139,8 @@ button:disabled { opacity: 0.4; cursor: default; }
 .param-group { border: 1px solid rgba(255,255,255,0.12); border-radius: 4px; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
 .param-field { display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: center; gap: 6px; }
 .param-field input[type="number"], .param-field input[type="text"], .param-field select { width: 100%; min-width: 0; }
+.camera-key { display: flex; flex-direction: column; gap: 4px; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.12); }
+.vec3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
 .box-overlay { position: absolute; border: 1px dashed #4fc3f7; box-shadow: 0 0 0 1px rgba(0,0,0,0.5); cursor: move; z-index: 2; }
 .box-handle { position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: #4fc3f7; border: 1px solid #000; cursor: nwse-resize; }
 .vibe-tab { display: flex; flex-direction: column; gap: 6px; }

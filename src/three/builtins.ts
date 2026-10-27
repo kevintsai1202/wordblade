@@ -7,6 +7,7 @@ import floatingBoardCode from "./builtins/floatingBoard.js?raw";
 import mascotCode from "./builtins/mascot.js?raw";
 import boardGeometryCode from "./boardGeometry.js?raw";
 import plane3dMathCode from "./vendor/plane3d_math.js?raw";
+import cameraPathCode from "./cameraPath.js?raw";
 
 /** 板子姿勢關鍵幀（原專案字導字演的格式；角度用度、size＝板寬佔畫面寬、px／py 以畫面寬高為 1） */
 export interface BoardKey {
@@ -40,14 +41,18 @@ export interface Component3D {
 /** 內建 3D 元件 */
 export const COMPONENTS_3D: Component3D[] = [
   {
-    id: "desk-screen", kind: "3d", effectKind: "scene3d", name: "Screen on a desk",
-    description: "The video plays on a monitor on a wooden desk; starts and ends full-frame so it cuts in seamlessly",
+    id: "desk-screen", kind: "3d", effectKind: "scene3d", name: "Screen in a scene",
+    description: "The video plays on a screen in a 3D scene (desk, classroom board or studio); starts and ends full-frame so it cuts in seamlessly",
     params: {
-      motion: { type: "enum", values: ["reveal", "push", "orbit"], labels: ["Pull back and return", "Slow push in", "Orbit"], default: "reveal", label: "Camera" },
+      scene: { type: "enum", values: ["desk", "classroom", "studio"], labels: ["Wooden desk", "Classroom board", "Studio"], default: "desk", label: "Scene" },
+      motion: { type: "enum", values: ["reveal", "push", "orbit"], labels: ["Pull back and return", "Slow push in", "Orbit"], default: "reveal", label: "Camera (no keyframes)" },
       tilt: { type: "number", min: 0, max: 20, step: 1, default: 7, label: "Screen tilt (°)" },
       ramp: { type: "duration", min: 0.3, max: 3, default: 1.2, label: "In/out (sec)" },
     },
-    code: deskScreenCode,
+    // 鏡頭關鍵幀的內插串在插件前面
+    code: `${cameraPathCode}
+;
+${deskScreenCode}`,
   },
   {
     id: "floating-board", kind: "3d", effectKind: "scene3d", name: "Floating board",
@@ -102,6 +107,8 @@ export const TEMPLATES_3D: Template3D[] = [
   { id: "mascot-wave", title: "Mascot waves", name: "Mascot walks in and waves", componentId: "mascot", params: { action: "wave", from: "right" }, duration: 4 },
   { id: "desk-reveal", title: "Desk screen", name: "Screen on a desk — pull back and return", componentId: "desk-screen", params: { motion: "reveal" }, duration: 6 },
   { id: "desk-orbit", title: "Desk orbit", name: "Screen on a desk — orbit", componentId: "desk-screen", params: { motion: "orbit" }, duration: 6 },
+  { id: "classroom-board", title: "Classroom board", name: "The video on a classroom blackboard", componentId: "desk-screen", params: { scene: "classroom", motion: "push", tilt: 0 }, duration: 6 },
+  { id: "studio-screen", title: "Studio screen", name: "The video on a screen in a studio", componentId: "desk-screen", params: { scene: "studio", motion: "reveal" }, duration: 6 },
 ];
 
 /** 物件的穩定 JSON（鍵排序） */

@@ -7,7 +7,7 @@ import { runPlane3d, type BoardParams } from "../ai/plane3d";
 import { captureFrame } from "./capture";
 import manifest from "../anim/anim_api_manifest.json";
 import { displayOf, type Component, type ParamDef } from "../anim/library";
-import type { Effect, Project } from "../core/model";
+import type { CameraKey, Effect, Project } from "../core/model";
 import type { Action } from "./state";
 
 /** 方向參數的選項與字型參數的選項（原專案 API 說明裡的列舉） */
@@ -77,9 +77,11 @@ function ParamField({ name, def, label, labels, value, onChange }: { name: strin
 }
 
 /** Inspector 頁籤 */
-export function InspectorTab({ project, effectId, dispatch, preview, onPreview }: {
+export function InspectorTab({ project, effectId, playhead = 0, dispatch, preview, onPreview }: {
   project: Project;
   effectId: string | null;
+  /** 播放頭（時間軸秒數）：新增鏡頭關鍵幀時放在這個時間 */
+  playhead?: number;
   dispatch: Dispatch<Action>;
   /** AI 預覽中的設定（還沒寫進專案） */
   preview: { effectId: string; params: Record<string, unknown> } | null;
@@ -87,7 +89,7 @@ export function InspectorTab({ project, effectId, dispatch, preview, onPreview }
 }) {
   const effect: Effect | undefined = project.effects.find((e) => e.id === effectId);
   if (!effect) return <p className="muted placeholder">Select an effect on the timeline to edit it.</p>;
-  if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} dispatch={dispatch} preview={preview?.effectId === effect.id ? preview.params : null} onPreview={onPreview} />;
+  if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} playhead={playhead} dispatch={dispatch} preview={preview?.effectId === effect.id ? preview.params : null} onPreview={onPreview} />;
   const box = effect.params.box as Box;
   const layers = (effect.params.layers ?? []) as Layer[];
 
@@ -195,7 +197,7 @@ function DescribeMove({ effect, current, preview, onPreview, dispatch }: { effec
 }
 
 /** 3D 特效的設定：依 3D 元件的參數定義產生表單；關鍵幀這類複雜參數先唯讀顯示（用「用說的」或範本改） */
-function Inspector3D({ project, effect, dispatch, preview, onPreview }: { project: Project; effect: Effect; dispatch: Dispatch<Action>; preview: Record<string, unknown> | null; onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void }) {
+function Inspector3D({ project, effect, playhead, dispatch, preview, onPreview }: { project: Project; effect: Effect; playhead: number; dispatch: Dispatch<Action>; preview: Record<string, unknown> | null; onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void }) {
   const plugin = project.plugins.find((p) => p.hash === effect.pluginId);
   const component = plugin?.component as { name?: string; params?: Record<string, ParamDef> } | undefined;
   const values = ((effect.params as { params?: Record<string, unknown> }).params ?? {}) as Record<string, unknown>;
@@ -213,7 +215,58 @@ function Inspector3D({ project, effect, dispatch, preview, onPreview }: { projec
             ? <label key={key} className="param-field" data-param={key}><span>{def.label ?? key}</span><code className="muted">{JSON.stringify(values[key] ?? def.default)?.slice(0, 120)}</code></label>
             : <ParamField key={key} name={key} def={def} label={def.label ?? key} labels={def.labels} value={values[key]} onChange={(v) => set(key, v)} />)}
       </fieldset>
+      {(component as { id?: string } | undefined)?.id === "desk-screen" && <CameraKeysEditor effect={effect} playhead={playhead} dispatch={dispatch} />}
       {(component as { id?: string } | undefined)?.id === "floating-board" && <DescribeMove effect={effect} current={values} preview={preview} onPreview={onPreview} dispatch={dispatch} />}
     </div>
+  );
+}
+
+/** 沒有關鍵幀時新增的第一個鏡頭（和預設運鏡 reveal 的中段差不多：斜上方看螢幕） */
+const DEFAULT_CAMERA_KEY: Omit<CameraKey, "t"> = { position: [0, 4.4, 9.5], target: [0, 1, 0], fov: 40 };
+
+/**
+ * 鏡頭關鍵幀編輯（spec §5.8，3D 場景用）：列出每個關鍵幀的時間（相對區段開頭）、鏡頭位置、看向的點、視角，可以改、新增、刪除。
+ * 有關鍵幀時中段照關鍵幀平滑內插，頭尾仍接回滿版；全部刪掉就回到「Camera」參數的預設運鏡。每次改動是一筆可復原的編輯。
+ */
+function CameraKeysEditor({ effect, playhead, dispatch }: { effect: Effect; playhead: number; dispatch: Dispatch<Action> }) {
+  const keys = effect.cameraKeys ?? [];
+  const length = effect.end - effect.start;
+  /** 寫回整組關鍵幀 */
+  const commit = (next: CameraKey[]) => dispatch({ type: "commit", edits: [{ kind: "setCameraKeys", effectId: effect.id, keys: next }] });
+  /** 改第 i 個關鍵幀的一個欄位 */
+  const patch = (i: number, change: Partial<CameraKey>) => commit(keys.map((k, j) => (j === i ? { ...k, ...change } : k)));
+  /** 在播放頭新增（播放頭不在區段內就放在最後一個之後 1 秒）；姿勢沿用最接近的那個關鍵幀 */
+  const add = () => {
+    const rel = playhead - effect.start;
+    const last = keys.length ? keys[keys.length - 1].t : -1;
+    const t = Math.round((rel >= 0 && rel <= length && !keys.some((k) => Math.abs(k.t - rel) < 0.01) ? rel : Math.min(length, last + 1)) * 100) / 100;
+    const near = keys.reduce<CameraKey | null>((best, k) => (!best || Math.abs(k.t - t) < Math.abs(best.t - t) ? k : best), null);
+    commit([...keys, { ...(near ?? DEFAULT_CAMERA_KEY), t, position: [...(near ?? DEFAULT_CAMERA_KEY).position], target: [...(near ?? DEFAULT_CAMERA_KEY).target] } as CameraKey]);
+  };
+  /** 三個數字的輸入列 */
+  const vec = (i: number, field: "position" | "target", v: [number, number, number]) =>
+    v.map((n, axis) => (
+      <input key={axis} type="number" step={0.1} value={n} aria-label={`${field} ${"xyz"[axis]}`} data-key-field={`${field}-${axis}`}
+        onChange={(e) => { const next = [...v] as [number, number, number]; next[axis] = Number(e.target.value); patch(i, { [field]: next }); }} />
+    ));
+  return (
+    <fieldset className="param-group camera-keys" data-testid="camera-keys">
+      <legend>Camera keyframes</legend>
+      {keys.length === 0 && <p className="muted">No keyframes: the camera follows the "Camera" preset. Add one to place the camera yourself.</p>}
+      {keys.map((k, i) => (
+        <div key={i} className="camera-key" data-key-index={i}>
+          <label className="param-field"><span>Time (sec)</span>
+            <input type="number" min={0} max={length} step={0.1} value={k.t} data-key-field="t" onChange={(e) => patch(i, { t: Math.min(length, Math.max(0, Number(e.target.value))) })} />
+          </label>
+          <label className="param-field"><span>Position</span><span className="vec3">{vec(i, "position", k.position)}</span></label>
+          <label className="param-field"><span>Look at</span><span className="vec3">{vec(i, "target", k.target)}</span></label>
+          <label className="param-field"><span>Field of view (°)</span>
+            <input type="number" min={10} max={100} step={1} value={k.fov} data-key-field="fov" onChange={(e) => patch(i, { fov: Math.min(100, Math.max(10, Number(e.target.value))) })} />
+          </label>
+          <button type="button" data-testid="camera-key-delete" onClick={() => commit(keys.filter((_, j) => j !== i))}>Delete keyframe</button>
+        </div>
+      ))}
+      <button type="button" data-testid="camera-key-add" onClick={add}>Add keyframe at playhead</button>
+    </fieldset>
   );
 }

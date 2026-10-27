@@ -87,7 +87,9 @@ export class EffectRenderer {
         return Promise.reject(new PluginError("Missing 3D plugin", "load", null, null));
       }
       const p = effect.params as { params?: Record<string, unknown>; box?: unknown };
-      return this.three.render(effect.id, code, { ...req, params: p.params ?? {}, box: p.box ?? null, seed: 1 }, background);
+      // 鏡頭關鍵幀（3D 場景）跟著參數送進插件
+      const params = effect.cameraKeys?.length ? { ...(p.params ?? {}), cameraKeys: effect.cameraKeys } : p.params ?? {};
+      return this.three.render(effect.id, code, { ...req, params, box: p.box ?? null, seed: 1 }, background);
     }
     return this.host.request<ImageBitmap>("render", { instance: instanceOf(effect), ...req, background }, background ? [background] : []);
   }
@@ -100,7 +102,7 @@ export class EffectRenderer {
   frameFor(effect: Effect, req: FrameRequest, snapshot: (() => Promise<ImageBitmap>) | null, belowKey = ""): ImageBitmap | null {
     // 讀下層畫面的特效：下層的內容（各影片的時間、載好沒）也算進鍵，下層換了（例如影片剛載好）就要重畫
     const uses = this.usesBackground(effect);
-    const key = `${JSON.stringify(effect.params)}|${req.frame}|${req.duration}|${req.width}x${req.height}${uses ? `|${belowKey}` : ""}`;
+    const key = `${JSON.stringify(effect.params)}|${JSON.stringify(effect.cameraKeys ?? null)}|${req.frame}|${req.duration}|${req.width}x${req.height}${uses ? `|${belowKey}` : ""}`;
     let slot = this.slots.get(effect.id);
     if (!slot) {
       slot = { key: "", bitmap: null, inflight: null, wanted: null, error: null };

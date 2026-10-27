@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addEffect, deleteEffect, effectPlan, moveEffect, setEffectParams, trimEffect } from "./effects";
+import { addEffect, deleteEffect, effectPlan, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
 import { makeProject } from "./fixtures";
 import type { Effect, Plugin } from "./model";
 
@@ -64,5 +64,15 @@ describe("effectPlan（每格要畫哪些 2D 特效）", () => {
     const p = addEffect(makeProject(), fx("a", 2, 4), [plugin]);
     expect(effectPlan(p, 4, 30)).toEqual([]);
     expect(effectPlan(p, 9, 30)).toEqual([]);
+  });
+});
+
+describe("setEffectCameraKeys", () => {
+  it("換掉特效的鏡頭關鍵幀（依時間排序），找不到 id 原樣回傳", () => {
+    const p = addEffect(makeProject(), fx("a", 2, 4), [plugin]);
+    const k1 = { t: 1.5, position: [0, 0, 5] as [number, number, number], target: [0, 0, 0] as [number, number, number], fov: 40 };
+    const k0 = { ...k1, t: 0.5 };
+    expect(setEffectCameraKeys(p, "a", [k1, k0]).effects.find((e) => e.id === "a")!.cameraKeys!.map((k) => k.t)).toEqual([0.5, 1.5]);
+    expect(setEffectCameraKeys(p, "nope", [k0])).toBe(p);
   });
 });
