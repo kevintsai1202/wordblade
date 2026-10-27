@@ -106,6 +106,15 @@ test("Vibe：拒答顯示固定文字，不顯示模型的文字", async ({ page
   await expect(page.locator(".effect-chip")).toHaveCount(0);
 });
 
+test("Vibe：點範例描述會填進輸入框", async ({ page }) => {
+  await setup(page, "");
+  const examples = page.getByTestId("vibe-example");
+  await expect(examples).toHaveCount(3);
+  await examples.nth(1).click();
+  await expect(page.getByTestId("vibe-description")).toHaveValue(/countdown from 3 to 1/);
+  await expect(page.getByTestId("vibe-generate")).toBeEnabled();
+});
+
 test("Vibe：權杖錯誤時提示檢查 AI 設定", async ({ page }) => {
   await page.route(`${GATEWAY}/**`, (route) => reply(route, 401, { error: "unauthorized" }));
   await page.addInitScript(() => localStorage.setItem("wordblade.consent.vibe", "yes"));

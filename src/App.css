@@ -147,3 +147,5 @@ button:disabled { opacity: 0.4; cursor: default; }
 .consent { border: 1px solid #e0b050; border-radius: 4px; padding: 6px 8px; font-size: 12px; }
 .ai-settings { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
 button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor: pointer; align-self: flex-start; font-size: 12px; }
+.vibe-examples { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 11px; }
+.example-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; padding: 2px 8px; border-radius: 10px; }

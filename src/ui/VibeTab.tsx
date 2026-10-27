@@ -7,6 +7,13 @@ import { GatewayClient, GatewayError, loadSettings, saveSettings, type GatewaySe
 import { runVibe, type VibeProgress } from "../ai/vibe";
 import { FPS, type Action } from "./state";
 
+/** Vibe特效的範例描述（點一下填進輸入框；都是 10/27 實測一輪就做得出來的） */
+export const VIBE_EXAMPLES = [
+  "A burst of colorful confetti shooting up from the bottom of the box",
+  "A countdown from 3 to 1 in big numbers in the middle of the box, each number popping in",
+  "An arrow pointing at the box from the left, then a yellow 'Click here' label above it",
+];
+
 /** 同意說明的鍵（同意過就不再問） */
 const CONSENT_KEY = "wordblade.consent.vibe";
 
@@ -108,6 +115,12 @@ export function VibeTab({ plugins, playhead, dispatch }: { plugins: PluginServic
         placeholder="e.g. A yellow arrow flies in from the left and points at the box, then sparkles"
         onChange={(e) => setDescription(e.target.value)}
       />
+      <div className="vibe-examples">
+        <span className="muted">Try:</span>
+        {VIBE_EXAMPLES.map((ex) => (
+          <button key={ex} className="example-chip" data-testid="vibe-example" disabled={busy} onClick={() => setDescription(ex)} title={ex}>{ex}</button>
+        ))}
+      </div>
       <div className="vibe-actions">
         <label><input type="checkbox" checked={attachFrame} onChange={(e) => setAttachFrame(e.target.checked)} /> Attach current frame</label>
         <span className="spacer" />
