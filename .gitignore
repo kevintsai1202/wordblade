@@ -13,6 +13,7 @@ src-tauri/binaries/
 
 # 測試與輸出
 output/
+samples/
 coverage/
 test-results/
 playwright-report/
@@ -23,3 +24,10 @@ playwright-report/
 .idea/
 .DS_Store
 Thumbs.db
+# 打包用的 ffmpeg（scripts/fetch-ffmpeg.ps1 下載）
+src-tauri/resources/ffmpeg/
+
+# 本機執行紀錄（測試、建置、部署、實測的 log 與結果）
+logs/
+# spikes 裡 Tauri 自動產生的 schema
+spikes/**/gen/schemas/
