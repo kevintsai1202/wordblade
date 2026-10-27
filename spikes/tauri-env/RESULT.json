@@ -1,0 +1,58 @@
+{
+  "requests": [
+    {
+      "method": "OPTIONS",
+      "path": "/report",
+      "origin": "http://localhost:5199",
+      "at": "2026-10-26T18:58:55.890Z"
+    },
+    {
+      "method": "POST",
+      "path": "/report",
+      "origin": "http://localhost:5199",
+      "at": "2026-10-26T18:58:55.895Z"
+    }
+  ],
+  "report": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
+    "status": "done",
+    "hardwareAcceleration": "prefer-hardware",
+    "frames": 20360,
+    "totalFrames": 20360,
+    "elapsedMs": 232253.90000003576,
+    "supportCheck": {
+      "config": {
+        "alpha": "discard",
+        "bitrate": 8000000,
+        "bitrateMode": "variable",
+        "codec": "avc1.640028",
+        "contentHint": "",
+        "framerate": 30,
+        "hardwareAcceleration": "prefer-hardware",
+        "height": 1080,
+        "latencyMode": "quality",
+        "width": 1920
+      },
+      "supported": true
+    },
+    "audioCodec": "aac",
+    "webglRenderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "encoderConfig": {
+      "codec": "avc1.640028",
+      "width": 1920,
+      "height": 1080,
+      "displayWidth": 1920,
+      "displayHeight": 1080,
+      "bitrate": 8000000,
+      "bitrateMode": "variable",
+      "alpha": "discard",
+      "framerate": 30,
+      "hardwareAcceleration": "prefer-hardware",
+      "avc": {
+        "format": "avc"
+      }
+    },
+    "outputBytes": 447431114,
+    "outputDuration": 678.6986666666667
+  }
+}

@@ -1,0 +1,945 @@
+{
+  "env": "chromium-headless",
+  "steps": {
+    "variants": {
+      "nonce/spec": {
+        "open": {
+          "ok": true,
+          "bootMs": 163,
+          "csp": "default-src 'none'; script-src blob: 'nonce-3Zq6qMPHPbC2W7bvgG7gRg=='; worker-src blob:; connect-src 'none'; img-src blob: data:",
+          "inlineRan": false
+        },
+        "plugin": {
+          "ok": true,
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "errors": []
+        },
+        "pixelMismatches": 0,
+        "violations": []
+      },
+      "nonce/hardened": {
+        "open": {
+          "ok": true,
+          "bootMs": 127,
+          "csp": "default-src 'none'; script-src blob: 'nonce-3Zq6qMPHPbC2W7bvgG7gRg=='; worker-src blob:; connect-src 'none'; img-src blob: data:; frame-src 'none'; base-uri 'none'; form-action 'none'",
+          "inlineRan": false
+        },
+        "plugin": {
+          "ok": true,
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "errors": []
+        },
+        "pixelMismatches": 0,
+        "violations": []
+      },
+      "hash/spec": {
+        "open": {
+          "ok": true,
+          "bootMs": 121,
+          "csp": "default-src 'none'; script-src blob: 'sha256-ScyF/oUBkshggHo73oEuomLJtH9f8rD3V1Yws+WTLB8='; worker-src blob:; connect-src 'none'; img-src blob: data:",
+          "inlineRan": false
+        },
+        "plugin": {
+          "ok": true,
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "errors": []
+        },
+        "pixelMismatches": 0,
+        "violations": []
+      },
+      "blob/spec": {
+        "open": {
+          "ok": false,
+          "error": "iframe 3 秒內沒有 boot（CSP 擋掉啟動腳本？）"
+        },
+        "plugin": null,
+        "pixelMismatches": null,
+        "violations": []
+      }
+    },
+    "inlineMainScript": {
+      "ok": true,
+      "bootMs": 109,
+      "csp": "default-src 'none'; script-src blob: 'nonce-3Zq6qMPHPbC2W7bvgG7gRg=='; worker-src blob:; connect-src 'none'; img-src blob: data:",
+      "inlineRan": true
+    },
+    "bench": {
+      "workerGl": {
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "vendor": "Google Inc. (Google)",
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+      },
+      "setupMs": 25,
+      "scriptLoadMs": 13,
+      "initMs": 12,
+      "directSmallReadback": {
+        "frames": 300,
+        "fullReadback": false,
+        "relay": false,
+        "mismatches": 0,
+        "samples": [],
+        "createImageBitmap": {
+          "mean": 1.813,
+          "p50": 1.8,
+          "p95": 2.4,
+          "max": 3.4
+        },
+        "sendToWorkerAndBack": {
+          "mean": 39.145,
+          "p50": 36.8,
+          "p95": 57.3,
+          "max": 91.4
+        },
+        "mainUploadDraw": {
+          "mean": 1.453,
+          "p50": 1.5,
+          "p95": 2.1,
+          "max": 3.4
+        },
+        "readback": {
+          "mean": 19.758,
+          "p50": 18.5,
+          "p95": 30.5,
+          "max": 58.7
+        },
+        "roundTripTotalExclCreate": {
+          "mean": 60.356,
+          "p50": 57.1,
+          "p95": 94.7,
+          "max": 127.3
+        },
+        "perFrameTotal": {
+          "mean": 62.169,
+          "p50": 58.9,
+          "p95": 96.9,
+          "max": 129.9
+        }
+      },
+      "directFullReadback": {
+        "frames": 300,
+        "fullReadback": true,
+        "relay": false,
+        "mismatches": 0,
+        "samples": [],
+        "createImageBitmap": {
+          "mean": 1.479,
+          "p50": 1.4,
+          "p95": 2.2,
+          "max": 3.7
+        },
+        "sendToWorkerAndBack": {
+          "mean": 36.368,
+          "p50": 35.6,
+          "p95": 44.4,
+          "max": 77.9
+        },
+        "mainUploadDraw": {
+          "mean": 1.319,
+          "p50": 1.2,
+          "p95": 2,
+          "max": 2.3
+        },
+        "readback": {
+          "mean": 24.097,
+          "p50": 23.7,
+          "p95": 30.2,
+          "max": 34.2
+        },
+        "roundTripTotalExclCreate": {
+          "mean": 61.784,
+          "p50": 60.9,
+          "p95": 75.3,
+          "max": 111.3
+        },
+        "perFrameTotal": {
+          "mean": 63.263,
+          "p50": 62.3,
+          "p95": 77.6,
+          "max": 113.9
+        }
+      },
+      "determinism": {
+        "hashes": [
+          3115396070,
+          3115396070
+        ],
+        "equal": true
+      },
+      "relayFullReadback": {
+        "frames": 300,
+        "fullReadback": true,
+        "relay": true,
+        "mismatches": 0,
+        "samples": [],
+        "createImageBitmap": {
+          "mean": 1.364,
+          "p50": 1.3,
+          "p95": 2,
+          "max": 2.8
+        },
+        "sendToWorkerAndBack": {
+          "mean": 43.633,
+          "p50": 42,
+          "p95": 56.3,
+          "max": 63.3
+        },
+        "mainUploadDraw": {
+          "mean": 1.294,
+          "p50": 1.1,
+          "p95": 2,
+          "max": 2.5
+        },
+        "readback": {
+          "mean": 24.655,
+          "p50": 24.1,
+          "p95": 30.9,
+          "max": 39.3
+        },
+        "roundTripTotalExclCreate": {
+          "mean": 69.582,
+          "p50": 67.5,
+          "p95": 88.1,
+          "max": 101.2
+        },
+        "perFrameTotal": {
+          "mean": 70.946,
+          "p50": 68.7,
+          "p95": 89.6,
+          "max": 103.2
+        }
+      }
+    },
+    "three": {
+      "startups": [
+        {
+          "ok": true,
+          "setupMs": 134,
+          "scriptLoadMs": 88,
+          "initMs": 46,
+          "errors": []
+        },
+        {
+          "ok": true,
+          "setupMs": 115,
+          "scriptLoadMs": 74,
+          "initMs": 41,
+          "errors": []
+        },
+        {
+          "ok": true,
+          "setupMs": 98,
+          "scriptLoadMs": 64,
+          "initMs": 35,
+          "errors": []
+        }
+      ],
+      "info": {
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "three": "186",
+        "webgl2": true
+      },
+      "frames": {
+        "frames": 60,
+        "mismatches": 0,
+        "samples": [],
+        "roundTripWithReadback": {
+          "mean": 71.823,
+          "p50": 71.8,
+          "p95": 78.5,
+          "max": 100.3
+        }
+      }
+    },
+    "reverse": {
+      "control": {
+        "reached": {
+          "fetch": 1,
+          "xhr": 1,
+          "websocket": 1,
+          "eventsource": 1,
+          "dynamicImport": 1,
+          "importScriptsExternal": 0,
+          "sendBeacon": 1,
+          "imgBeacon": 1,
+          "windowOpen": 1
+        },
+        "blockedFlags": {
+          "fetch": false,
+          "fetchData": false,
+          "fetchBlob": false,
+          "xhr": false,
+          "websocket": true,
+          "eventsource": true,
+          "eval": false,
+          "newFunction": false,
+          "dynamicImport": true,
+          "sendBeacon": false,
+          "imgBeacon": true,
+          "windowOpen": false
+        },
+        "worker": {
+          "reached": {
+            "fetch": 1,
+            "xhr": 1,
+            "websocket": 1,
+            "eventsource": 1,
+            "dynamicImport": 1,
+            "importScriptsExternal": 1,
+            "sendBeacon": 0,
+            "imgBeacon": 0,
+            "windowOpen": 0
+          },
+          "blockedFlags": {
+            "fetch": false,
+            "fetchData": false,
+            "fetchBlob": false,
+            "xhr": false,
+            "websocket": true,
+            "eventsource": true,
+            "eval": false,
+            "newFunction": false,
+            "dynamicImport": true,
+            "importScriptsExternal": false,
+            "importScriptsBlobControl": false,
+            "sendBeacon": true,
+            "rtcInWorker": true
+          }
+        },
+        "rtc": {
+          "result": {
+            "typeofCtor": "function",
+            "webkitTypeof": "function",
+            "directBlocked": false,
+            "nestedIframeAttached": true,
+            "nestedCtorAvailable": true
+          },
+          "udpPackets": 3
+        }
+      },
+      "spec": {
+        "worker": {
+          "fetch": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "fetchData": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "fetchBlob": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "xhr": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "xhr error event"
+          },
+          "websocket": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "eventsource": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "eval": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because '"
+          },
+          "newFunction": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because '"
+          },
+          "dynamicImport": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:49253/hit-k-import.js"
+          },
+          "importScriptsExternal": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "NetworkError: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://127.0.0.1:49253/hit?"
+          },
+          "importScriptsBlobControl": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "NetworkError: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'blob:null/4a7c90ea-af3a-40b"
+          },
+          "sendBeacon": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "typeof navigator.sendBeacon = undefined"
+          },
+          "rtcInWorker": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "typeof RTCPeerConnection = undefined"
+          }
+        },
+        "workerWhenParentAllowsBlobScript": {
+          "importScriptsBlobControl": {
+            "blocked": false,
+            "detail": "went through: undefined",
+            "expectBlocked": false
+          }
+        },
+        "iframeMain": {
+          "fetch": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "fetchData": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "fetchBlob": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "xhr": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "xhr error event"
+          },
+          "websocket": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "eventsource": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "eval": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because '"
+          },
+          "newFunction": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because '"
+          },
+          "dynamicImport": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:49253/hit-k-import.js"
+          },
+          "sendBeacon": {
+            "pass": true,
+            "blocked": false,
+            "decoyHits": 0,
+            "detail": "went through: true"
+          },
+          "imgBeacon": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "windowOpen": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "Error: window.open returned null"
+          }
+        },
+        "rtcAfterLockdown": {
+          "result": {
+            "typeofCtor": "undefined",
+            "webkitTypeof": "undefined",
+            "directBlocked": true,
+            "nestedIframeAttached": true,
+            "nestedError": "SecurityError: Failed to read a named property 'RTCPeerConnection' from 'Window': Blocked a frame with origin \"null"
+          },
+          "udpPackets": 0
+        },
+        "parentAccess": {
+          "parentDocument": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property 'document' from 'Window': Blocked a frame with origin \"null\" from ac"
+          },
+          "parentBody": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property 'document' from 'Window': Blocked a frame with origin \"null\" from ac"
+          },
+          "parentSecretVar": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property '__secret' from 'Window': Blocked a frame with origin \"null\" from ac"
+          },
+          "parentLocalStorage": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property 'localStorage' from 'Window': Blocked a frame with origin \"null\" fro"
+          },
+          "topLocation": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property 'href' from 'Location': Blocked a frame with origin \"null\" from acce"
+          },
+          "ownCookie": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read the 'cookie' property from 'Document': The document is sandboxed and lacks the 'allow"
+          },
+          "ownLocalStorage": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read the 'localStorage' property from 'Window': The document is sandboxed and lacks the 'a"
+          },
+          "ownSessionStorage": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the "
+          },
+          "indexedDB": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to execute 'open' on 'IDBFactory': access to the Indexed Database API is denied in this conte"
+          },
+          "origin": {
+            "blocked": true,
+            "detail": "self.origin=null"
+          }
+        },
+        "rtcWithoutLockdown": {
+          "result": {
+            "typeofCtor": "function",
+            "webkitTypeof": "function",
+            "directBlocked": false,
+            "nestedIframeAttached": true,
+            "nestedError": "SecurityError: Failed to read a named property 'RTCPeerConnection' from 'Window': Blocked a frame with origin \"null"
+          },
+          "udpPackets": 3
+        }
+      },
+      "hardened": {
+        "worker": {
+          "fetch": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "fetchData": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "fetchBlob": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "xhr": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "xhr error event"
+          },
+          "websocket": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "eventsource": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "eval": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because '"
+          },
+          "newFunction": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because '"
+          },
+          "dynamicImport": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:49253/hit-k-import.js"
+          },
+          "importScriptsExternal": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "NetworkError: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://127.0.0.1:49253/hit?"
+          },
+          "importScriptsBlobControl": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "NetworkError: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'blob:null/f086f7a6-3399-40c"
+          },
+          "sendBeacon": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "typeof navigator.sendBeacon = undefined"
+          },
+          "rtcInWorker": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "typeof RTCPeerConnection = undefined"
+          }
+        },
+        "iframeMain": {
+          "fetch": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "fetchData": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "fetchBlob": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "TypeError: Failed to fetch"
+          },
+          "xhr": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "xhr error event"
+          },
+          "websocket": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "eventsource": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "eval": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because '"
+          },
+          "newFunction": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": null,
+            "detail": "EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because '"
+          },
+          "dynamicImport": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:49253/hit-k-import.js"
+          },
+          "sendBeacon": {
+            "pass": true,
+            "blocked": false,
+            "decoyHits": 0,
+            "detail": "went through: true"
+          },
+          "imgBeacon": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "error fired"
+          },
+          "windowOpen": {
+            "pass": true,
+            "blocked": true,
+            "decoyHits": 0,
+            "detail": "Error: window.open returned null"
+          }
+        },
+        "rtcAfterLockdown": {
+          "result": {
+            "typeofCtor": "undefined",
+            "webkitTypeof": "undefined",
+            "directBlocked": true,
+            "nestedIframeAttached": true,
+            "nestedError": "SecurityError: Failed to read a named property 'RTCPeerConnection' from 'Window': Blocked a frame with origin \"null"
+          },
+          "udpPackets": 0
+        },
+        "parentAccess": {
+          "parentDocument": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property 'document' from 'Window': Blocked a frame with origin \"null\" from ac"
+          },
+          "parentBody": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property 'document' from 'Window': Blocked a frame with origin \"null\" from ac"
+          },
+          "parentSecretVar": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property '__secret' from 'Window': Blocked a frame with origin \"null\" from ac"
+          },
+          "parentLocalStorage": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property 'localStorage' from 'Window': Blocked a frame with origin \"null\" fro"
+          },
+          "topLocation": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read a named property 'href' from 'Location': Blocked a frame with origin \"null\" from acce"
+          },
+          "ownCookie": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read the 'cookie' property from 'Document': The document is sandboxed and lacks the 'allow"
+          },
+          "ownLocalStorage": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read the 'localStorage' property from 'Window': The document is sandboxed and lacks the 'a"
+          },
+          "ownSessionStorage": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to read the 'sessionStorage' property from 'Window': The document is sandboxed and lacks the "
+          },
+          "indexedDB": {
+            "blocked": true,
+            "detail": "SecurityError: Failed to execute 'open' on 'IDBFactory': access to the Indexed Database API is denied in this conte"
+          },
+          "origin": {
+            "blocked": true,
+            "detail": "self.origin=null"
+          }
+        },
+        "rtcWithoutLockdown": {
+          "result": {
+            "typeofCtor": "function",
+            "webkitTypeof": "function",
+            "directBlocked": false,
+            "nestedIframeAttached": true,
+            "nestedError": "SecurityError: Failed to read a named property 'RTCPeerConnection' from 'Window': Blocked a frame with origin \"null"
+          },
+          "udpPackets": 3
+        }
+      }
+    },
+    "navigation": {
+      "spec": {
+        "decoyHits": 0,
+        "frameUrls": [
+          "http://127.0.0.1:49254/main.html?variant=nonce&pblob=1",
+          "chrome-error://chromewebdata/"
+        ],
+        "violations": [
+          "Framing 'http://127.0.0.1:49253/' violates the following Content Security Policy directive: \"frame-src 'none'\". The request has been blocked.\n"
+        ]
+      },
+      "hardened": {
+        "decoyHits": 0,
+        "frameUrls": [
+          "http://127.0.0.1:49254/main.html?variant=nonce&pblob=1",
+          "chrome-error://chromewebdata/"
+        ],
+        "violations": [
+          "Framing 'http://127.0.0.1:49253/' violates the following Content Security Policy directive: \"frame-src 'none'\". The request has been blocked.\n"
+        ]
+      },
+      "spec+parentFrameSrcOpen": {
+        "decoyHits": 1,
+        "frameUrls": [
+          "http://127.0.0.1:49254/main.html?variant=nonce&pblob=1&pfram",
+          "http://127.0.0.1:49253/hit?k=nav"
+        ],
+        "violations": []
+      }
+    },
+    "clock": {
+      "worker": {
+        "dateNow": 1767225602500,
+        "newDate": 1767225602500,
+        "perfNow": 2500,
+        "timeOrigin": 1767225600000,
+        "ctorLeak": 1767225602500,
+        "perfMarkStart": 152.39999997615814,
+        "evtTimeStamp": 152.30000001192093,
+        "perfEntryCount": 1,
+        "intl": "1/1/26, 12:00:02 AM",
+        "rand": [
+          0.011704753153026104,
+          0.06195825757458806,
+          0.97690763277933
+        ]
+      },
+      "iframeMain": {
+        "dateNow": 1767225602500,
+        "newDate": 1767225602500,
+        "perfNow": 2500,
+        "rand": [
+          0.011704753153026104,
+          0.06195825757458806,
+          0.97690763277933
+        ]
+      },
+      "realNow": 1793039326582,
+      "workerDateNowIsSegmentTime": true,
+      "workerNewDateIsSegmentTime": true,
+      "workerPerfNowIsSegmentTime": true,
+      "workerCtorLeakClosed": true,
+      "workerIntlFormatNoArg": "1/1/26, 12:00:02 AM",
+      "sameSeedSameSequence_acrossRepeatAndWorkers": true,
+      "iframeMainDateNowIsSegmentTime": true,
+      "iframeMainPerfNow": 2500,
+      "iframeMainSameSeedAsWorker": true
+    },
+    "timeout": {
+      "cycles": [
+        {
+          "timedOut": true,
+          "detectMs": 106,
+          "killMs": 0.2,
+          "rebuildMs": 17,
+          "firstFrameAfterMs": 70,
+          "pixelsOk": true,
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "budgetMs": 100,
+          "workerTargets": {
+            "before": 1,
+            "duringHang": 1,
+            "afterRecover": 1
+          },
+          "hungWorkerGone": true
+        },
+        {
+          "timedOut": true,
+          "detectMs": 115,
+          "killMs": 0.2,
+          "rebuildMs": 20,
+          "firstFrameAfterMs": 72,
+          "pixelsOk": true,
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "budgetMs": 100,
+          "workerTargets": {
+            "before": 1,
+            "duringHang": 1,
+            "afterRecover": 1
+          },
+          "hungWorkerGone": true
+        },
+        {
+          "timedOut": true,
+          "detectMs": 106,
+          "killMs": 0.2,
+          "rebuildMs": 16,
+          "firstFrameAfterMs": 66,
+          "pixelsOk": true,
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "budgetMs": 100,
+          "workerTargets": {
+            "before": 1,
+            "duringHang": 1,
+            "afterRecover": 1
+          },
+          "hungWorkerGone": true
+        },
+        {
+          "timedOut": true,
+          "detectMs": 32,
+          "killMs": 0.2,
+          "rebuildMs": 16,
+          "firstFrameAfterMs": 67,
+          "pixelsOk": true,
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "budgetMs": 30,
+          "workerTargets": {
+            "before": 1,
+            "duringHang": 1,
+            "afterRecover": 1
+          },
+          "hungWorkerGone": true
+        },
+        {
+          "timedOut": true,
+          "detectMs": 32,
+          "killMs": 0.2,
+          "rebuildMs": 27,
+          "firstFrameAfterMs": 86,
+          "pixelsOk": true,
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "budgetMs": 30,
+          "workerTargets": {
+            "before": 1,
+            "duringHang": 1,
+            "afterRecover": 1
+          },
+          "hungWorkerGone": true
+        }
+      ],
+      "mainHeartbeat": {
+        "n": 574,
+        "maxGapMs": 31,
+        "sinceLastMs": 12
+      }
+    },
+    "churn": {
+      "n": 40,
+      "startMs": {
+        "mean": 46.342,
+        "p50": 44.7,
+        "p95": 62,
+        "max": 65.2
+      },
+      "finalMismatches": 0,
+      "hostErrors": 0
+    },
+    "fallbackMainLoop": {
+      "targetTypesBefore": "worker,page,page",
+      "mainBlocked": true,
+      "error": "逾時 4000ms：() => window.t.heartbeat()",
+      "recovered": false
+    }
+  },
+  "browserVersion": "156.0.8078.4",
+  "env_info": {
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "mainRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "crossOriginIsolated": false,
+    "hwConcurrency": 18
+  }
+}

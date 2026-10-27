@@ -1,0 +1,16 @@
+{
+  "name": "wordblade-spike-sandbox",
+  "private": true,
+  "type": "module",
+  "description": "沙盒實測：sandbox=allow-scripts 的 srcdoc iframe 裡能不能跑 Web Worker＋OffscreenCanvas WebGL2（spec §5.7、D24）",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node run.mjs",
+    "serve": "node server.mjs"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.64.1",
+    "three": "^0.186.1"
+  }
+}

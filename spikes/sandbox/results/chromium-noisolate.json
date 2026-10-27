@@ -1,0 +1,80 @@
+{
+  "env": "chromium-noisolate",
+  "steps": {
+    "variants": {
+      "nonce/spec": {
+        "open": {
+          "ok": true,
+          "bootMs": 127,
+          "csp": "default-src 'none'; script-src blob: 'nonce-ECR2mH4uBUp7Q9BD9tpF/Q=='; worker-src blob:; connect-src 'none'; img-src blob: data:",
+          "inlineRan": false
+        },
+        "plugin": {
+          "ok": true,
+          "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "errors": []
+        },
+        "pixelMismatches": 0,
+        "violations": []
+      },
+      "nonce/hardened": {
+        "open": {
+          "ok": true,
+          "bootMs": 126,
+          "csp": "default-src 'none'; script-src blob: 'nonce-ECR2mH4uBUp7Q9BD9tpF/Q=='; worker-src blob:; connect-src 'none'; img-src blob: data:; frame-src 'none'; base-uri 'none'; form-action 'none'",
+          "inlineRan": false
+        },
+        "plugin": {
+          "ok": true,
+          "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "errors": []
+        },
+        "pixelMismatches": 0,
+        "violations": []
+      },
+      "hash/spec": {
+        "open": {
+          "ok": true,
+          "bootMs": 139,
+          "csp": "default-src 'none'; script-src blob: 'sha256-ScyF/oUBkshggHo73oEuomLJtH9f8rD3V1Yws+WTLB8='; worker-src blob:; connect-src 'none'; img-src blob: data:",
+          "inlineRan": false
+        },
+        "plugin": {
+          "ok": true,
+          "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "errors": []
+        },
+        "pixelMismatches": 0,
+        "violations": []
+      },
+      "blob/spec": {
+        "open": {
+          "ok": false,
+          "error": "iframe 3 秒內沒有 boot（CSP 擋掉啟動腳本？）"
+        },
+        "plugin": null,
+        "pixelMismatches": null,
+        "violations": []
+      }
+    },
+    "inlineMainScript": {
+      "ok": true,
+      "bootMs": 134,
+      "csp": "default-src 'none'; script-src blob: 'nonce-ECR2mH4uBUp7Q9BD9tpF/Q=='; worker-src blob:; connect-src 'none'; img-src blob: data:",
+      "inlineRan": true
+    },
+    "fallbackMainLoop": {
+      "targetTypesBefore": "worker,browser_ui,page,browser_ui,browser_ui,browser_ui,browser_ui,page,browser_ui,page",
+      "mainBlocked": true,
+      "error": "逾時 4000ms：() => window.t.heartbeat()",
+      "recovered": false
+    }
+  },
+  "browserVersion": "156.0.8078.4",
+  "env_info": {
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "mainRenderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "crossOriginIsolated": false,
+    "hwConcurrency": 18
+  }
+}
