@@ -9,6 +9,7 @@ import { createEngine } from "./engine/createEngine";
 import { TEMPLATES, templateEffect } from "./anim/library";
 import { PluginService } from "./anim/pluginService";
 import { instanceOf } from "./anim/effectRenderer";
+import { TEMPLATES_3D, builtinPlugins3D } from "./three/builtins";
 
 /** 等事件或逾時；回傳事件有沒有發生 */
 function waitFor(target: EventTarget, event: string, ms: number): Promise<boolean> {
@@ -150,6 +151,54 @@ async function checkSandbox(): Promise<Record<string, unknown>> {
   }
 }
 
+/**
+ * 3D 效能（plan-10-30 ⑧）：1280×720，每格送一張下層畫面（模擬 V1），依序畫 120 格；
+ * 記第一格（建場景＋編 shader）與之後每格的平均、p95（含畫面轉移與回傳），換算 60 秒區段要多久。
+ */
+async function check3D(): Promise<Record<string, unknown>> {
+  const service = new PluginService();
+  const out: Record<string, unknown> = {};
+  try {
+    const plugins = await builtinPlugins3D();
+    // 模擬的下層畫面：彩色漸層（每格不同，避免被快取）
+    const src = new OffscreenCanvas(1280, 720);
+    const g = src.getContext("2d")!;
+    /** 讀回用的 1×1 畫布 */
+    const probe = new OffscreenCanvas(1, 1).getContext("2d", { willReadFrequently: true })!;
+    for (const id of ["desk-reveal", "board-swing-in", "mascot-point"]) {
+      const template = TEMPLATES_3D.find((t) => t.id === id)!;
+      const plugin = plugins.get(template.componentId)!;
+      const code = String(plugin.component.code);
+      const params = Object.fromEntries(Object.entries((plugin.component as { params: Record<string, { default?: unknown }> }).params).map(([k, d]) => [k, d.default]));
+      Object.assign(params, template.params);
+      const times: number[] = [];
+      for (let f = 0; f < 120; f++) {
+        const grad = g.createLinearGradient(0, 0, 1280, 720);
+        grad.addColorStop(0, `hsl(${(f * 3) % 360}, 80%, 50%)`);
+        grad.addColorStop(1, `hsl(${(f * 3 + 180) % 360}, 80%, 50%)`);
+        g.fillStyle = grad;
+        g.fillRect(0, 0, 1280, 720);
+        const bg = src.transferToImageBitmap();
+        const t0 = performance.now();
+        const bitmap = await service.three.render(`perf-${id}`, code, { frame: f, fps: 30, duration: template.duration, width: 1280, height: 720, videoW: 1280, videoH: 720, params, box: { cx: 0.6, cy: 0.45, w: 0.25, h: 0.25 }, seed: 1 }, bg);
+        // 讀回一個像素：逼 GPU 把這一格畫完（WebGL 送出就回來，不讀回量到的只是訊息往返）
+        probe.drawImage(bitmap, 0, 0, 1, 1);
+        probe.getImageData(0, 0, 1, 1);
+        times.push(performance.now() - t0);
+        bitmap.close();
+      }
+      const rest = times.slice(1).sort((a, b) => a - b);
+      const mean = rest.reduce((a, b) => a + b, 0) / rest.length;
+      out[id] = { firstMs: Math.round(times[0]), meanMs: Number(mean.toFixed(1)), p95Ms: Number(rest[Math.floor(rest.length * 0.95)].toFixed(1)), sixtySecondsSec: Number((mean * 1800 / 1000).toFixed(1)) };
+    }
+  } catch (e) {
+    out.error = String(e);
+  } finally {
+    service.three.dispose();
+  }
+  return out;
+}
+
 /** 跑自我檢查：從回報伺服器拿要檢查的檔案清單，逐一檢查後把結果送回去 */
 export async function runSelftest(server: string) {
   const report: Record<string, unknown> = { origin: location.origin, userAgent: navigator.userAgent, startedAt: new Date().toISOString() };
@@ -162,6 +211,7 @@ export async function runSelftest(server: string) {
     for (const [i, path] of paths.entries()) files.push(await checkFile(path, i));
     report.files = files;
     report.sandbox = await checkSandbox();
+    report.three = await check3D();
     report.microphone = await checkMicrophone();
   } catch (e) {
     report.error = String(e);
