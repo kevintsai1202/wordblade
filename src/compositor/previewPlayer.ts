@@ -161,8 +161,8 @@ export class PreviewPlayer {
           return i;
         });
         const ready = !!img?.complete && (img?.naturalWidth ?? 0) > 0;
-        if (ready) this.compositor.draw(img!, layer.rect, layer.opacity);
-        below += `|${layer.clipId}:${ready ? "1" : "0"}`;
+        if (ready) this.compositor.draw(img!, layer.rect, layer.opacity, layer.crop);
+        below += `|${layer.clipId}:${ready ? "1" : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
         continue;
       }
       const clip = project.clips.find((c) => c.id === layer.clipId)!;
@@ -176,8 +176,9 @@ export class PreviewPlayer {
       if (!el) continue;
       this.sync(el, layer.srcTime, playing, rate * clip.speed);
       const ready = el.readyState >= 2 && !el.seeking;
-      if (el.readyState >= 2) this.compositor.draw(el, layer.rect, layer.opacity);
-      below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : "0"}`;
+      if (el.readyState >= 2) this.compositor.draw(el, layer.rect, layer.opacity, layer.crop);
+      // 下層狀態含放大範圍：改了放大，讀下層畫面的特效（3D 場景）才會重畫
+      below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
     }
 
     // 字幕畫在最上層（預覽與匯出同一個 CaptionLayer）

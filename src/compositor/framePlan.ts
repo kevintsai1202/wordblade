@@ -2,6 +2,7 @@
 // 由下到上：V1 主軌 → V2、V3…疊加軌；3D 場景、插件、字幕之後在合成器裡接著疊。
 import type { Clip, Project, Rect, Seconds } from "../core/model";
 import { clipDuration, clipEnd, timelineToSource } from "../core/timeline";
+import { zoomAt, zoomCrop } from "../core/zoom";
 
 /** 全畫面的框 */
 const FULL: Rect = { x: 0, y: 0, w: 1, h: 1 };
@@ -16,6 +17,8 @@ export interface VideoLayer {
   rect: Rect;
   /** 透明度（已含淡入淡出） */
   opacity: number;
+  /** 局部放大：只取素材畫面的這個範圍放大畫滿（§5.19；沒放大就沒有） */
+  crop?: Rect;
 }
 
 /** 一個發聲中的音訊片段 */
@@ -50,12 +53,15 @@ export function framePlan(project: Project, t: Seconds): VideoLayer[] {
   for (const track of tracks) {
     for (const clip of project.clips) {
       if (clip.trackId !== track.id || !covers(clip, t)) continue;
+      const srcTime = timelineToSource(clip, t);
+      const zoom = clip.zoomKeys?.length ? zoomAt(clip, srcTime) : null;
       layers.push({
         clipId: clip.id,
         mediaId: clip.mediaId,
-        srcTime: timelineToSource(clip, t),
+        srcTime,
         rect: clip.transform ?? FULL,
         opacity: clip.opacity * fadeFactor(clip, t),
+        ...(zoom && zoom.scale > 1 ? { crop: zoomCrop(zoom) } : {}),
       });
     }
   }

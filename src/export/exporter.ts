@@ -169,13 +169,13 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
           const media = project.media.find((m) => m.id === layer.mediaId);
           if (media?.kind === "image") {
             const bitmap = images.get(media.id);
-            if (bitmap) compositor.draw(bitmap, layer.rect, layer.opacity);
+            if (bitmap) compositor.draw(bitmap, layer.rect, layer.opacity, layer.crop);
             continue;
           }
           const sample = samples.get(layer.clipId);
           if (!sample) continue;
           const frame = sample.toVideoFrame();
-          compositor.draw(frame, layer.rect, layer.opacity);
+          compositor.draw(frame, layer.rect, layer.opacity, layer.crop);
           frame.close();
           continue;
         }

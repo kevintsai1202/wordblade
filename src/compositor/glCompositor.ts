@@ -13,20 +13,25 @@ void main() {
   gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
 }`;
 
-/** 片段著色器：貼圖乘上透明度（預乘 alpha） */
+/** 片段著色器：取貼圖的 uvRect 範圍（局部放大，§5.19；預設整張），乘上透明度（預乘 alpha） */
 const FRAGMENT = `#version 300 es
 precision mediump float;
 in vec2 uv;
 uniform sampler2D tex;
 uniform float opacity;
+uniform vec4 uvRect;
 out vec4 color;
-void main() { color = texture(tex, uv) * opacity; }`;
+void main() { color = texture(tex, uvRect.xy + uv * uvRect.zw) * opacity; }`;
+
+/** 整張貼圖 */
+const FULL_UV: Rect = { x: 0, y: 0, w: 1, h: 1 };
 
 /** WebGL2 合成器 */
 export class GlCompositor {
   private readonly gl: WebGL2RenderingContext;
   private readonly rectLoc: WebGLUniformLocation;
   private readonly opacityLoc: WebGLUniformLocation;
+  private readonly uvRectLoc: WebGLUniformLocation;
 
   constructor(canvas: HTMLCanvasElement | OffscreenCanvas) {
     const gl = canvas.getContext("webgl2", { alpha: false, premultipliedAlpha: true, preserveDrawingBuffer: true }) as WebGL2RenderingContext | null;
@@ -49,6 +54,7 @@ export class GlCompositor {
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
     this.rectLoc = gl.getUniformLocation(program, "rect")!;
     this.opacityLoc = gl.getUniformLocation(program, "opacity")!;
+    this.uvRectLoc = gl.getUniformLocation(program, "uvRect")!;
     gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -67,12 +73,13 @@ export class GlCompositor {
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
-  /** 把一個影像來源畫到 rect，透明度 opacity */
-  draw(source: TexImageSource, rect: Rect, opacity: number) {
+  /** 把一個影像來源畫到 rect，透明度 opacity；crop：只取來源的這個範圍（0～1，左上原點；局部放大用） */
+  draw(source: TexImageSource, rect: Rect, opacity: number, crop: Rect = FULL_UV) {
     const { gl } = this;
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
     gl.uniform4f(this.rectLoc, rect.x, rect.y, rect.w, rect.h);
     gl.uniform1f(this.opacityLoc, opacity);
+    gl.uniform4f(this.uvRectLoc, crop.x, crop.y, crop.w, crop.h);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }

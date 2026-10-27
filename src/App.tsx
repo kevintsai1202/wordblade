@@ -19,6 +19,9 @@ import { TranscribePanel } from "./ui/TranscribePanel";
 import { CaptionStyleTab } from "./ui/CaptionStyleTab";
 import { TranscriptTab } from "./ui/TranscriptTab";
 import { CleanupPanel } from "./ui/CleanupPanel";
+import { ZoomTab, zoomableClip } from "./ui/ZoomTab";
+import { insertZoomKey, type Zoom } from "./core/zoom";
+import { timelineToSource } from "./core/timeline";
 import "./App.css";
 
 /** 網址帶 ?demo=1 就直接開示範專案（e2e 用）；否則開空專案 */
@@ -40,6 +43,18 @@ function App() {
   const { library, importSources, enqueuePrepare, reset } = useMediaLibrary(engine, dispatch);
   /** AI 預覽中的特效設定（「用說的」的提議，還沒寫進專案；預覽畫面用它） */
   const [aiPreview, setAiPreview] = useState<{ effectId: string; params: Record<string, unknown> } | null>(null);
+  /** 局部放大：正在預覽上選範圍（Zoom 頁籤的 Pick region） */
+  const [zoomPicking, setZoomPicking] = useState(false);
+  const zoomClip = zoomableClip(project, state.selectedClipId);
+  // 選的片段不能放大了（換選、被刪）就結束選範圍
+  useEffect(() => { if (!zoomClip) setZoomPicking(false); }, [zoomClip]);
+  /** 拉框完成：在播放頭加一個放大關鍵幀（第一次同時建 2 秒後同一個框） */
+  const onZoomPick = (z: Zoom) => {
+    if (!zoomClip) return;
+    const key = { src: timelineToSource(zoomClip, state.playhead), scale: z.scale, cx: z.cx, cy: z.cy };
+    dispatch({ type: "commit", edits: [{ kind: "setZoomKeys", clipId: zoomClip.id, keys: insertZoomKey(zoomClip.zoomKeys ?? [], key, zoomClip.srcOut) }] });
+    setZoomPicking(false);
+  };
   /** 預覽畫面看到的專案：有 AI 預覽時套上提議 */
   const shownProject = useMemo(() => {
     if (!aiPreview) return project;
@@ -99,7 +114,7 @@ function App() {
         <button disabled title="Export — coming soon">Export</button>
       </header>
       <main className="workspace">
-        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId} dispatch={dispatch} />
+        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId} onZoomPick={zoomPicking && zoomClip ? onZoomPick : null} onZoomCancel={() => setZoomPicking(false)} dispatch={dispatch} />
         <EditPanel
           initialTab={START_WITH_DEMO ? "transcript" : "media"}
           tabs={{
@@ -107,6 +122,7 @@ function App() {
             vibe: <VibeTab plugins={plugins} playhead={state.playhead} dispatch={dispatch} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
+            zoom: <ZoomTab project={project} clipId={state.selectedClipId} playhead={state.playhead} picking={zoomPicking} onPicking={setZoomPicking} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
             inspector: <InspectorTab project={project} effectId={state.selectedEffectId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
