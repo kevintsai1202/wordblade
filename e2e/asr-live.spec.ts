@@ -66,7 +66,8 @@ test("Muse ASR 實機：英文 TTS 講課片轉錄，字幕句子起點對 SRT �
     const [m, s, f] = c.code.split(":").map(Number);
     return { start: m * 60 + s + f / 30, text: c.text };
   });
-  const srt = readSrt(SRT);
+  // 沒有 SRT 的素材（例如 FOSDEM 的真人演講片段）只看速度、涵蓋率與語助詞
+  const srt = existsSync(SRT) ? readSrt(SRT) : [];
   const errors: { srt: number; caption: number; text: string }[] = [];
   for (const cue of srt) {
     const k = key(cue.text);
@@ -101,5 +102,5 @@ test("Muse ASR 實機：英文 TTS 講課片轉錄，字幕句子起點對 SRT �
   console.log(`ASR 實機：${seconds.toFixed(1)} 秒，${status}；SRT ${srt.length} 句、對上 ${errors.length} 句，起點誤差平均 ${result.meanStartError} 秒、中位數 ${result.medianStartError}、p90 ${result.p90StartError}${warning ? `；${warning}` : ""}`);
   await page.screenshot({ path: "output/ui-shots/asr-live.png" });
   // Muse 每次斷句（標點）不同，對上的句數會變；只要求對上三分之一，數字看 output/asr-live.json
-  expect(errors.length).toBeGreaterThanOrEqual(srt.length / 3);
+  if (srt.length) expect(errors.length).toBeGreaterThanOrEqual(srt.length / 3);
 });
