@@ -4,6 +4,7 @@
 import type { Effect, Plugin } from "../core/model";
 import deskScreenCode from "./builtins/deskScreen.js?raw";
 import floatingBoardCode from "./builtins/floatingBoard.js?raw";
+import mascotCode from "./builtins/mascot.js?raw";
 import boardGeometryCode from "./boardGeometry.js?raw";
 import plane3dMathCode from "./vendor/plane3d_math.js?raw";
 
@@ -66,6 +67,18 @@ ${boardGeometryCode}
 ;
 ${floatingBoardCode}`,
   },
+  {
+    id: "mascot", kind: "3d", effectKind: "anim3d", name: "Mascot",
+    description: "A little 3D character walks in, stops next to the target box and waves or points at it",
+    params: {
+      action: { type: "enum", values: ["point", "wave"], labels: ["Point at the box", "Wave"], default: "point", label: "Action" },
+      from: { type: "enum", values: ["left", "right"], labels: ["Left", "Right"], default: "left", label: "Walks in from" },
+      color: { type: "color", default: "#ffb020", label: "Color" },
+      height: { type: "number", min: 0.15, max: 0.7, step: 0.05, default: 0.35, label: "Height (of frame)" },
+      walk: { type: "duration", min: 0.3, max: 4, default: 1.6, label: "Walk time (sec)" },
+    },
+    code: mascotCode,
+  },
 ];
 
 /** 3D 範本（加到時間軸的預設長度與參數） */
@@ -85,6 +98,8 @@ export const TEMPLATES_3D: Template3D[] = [
   { id: "board-float", title: "Float", name: "Floating board — gentle sway", componentId: "floating-board", params: { keys: [key({ size: 0.8 })], float: { rx: 3, ry: 6, period: 4 } }, duration: 5 },
   { id: "board-pull-back", title: "Pull back", name: "Floating board — pulls back and tilts", componentId: "floating-board", params: { keys: [key({ size: 1 }), key({ t: 2, rx: 10, size: 0.6 })], float: null }, duration: 5 },
   { id: "board-swing-out", title: "Swing out", name: "Floating board — swings out at the end", componentId: "floating-board", params: { keys: [key({ anchor: "end", t: 1.5, size: 0.82 }), key({ anchor: "end", t: 0, ry: -55, size: 0.55, px: -0.12 })], float: null }, duration: 5 },
+  { id: "mascot-point", title: "Mascot points", name: "Mascot walks in and points at the box", componentId: "mascot", params: { action: "point" }, duration: 4 },
+  { id: "mascot-wave", title: "Mascot waves", name: "Mascot walks in and waves", componentId: "mascot", params: { action: "wave", from: "right" }, duration: 4 },
   { id: "desk-reveal", title: "Desk screen", name: "Screen on a desk — pull back and return", componentId: "desk-screen", params: { motion: "reveal" }, duration: 6 },
   { id: "desk-orbit", title: "Desk orbit", name: "Screen on a desk — orbit", componentId: "desk-screen", params: { motion: "orbit" }, duration: 6 },
 ];
@@ -118,6 +133,10 @@ export function template3DEffect(template: Template3D, plugin: Plugin, id: strin
   const defaults = Object.fromEntries(Object.entries(component.params).map(([k, d]) => [k, d.default]));
   return {
     id, kind: component.effectKind, start, end: start + template.duration, pluginId: plugin.hash, anchorIds: [],
-    params: { title: template.title, template: template.id, params: { ...defaults, ...template.params } },
+    params: {
+      title: template.title, template: template.id, params: { ...defaults, ...template.params },
+      // 疊加的 3D 特效（吉祥物）有目標框，和 2D 特效一樣可以在預覽上拖
+      ...(component.effectKind === "anim3d" ? { box: { cx: 0.6, cy: 0.45, w: 0.25, h: 0.25 } } : {}),
+    },
   };
 }

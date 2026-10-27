@@ -101,3 +101,44 @@ test("漂浮的板子：中段板子縮小、背景是攝影棚；Inspector 換�
   await expect.poll(async () => { const [r, g, b] = await corner(); return Math.abs(r - 32) < 8 && Math.abs(g - 32) < 8 && Math.abs(b - 32) < 8; }, { timeout: 30_000 }).toBe(true);
   await page.screenshot({ path: "output/ui-shots/three-board.png" });
 });
+
+test("吉祥物：走到目標框旁邊；拖目標框，吉祥物跟著換位置", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/");
+  await page.locator('[data-tab="vibe"]').click();
+  await page.locator('[data-template="mascot-point"]').click();
+  const chip = page.locator(".effect-chip");
+  await expect(chip).toHaveCount(1);
+
+  /** 橘色（吉祥物）像素的數量與水平重心（0～1） */
+  const orange = () => page.getByTestId("preview-canvas").evaluate((c: HTMLCanvasElement) => {
+    const p = document.createElement("canvas");
+    p.width = 160;
+    p.height = 90;
+    const ctx = p.getContext("2d")!;
+    ctx.drawImage(c, 0, 0, 160, 90);
+    const d = ctx.getImageData(0, 0, 160, 90).data;
+    let n = 0, sx = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 180 && d[i + 1] > 90 && d[i + 1] < 210 && d[i + 2] < 90) { n++; sx += (i / 4) % 160; }
+    return { n, x: n ? sx / n / 160 : -1 };
+  });
+  // 3 秒：已經走到框（中心 x 0.6、寬 0.25）左邊，重心大約在 0.4 附近
+  await page.locator(".ruler").click({ position: { x: 60, y: 5 } });
+  await expect.poll(async () => (await orange()).n, { timeout: 60_000 }).toBeGreaterThan(30);
+  const before = await orange();
+  expect(before.x).toBeGreaterThan(0.3);
+  expect(before.x).toBeLessThan(0.55);
+
+  // 拖目標框往右 0.25：吉祥物跟著往右
+  await chip.click();
+  const overlay = page.getByTestId("box-overlay");
+  const o = (await overlay.boundingBox())!;
+  const frame = (await page.getByTestId("preview-canvas").boundingBox())!;
+  await page.mouse.move(o.x + o.width / 2, o.y + o.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(o.x + o.width / 2 + frame.width * 0.25, o.y + o.height / 2, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(async () => (await orange()).x, { timeout: 30_000 }).toBeGreaterThan(before.x + 0.15);
+  await page.screenshot({ path: "output/ui-shots/three-mascot.png" });
+});

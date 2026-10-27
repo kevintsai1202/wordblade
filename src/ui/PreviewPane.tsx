@@ -32,7 +32,8 @@ export function PreviewPane(props: {
 }) {
   const { project, playhead, playing, rate, duration, captions, engine, library, plugins, selectedEffectId, dispatch } = props;
   const frameRef = useRef<HTMLDivElement>(null);
-  const selectedEffect = project.effects.find((e) => e.id === selectedEffectId && e.kind === "anim2d");
+  // 有目標框的特效（2D 與疊加的 3D）才在預覽上顯示框
+  const selectedEffect = project.effects.find((e) => e.id === selectedEffectId && (e.kind === "anim2d" || e.kind === "anim3d") && !!e.params.box);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef<PreviewPlayer | null>(null);
   /** 播放迴圈要讀的最新值（避免每格重建迴圈） */
