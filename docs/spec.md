@@ -327,6 +327,12 @@
 - **用說的**：一句描述（可附當格截圖）→ 閘道 `/v1/ai/plane3d` 用結構化輸出拿回鏡頭關鍵幀與場景設定（不是程式碼）→ 閘道驗證範圍與時間順序（不合格回饋重問一次）→ 桌面進入 AI 預覽，按「套用」才寫進專案。要改物件或動作時改走 Vibe特效。原專案實測（2026-10-26，Spark contributor、推理 low、8 秒區段）：8 句 1 輪全部合格；不附圖 1,700～2,700 token、5～14 秒，附 1280 寬截圖 3,000～3,500 token、7～14 秒；無關要求 2 秒拒答。
 - 字幕、2D 動畫、疊加軌不跟著 3D 場景轉，留在上層。
 - 輸出照 §5.7 的 3D 插件：逐格算、以 `ImageBitmap` 交回合成器。
+- **10/27 實作（`docs/plan-10-30.md`）**：
+  - 3D 沙盒：獨立的沙盒 iframe（3D 插件卡住重建時不影響 2D），每個 3D 特效一個 Worker；Worker 原始碼＝前置腳本＋three.js（`build/three.cjs` 包成 `THREE` 全域，第一次用到才載入）＋插件程式＋harness。iframe 的 CSP 沒有 `unsafe-eval`，所以插件程式直接串進原始碼、不用 `new Function`。契約 `setup(THREE, scene, camera, env)`／`update(t, env)`，`env.frameTexture`（當格畫面，`NoColorSpace`）與 `env.frameMaterial()`（原樣貼圖）；跳格時從區段開頭重跑（宣告 `pure` 的插件直接跳）；第一格 10 秒、之後每格 2 秒逾時，只終止那個 Worker。安全只靠沙盒（原生 JS 進不了直譯器）。
+  - 疊放順序 `layerPlan`（§5.10）：V1 → 3D 場景（`scene3d`，貼 V1 畫面、蓋住 V1）→ V2 以上 → 2D／3D 插件。讀下層畫面的特效把下層狀態（各影片的時間、載好沒）算進請求鍵，下層換了才重畫。
+  - 「漂浮的板子」沿用原專案的板子姿勢關鍵幀（`src/three/vendor/plane3d_math.js` 原樣）：`boardGeometry.js` 把四角換成 three.js 相機座標（水平視角 40° 換成垂直視角），投影結果和原專案逐點相同（200 組隨機姿勢誤差 < 0.01 px）；5 個運鏡範本照搬；背景用程式畫（攝影棚、科技格線、模糊原畫面、純色），原專案 Muse 生成的書桌、黑板圖不沿用（商用條款待確認）。
+  - 「桌上螢幕」：程式畫的木紋桌、螢幕、杯子（移植匯出實測的場景），頭尾鏡頭沿螢幕法線退到剛好填滿畫面，接原片看不出接縫；reveal／push／orbit。
+  - **用說的**：閘道 `/v1/ai/plane3d`（Spark、推理 low、最多 2 輪、1.2 萬 token），提示詞移植原專案 `plane3d_ai.py`，範圍表與提示詞由 `scripts/plane3d/build-prompt.mjs` 從原專案的姿勢數學產生；閘道檢查形狀、範圍、t 不超過區段長度（原專案默默夾住，這裡改成擋下）、換算後嚴格遞增；桌面用同一份數學檢查姿勢路徑，不過就回饋。介面在 Inspector「Describe the move」，提議先預覽、按 Apply 才寫進專案（一筆可復原的編輯）。10/27 實測（`scripts/plane3d/probe.mjs`）：Spark 8／8（方向、時間、路徑都對，拒答 1 句），每句 2～10 秒。
 
 ### 5.9 轉場（P2）
 
