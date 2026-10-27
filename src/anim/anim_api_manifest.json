@@ -1,0 +1,361 @@
+{
+ "runtimeVersion": 2,
+ "g": [
+  {
+   "name": "begin",
+   "doc": "g.begin()：開始新路徑"
+  },
+  {
+   "name": "moveTo",
+   "doc": "g.moveTo(x, y)"
+  },
+  {
+   "name": "lineTo",
+   "doc": "g.lineTo(x, y)"
+  },
+  {
+   "name": "quadTo",
+   "doc": "g.quadTo(cx, cy, x, y)：二次貝茲"
+  },
+  {
+   "name": "curveTo",
+   "doc": "g.curveTo(c1x, c1y, c2x, c2y, x, y)：三次貝茲"
+  },
+  {
+   "name": "arc",
+   "doc": "g.arc(x, y, r, a0, a1, ccw?)：圓弧（弧度）"
+  },
+  {
+   "name": "ellipse",
+   "doc": "g.ellipse(x, y, rx, ry, rot?, a0?, a1?)"
+  },
+  {
+   "name": "rect",
+   "doc": "g.rect(x, y, w, h)"
+  },
+  {
+   "name": "roundRect",
+   "doc": "g.roundRect(x, y, w, h, r)"
+  },
+  {
+   "name": "circle",
+   "doc": "g.circle(x, y, r)：整圓"
+  },
+  {
+   "name": "line",
+   "doc": "g.line(x0, y0, x1, y1)：一段線（含 begin）"
+  },
+  {
+   "name": "close",
+   "doc": "g.close()：封閉路徑"
+  },
+  {
+   "name": "stroke",
+   "doc": "g.stroke({color, width, cap, join, dash, dashOffset, alpha, progress})：描邊；cap 只能 \"butt\"|\"round\"|\"square\"，join 只能 \"miter\"|\"round\"|\"bevel\"，dash 是數字陣列；progress 0～1 只畫路徑前段（描邊畫出）"
+  },
+  {
+   "name": "fill",
+   "doc": "g.fill({color, alpha, gradient:{type:\"linear\"|\"radial\", x0,y0,x1,y1 | x,y,r, stops:[[0,\"#f00\"],[1,\"#00f\"]]}, rule:\"nonzero\"|\"evenodd\"})：填色"
+  },
+  {
+   "name": "clip",
+   "doc": "g.clip({rule})：以目前路徑裁切，g.restore 解除；rule 只能 \"nonzero\"|\"evenodd\""
+  },
+  {
+   "name": "text",
+   "doc": "g.text(str, x, y, {size, weight, font, color, align, baseline, outline, outlineWidth, shadow, gradient, letterSpacing})：文字（≤ 200 字）；font 只能 \"sans\"|\"display\"|\"rounded\"|\"mono\"，align 只能 \"left\"|\"center\"|\"right\"，baseline 只能 \"top\"|\"middle\"|\"alphabetic\"|\"bottom\"，outline 是描邊顏色"
+  },
+  {
+   "name": "measure",
+   "doc": "g.measure(str, {size, weight, font}) → 寬度"
+  },
+  {
+   "name": "image",
+   "doc": "g.image(bg, sx, sy, sw, sh, dx, dy, dw, dh)：把下層畫面的一塊畫上來（第一個參數一定是 bg）"
+  },
+  {
+   "name": "save",
+   "doc": "g.save()"
+  },
+  {
+   "name": "restore",
+   "doc": "g.restore()"
+  },
+  {
+   "name": "translate",
+   "doc": "g.translate(dx, dy)"
+  },
+  {
+   "name": "rotate",
+   "doc": "g.rotate(rad)"
+  },
+  {
+   "name": "scale",
+   "doc": "g.scale(sx, sy)"
+  },
+  {
+   "name": "alpha",
+   "doc": "g.alpha(a)：之後的作畫乘上透明度（到 restore）"
+  },
+  {
+   "name": "glow",
+   "doc": "g.glow({color, blur})：之後的作畫帶發光；g.glow(null) 關閉"
+  }
+ ],
+ "a": [
+  {
+   "name": "tone",
+   "doc": "a.tone({type:\"sine\"|\"square\"|\"sawtooth\"|\"triangle\", freq, freqEnd, at, dur, attack, release, gain, pan})：純音；時間都是秒（at 相對音效起點），gain 0～1、pan -1～1"
+  },
+  {
+   "name": "noise",
+   "doc": "a.noise({color:\"white\"|\"pink\", at, dur, filter:{type:\"lowpass\"|\"highpass\"|\"bandpass\", freq, freqEnd, q}, attack, release, gain, pan})：雜訊"
+  }
+ ],
+ "bg": [
+  {
+   "name": "available",
+   "doc": "bg.available：有沒有下層畫面（沒有時所有方法回中性值）"
+  },
+  {
+   "name": "sample",
+   "doc": "bg.sample(x, y) → {r, g, b, l}"
+  },
+  {
+   "name": "average",
+   "doc": "bg.average(x, y, w, h) → {r, g, b, l}"
+  },
+  {
+   "name": "brightest",
+   "doc": "bg.brightest(x, y, w, h) → {x, y, l}"
+  },
+  {
+   "name": "find",
+   "doc": "bg.find(color, tolerance, x, y, w, h) → {x, y, w, h, count} 或 null（一定要處理 null）"
+  },
+  {
+   "name": "edges",
+   "doc": "bg.edges(x, y, w, h, threshold) → [{x, y}]（≤ 512 點）"
+  },
+  {
+   "name": "motion",
+   "doc": "bg.motion(x, y, w, h) → 0～1 與前一格的差異"
+  }
+ ],
+ "env": [
+  {
+   "name": "width",
+   "doc": "虛擬畫布寬（高固定 1080）"
+  },
+  {
+   "name": "height",
+   "doc": "虛擬畫布高（1080）"
+  },
+  {
+   "name": "box",
+   "doc": "目標框 {x, y, w, h}（虛擬像素；框架已套路徑與偏移）"
+  },
+  {
+   "name": "duration",
+   "doc": "這個圖層（或重播的一段）的長度（秒）"
+  },
+  {
+   "name": "fps",
+   "doc": "每秒格數"
+  },
+  {
+   "name": "frame",
+   "doc": "第幾格"
+  },
+  {
+   "name": "t",
+   "doc": "動畫開始後的秒數"
+  },
+  {
+   "name": "progress",
+   "doc": "t／duration（0～1）"
+  },
+  {
+   "name": "seed",
+   "doc": "亂數種子"
+  },
+  {
+   "name": "rand",
+   "doc": "env.rand(i) → 0～1，同一個 i 永遠同一個值（沒有 Math.random）"
+  }
+ ],
+ "globals": [
+  {
+   "name": "Math",
+   "doc": "Math.abs/ceil/floor/round/trunc/sign/min/max/pow/sqrt/hypot/exp/log/log2/log10/sin/cos/tan/asin/acos/atan/atan2、PI/E/SQRT2/LN2/LN10"
+  },
+  {
+   "name": "ease",
+   "doc": "ease.<名稱>(u)：緩動曲線"
+  },
+  {
+   "name": "String",
+   "doc": "String(v)"
+  },
+  {
+   "name": "Number",
+   "doc": "Number(v)"
+  },
+  {
+   "name": "Boolean",
+   "doc": "Boolean(v)"
+  },
+  {
+   "name": "parseInt",
+   "doc": "parseInt(s, radix)"
+  },
+  {
+   "name": "parseFloat",
+   "doc": "parseFloat(s)"
+  },
+  {
+   "name": "isFinite",
+   "doc": "isFinite(v)"
+  },
+  {
+   "name": "isNaN",
+   "doc": "isNaN(v)"
+  },
+  {
+   "name": "lerp",
+   "doc": "lerp(a, b, u)"
+  },
+  {
+   "name": "clamp",
+   "doc": "clamp(x, lo, hi)"
+  },
+  {
+   "name": "Object",
+   "doc": "Object.keys/values/entries"
+  },
+  {
+   "name": "Array",
+   "doc": "Array.isArray"
+  },
+  {
+   "name": "Infinity",
+   "doc": "Infinity"
+  },
+  {
+   "name": "NaN",
+   "doc": "NaN"
+  }
+ ],
+ "ease": [
+  "linear",
+  "inQuad",
+  "outQuad",
+  "inOutQuad",
+  "inCubic",
+  "outCubic",
+  "inOutCubic",
+  "outBack",
+  "outElastic",
+  "outBounce"
+ ],
+ "params": {
+  "types": [
+   "number",
+   "color",
+   "enum",
+   "boolean",
+   "text",
+   "point",
+   "font",
+   "easing",
+   "angle",
+   "duration",
+   "direction"
+  ],
+  "roles": [
+   "primary",
+   "secondary",
+   "text",
+   "outline"
+  ],
+  "fonts": [
+   "sans",
+   "display",
+   "rounded",
+   "mono"
+  ],
+  "directions": [
+   "left",
+   "right",
+   "top",
+   "bottom",
+   "top-left",
+   "top-right",
+   "bottom-left",
+   "bottom-right"
+  ]
+ },
+ "categories": [
+  "pointer",
+  "emphasis",
+  "text",
+  "overlay",
+  "feedback",
+  "fx",
+  "sound"
+ ],
+ "framework": {
+  "anchors": [
+   "center",
+   "top",
+   "bottom",
+   "left",
+   "right",
+   "top-left",
+   "top-right",
+   "bottom-left",
+   "bottom-right"
+  ],
+  "sides": [
+   "left",
+   "right",
+   "top",
+   "bottom"
+  ],
+  "enter": [
+   "fade",
+   "slide",
+   "pop",
+   "bounce",
+   "wipe"
+  ],
+  "exit": [
+   "fade",
+   "slide",
+   "shrink",
+   "wipe"
+  ],
+  "emphasis": [
+   "pulse",
+   "shake",
+   "wiggle",
+   "bounce",
+   "blink"
+  ],
+  "loop": [
+   "restart",
+   "pingpong"
+  ],
+  "maxPathPoints": 200
+ },
+ "limits": {
+  "code": 20000,
+  "commands": 5000,
+  "text": 200,
+  "textPerFrame": 600,
+  "images": 16,
+  "soundEvents": 32,
+  "soundSeconds": 10,
+  "bgCalls": 64
+ }
+}

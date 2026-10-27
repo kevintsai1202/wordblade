@@ -1,0 +1,618 @@
+{
+  "version": 2,
+  "note": "內建動畫插件（schema 2：category／preview／顏色 role／duration・direction・font 型別，Vibe特效插件框架設計 docs/superpowers/specs/2026-10-20-anim-plugin-framework-design.md §2.2）與範本（設計 docs/superpowers/specs/2026-10-06-anim-engine-design.md §9）。code 寫成一行一個字串的陣列方便閱讀，載入時以換行接起來；元件一樣經過護欄（AnimRuntime.validateComponent、smokeTest），驗收：node scripts/anim-library-unit.js。",
+  "components": [
+    {
+      "id": "arrow", "version": 2, "schema": 2, "category": "pointer", "preview": {"t": 1, "box": {"w": 0.2, "h": 0.12}}, "kind": "visual", "name": "箭頭",
+      "description": "從框外某個方向畫出、飛入或彈入一支箭頭，尖端指向框的邊緣或角",
+      "tags": ["指向", "箭頭"],
+      "params": {
+        "from": {"type": "direction", "default": "left", "label": "從哪邊來"},
+        "motion": {"type": "enum", "values": ["draw", "fly", "bounce"], "labels": ["畫出", "飛入", "彈入"], "default": "draw", "label": "進場"},
+        "color": {"type": "color", "role": "primary", "default": "#ff3b30", "label": "顏色"},
+        "width": {"type": "number", "min": 4, "max": 40, "step": 1, "default": 12, "label": "粗細"},
+        "length": {"type": "number", "min": 60, "max": 800, "step": 10, "default": 220, "label": "長度"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.6, "label": "進場秒數"},
+        "shadow": {"type": "boolean", "default": true, "label": "陰影"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, gap = 12;",
+        "  // 方向表用兩個陣列：top 是禁用的屬性名（瀏覽器頂層視窗），不能當物件的鍵",
+        "  const names = ['left', 'right', 'top', 'bottom', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];",
+        "  const vecs = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];",
+        "  const d = vecs[Math.max(0, names.indexOf(p.from))], n = Math.hypot(d[0], d[1]), dx = d[0] / n, dy = d[1] / n;",
+        "  // 尖端：框上朝來向的那一點（邊的中點或角），往外留一點空隙",
+        "  const tipX = b.x + b.w * (0.5 + d[0] * 0.5) + dx * gap, tipY = b.y + b.h * (0.5 + d[1] * 0.5) + dy * gap;",
+        "  const u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  let ox = 0, oy = 0, s = 1, prog = 1;",
+        "  if (p.motion === 'draw') prog = ease.outCubic(u);",
+        "  else if (p.motion === 'fly') { const k = (1 - ease.outCubic(u)) * p.length * 1.5; ox = dx * k; oy = dy * k; }",
+        "  else { s = ease.outBack(u); if (u >= 1) { const k = Math.sin((t - p.inDur) * 7) * 8; ox = dx * k; oy = dy * k; } }",
+        "  if (s <= 0.001) return;",
+        "  const head = p.width * 2.8, px = -dy, py = dx;",
+        "  g.save(); g.alpha(fade); g.translate(tipX + ox, tipY + oy); g.scale(s, s);",
+        "  if (p.shadow) g.glow({color: '#00000080', blur: 10});",
+        "  g.begin(); g.moveTo(dx * p.length, dy * p.length); g.lineTo(dx * head * 0.6, dy * head * 0.6);",
+        "  g.stroke({color: p.color, width: p.width, cap: 'round', progress: prog});",
+        "  const hs = p.motion === 'draw' ? ease.outBack(clamp((u - 0.75) / 0.25, 0, 1)) : 1;",
+        "  if (hs > 0.001) {",
+        "    g.begin(); g.moveTo(0, 0);",
+        "    g.lineTo((dx * head + px * head * 0.6) * hs, (dy * head + py * head * 0.6) * hs);",
+        "    g.lineTo((dx * head - px * head * 0.6) * hs, (dy * head - py * head * 0.6) * hs);",
+        "    g.close(); g.fill({color: p.color});",
+        "  }",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "box", "version": 2, "schema": 2, "category": "emphasis", "preview": {"t": 1, "box": {"w": 0.3, "h": 0.2}}, "kind": "visual", "name": "框線",
+      "description": "沿著目標框畫出圓角框線，可改成彈出或淡入，進場後可以輕輕脈動",
+      "tags": ["框", "強調"],
+      "params": {
+        "motion": {"type": "enum", "values": ["draw", "pop", "fade"], "labels": ["描邊畫出", "彈出", "淡入"], "default": "draw", "label": "進場"},
+        "color": {"type": "color", "role": "primary", "default": "#ff3b30", "label": "顏色"},
+        "width": {"type": "number", "min": 3, "max": 30, "step": 1, "default": 8, "label": "粗細"},
+        "radius": {"type": "number", "min": 0, "max": 80, "step": 1, "default": 12, "label": "圓角"},
+        "padding": {"type": "number", "min": 0, "max": 80, "step": 1, "default": 10, "label": "外擴"},
+        "pulse": {"type": "boolean", "default": false, "label": "脈動"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.6, "label": "進場秒數"},
+        "shadow": {"type": "boolean", "default": true, "label": "陰影"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, pad = p.padding, u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  const w = b.w + pad * 2, h = b.h + pad * 2;",
+        "  let s = 1, a = fade, prog = 1;",
+        "  if (p.motion === 'draw') prog = ease.outCubic(u);",
+        "  else if (p.motion === 'pop') s = ease.outBack(u);",
+        "  else a = a * ease.outQuad(u);",
+        "  if (p.pulse && u >= 1) s = s * (1 + Math.sin((t - p.inDur) * 6) * 0.025);",
+        "  if (s <= 0.001) return;",
+        "  g.save(); g.alpha(a); g.translate(b.x + b.w / 2, b.y + b.h / 2); g.scale(s, s);",
+        "  if (p.shadow) g.glow({color: '#00000080', blur: 12});",
+        "  g.begin(); g.roundRect(-w / 2, -h / 2, w, h, p.radius);",
+        "  g.stroke({color: p.color, width: p.width, progress: prog});",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "circle", "version": 2, "schema": 2, "category": "emphasis", "preview": {"t": 1, "box": {"w": 0.24, "h": 0.14}}, "kind": "visual", "name": "圈選",
+      "description": "像用筆隨手圈起來的橢圓，筆畫略有起伏、結尾稍微超過起點",
+      "tags": ["圈", "強調", "手繪"],
+      "params": {
+        "color": {"type": "color", "role": "primary", "default": "#ff3b30", "label": "顏色"},
+        "width": {"type": "number", "min": 3, "max": 24, "step": 1, "default": 7, "label": "粗細"},
+        "padding": {"type": "number", "min": 0, "max": 80, "step": 1, "default": 18, "label": "外擴"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.7, "label": "畫出秒數"},
+        "shadow": {"type": "boolean", "default": true, "label": "陰影"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  const cx = b.x + b.w / 2, cy = b.y + b.h / 2, rx = b.w / 2 + p.padding, ry = b.h / 2 + p.padding;",
+        "  // 起伏與起點由 env.rand 決定：同一段動畫每一格都一樣，預覽與輸出相同",
+        "  const ph = env.rand(1) * 6.28, start = -2.2 + env.rand(2) * 0.4, steps = 56;",
+        "  g.save(); g.alpha(fade);",
+        "  if (p.shadow) g.glow({color: '#00000066', blur: 8});",
+        "  g.begin();",
+        "  for (let i = 0; i <= steps; i++) {",
+        "    const a = start + (i / steps) * Math.PI * 2 * 1.1;",
+        "    const k = 1 + 0.045 * Math.sin(a * 3 + ph) + 0.02 * Math.sin(a * 7 + ph * 2) + (i / steps) * 0.06;",
+        "    const x = cx + Math.cos(a) * rx * k, y = cy + Math.sin(a) * ry * k;",
+        "    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);",
+        "  }",
+        "  g.stroke({color: p.color, width: p.width, progress: ease.inOutQuad(u)});",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "underline", "version": 2, "schema": 2, "category": "emphasis", "preview": {"t": 1, "box": {"w": 0.3, "h": 0.06}}, "kind": "visual", "name": "底線",
+      "description": "在框的下緣由左到右畫出底線，可選直線、波浪線或雙線",
+      "tags": ["底線", "強調"],
+      "params": {
+        "style": {"type": "enum", "values": ["straight", "wavy", "double"], "labels": ["直線", "波浪", "雙線"], "default": "straight", "label": "樣式"},
+        "color": {"type": "color", "role": "primary", "default": "#ffd400", "label": "顏色"},
+        "width": {"type": "number", "min": 2, "max": 30, "step": 1, "default": 8, "label": "粗細"},
+        "offset": {"type": "number", "min": -40, "max": 80, "step": 1, "default": 8, "label": "與框的距離"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.5, "label": "畫出秒數"},
+        "shadow": {"type": "boolean", "default": true, "label": "陰影"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  const y = b.y + b.h + p.offset, x0 = b.x, x1 = b.x + b.w;",
+        "  g.save(); g.alpha(fade);",
+        "  if (p.shadow) g.glow({color: '#00000066', blur: 8});",
+        "  g.begin();",
+        "  if (p.style === 'wavy') {",
+        "    const n = Math.max(8, Math.round(b.w / 12)), waves = Math.max(2, Math.round(b.w / 60));",
+        "    for (let i = 0; i <= n; i++) {",
+        "      const x = lerp(x0, x1, i / n), yy = y + Math.sin(i / n * Math.PI * 2 * waves) * p.width * 0.9;",
+        "      if (i === 0) g.moveTo(x, yy); else g.lineTo(x, yy);",
+        "    }",
+        "  } else {",
+        "    g.moveTo(x0, y); g.lineTo(x1, y);",
+        "    if (p.style === 'double') { g.moveTo(x0, y + p.width * 1.8); g.lineTo(x1, y + p.width * 1.8); }",
+        "  }",
+        "  g.stroke({color: p.color, width: p.width, progress: ease.outCubic(u)});",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "highlighter", "version": 2, "schema": 2, "category": "emphasis", "preview": {"t": 1, "box": {"w": 0.3, "h": 0.06}}, "kind": "visual", "name": "螢光筆劃記",
+      "description": "半透明的螢光筆由左到右劃過框裡的字，邊緣略帶手繪感",
+      "tags": ["螢光筆", "劃記", "強調"],
+      "params": {
+        "color": {"type": "color", "role": "primary", "default": "#ffe14d", "label": "顏色"},
+        "opacity": {"type": "number", "min": 0.15, "max": 0.8, "step": 0.05, "default": 0.45, "label": "濃淡"},
+        "thickness": {"type": "number", "min": 0.3, "max": 1.2, "step": 0.05, "default": 0.85, "label": "粗細（框高的比例）"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.6, "label": "劃過秒數"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, u = ease.outCubic(clamp(t / p.inDur, 0, 1)), fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  const h = b.h * p.thickness, y = b.y + (b.h - h) / 2, x0 = b.x - 6, w = (b.w + 12) * u;",
+        "  if (w <= 1) return;",
+        "  g.save(); g.alpha(fade * p.opacity);",
+        "  g.begin();",
+        "  g.moveTo(x0, y + env.rand(1) * 4); g.lineTo(x0 + w, y + env.rand(2) * 4);",
+        "  g.lineTo(x0 + w - 4, y + h - env.rand(3) * 4); g.lineTo(x0 + 3, y + h - env.rand(4) * 4); g.close();",
+        "  g.fill({color: p.color});",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "ripple", "version": 2, "schema": 2, "category": "emphasis", "preview": {"t": 0.4, "box": {"w": 0.06, "h": 0.1}}, "kind": "visual", "name": "點擊漣漪",
+      "description": "在框的中心按下去並擴散出一圈圈漣漪，標示滑鼠點擊的位置",
+      "tags": ["點擊", "滑鼠", "漣漪"],
+      "params": {
+        "color": {"type": "color", "role": "primary", "default": "#38bdf8", "label": "顏色"},
+        "width": {"type": "number", "min": 2, "max": 16, "step": 1, "default": 5, "label": "粗細"},
+        "size": {"type": "number", "min": 0.5, "max": 3, "step": 0.1, "default": 1, "label": "大小"},
+        "period": {"type": "number", "min": 0.3, "max": 2, "step": 0.1, "default": 0.8, "label": "每圈秒數"},
+        "repeat": {"type": "boolean", "default": true, "label": "重複"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, cx = b.x + b.w / 2, cy = b.y + b.h / 2, r1 = Math.max(30, Math.min(b.w, b.h) / 2) * p.size;",
+        "  const fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  g.save(); g.alpha(fade);",
+        "  for (let i = 0; i < 3; i++) {",
+        "    let local = t - i * 0.15;",
+        "    if (local < 0) continue;",
+        "    if (p.repeat) local = local % p.period; else if (local > p.period) continue;",
+        "    const u = local / p.period;",
+        "    g.begin(); g.circle(cx, cy, lerp(r1 * 0.15, r1, ease.outCubic(u)));",
+        "    g.stroke({color: p.color, width: lerp(p.width, 1, u), alpha: 1 - u});",
+        "  }",
+        "  const press = ease.outBack(clamp(t / 0.2, 0, 1));",
+        "  g.begin(); g.circle(cx, cy, r1 * 0.14 * (1.5 - 0.5 * press));",
+        "  g.fill({color: p.color, alpha: 0.8});",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "check", "version": 2, "schema": 2, "category": "feedback", "preview": {"t": 1, "box": {"w": 0.12, "h": 0.2}}, "kind": "visual", "name": "打勾",
+      "description": "在框的中央畫出一個勾，可帶外圈",
+      "tags": ["打勾", "正確", "完成"],
+      "params": {
+        "color": {"type": "color", "role": "primary", "default": "#34c759", "label": "顏色"},
+        "width": {"type": "number", "min": 4, "max": 30, "step": 1, "default": 12, "label": "粗細"},
+        "ring": {"type": "boolean", "default": true, "label": "外圈"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.6, "label": "畫出秒數"},
+        "shadow": {"type": "boolean", "default": true, "label": "陰影"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, s = Math.min(b.w, b.h) * 0.8, cx = b.x + b.w / 2, cy = b.y + b.h / 2;",
+        "  const u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  g.save(); g.alpha(fade);",
+        "  if (p.shadow) g.glow({color: '#00000080', blur: 10});",
+        "  if (p.ring) {",
+        "    g.begin(); g.circle(cx, cy, s / 2); g.fill({color: p.color, alpha: 0.2 * ease.outCubic(u)});",
+        "    g.begin(); g.circle(cx, cy, s / 2); g.stroke({color: p.color, width: p.width * 0.6, progress: ease.outCubic(u)});",
+        "  }",
+        "  const k = ease.outCubic(clamp((t - p.inDur * 0.35) / (p.inDur * 0.65), 0, 1));",
+        "  if (k > 0) {",
+        "    g.begin(); g.moveTo(cx - s * 0.27, cy + s * 0.02); g.lineTo(cx - s * 0.07, cy + s * 0.22); g.lineTo(cx + s * 0.29, cy - s * 0.2);",
+        "    g.stroke({color: p.color, width: p.width, cap: 'round', join: 'round', progress: k});",
+        "  }",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "cross", "version": 2, "schema": 2, "category": "feedback", "preview": {"t": 1, "box": {"w": 0.12, "h": 0.2}}, "kind": "visual", "name": "打叉",
+      "description": "在框的中央先後畫出兩筆，組成一個叉，可帶外圈",
+      "tags": ["打叉", "錯誤", "不要"],
+      "params": {
+        "color": {"type": "color", "role": "primary", "default": "#ff3b30", "label": "顏色"},
+        "width": {"type": "number", "min": 4, "max": 30, "step": 1, "default": 12, "label": "粗細"},
+        "ring": {"type": "boolean", "default": false, "label": "外圈"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.5, "label": "畫出秒數"},
+        "shadow": {"type": "boolean", "default": true, "label": "陰影"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, k = Math.min(b.w, b.h) * 0.32, cx = b.x + b.w / 2, cy = b.y + b.h / 2;",
+        "  const half = p.inDur / 2, fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  const u1 = ease.outCubic(clamp(t / half, 0, 1)), u2 = ease.outCubic(clamp((t - half) / half, 0, 1));",
+        "  g.save(); g.alpha(fade);",
+        "  if (p.shadow) g.glow({color: '#00000080', blur: 10});",
+        "  if (p.ring) { g.begin(); g.circle(cx, cy, k * 1.55); g.stroke({color: p.color, width: p.width * 0.6, progress: u1}); }",
+        "  g.begin(); g.moveTo(cx - k, cy - k); g.lineTo(cx + k, cy + k);",
+        "  g.stroke({color: p.color, width: p.width, cap: 'round', progress: u1});",
+        "  if (u2 > 0) {",
+        "    g.begin(); g.moveTo(cx + k, cy - k); g.lineTo(cx - k, cy + k);",
+        "    g.stroke({color: p.color, width: p.width, cap: 'round', progress: u2});",
+        "  }",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "badge", "version": 2, "schema": 2, "category": "feedback", "preview": {"t": 1, "box": {"w": 0.1, "h": 0.15}}, "kind": "visual", "name": "數字標號",
+      "description": "在框的角落或中央彈出一個圓形標號，標示操作步驟",
+      "tags": ["標號", "步驟", "數字"],
+      "params": {
+        "text": {"type": "text", "maxLength": 4, "default": "1", "label": "標號"},
+        "corner": {"type": "enum", "values": ["top-left", "top-right", "bottom-left", "bottom-right", "center"], "labels": ["左上", "右上", "左下", "右下", "中央"], "default": "top-left", "label": "位置"},
+        "color": {"type": "color", "role": "primary", "default": "#ff3b30", "label": "底色"},
+        "textColor": {"type": "color", "role": "text", "default": "#ffffff", "label": "字色"},
+        "size": {"type": "number", "min": 24, "max": 200, "step": 2, "default": 64, "label": "大小"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.4, "label": "彈出秒數"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, r = p.size / 2;",
+        "  const spots = {'top-left': [b.x, b.y], 'top-right': [b.x + b.w, b.y], 'bottom-left': [b.x, b.y + b.h], 'bottom-right': [b.x + b.w, b.y + b.h], center: [b.x + b.w / 2, b.y + b.h / 2]};",
+        "  const at = spots[p.corner], s = ease.outBack(clamp(t / p.inDur, 0, 1)), fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  if (s <= 0.001) return;",
+        "  g.save(); g.alpha(fade); g.translate(at[0], at[1]); g.scale(s, s);",
+        "  g.glow({color: '#00000080', blur: 10});",
+        "  g.begin(); g.circle(0, 0, r); g.fill({color: p.color});",
+        "  g.glow(null);",
+        "  g.begin(); g.circle(0, 0, r); g.stroke({color: '#ffffff', width: Math.max(2, r * 0.12)});",
+        "  g.text(p.text, 0, r * 0.04, {size: r * 1.1, color: p.textColor, weight: 900});",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "label", "version": 2, "schema": 2, "category": "pointer", "preview": {"t": 1, "box": {"w": 0.2, "h": 0.1}}, "kind": "visual", "name": "文字標籤",
+      "description": "在框的上下左右彈出一個小對話框，尖角指向框",
+      "tags": ["標籤", "說明", "對話框"],
+      "params": {
+        "text": {"type": "text", "maxLength": 30, "default": "這裡", "label": "文字"},
+        "side": {"type": "enum", "values": ["above", "below", "left", "right"], "labels": ["上方", "下方", "左邊", "右邊"], "default": "above", "label": "位置"},
+        "color": {"type": "color", "role": "primary", "default": "#111827", "label": "底色"},
+        "textColor": {"type": "color", "role": "text", "default": "#ffffff", "label": "字色"},
+        "size": {"type": "number", "min": 16, "max": 120, "step": 2, "default": 40, "label": "字級"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.4, "label": "彈出秒數"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, u = clamp(t / p.inDur, 0, 1), s = ease.outBack(u), fade = clamp((env.duration - t) / 0.25, 0, 1);",
+        "  if (s <= 0.001) return;",
+        "  const font = {size: p.size, weight: 700};",
+        "  const w = g.measure(p.text, font) + p.size * 1.2, h = p.size * 1.7, tail = p.size * 0.55;",
+        "  const cx = b.x + b.w / 2, cy = b.y + b.h / 2;",
+        "  let x = cx, y = cy, tx = cx, ty = cy;  // 標籤中心與尖角指的點",
+        "  if (p.side === 'above') { y = b.y - tail - h / 2; ty = b.y - 4; }",
+        "  else if (p.side === 'below') { y = b.y + b.h + tail + h / 2; ty = b.y + b.h + 4; }",
+        "  else if (p.side === 'left') { x = b.x - tail - w / 2; tx = b.x - 4; }",
+        "  else { x = b.x + b.w + tail + w / 2; tx = b.x + b.w + 4; }",
+        "  x = clamp(x, w / 2 + 8, env.width - w / 2 - 8); y = clamp(y, h / 2 + 8, env.height - h / 2 - 8);",
+        "  const ax = tx - x, ay = ty - y, vertical = p.side === 'above' || p.side === 'below';",
+        "  // 以尖角為中心彈出，再把原點移回標籤中心",
+        "  g.save(); g.alpha(fade); g.translate(tx, ty); g.scale(s, s); g.translate(-ax, -ay);",
+        "  g.glow({color: '#00000066', blur: 14});",
+        "  g.begin(); g.roundRect(-w / 2, -h / 2, w, h, h * 0.3); g.fill({color: p.color});",
+        "  g.begin();",
+        "  if (vertical) { const by = Math.sign(ay) * (h / 2 - 1); g.moveTo(-tail * 0.6, by); g.lineTo(ax, ay); g.lineTo(tail * 0.6, by); }",
+        "  else { const bx = Math.sign(ax) * (w / 2 - 1); g.moveTo(bx, -tail * 0.6); g.lineTo(ax, ay); g.lineTo(bx, tail * 0.6); }",
+        "  g.close(); g.fill({color: p.color});",
+        "  g.glow(null);",
+        "  g.text(p.text, 0, 0, {size: p.size, weight: 700, color: p.textColor});",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "spotlight", "version": 2, "schema": 2, "category": "overlay", "preview": {"t": 1, "box": {"w": 0.3, "h": 0.25}}, "kind": "visual", "name": "聚光燈",
+      "description": "框外的畫面變暗、框內保持原樣，頭尾淡入淡出，把視線集中在框裡",
+      "tags": ["聚光燈", "聚焦", "變暗"],
+      "params": {
+        "shape": {"type": "enum", "values": ["rect", "ellipse"], "labels": ["圓角矩形", "橢圓"], "default": "rect", "label": "形狀"},
+        "color": {"type": "color", "role": "primary", "default": "#000000", "label": "顏色"},
+        "dim": {"type": "number", "min": 0.2, "max": 0.9, "step": 0.05, "default": 0.6, "label": "變暗程度"},
+        "padding": {"type": "number", "min": 0, "max": 80, "step": 1, "default": 16, "label": "外擴"},
+        "radius": {"type": "number", "min": 0, "max": 80, "step": 1, "default": 16, "label": "圓角"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 2, "default": 0.4, "label": "淡入淡出秒數"},
+        "ring": {"type": "boolean", "default": false, "label": "框邊亮線"},
+        "ringColor": {"type": "color", "role": "secondary", "default": "#ffffff", "label": "亮線顏色"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, pad = p.padding;",
+        "  const a = clamp(t / p.inDur, 0, 1) * clamp((env.duration - t) / p.inDur, 0, 1);",
+        "  if (a <= 0) return;",
+        "  const cx = b.x + b.w / 2, cy = b.y + b.h / 2, rx = b.w / 2 + pad, ry = b.h / 2 + pad;",
+        "  // 整張畫面加上框的形狀、evenodd 填色：框內是洞",
+        "  g.begin(); g.rect(0, 0, env.width, env.height);",
+        "  if (p.shape === 'ellipse') { g.moveTo(cx + rx, cy); g.ellipse(cx, cy, rx, ry); }",
+        "  else g.roundRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2, p.radius);",
+        "  g.fill({color: p.color, alpha: a * p.dim, rule: 'evenodd'});",
+        "  if (p.ring) {",
+        "    g.begin();",
+        "    if (p.shape === 'ellipse') { g.moveTo(cx + rx, cy); g.ellipse(cx, cy, rx, ry); }",
+        "    else g.roundRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2, p.radius);",
+        "    g.stroke({color: p.ringColor, width: 4, alpha: a});",
+        "  }",
+        "}"
+      ]
+    },
+    {
+      "id": "title", "version": 2, "schema": 2, "category": "text", "preview": {"t": 1, "box": {"w": 0.6, "h": 0.18}}, "kind": "visual", "name": "動畫字卡",
+      "description": "在框的中央出現標題文字：彈出、打字機、逐字跳入或漸層，最多三行",
+      "tags": ["字卡", "標題", "文字"],
+      "params": {
+        "text": {"type": "text", "maxLength": 40, "default": "重點來了！", "label": "文字"},
+        "mode": {"type": "enum", "values": ["pop", "typewriter", "bounce", "gradient"], "labels": ["彈出", "打字機", "逐字跳入", "漸層"], "default": "pop", "label": "效果"},
+        "font": {"type": "font", "default": "sans", "label": "字型"},
+        "size": {"type": "number", "min": 24, "max": 200, "step": 2, "default": 96, "label": "字級"},
+        "color": {"type": "color", "role": "primary", "default": "#ffffff", "label": "顏色"},
+        "accent": {"type": "color", "role": "secondary", "default": "#ffd400", "label": "漸層第二色"},
+        "outline": {"type": "color", "role": "outline", "default": "#000000", "label": "描邊顏色"},
+        "outlineWidth": {"type": "number", "min": 0, "max": 30, "step": 1, "default": 10, "label": "描邊粗細"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.5, "label": "進場秒數"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, cx = b.x + b.w / 2, cy = b.y + b.h / 2, fade = clamp((env.duration - t) / 0.3, 0, 1);",
+        "  const lines = p.text.split('\\n').slice(0, 3), lh = p.size * 1.25;",
+        "  const style = {size: p.size, font: p.font, weight: 900, color: p.color, outline: p.outline, outlineWidth: p.outlineWidth,",
+        "    shadow: {color: '#00000099', blur: 14, x: 0, y: 6}};",
+        "  if (p.mode === 'gradient') style.gradient = {type: 'linear', x0: 0, y0: -p.size / 2, x1: 0, y1: p.size / 2, stops: [[0, p.color], [1, p.accent]]};",
+        "  const total = lines.reduce((n, l) => n + [...l].length, 0);",
+        "  const shown = p.mode === 'typewriter' ? Math.floor(clamp(t / p.inDur, 0, 1) * total) : total;",
+        "  let typed = 0;  // 打字機：前面幾行的字數",
+        "  g.save(); g.alpha(fade);",
+        "  for (let i = 0; i < lines.length; i++) {",
+        "    const chars = [...lines[i]], y = cy + (i - (lines.length - 1) / 2) * lh;",
+        "    if (p.mode === 'typewriter') {",
+        "      const n = clamp(shown - typed, 0, chars.length); typed += chars.length;",
+        "      if (n <= 0) continue;",
+        "      const full = g.measure(lines[i], style), part = chars.slice(0, n).join('');",
+        "      g.text(part, cx - full / 2, y, {...style, align: 'left'});",
+        "      if (n < chars.length || (shown >= total && i === lines.length - 1 && Math.floor(t * 2) % 2 === 0)) {",
+        "        g.begin(); g.rect(cx - full / 2 + g.measure(part, style) + 6, y - p.size * 0.45, p.size * 0.08, p.size * 0.9); g.fill({color: p.color});",
+        "      }",
+        "    } else if (p.mode === 'bounce') {",
+        "      let x = cx - g.measure(lines[i], style) / 2;",
+        "      for (let k = 0; k < chars.length; k++) {",
+        "        const w = g.measure(chars[k], style), local = clamp((t - (k + i * 4) * 0.06) / 0.5, 0, 1);",
+        "        if (local > 0) g.text(chars[k], x + w / 2, y - (1 - ease.outBounce(local)) * p.size * 1.2, {...style, alpha: clamp(local * 3, 0, 1)});",
+        "        x += w;",
+        "      }",
+        "    } else {",
+        "      const local = clamp((t - i * 0.1) / p.inDur, 0, 1);",
+        "      if (local <= 0) continue;",
+        "      const s = p.mode === 'pop' ? ease.outBack(local) : lerp(0.85, 1, ease.outCubic(local));",
+        "      g.save(); g.translate(cx, y); g.scale(s, s);",
+        "      if (p.mode === 'pop') g.rotate((1 - local) * -0.12);",
+        "      g.text(lines[i], 0, 0, {...style, alpha: p.mode === 'pop' ? 1 : ease.outCubic(local)});",
+        "      g.restore();",
+        "    }",
+        "  }",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "magnifier", "version": 1, "schema": 2, "category": "overlay", "preview": {"t": 1, "box": {"w": 0.2, "h": 0.2}}, "kind": "visual", "name": "放大鏡", "description": "把框裡的畫面放大顯示在圓形鏡片裡（讀下層畫面），鏡片從框中央彈出並微微漂浮", "tags": ["放大", "鏡片", "下層畫面"],
+      "params": {
+        "zoom": {"type": "number", "min": 1.2, "max": 4, "step": 0.1, "default": 2, "label": "倍率"},
+        "size": {"type": "number", "min": 0.5, "max": 3, "step": 0.1, "default": 1.4, "label": "鏡片大小（框寬的倍數）"},
+        "color": {"type": "color", "role": "primary", "default": "#ffffff", "label": "鏡框顏色"},
+        "width": {"type": "number", "min": 2, "max": 30, "step": 1, "default": 8, "label": "鏡框粗細"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 2, "default": 0.4, "label": "彈出秒數"}
+      },
+      "code": [
+        "function draw(g, t, p, env, bg) {",
+        "  const b = env.box, cx = b.x + b.w / 2, cy = b.y + b.h / 2;",
+        "  const r = Math.max(24, b.w * p.size / 2), u = clamp(t / p.inDur, 0, 1), s = ease.outBack(u);",
+        "  if (s <= 0.001) return;",
+        "  const fy = Math.sin(t * 2.2) * 4;  // 微微漂浮",
+        "  g.save(); g.translate(cx, cy + fy); g.scale(s, s); g.translate(-cx, -cy);",
+        "  g.begin(); g.circle(cx, cy, r); g.clip({});",
+        "  // 鏡片裡是放大的下層畫面；沒有下層畫面時填半透明底色",
+        "  if (bg.available) g.image(bg, cx - r / p.zoom, cy - r / p.zoom, 2 * r / p.zoom, 2 * r / p.zoom, cx - r, cy - r, 2 * r, 2 * r);",
+        "  else { g.begin(); g.rect(cx - r, cy - r, 2 * r, 2 * r); g.fill({color: '#ffffff', alpha: 0.25}); }",
+        "  g.restore();",
+        "  g.save(); g.translate(cx, cy + fy); g.scale(s, s); g.translate(-cx, -cy);",
+        "  g.glow({color: '#00000080', blur: 12});",
+        "  g.begin(); g.circle(cx, cy, r); g.stroke({color: p.color, width: p.width});",
+        "  g.glow(null);",
+        "  g.begin(); g.arc(cx, cy, r - p.width * 1.2, -2.4, -1.4); g.stroke({color: '#ffffff', width: p.width * 0.5, cap: 'round', alpha: 0.7});  // 反光",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "contrast-box", "version": 1, "schema": 2, "category": "emphasis", "preview": {"t": 1, "box": {"w": 0.3, "h": 0.2}}, "kind": "visual", "name": "對比框線", "description": "框線顏色依框裡畫面的亮度自動挑（亮底用深色、暗底用亮色），描邊畫出；讀下層畫面", "tags": ["框", "強調", "自動配色", "下層畫面"],
+      "params": {
+        "light": {"type": "color", "role": "primary", "default": "#ffd400", "label": "暗底用的顏色"},
+        "dark": {"type": "color", "role": "secondary", "default": "#1d4ed8", "label": "亮底用的顏色"},
+        "width": {"type": "number", "min": 2, "max": 40, "step": 1, "default": 8, "label": "粗細"},
+        "padding": {"type": "number", "min": 0, "max": 100, "step": 1, "default": 10, "label": "外擴"},
+        "inDur": {"type": "duration", "min": 0.1, "max": 3, "default": 0.6, "label": "畫出秒數"}
+      },
+      "code": [
+        "function draw(g, t, p, env, bg) {",
+        "  const b = env.box, pad = p.padding, u = clamp(t / p.inDur, 0, 1);",
+        "  const a = bg.average(b.x, b.y, b.w, b.h);  // 沒有下層畫面時 l 是 0 → 當暗底",
+        "  const color = a.l > 0.55 ? p.dark : p.light;",
+        "  g.begin(); g.roundRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2, 12);",
+        "  g.stroke({color, width: p.width, join: 'round', progress: ease.outCubic(u)});",
+        "}"
+      ]
+    },
+    {
+      "id": "whoosh", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "咻",
+      "description": "風切聲：雜訊的頻率由低往高掃過，配合飛入的動作",
+      "tags": ["咻", "飛入"],
+      "params": {
+        "volume": {"type": "number", "min": 0, "max": 1, "step": 0.05, "default": 0.6, "label": "音量"},
+        "length": {"type": "number", "min": 0.15, "max": 1.5, "step": 0.05, "default": 0.45, "label": "長度（秒）"}
+      },
+      "code": [
+        "function sound(a, p, env) {",
+        "  a.noise({color: 'pink', dur: p.length, gain: p.volume, attack: p.length * 0.3, release: p.length * 0.6,",
+        "    filter: {type: 'bandpass', freq: 400, freqEnd: 3200, q: 1.2}});",
+        "}"
+      ]
+    },
+    {
+      "id": "pop", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "啵",
+      "description": "短促的啵一聲：音高快速往下掉，加一點點擊感",
+      "tags": ["啵", "彈出"],
+      "params": {
+        "volume": {"type": "number", "min": 0, "max": 1, "step": 0.05, "default": 0.7, "label": "音量"},
+        "pitch": {"type": "number", "min": 200, "max": 1500, "step": 10, "default": 650, "label": "音高"}
+      },
+      "code": [
+        "function sound(a, p, env) {",
+        "  a.tone({type: 'sine', freq: p.pitch, freqEnd: p.pitch * 0.3, dur: 0.13, gain: p.volume, attack: 0.002, release: 0.09});",
+        "  a.noise({dur: 0.02, gain: p.volume * 0.35, attack: 0.001, release: 0.015, filter: {type: 'highpass', freq: 2500}});",
+        "}"
+      ]
+    },
+    {
+      "id": "ding", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "叮",
+      "description": "清脆的鈴聲：基音加兩個泛音，尾音慢慢消失",
+      "tags": ["叮", "提示"],
+      "params": {
+        "volume": {"type": "number", "min": 0, "max": 1, "step": 0.05, "default": 0.5, "label": "音量"},
+        "pitch": {"type": "number", "min": 400, "max": 2400, "step": 10, "default": 1320, "label": "音高"}
+      },
+      "code": [
+        "function sound(a, p, env) {",
+        "  a.tone({type: 'sine', freq: p.pitch, dur: 1.2, gain: p.volume, attack: 0.003, release: 1.1});",
+        "  a.tone({type: 'sine', freq: p.pitch * 2.76, dur: 0.6, gain: p.volume * 0.3, attack: 0.003, release: 0.55});",
+        "  a.tone({type: 'triangle', freq: p.pitch * 5.4, dur: 0.25, gain: p.volume * 0.1, attack: 0.002, release: 0.24});",
+        "}"
+      ]
+    },
+    {
+      "id": "click", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "喀",
+      "description": "滑鼠或鍵盤的喀一聲；可連續好幾下，當打字聲",
+      "tags": ["喀", "點擊", "打字"],
+      "params": {
+        "volume": {"type": "number", "min": 0, "max": 1, "step": 0.05, "default": 0.6, "label": "音量"},
+        "count": {"type": "number", "min": 1, "max": 24, "step": 1, "default": 1, "label": "幾下"},
+        "gap": {"type": "number", "min": 0.04, "max": 0.5, "step": 0.01, "default": 0.09, "label": "間隔（秒）"}
+      },
+      "code": [
+        "function sound(a, p, env) {",
+        "  const n = Math.round(p.count);",
+        "  for (let i = 0; i < n; i++) {",
+        "    const at = i * p.gap + (i % 3) * 0.012;  // 間隔略有變化，比較像真的打字",
+        "    a.noise({at: at, dur: 0.03, gain: p.volume, attack: 0.001, release: 0.02, filter: {type: 'bandpass', freq: 3000 + (i % 4) * 350, q: 2}});",
+        "  }",
+        "}"
+      ]
+    },
+    {
+      "id": "success", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "成功",
+      "description": "三個音往上的和弦琶音，表示完成或答對",
+      "tags": ["成功", "完成", "正確"],
+      "params": {
+        "volume": {"type": "number", "min": 0, "max": 1, "step": 0.05, "default": 0.5, "label": "音量"}
+      },
+      "code": [
+        "function sound(a, p, env) {",
+        "  const notes = [1047, 1319, 1568];",
+        "  for (let i = 0; i < notes.length; i++) {",
+        "    const last = i === notes.length - 1;",
+        "    a.tone({type: 'triangle', freq: notes[i], at: i * 0.09, dur: last ? 0.5 : 0.22, gain: p.volume, attack: 0.004, release: last ? 0.42 : 0.15});",
+        "  }",
+        "}"
+      ]
+    },
+    {
+      "id": "error", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "錯誤",
+      "description": "兩聲往下的低音，表示錯誤或不行",
+      "tags": ["錯誤", "警告"],
+      "params": {
+        "volume": {"type": "number", "min": 0, "max": 1, "step": 0.05, "default": 0.45, "label": "音量"}
+      },
+      "code": [
+        "function sound(a, p, env) {",
+        "  a.tone({type: 'square', freq: 220, freqEnd: 200, dur: 0.16, gain: p.volume * 0.5, attack: 0.003, release: 0.05});",
+        "  a.tone({type: 'square', freq: 165, freqEnd: 150, at: 0.19, dur: 0.3, gain: p.volume * 0.5, attack: 0.003, release: 0.15});",
+        "}"
+      ]
+    },
+    {
+      "id": "rise", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "上升",
+      "description": "音高一路往上滑，配合放大、出現或期待感",
+      "tags": ["上升", "期待"],
+      "params": {
+        "volume": {"type": "number", "min": 0, "max": 1, "step": 0.05, "default": 0.45, "label": "音量"},
+        "length": {"type": "number", "min": 0.2, "max": 3, "step": 0.1, "default": 0.7, "label": "長度（秒）"}
+      },
+      "code": [
+        "function sound(a, p, env) {",
+        "  a.tone({type: 'sine', freq: 300, freqEnd: 1200, dur: p.length, gain: p.volume, attack: p.length * 0.2, release: p.length * 0.25});",
+        "  a.noise({color: 'pink', dur: p.length, gain: p.volume * 0.25, attack: p.length * 0.7, release: p.length * 0.2,",
+        "    filter: {type: 'highpass', freq: 800, freqEnd: 5000, q: 0.7}});",
+        "}"
+      ]
+    },
+    {
+      "id": "sparkle", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "閃亮",
+      "description": "一串細碎的高音，像星星閃一下",
+      "tags": ["閃亮", "魔法"],
+      "params": {
+        "volume": {"type": "number", "min": 0, "max": 1, "step": 0.05, "default": 0.35, "label": "音量"}
+      },
+      "code": [
+        "function sound(a, p, env) {",
+        "  const notes = [2093, 2637, 3136, 3951, 2349, 2794, 3520];",
+        "  for (let i = 0; i < notes.length; i++) {",
+        "    a.tone({type: 'sine', freq: notes[i], at: i * 0.055, dur: 0.18, gain: p.volume * (1 - i * 0.1), attack: 0.002, release: 0.16, pan: (i % 2 ? 0.4 : -0.4)});",
+        "  }",
+        "}"
+      ]
+    }
+  ],
+  "templates": [
+    {"id": "box-ding", "name": "紅框描邊＋叮", "title": "紅框", "box": {"w": 0.3, "h": 0.2},
+     "layers": [{"component": "box", "params": {"motion": "draw"}}], "sounds": [{"component": "ding", "params": {}, "at": 0.45}]},
+    {"id": "arrow-whoosh", "name": "箭頭飛入＋咻", "title": "箭頭", "box": {"w": 0.2, "h": 0.12},
+     "layers": [{"component": "arrow", "params": {"motion": "fly", "from": "left"}}], "sounds": [{"component": "whoosh", "params": {}, "at": 0}]},
+    {"id": "circle-pop", "name": "圈選強調＋啵", "title": "圈選", "box": {"w": 0.24, "h": 0.14},
+     "layers": [{"component": "circle", "params": {}}], "sounds": [{"component": "pop", "params": {}, "at": 0.6}]},
+    {"id": "ripple-click", "name": "點擊漣漪＋喀", "title": "點擊", "box": {"w": 0.06, "h": 0.1},
+     "layers": [{"component": "ripple", "params": {}}], "sounds": [{"component": "click", "params": {}, "at": 0}]},
+    {"id": "check-success", "name": "打勾＋成功", "title": "打勾", "box": {"w": 0.12, "h": 0.2},
+     "layers": [{"component": "check", "params": {}}], "sounds": [{"component": "success", "params": {}, "at": 0.25}]},
+    {"id": "highlighter", "name": "螢光筆劃記", "title": "劃記", "box": {"w": 0.3, "h": 0.06},
+     "layers": [{"component": "highlighter", "params": {}}], "sounds": []},
+    {"id": "spotlight", "name": "聚光燈", "title": "聚光燈", "box": {"w": 0.3, "h": 0.25},
+     "layers": [{"component": "spotlight", "params": {}}], "sounds": []},
+    {"id": "title-pop", "name": "綜藝字卡（彈出＋啵）", "title": "字卡", "box": {"w": 0.6, "h": 0.18},
+     "layers": [{"component": "title", "params": {"mode": "pop"}}], "sounds": [{"component": "pop", "params": {}, "at": 0}]},
+    {"id": "title-typewriter", "name": "打字機標題（＋喀喀）", "title": "打字機", "box": {"w": 0.6, "h": 0.18},
+     "layers": [{"component": "title", "params": {"mode": "typewriter", "inDur": 1}}], "sounds": [{"component": "click", "params": {"count": 10, "gap": 0.1}, "at": 0}]},
+    {"id": "magnifier", "name": "放大鏡（讀畫面）", "title": "放大鏡", "box": {"w": 0.2, "h": 0.2}, "layers": [{"component": "magnifier", "params": {}}], "sounds": [{"component": "pop", "params": {}, "at": 0}]}
+  ]
+}

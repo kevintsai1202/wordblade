@@ -1,0 +1,542 @@
+{
+  "components": {
+    "arrow": {
+      "_src": "dee7f749b8",
+      "description": "Draws, flies in or pops in an arrow from one side outside the box, with the tip pointing at an edge or corner of the box",
+      "name": "Arrow",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "from": {
+          "label": "Comes from"
+        },
+        "inDur": {
+          "label": "Entrance time (sec)"
+        },
+        "length": {
+          "label": "Length"
+        },
+        "motion": {
+          "label": "Entrance",
+          "labels": [
+            "Draw",
+            "Fly in",
+            "Pop in"
+          ]
+        },
+        "shadow": {
+          "label": "Shadow"
+        },
+        "width": {
+          "label": "Thickness"
+        }
+      }
+    },
+    "badge": {
+      "_src": "b8aba02785",
+      "description": "Pops up a round numbered badge at a corner or the center of the box, marking a step in a procedure",
+      "name": "Number badge",
+      "params": {
+        "color": {
+          "label": "Fill color"
+        },
+        "corner": {
+          "label": "Position",
+          "labels": [
+            "Top left",
+            "Top right",
+            "Bottom left",
+            "Bottom right",
+            "Center"
+          ]
+        },
+        "inDur": {
+          "label": "Pop-in time (sec)"
+        },
+        "size": {
+          "label": "Size"
+        },
+        "text": {
+          "label": "Number"
+        },
+        "textColor": {
+          "label": "Text color"
+        }
+      }
+    },
+    "box": {
+      "_src": "b798d16fa9",
+      "description": "Draws a rounded outline along the target box; can be changed to pop or fade in, and can pulse gently after it appears",
+      "name": "Box outline",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "inDur": {
+          "label": "Entrance time (sec)"
+        },
+        "motion": {
+          "label": "Entrance",
+          "labels": [
+            "Trace outline",
+            "Pop",
+            "Fade in"
+          ]
+        },
+        "padding": {
+          "label": "Expand"
+        },
+        "pulse": {
+          "label": "Pulse"
+        },
+        "radius": {
+          "label": "Corner radius"
+        },
+        "shadow": {
+          "label": "Shadow"
+        },
+        "width": {
+          "label": "Thickness"
+        }
+      }
+    },
+    "check": {
+      "_src": "e7dc018eee",
+      "description": "Draws a checkmark at the center of the box, optionally with an outer ring",
+      "name": "Checkmark",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "inDur": {
+          "label": "Draw time (sec)"
+        },
+        "ring": {
+          "label": "Outer ring"
+        },
+        "shadow": {
+          "label": "Shadow"
+        },
+        "width": {
+          "label": "Thickness"
+        }
+      }
+    },
+    "circle": {
+      "_src": "ce8a595a22",
+      "description": "A hand-drawn-looking ellipse, as if circled with a pen: the stroke wobbles slightly and the end overshoots the start a little",
+      "name": "Circle",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "inDur": {
+          "label": "Draw time (sec)"
+        },
+        "padding": {
+          "label": "Expand"
+        },
+        "shadow": {
+          "label": "Shadow"
+        },
+        "width": {
+          "label": "Thickness"
+        }
+      }
+    },
+    "click": {
+      "_src": "a3fa3b0248",
+      "description": "The click of a mouse or keyboard; can repeat several times to sound like typing",
+      "name": "Click",
+      "params": {
+        "count": {
+          "label": "Number of clicks"
+        },
+        "gap": {
+          "label": "Interval (sec)"
+        },
+        "volume": {
+          "label": "Volume"
+        }
+      }
+    },
+    "contrast-box": {
+      "_src": "ad86f116e5",
+      "description": "The outline color is picked automatically from the brightness of the picture inside the box (dark on a light background, light on a dark one) and traced in; reads the layer below",
+      "name": "Contrast box outline",
+      "params": {
+        "dark": {
+          "label": "Color for light backgrounds"
+        },
+        "inDur": {
+          "label": "Draw time (sec)"
+        },
+        "light": {
+          "label": "Color for dark backgrounds"
+        },
+        "padding": {
+          "label": "Expand"
+        },
+        "width": {
+          "label": "Thickness"
+        }
+      }
+    },
+    "cross": {
+      "_src": "20664bb635",
+      "description": "Draws two strokes one after the other at the center of the box to form a cross, optionally with an outer ring",
+      "name": "Cross",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "inDur": {
+          "label": "Draw time (sec)"
+        },
+        "ring": {
+          "label": "Outer ring"
+        },
+        "shadow": {
+          "label": "Shadow"
+        },
+        "width": {
+          "label": "Thickness"
+        }
+      }
+    },
+    "ding": {
+      "_src": "876a248484",
+      "description": "A crisp bell sound: a fundamental plus two overtones, with the tail fading out slowly",
+      "name": "Ding",
+      "params": {
+        "pitch": {
+          "label": "Pitch"
+        },
+        "volume": {
+          "label": "Volume"
+        }
+      }
+    },
+    "error": {
+      "_src": "5f3359ba11",
+      "description": "Two falling low notes, signaling an error or \"no\"",
+      "name": "Error",
+      "params": {
+        "volume": {
+          "label": "Volume"
+        }
+      }
+    },
+    "highlighter": {
+      "_src": "6b1ee46d54",
+      "description": "A semi-transparent highlighter sweeps across the text in the box from left to right, with slightly hand-drawn edges",
+      "name": "Highlighter",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "inDur": {
+          "label": "Sweep time (sec)"
+        },
+        "opacity": {
+          "label": "Opacity"
+        },
+        "thickness": {
+          "label": "Thickness (relative to box height)"
+        }
+      }
+    },
+    "label": {
+      "_src": "a1ad835dc5",
+      "description": "Pops up a small speech bubble above, below, or to the left or right of the box, with its pointer aimed at the box",
+      "name": "Text label",
+      "params": {
+        "color": {
+          "label": "Fill color"
+        },
+        "inDur": {
+          "label": "Pop-in time (sec)"
+        },
+        "side": {
+          "label": "Position",
+          "labels": [
+            "Above",
+            "Below",
+            "Left",
+            "Right"
+          ]
+        },
+        "size": {
+          "label": "Font size"
+        },
+        "text": {
+          "label": "Text"
+        },
+        "textColor": {
+          "label": "Text color"
+        }
+      }
+    },
+    "magnifier": {
+      "_src": "580ecae596",
+      "description": "Enlarges the picture inside the box in a round lens (reads the layer below); the lens pops out from the center of the box and floats slightly",
+      "name": "Magnifier",
+      "params": {
+        "color": {
+          "label": "Rim color"
+        },
+        "inDur": {
+          "label": "Pop-in time (sec)"
+        },
+        "size": {
+          "label": "Lens size (multiple of box width)"
+        },
+        "width": {
+          "label": "Rim thickness"
+        },
+        "zoom": {
+          "label": "Magnification"
+        }
+      }
+    },
+    "pop": {
+      "_src": "24f872b994",
+      "description": "A short pop: the pitch drops quickly, with a slight click feel",
+      "name": "Pop",
+      "params": {
+        "pitch": {
+          "label": "Pitch"
+        },
+        "volume": {
+          "label": "Volume"
+        }
+      }
+    },
+    "ripple": {
+      "_src": "804fdb04a7",
+      "description": "Presses down at the center of the box and spreads out rings of ripples, marking where the mouse clicks",
+      "name": "Click ripple",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "period": {
+          "label": "Time per ring (sec)"
+        },
+        "repeat": {
+          "label": "Repeat"
+        },
+        "size": {
+          "label": "Size"
+        },
+        "width": {
+          "label": "Thickness"
+        }
+      }
+    },
+    "rise": {
+      "_src": "d358542267",
+      "description": "The pitch slides steadily upward, to go with a zoom-in, an appearance, or a sense of anticipation",
+      "name": "Rise",
+      "params": {
+        "length": {
+          "label": "Length (sec)"
+        },
+        "volume": {
+          "label": "Volume"
+        }
+      }
+    },
+    "sparkle": {
+      "_src": "cccee49665",
+      "description": "A string of tiny high notes, like a star twinkling",
+      "name": "Sparkle",
+      "params": {
+        "volume": {
+          "label": "Volume"
+        }
+      }
+    },
+    "spotlight": {
+      "_src": "1e7b69f4c8",
+      "description": "Dims the picture outside the box and leaves the inside as is, fading in and out at the start and end, to focus attention on the box",
+      "name": "Spotlight",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "dim": {
+          "label": "Dimming"
+        },
+        "inDur": {
+          "label": "Fade time (sec)"
+        },
+        "padding": {
+          "label": "Expand"
+        },
+        "radius": {
+          "label": "Corner radius"
+        },
+        "ring": {
+          "label": "Edge highlight"
+        },
+        "ringColor": {
+          "label": "Highlight color"
+        },
+        "shape": {
+          "label": "Shape",
+          "labels": [
+            "Rounded rectangle",
+            "Ellipse"
+          ]
+        }
+      }
+    },
+    "success": {
+      "_src": "8721f037c0",
+      "description": "A rising three-note arpeggio, signaling completion or a correct answer",
+      "name": "Success",
+      "params": {
+        "volume": {
+          "label": "Volume"
+        }
+      }
+    },
+    "title": {
+      "_src": "48616162c0",
+      "description": "Shows title text at the center of the box: pop, typewriter, character by character, or gradient, up to three lines",
+      "name": "Animated title card",
+      "params": {
+        "accent": {
+          "label": "Gradient second color"
+        },
+        "color": {
+          "label": "Color"
+        },
+        "font": {
+          "label": "Font"
+        },
+        "inDur": {
+          "label": "Entrance time (sec)"
+        },
+        "mode": {
+          "label": "Effect",
+          "labels": [
+            "Pop",
+            "Typewriter",
+            "Character by character",
+            "Gradient"
+          ]
+        },
+        "outline": {
+          "label": "Outline color"
+        },
+        "outlineWidth": {
+          "label": "Outline thickness"
+        },
+        "size": {
+          "label": "Font size"
+        },
+        "text": {
+          "label": "Text"
+        }
+      }
+    },
+    "underline": {
+      "_src": "ccc607be9c",
+      "description": "Draws an underline along the bottom edge of the box from left to right; choose a straight, wavy or double line",
+      "name": "Underline",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "inDur": {
+          "label": "Draw time (sec)"
+        },
+        "offset": {
+          "label": "Distance from box"
+        },
+        "shadow": {
+          "label": "Shadow"
+        },
+        "style": {
+          "label": "Style",
+          "labels": [
+            "Straight",
+            "Wavy",
+            "Double"
+          ]
+        },
+        "width": {
+          "label": "Thickness"
+        }
+      }
+    },
+    "whoosh": {
+      "_src": "5bb63bbe98",
+      "description": "Wind-swish sound: noise sweeps from low to high frequency, to go with a fly-in motion",
+      "name": "Whoosh",
+      "params": {
+        "length": {
+          "label": "Length (sec)"
+        },
+        "volume": {
+          "label": "Volume"
+        }
+      }
+    }
+  },
+  "templates": {
+    "arrow-whoosh": {
+      "_src": "a1749718e7",
+      "name": "Arrow fly-in + whoosh",
+      "title": "Arrow"
+    },
+    "box-ding": {
+      "_src": "e7d7bd2144",
+      "name": "Red box outline + ding",
+      "title": "Red box"
+    },
+    "check-success": {
+      "_src": "71a22d5eef",
+      "name": "Checkmark + success",
+      "title": "Checkmark"
+    },
+    "circle-pop": {
+      "_src": "db5ae48935",
+      "name": "Circle highlight + pop",
+      "title": "Circle"
+    },
+    "highlighter": {
+      "_src": "cd5e23bc1f",
+      "name": "Highlighter",
+      "title": "Highlight"
+    },
+    "magnifier": {
+      "_src": "1bd82f7603",
+      "name": "Magnifier (reads the picture)",
+      "title": "Magnifier"
+    },
+    "ripple-click": {
+      "_src": "08c5e3b80a",
+      "name": "Click ripple + click",
+      "title": "Click"
+    },
+    "spotlight": {
+      "_src": "0e338eb1fa",
+      "name": "Spotlight",
+      "title": "Spotlight"
+    },
+    "title-pop": {
+      "_src": "667800197b",
+      "name": "Title card (pop + pop sound)",
+      "title": "Title card"
+    },
+    "title-typewriter": {
+      "_src": "b9b3dea1fa",
+      "name": "Typewriter title (+ clicks)",
+      "title": "Typewriter"
+    }
+  }
+}
