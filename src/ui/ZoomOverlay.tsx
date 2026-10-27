@@ -42,6 +42,7 @@ export function ZoomOverlay({ onPick, onCancel }: { onPick: (zoom: Zoom) => void
       }}
       onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
       tabIndex={0}
+      autoFocus
     >
       {box && <div className="zoom-box" style={{ left: `${box.x * 100}%`, top: `${box.y * 100}%`, width: `${box.s * 100}%`, height: `${box.s * 100}%` }} />}
       {!drag && <div className="zoom-hint">Drag a box over the area to zoom into</div>}
