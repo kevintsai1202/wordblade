@@ -7,7 +7,9 @@ import { runPlane3d, type BoardParams } from "../ai/plane3d";
 import { captureFrame } from "./capture";
 import manifest from "../anim/anim_api_manifest.json";
 import { displayOf, type Component, type ParamDef } from "../anim/library";
-import type { CameraKey, Effect, Project } from "../core/model";
+import type { CameraKey, Clip, Effect, Project } from "../core/model";
+import { MAX_SPEED, MIN_SPEED } from "../core/speed";
+import { clipEnd } from "../core/timeline";
 import type { Action } from "./state";
 
 /** 方向參數的選項與字型參數的選項（原專案 API 說明裡的列舉） */
@@ -77,9 +79,11 @@ function ParamField({ name, def, label, labels, value, onChange }: { name: strin
 }
 
 /** Inspector 頁籤 */
-export function InspectorTab({ project, effectId, playhead = 0, dispatch, preview, onPreview }: {
+export function InspectorTab({ project, effectId, clipId = null, playhead = 0, dispatch, preview, onPreview }: {
   project: Project;
   effectId: string | null;
+  /** 選取的片段（沒有選特效時顯示片段屬性：變速） */
+  clipId?: string | null;
   /** 播放頭（時間軸秒數）：新增鏡頭關鍵幀時放在這個時間 */
   playhead?: number;
   dispatch: Dispatch<Action>;
@@ -88,7 +92,11 @@ export function InspectorTab({ project, effectId, playhead = 0, dispatch, previe
   onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void;
 }) {
   const effect: Effect | undefined = project.effects.find((e) => e.id === effectId);
-  if (!effect) return <p className="muted placeholder">Select an effect on the timeline to edit it.</p>;
+  if (!effect) {
+    const clip = project.clips.find((c) => c.id === clipId);
+    if (clip) return <ClipInspector project={project} clip={clip} dispatch={dispatch} />;
+    return <p className="muted placeholder">Select a clip or an effect on the timeline to edit it.</p>;
+  }
   if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} playhead={playhead} dispatch={dispatch} preview={preview?.effectId === effect.id ? preview.params : null} onPreview={onPreview} />;
   const box = effect.params.box as Box;
   const layers = (effect.params.layers ?? []) as Layer[];
@@ -285,5 +293,39 @@ function KeyTimeInput({ value, max, onCommit }: { value: number; max: number; on
   return (
     <input type="number" min={0} max={max} step={0.1} value={draft} data-key-field="t"
       onChange={(e) => setDraft(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+  );
+}
+
+/** 變速的常用倍數 */
+const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
+
+/**
+ * 片段屬性（spec §5.20 片段變速，P1-6）：0.25～4 倍，常用倍數按鈕＋自訂。同位置的連動片段（A1 對白）一起變，
+ * V1 片段變長變短時後面的一起挪（setClipSpeed）。每次一筆可復原的編輯。
+ */
+function ClipInspector({ project, clip, dispatch }: { project: Project; clip: Clip; dispatch: Dispatch<Action> }) {
+  const media = project.media.find((m) => m.id === clip.mediaId);
+  const track = project.tracks.find((t) => t.id === clip.trackId);
+  const label = track ? `${track.kind === "video" ? "V" : "A"}${track.index + 1}` : "";
+  /** 設倍數 */
+  const set = (speed: number) => dispatch({ type: "commit", edits: [{ kind: "setSpeed", clipId: clip.id, speed }] });
+  return (
+    <div className="inspector" data-testid="clip-inspector">
+      <h3 className="section-title">{media?.name ?? clip.mediaId}</h3>
+      <p className="muted">{label} · {clip.start.toFixed(2)}s – {clipEnd(clip).toFixed(2)}s{clip.freeze ? " · freeze frame" : ""}</p>
+      <fieldset className="param-group" disabled={!!clip.freeze}>
+        <legend>Speed</legend>
+        <div className="speed-presets">
+          {SPEEDS.map((s) => (
+            <button key={s} type="button" data-speed={s} className={Math.abs(clip.speed - s) < 1e-6 ? "active" : ""} onClick={() => set(s)}>{s}×</button>
+          ))}
+        </div>
+        <label className="param-field"><span>Custom</span>
+          <input type="number" data-testid="speed-input" min={MIN_SPEED} max={MAX_SPEED} step={0.05} value={clip.speed}
+            onChange={(e) => { const v = Number(e.target.value); if (v > 0) set(v); }} />
+        </label>
+        <p className="muted">The linked audio changes with it and keeps its pitch. Later clips move to stay in sync.</p>
+      </fieldset>
+    </div>
   );
 }

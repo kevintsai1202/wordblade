@@ -37,7 +37,7 @@ function v1TrackId(project: Project | Draft<Project>): string | undefined {
 }
 
 /** 在草稿上依起點順序重算 V1 起點，首尾相接 */
-function layoutV1Draft(draft: Draft<Project>) {
+export function layoutV1Draft(draft: Draft<Project>) {
   const v1 = v1TrackId(draft);
   let cursor = 0;
   const clips = draft.clips.filter((c) => c.trackId === v1).sort((a, b) => a.start - b.start);
@@ -76,7 +76,7 @@ function setClipStart(clip: Draft<Clip>, t: Seconds) {
 }
 
 /** 淡入淡出不超過片段長度 */
-function clampFades(clip: Draft<Clip>) {
+export function clampFades(clip: Draft<Clip>) {
   const len = clipDuration(clip);
   clip.fadeIn = Math.min(clip.fadeIn, len);
   clip.fadeOut = Math.min(clip.fadeOut, len);

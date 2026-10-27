@@ -6,6 +6,7 @@ import type { CameraKey, Effect, Plugin, Project, Seconds, Word, ZoomRegion } fr
 import { setCaptionStyle, setMediaWords } from "./media";
 import { editWords } from "./transcriptEdit";
 import { addZoom, deleteZoom, setZoom } from "./zoom";
+import { setClipSpeed } from "./speed";
 import type { CaptionStyle } from "../captions/captionLayout";
 import { cutByWords, cutSourceRanges, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
 
@@ -30,7 +31,8 @@ export type Edit =
   | { kind: "cutRanges"; ranges: SourceRange[] }
   | { kind: "addZoom"; zoom: ZoomRegion }
   | { kind: "setZoom"; zoom: ZoomRegion }
-  | { kind: "deleteZoom"; zoomId: string };
+  | { kind: "deleteZoom"; zoomId: string }
+  | { kind: "setSpeed"; clipId: string; speed: number };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -55,6 +57,7 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "addZoom": return addZoom(project, edit.zoom);
     case "setZoom": return setZoom(project, edit.zoom);
     case "deleteZoom": return deleteZoom(project, edit.zoomId);
+    case "setSpeed": return setClipSpeed(project, edit.clipId, edit.speed);
   }
 }
 

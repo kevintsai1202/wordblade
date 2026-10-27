@@ -167,7 +167,7 @@ function App() {
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
-            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
+            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
           }}
         />
       </main>

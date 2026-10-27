@@ -196,3 +196,8 @@ button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor
 .zoom-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .zoom-list li { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
 .zoom-list li.selected { background: #263248; }
+
+/* 片段屬性：變速的常用倍數 */
+.speed-presets { display: flex; flex-wrap: wrap; gap: 4px; }
+.speed-presets button { padding: 1px 6px; }
+.speed-presets button.active { background: var(--accent); color: #fff; }

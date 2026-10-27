@@ -109,7 +109,8 @@ export class PreviewPlayer {
   /** 讓元素對準素材時間：播放中（只支援前進）就播並修正漂移，否則暫停並拖到位置 */
   private sync(el: HTMLMediaElement, srcTime: Seconds, playing: boolean, rate: number) {
     if (playing && rate > 0) {
-      el.playbackRate = rate;
+      // 瀏覽器只接受 0.0625～16 倍（超出會拋 NotSupportedError）：4 倍速片段再按 L 快轉到 8 倍就會超過，夾住
+      el.playbackRate = Math.min(16, Math.max(0.0625, rate));
       if (el.paused) {
         el.currentTime = srcTime;
         void el.play().catch(() => undefined);
