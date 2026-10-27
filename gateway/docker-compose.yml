@@ -1,0 +1,10 @@
+# 本機開發用 PostgreSQL（帳密與 application.yml 預設值一致）
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: wordblade
+      POSTGRES_USER: wordblade
+      POSTGRES_PASSWORD: wordblade
+    ports:
+      - "5432:5432"

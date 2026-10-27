@@ -1,0 +1,27 @@
+# Zeabur 注入 PORT（內網只開宣告的 8080）；本機預設 8080
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: wordblade-gateway
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wordblade}
+    username: ${DB_USER:wordblade}
+    password: ${DB_PASSWORD:wordblade}
+  ai:
+    openai:
+      # openai-java SDK 的 base-url 含 /v1，路徑由 SDK 補 /chat/completions
+      base-url: https://api.meta.ai/v1
+      api-key: ${META_API_KEY:}
+      chat:
+        options:
+          model: ${WORDBLADE_MODEL_SPARK:muse-spark-1.3-contributor}
+
+wordblade:
+  timezone: ${WORDBLADE_TIMEZONE:Asia/Taipei}
+  # 網頁版正式網域上線後，用環境變數 WORDBLADE_CORS_ALLOWED_ORIGINS（逗號分隔）整份覆蓋
+  cors-allowed-origins: ${WORDBLADE_CORS_ALLOWED_ORIGINS:http://localhost:1420,http://tauri.localhost}
+  models:
+    spark: ${WORDBLADE_MODEL_SPARK:muse-spark-1.3-contributor}
+    wonder: ${WORDBLADE_MODEL_WONDER:muse-wonder-1.0}
