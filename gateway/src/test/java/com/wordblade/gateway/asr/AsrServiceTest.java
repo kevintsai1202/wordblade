@@ -14,7 +14,7 @@ class AsrServiceTest {
     static class FakeClient implements MuseAsrClient {
         byte[] wav;
         List<String> keywords;
-        AsrResult reply = new AsrResult("hello world", List.of(new AsrResult.Turn("hello world", 100, 1900, "0")), 2500);
+        AsrResult reply = new AsrResult("hello world", List.of(new AsrResult.Turn("hello world", 100, 1900, "0")), 2500, List.of());
 
         @Override
         public AsrResult transcribe(byte[] wav, List<String> keywords) {

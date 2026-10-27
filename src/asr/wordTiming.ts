@@ -177,3 +177,77 @@ export function coverage(turns: Turn[], env: Envelope, a: Seconds, b: Seconds): 
   }
   return Math.min(1, covered / total);
 }
+
+/** Muse DELTA 串流的一個文字事件（素材時間：t＝事件當時處理到的秒數） */
+export interface Delta {
+  text: string;
+  t: Seconds;
+}
+
+/** DELTA 事件比字的結尾晚多少（秒；2026-10-27 實測句首 0.36～1.09、扣掉字長約 0.3～0.4） */
+export const DELTA_DELAY: Seconds = 0.35;
+/** 估出來的起點落在無聲處時，往後找開口最多找多遠 */
+const SNAP_FORWARD: Seconds = 1.5;
+/** 由 DELTA 事件估字的範圍時，每個字最多佔幾秒 */
+const MAX_WORD: Seconds = 0.5;
+/** 估出來的起點離開口多近就吸附過去（前一個字在停頓之前時） */
+const SNAP_NEAR: Seconds = 0.3;
+
+/**
+ * DELTA 錨點 → 詞級時間（spec §5.2 步驟 3）：
+ * 1. 每個事件的字佔 [前一個事件時間 − 延遲, 這個事件時間 − 延遲]（每個字最多 0.5 秒），同一事件的幾個字依字數比例分；
+ * 2. 起點落在無聲處 → 往後吸附到下一個開口（1.5 秒內；字不會在停頓裡）；離開口 0.3 秒內、且前一個字在停頓之前 → 吸附到開口；
+ * 3. 起點嚴格遞增；結尾是下一個字的起點，若中間有停頓就收在有聲段的結尾。
+ * Muse 沒有詞級時間，但 DELTA 事件約每 0.32 秒一個、每個約 1.2 字，比依字數攤在整段話上準得多（長 turn 不再累積誤差）。
+ */
+export function deltasToWords(mediaId: string, deltas: Delta[], env: Envelope, delay: Seconds = DELTA_DELAY): Word[] {
+  const voiced = voicedSegments(env, 0, env.rms.length / env.rate);
+  /** t 所在的有聲段（不在就 -1） */
+  const segAt = (t: Seconds) => voiced.findIndex((v) => t >= v.start && t < v.end);
+  /** t 之後第一個開口 */
+  const nextOnset = (t: Seconds) => voiced.find((v) => v.start >= t);
+  // 1. 依事件估起點
+  const est: { text: string; start: Seconds }[] = [];
+  let prev: Seconds | null = null;
+  for (const d of deltas) {
+    const tokens = tokenize(d.text);
+    if (!tokens.length) continue;
+    const end = d.t - delay;
+    // 每個字最多佔 0.5 秒：兩個事件之間隔著停頓時，不讓停頓被算成這個字的長度（否則停頓後的第一個字會落回前一句的尾巴）
+    const begin = Math.min(end, Math.max(prev === null ? -Infinity : prev - delay, end - MAX_WORD * tokens.length));
+    const weights = tokens.map(weight);
+    const total = weights.reduce((a, b) => a + b, 0);
+    let acc = 0;
+    for (const [i, tok] of tokens.entries()) {
+      est.push({ text: tok, start: begin + ((end - begin) * acc) / total });
+      acc += weights[i];
+    }
+    prev = d.t;
+  }
+  // 2. 吸附到有聲段
+  const starts: Seconds[] = [];
+  for (const [i, w] of est.entries()) {
+    let s = Math.max(0, w.start);
+    const before = i ? starts[i - 1] : -Infinity;
+    if (segAt(s) < 0) {
+      // 落在無聲處：往後找開口
+      const on = nextOnset(s);
+      if (on && on.start - s <= SNAP_FORWARD) s = on.start;
+    } else {
+      // 在有聲段裡：附近有開口、而且前一個字在這個開口之前的停頓裡或更早 → 吸附到開口
+      const near = voiced.find((v) => Math.abs(v.start - s) <= SNAP_NEAR && before < v.start);
+      if (near) s = near.start;
+    }
+    starts.push(Math.max(s, before + 0.02));
+  }
+  // 3. 結尾
+  return est.map((w, i) => {
+    const start = starts[i];
+    const seg = voiced[segAt(start)];
+    const next = i + 1 < starts.length ? starts[i + 1] : Infinity;
+    const end = Math.min(next, seg ? seg.end : start + 0.5);
+    // 長度限制在 0.05～1.5 秒；先捨入到毫秒再限制，避免捨入後短於 0.05
+    const s0 = ms(start);
+    return { id: `${mediaId}:w${i}`, mediaId, text: w.text, start: s0, end: Math.min(Math.max(ms(end), s0 + 0.051), s0 + 1.5) };
+  });
+}

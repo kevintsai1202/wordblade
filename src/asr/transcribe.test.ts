@@ -73,3 +73,22 @@ describe("transcribeMedia", () => {
     await expect(transcribeMedia({ ...media, duration: 10 }, e, async () => new Uint8Array(1), async () => { throw Object.assign(new Error("bad"), { status: 400 }); }, () => undefined)).rejects.toThrow("bad");
   });
 });
+
+describe("transcribeMedia：DELTA 錨點", () => {
+  it("閘道回了 deltas：詞從 deltas 來，時間加上段的起點；turn 時間扣掉事件延遲", async () => {
+    // 有聲 0～50（第一段）、60～100（第二段，切在 50～60 的無聲處）
+    const e = env(100, [[1, 50], [61, 100]]);
+    const send = async (wav: Uint8Array): Promise<AsrResponse> => wav[0] === 0
+      ? { transcript: "alpha beta", audioDurationMs: 0, turns: [{ transcript: "alpha beta", startMs: 1400, endMs: 3000, speaker: "A" }], deltas: [{ text: "alpha", ms: 1700 }, { text: "beta", ms: 2100 }] }
+      : { transcript: "gamma", audioDurationMs: 0, turns: [{ transcript: "gamma", startMs: 11200, endMs: 12000, speaker: "A" }], deltas: [{ text: "gamma", ms: 11400 }] };
+    let n = 0;
+    const result = await transcribeMedia({ ...media, duration: 100 }, e, async () => new Uint8Array([n++]), send, () => undefined, { maxSegment: 60, parallel: 1 });
+    expect(result.segments).toBe(2);
+    expect(result.words.map((w) => w.text)).toEqual(["alpha", "beta", "gamma"]);
+    // alpha 落在第一個開口（1 秒）；第二段從 50 秒左右的無聲處開始，gamma 在段內 11.4 秒 − 延遲 → 吸附到 61 秒的開口
+    expect(result.words[0].start).toBeCloseTo(1, 1);
+    expect(result.words[2].start).toBeCloseTo(61, 0);
+    // turn 時間扣掉 DELTA 延遲
+    expect(result.turns[0].start).toBeCloseTo(1.4 - 0.35, 2);
+  });
+});

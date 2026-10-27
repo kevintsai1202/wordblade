@@ -1,15 +1,17 @@
-// 一支素材的 Muse ASR 流程（spec §5.2）：在無聲處切段 → 抽音訊（Engine）→ 最多 3 段平行送閘道 → turn 時間換回素材時間 →
-// 依音量包絡重建詞級時間。抽音訊與送出由呼叫端注入（測試換成假的）。
+// 一支素材的 Muse ASR 流程（spec §5.2）：在無聲處切段 → 抽音訊（Engine）→ 最多 3 段平行送閘道 → 時間換回素材時間 →
+// 詞級時間：閘道有回 DELTA 事件就用它當錨點（deltasToWords），舊版閘道沒有就依音量包絡把 turn 的字攤開（turnsToWords）。抽音訊與送出由呼叫端注入（測試換成假的）。
 import type { Envelope } from "../audio/envelope";
 import type { Media, Word } from "../core/model";
 import { splitAtSilence } from "./segment";
-import { coverage, turnsToWords, type Turn } from "./wordTiming";
+import { coverage, DELTA_DELAY, deltasToWords, turnsToWords, type Delta, type Turn } from "./wordTiming";
 
 /** 閘道 /v1/asr 的回應 */
 export interface AsrResponse {
   transcript: string;
   turns: { transcript: string; startMs: number; endMs: number; speaker: string | null }[];
   audioDurationMs: number;
+  /** DELTA 串流的文字事件（閘道 10/27 起才有；舊版閘道沒有時退回依包絡推算） */
+  deltas?: { text: string; ms: number }[];
 }
 
 /** 進度：完成幾段／共幾段 */
@@ -59,6 +61,8 @@ export async function transcribeMedia(
   // 在上限前 1/3 的範圍內找無聲處（最多 30 秒）
   const segments = splitAtSilence(env, media.duration, max, Math.min(30, max / 3));
   const turns: Turn[][] = segments.map(() => []);
+  /** 各段的 DELTA 事件（素材時間）；有任何一段沒有 deltas 就整支退回包絡推算 */
+  const deltas: (Delta[] | null)[] = segments.map(() => null);
   let next = 0;
   let done = 0;
   onProgress({ done, total: segments.length });
@@ -81,9 +85,12 @@ export async function transcribeMedia(
       const i = next++;
       const seg = segments[i];
       const res = await sendWithRetry(await extract(media, seg.start, seg.end));
+      // DELTA 版的 turn 時間是事件時間（比實際晚），扣掉延遲
+      const shift = res.deltas ? DELTA_DELAY : 0;
       const list: Turn[] = res.turns
         .filter((t) => t.transcript.trim())
-        .map((t) => ({ text: t.transcript, start: seg.start + t.startMs / 1000, end: Math.min(seg.end, seg.start + t.endMs / 1000) }));
+        .map((t) => ({ text: t.transcript, start: Math.max(seg.start, seg.start + t.startMs / 1000 - shift), end: Math.min(seg.end, seg.start + t.endMs / 1000 - shift) }));
+      if (res.deltas) deltas[i] = res.deltas.map((d) => ({ text: d.text, t: seg.start + d.ms / 1000 }));
       // 沒有 turn 時間（只有整段文字）：整段當一個 turn
       if (!list.length && res.transcript.trim()) list.push({ text: res.transcript, start: seg.start, end: seg.end });
       turns[i] = list;
@@ -93,5 +100,8 @@ export async function transcribeMedia(
   await Promise.all(Array.from({ length: Math.min(parallel, segments.length) }, worker));
 
   const all = turns.flat().sort((a, b) => a.start - b.start);
-  return { words: turnsToWords(media.id, all, env), segments: segments.length, coverage: coverage(all, env, 0, media.duration), turns: all };
+  // 每段都有 DELTA 事件：用它當詞級時間的錨點；否則照舊依包絡把 turn 的字攤開
+  const anchored = deltas.every((d) => d !== null);
+  const words = anchored ? deltasToWords(media.id, deltas.flatMap((d) => d!), env) : turnsToWords(media.id, all, env);
+  return { words, segments: segments.length, coverage: coverage(all, env, 0, media.duration), turns: all };
 }
