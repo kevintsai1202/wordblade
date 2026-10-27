@@ -1,11 +1,11 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { ENVELOPE_RATE } from "../audio/envelope";
 import { IMAGE_DURATION } from "../core/media";
 import type { Media } from "../core/model";
-import { NotImplementedError, UnsupportedMediaError, type Engine, type ImportSource, type Prepared } from "./Engine";
+import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared } from "./Engine";
 
 /** Rust probe_media 回傳的規格 */
 interface ProbeInfo {
@@ -114,6 +114,31 @@ export class DesktopEngine implements Engine {
 
   async makeMezzanine(_mediaId: string): Promise<string> {
     throw new NotImplementedError("makeMezzanine");
+  }
+
+  /** 原檔（WebCodecs 解不了的用中間檔）的 asset 網址；mediabunny 用 Range 分段讀 */
+  async exportSource(media: Media): Promise<Blob | string> {
+    const path = media.mezzaninePath ?? media.path;
+    if (!path) throw new Error(`Media ${media.name ?? media.id} has no source`);
+    return convertFileSrc(path);
+  }
+
+  /** 存檔對話框選位置，Rust 分塊寫入（raw body）；SRT 寫在同一個資料夾、同檔名 */
+  async openExportTarget(suggestedName: string): Promise<ExportTarget | null> {
+    const path = await save({ defaultPath: suggestedName, filters: [{ name: "MP4 video", extensions: ["mp4"] }] });
+    if (!path) return null;
+    const id = await invoke<number>("export_open", { path });
+    return {
+      name: path,
+      write: (position, data) => invoke("export_write", data, { headers: { "x-export-id": String(id), "x-export-pos": String(position) } }),
+      close: () => invoke("export_close", { id }),
+      abort: () => invoke("export_abort", { id }),
+      writeSibling: async (ext, text) => {
+        const sibling = path.replace(/\.[^.\/]+$/, "") + `.${ext}`;
+        await invoke("write_text_file", { path: sibling, text });
+        return sibling;
+      },
+    };
   }
 
   async extractAsrAudio(_mediaId: string): Promise<Blob> {

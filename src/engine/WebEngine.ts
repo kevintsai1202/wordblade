@@ -2,7 +2,7 @@ import type { InputFormat } from "mediabunny";
 import { EnvelopeBuilder } from "../audio/envelope";
 import type { Media } from "../core/model";
 import { IMAGE_DURATION } from "../core/media";
-import { NotImplementedError, UnsupportedMediaError, type Engine, type ImportSource, type Prepared } from "./Engine";
+import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared } from "./Engine";
 import { classifyFile, webSupport } from "./webFormats";
 
 /** 選檔對話框接受的類型 */
@@ -171,6 +171,73 @@ export class WebEngine implements Engine {
 
   async makeMezzanine(_mediaId: string): Promise<string> {
     throw new NotImplementedError("makeMezzanine");
+  }
+
+  /** 匯入的檔案給 File；示範專案的素材（開發伺服器 /samples/）給網址 */
+  async exportSource(media: Media): Promise<Blob | string> {
+    const entry = media.handleKey ? this.files.get(media.handleKey) : undefined;
+    if (entry) return entry.file;
+    const path = media.mezzaninePath ?? media.path ?? "";
+    if (!path) throw new Error(`Media ${media.name ?? media.id} has no source`);
+    return path.startsWith("/") || /^[a-z]+:/i.test(path) ? path : `/${path}`;
+  }
+
+  /**
+   * 有存檔對話框（Chrome／Edge）就讓使用者選位置；沒有（或 localStorage `wordblade.exportToOpfs` 為 "1"，e2e 用）
+   * 就寫進 OPFS 的 exports/ 資料夾。SRT：選了位置的話以下載給出（對話框要使用者手勢，匯出完已經沒有了），OPFS 則寫在同一資料夾。
+   */
+  async openExportTarget(suggestedName: string): Promise<ExportTarget | null> {
+    const picker = (window as unknown as { showSaveFilePicker?: (o: unknown) => Promise<FileSystemFileHandle> }).showSaveFilePicker;
+    let toOpfs = !picker;
+    try {
+      if (localStorage.getItem("wordblade.exportToOpfs") === "1") toOpfs = true;
+    } catch { /* 沒有 localStorage 就照預設 */ }
+    let handle: FileSystemFileHandle;
+    let remove: () => Promise<void>;
+    let sibling: (name: string, text: string) => Promise<string>;
+    if (toOpfs) {
+      const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("exports", { create: true });
+      handle = await dir.getFileHandle(suggestedName, { create: true });
+      remove = () => dir.removeEntry(suggestedName).catch(() => undefined);
+      sibling = async (name, text) => {
+        const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+        await w.write(text);
+        await w.close();
+        return `OPFS exports/${name}`;
+      };
+    } else {
+      try {
+        handle = await picker!({ suggestedName, types: [{ description: "MP4 video", accept: { "video/mp4": [".mp4"] } }] });
+      } catch (e) {
+        if ((e as DOMException).name === "AbortError") return null;
+        throw e;
+      }
+      // 使用者選的檔案刪不掉（沒有父資料夾的權限），取消時改成清空
+      remove = async () => {
+        const w = await handle.createWritable();
+        await w.close();
+      };
+      sibling = async (name, text) => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+        return `download ${name}`;
+      };
+    }
+    const writable = await handle.createWritable();
+    const base = handle.name.replace(/\.[^.]+$/, "");
+    return {
+      name: toOpfs ? `OPFS exports/${handle.name}` : handle.name,
+      write: (position, data) => writable.write({ type: "write", position, data: data as Uint8Array<ArrayBuffer> }),
+      close: () => writable.close(),
+      abort: async () => {
+        await writable.abort().catch(() => undefined);
+        await remove();
+      },
+      writeSibling: (ext, text) => sibling(`${base}.${ext}`, text),
+    };
   }
 
   async extractAsrAudio(_mediaId: string): Promise<Blob> {

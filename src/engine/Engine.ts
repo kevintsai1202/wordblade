@@ -34,6 +34,23 @@ export interface EngineCapabilities {
   anyFormatImport: boolean;
 }
 
+/**
+ * 匯出的寫入目標（§5.4）：mediabunny 依位置分塊寫入（MP4 收尾時會回頭改檔頭，所以要能指定位置）。
+ * Windows 版是使用者選的檔案（Rust 分塊寫），網頁版是 File System Access 的可寫串流（沒有存檔對話框時寫進 OPFS）。
+ */
+export interface ExportTarget {
+  /** 顯示給使用者的位置（路徑或檔名） */
+  readonly name: string;
+  /** 在 position 寫入 data */
+  write(position: number, data: Uint8Array): Promise<void>;
+  /** 寫完收尾 */
+  close(): Promise<void>;
+  /** 取消：關掉並刪除寫了一半的檔案 */
+  abort(): Promise<void>;
+  /** 同名、換副檔名的文字檔（SRT）；回傳存到哪裡（網頁版是下載） */
+  writeSibling(ext: string, text: string): Promise<string>;
+}
+
 /** 平台相關功能；各方法的細節在對應的開發日補上 */
 export interface Engine {
   /** 執行環境：Windows 桌面版或網頁版 */
@@ -56,6 +73,10 @@ export interface Engine {
   release(media: Media): void;
   /** 示範專案的素材資料夾：網頁版是開發伺服器的 samples/；Windows 版找 repo 的 samples/，找不到（安裝版）回 null */
   demoMediaRoot(): Promise<string | null>;
+  /** 匯出讀的素材來源（原檔或中間檔，不用代理檔）：網頁版是 File，Windows 版是 asset 協定的網址（mediabunny 分段讀） */
+  exportSource(media: Media): Promise<Blob | string>;
+  /** 選擇匯出位置（存檔對話框）；使用者取消回 null */
+  openExportTarget(suggestedName: string): Promise<ExportTarget | null>;
   /** WebCodecs 解不了的原檔轉成原解析度中間檔，回傳中間檔位置（Q5） */
   makeMezzanine(mediaId: string): Promise<string>;
   /** 抽出 16 kHz 單聲道 WAV 給 Muse ASR（§5.2） */

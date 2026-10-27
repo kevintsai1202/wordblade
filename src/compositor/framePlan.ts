@@ -33,8 +33,8 @@ function covers(clip: Clip, t: Seconds): boolean {
   return t >= clip.start && t < clipEnd(clip);
 }
 
-/** 淡入淡出的係數（0～1） */
-function fadeFactor(clip: Clip, t: Seconds): number {
+/** 淡入淡出的係數（0～1）；匯出混音也用 */
+export function fadeFactor(clip: Clip, t: Seconds): number {
   const local = t - clip.start;
   const remain = clipDuration(clip) - local;
   let f = 1;

@@ -78,6 +78,17 @@ export class EffectRenderer {
     return this.bgCache.get(key);
   }
 
+  /** 匯出用：等沙盒回答這個特效要不要下層畫面（3D 一律要） */
+  async needsBackground(effect: Effect): Promise<boolean> {
+    if (effect.kind !== "anim2d") return true;
+    const key = JSON.stringify(effect.params);
+    const cached = this.bgCache.get(key);
+    if (cached !== undefined) return cached;
+    const uses = await this.host.request<boolean>("usesBackground", { instance: instanceOf(effect) }).catch(() => false);
+    this.bgCache.set(key, uses);
+    return uses;
+  }
+
   /** 直接要一格（匯出用：逐格 await；background 是下層畫面，會轉移進沙盒） */
   renderFrame(effect: Effect, req: FrameRequest, background: ImageBitmap | null = null): Promise<ImageBitmap> {
     if (effect.kind !== "anim2d") {

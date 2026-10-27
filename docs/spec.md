@@ -262,6 +262,15 @@
 - 進度：已編碼的格數／總格數；可取消。
 - 同時輸出 SRT（剪後時間）。
 
+**實作狀態（2026-10-27 提前完成）**
+
+- `src/export/`：`exportPlan`（大小、格率、位元率、每個片段要解的格）、`exporter`（每個片段一條 `VideoSampleSink` 串流並預先解下一格 → `layerPlan`＋`GlCompositor` 畫在 OffscreenCanvas → 特效向沙盒逐格 await → `CanvasSource` 編碼）、`audioMix`、`srt`；匯出頁籤 `src/ui/ExportTab.tsx`（依素材／1080p／720p、進度、取消，插件出錯只略過該特效並在完成訊息列出）。
+- 聲音：不用 `OfflineAudioContext`，改成 TS 直接混（每 5 分鐘一段、增益與壓低曲線逐樣本算，純函式可測）；來源用 `AudioSampleSink` 只讀那一段，線性內插換成 48 kHz，變速片段用 soundtouchjs 的 WSOLA。
+- 編碼器先用 `VideoEncoder.isConfigSupported` 問硬體，沒有就改軟體（無頭 Chromium 沒有 H.264 硬體編碼器，指定 prefer-hardware 會直接失敗）。
+- 寫檔：`Engine.openExportTarget`——Windows 版存檔對話框＋Rust `export_open／export_write（raw body，位置放標頭）／export_close／export_abort`；網頁版 `showSaveFilePicker` 的可寫串流，沒有對話框（或 e2e 設 `wordblade.exportToOpfs`）時寫進 OPFS。SRT：Windows 版寫在 MP4 旁邊，網頁版以下載給出。
+- 實測：e2e（`e2e/export.spec.ts`）3 項——影片＋聲音＋2D 特效（長度、解析度、48 kHz 聲音、紅框畫進去、特效後和原片同一格）、取消（不留半成品）、3D 場景（中段有木紋桌、開頭滿版）；WebView2 自我檢查（`src/selftest.ts` 的 `checkExport`）：asset 協定讀原檔、Rust 分塊寫檔都正常，1080p 30 秒片段 6.1 秒（4.9 倍即時，單一串流、無特效）。
+- 還沒做：字幕燒進畫面（JASSUB，11/1 和字幕一起）、遮罩、局部放大；變速片段預覽（`preservesPitch`）和匯出（WSOLA）聽起來差多少，等 P1-6 有變速介面時一起聽。
+
 **不採用的路線：ffmpeg 濾鏡圖匯出（10/27 實測後放棄，D24）**
 
 - 量測（`spikes/export-bench/RESULT.md`，11.3 分鐘 1080p 多軌片）：沒有 3D 時 ffmpeg `h264_qsv` 136.5 秒、統一合成器（WebView2）232.3 秒；加一段 60 秒 3D 後，統一合成器 254.9 秒，ffmpeg 路線估算 536～676 秒。ffmpeg 路線的 3D 畫格要經 Tauri IPC 在 WebView 與 ffmpeg 之間來回（每格 8 MB，實測約 75 MB/s 收、50 MB/s 送，每格往返約 280 ms），片子裡 3D 超過約 11～15 秒就比統一合成器慢。

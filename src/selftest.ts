@@ -10,6 +10,13 @@ import { TEMPLATES, templateEffect } from "./anim/library";
 import { PluginService } from "./anim/pluginService";
 import { instanceOf } from "./anim/effectRenderer";
 import { TEMPLATES_3D, builtinPlugins3D } from "./three/builtins";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import type { Project } from "./core/model";
+import { emptyProject } from "./core/media";
+import { placeMedia } from "./core/timeline";
+import { mixAudio } from "./export/audioMix";
+import { runExport } from "./export/exporter";
+import { exportPlan } from "./export/exportPlan";
 
 /** 等事件或逾時；回傳事件有沒有發生 */
 function waitFor(target: EventTarget, event: string, ms: number): Promise<boolean> {
@@ -199,6 +206,57 @@ async function check3D(): Promise<Record<string, unknown>> {
   return out;
 }
 
+/**
+ * MP4 匯出（§5.4）在 WebView2 的關鍵路徑：mediabunny 用 asset 協定的網址（Range）讀原檔、Rust 分塊寫檔（raw body）、
+ * 硬體編碼。每支影片取前 30 秒放上 V1＋A1，匯出到 repo 的 output/ 再用 ffprobe 讀回長度；記耗時與即時倍速。
+ */
+async function checkExport(paths: string[]): Promise<Record<string, unknown>[]> {
+  const engine = createEngine();
+  const results: Record<string, unknown>[] = [];
+  const videos = paths.filter((p) => /\.(mp4|mov)$/i.test(p) && !/alpha/i.test(p));
+  for (const [i, path] of videos.entries()) {
+    const out: Record<string, unknown> = { path };
+    try {
+      const media = await engine.probe({ kind: "path", path, name: path.split(/[\\/]/).pop()! }, `x${i}`);
+      const { Input, UrlSource, ALL_FORMATS } = await import("mediabunny");
+      const input = new Input({ source: new UrlSource(convertFileSrc(path)), formats: ALL_FORMATS });
+      out.sourceDuration = await input.computeDuration();
+      input.dispose();
+      let project: Project = { ...emptyProject(), media: [media] };
+      // 放上 V1（有聲音的影片會一併放上對白軌），只取前 30 秒
+      project = placeMedia(project, media.id, project.tracks.find((t) => t.kind === "video")!.id, 0);
+      project = { ...project, clips: project.clips.map((c) => ({ ...c, srcOut: Math.min(c.srcOut, c.srcIn + 30) })) };
+      const plan = exportPlan(project, "source");
+      const dest = path.replace(/[\\/](e2e[\\/]fixtures|samples)[\\/][^\\/]+$/i, "") + `\\output\\selftest-export-${i}.mp4`;
+      const id = await invoke<number>("export_open", { path: dest });
+      const target = {
+        name: dest,
+        write: (position: number, data: Uint8Array) => invoke<void>("export_write", data, { headers: { "x-export-id": String(id), "x-export-pos": String(position) } }),
+        close: () => invoke<void>("export_close", { id }),
+        abort: () => invoke<void>("export_abort", { id }),
+        writeSibling: async () => "",
+      };
+      const t0 = performance.now();
+      await runExport({
+        project, plan, target, effects: null, audioCodec: "aac",
+        source: (m) => engine.exportSource(m),
+        audio: (audioSource, signal) => mixAudio({ project, duration: plan.duration, source: (m) => engine.exportSource(m), audioSource, signal }),
+      });
+      const ms = performance.now() - t0;
+      // 讀回成品：output/ 不在 asset 協定的範圍內，改用 ffprobe（Rust probe_media）
+      const probe = await invoke<{ duration: number; audio: boolean; width?: number; height?: number }>("probe_media", { path: dest });
+      Object.assign(out, {
+        size: `${plan.width}x${plan.height}`, exportDuration: plan.duration, outputDuration: probe.duration, outputSize: `${probe.width}x${probe.height}`,
+        audioTrack: probe.audio, ms: Math.round(ms), realtime: Number((plan.duration / (ms / 1000)).toFixed(2)), dest,
+      });
+    } catch (e) {
+      out.error = String(e);
+    }
+    results.push(out);
+  }
+  return results;
+}
+
 /** 跑自我檢查：從回報伺服器拿要檢查的檔案清單，逐一檢查後把結果送回去 */
 export async function runSelftest(server: string) {
   const report: Record<string, unknown> = { origin: location.origin, userAgent: navigator.userAgent, startedAt: new Date().toISOString() };
@@ -213,6 +271,7 @@ export async function runSelftest(server: string) {
     report.sandbox = await checkSandbox();
     report.three = await check3D();
     report.microphone = await checkMicrophone();
+    report.export = await checkExport(paths);
   } catch (e) {
     report.error = String(e);
   }

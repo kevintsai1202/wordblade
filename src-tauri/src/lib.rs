@@ -1,5 +1,6 @@
 // WordBlade 桌面版的 Rust 指令層（spec §3）：ffmpeg／ffprobe（代理檔、縮圖、音量包絡）、之後放檔案讀寫、背景工作、聲音分離。
 
+mod export;
 mod media;
 
 use tauri::webview::{PageLoadEvent, PermissionKind, PermissionResponse};
@@ -10,6 +11,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .manage(export::ExportFiles::default())
         .invoke_handler(tauri::generate_handler![
             media::probe_media,
             media::make_proxy,
@@ -17,7 +19,12 @@ pub fn run() {
             media::media_thumbnail,
             media::media_tools,
             media::evict_proxy,
-            media::find_samples_dir
+            media::find_samples_dir,
+            export::export_open,
+            export::export_write,
+            export::export_close,
+            export::export_abort,
+            export::write_text_file
         ])
         // 麥克風（重配錄音，§5.18）：WebView2 預設會跳權限詢問且卡住 getUserMedia，這裡直接允許；
         // 其他權限（相機、定位…）照平台預設。Windows「隱私權 > 麥克風 > 允許桌面應用程式存取」關掉時仍會被拒。
