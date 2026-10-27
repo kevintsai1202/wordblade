@@ -79,8 +79,8 @@ export interface Engine {
   openExportTarget(suggestedName: string): Promise<ExportTarget | null>;
   /** WebCodecs 解不了的原檔轉成原解析度中間檔，回傳中間檔位置（Q5） */
   makeMezzanine(mediaId: string): Promise<string>;
-  /** 抽出 16 kHz 單聲道 WAV 給 Muse ASR（§5.2） */
-  extractAsrAudio(mediaId: string): Promise<Blob>;
+  /** 抽出素材 [start, end) 的 16 kHz 單聲道 16-bit WAV 給 Muse ASR（§5.2；長片由呼叫端在無聲處切段） */
+  extractAsrAudio(media: Media, start: number, end: number): Promise<Uint8Array>;
   /** 人聲／背景音樂分離，回傳兩個衍生素材的 id（§5.14） */
   separateVocals(mediaId: string): Promise<{ vocalsId: string; backgroundId: string }>;
 }

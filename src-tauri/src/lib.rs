@@ -20,6 +20,7 @@ pub fn run() {
             media::media_tools,
             media::evict_proxy,
             media::find_samples_dir,
+            media::asr_pcm,
             export::export_open,
             export::export_write,
             export::export_close,

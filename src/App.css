@@ -151,3 +151,10 @@ button:disabled { opacity: 0.4; cursor: default; }
 button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor: pointer; align-self: flex-start; font-size: 12px; }
 .vibe-examples { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 11px; }
 .example-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+
+/* 轉錄工具（逐字稿頁籤上方） */
+.transcribe-panel { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.transcribe-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.transcribe-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.transcribe-list .media-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.warning { color: #f0b429; }

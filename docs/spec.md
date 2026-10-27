@@ -234,6 +234,15 @@
    - 中文內容照樣能轉錄與上字幕，用同一套規則（行長改以全形字計），不另外調。
 6. 驗收：用自己的英文錄影（至少 2 支）量「詞的起點和人工標的起點」平均誤差，目標 ≤ 0.15 秒；字幕抽 50 段人工看，斷在不自然位置的 ≤ 10%。
 
+**實作狀態（2026-10-27 提前完成）**
+
+- 閘道 `POST /v1/asr`（`gateway/.../asr/`）：multipart 的 audio（WAV）＋選填 keywords；先檢查 WAV（PCM 單聲道 16-bit、16／24 kHz、≤ 600 秒），不合格回 400 不送上游；轉送 Meta `/v1/asr/transcribe`（DIARIZATION），只回 transcript、turns、audioDurationMs；用量記音訊秒數；上游 429 回 503（桌面重試）、其他錯誤回 502，上游訊息只寫閘道 log。multipart 上限 33 MB（Spring 預設只有 1 MB）。
+- **multipart 要自己組**（10/27 實測）：Spring 的 `FormHttpMessageConverter` 會在每個 part 加 `Content-Length` 標頭，Meta 對這種寫法回 400「Malformed multipart body」，拿掉就 200（瀏覽器的 FormData 也不帶）。
+- 桌面（`src/asr/`）：`splitAtSilence` 依音量包絡在無聲處切成 ≤ 180 秒的段（比 §5.2 原訂的 9 分鐘短：每段十幾秒就回來、3 段平行更快，也避開代理逾時）；`Engine.extractAsrAudio` 抽 16 kHz 單聲道 WAV（Windows 版 Rust `asr_pcm` 用 ffmpeg 出 s16le 再補檔頭，網頁版 mediabunny 解碼＋盒狀濾波降取樣）；`transcribeMedia` 最多 3 段平行、503 重試；`turnsToWords` 依包絡重建詞級時間（標點黏前一個詞、中日文逐字、跨過停頓的詞界吸附到停頓兩側）；`coverage` 算 turns 涵蓋多少有聲時間，低於 90% 在介面提醒可能漏段。結果用 `setWords` 寫進專案（一筆可復原的編輯，指到舊詞的字幕斷點一起刪掉）。
+- 介面：逐字稿頁籤上方每支有聲素材一顆 Transcribe（第一次問上傳同意；素材還在算音量包絡時停用）。完整的逐字稿面板 11/1 做。
+- 實測（`pwsh scripts/asr/live-local.ps1`：本機閘道＋臨時資料庫＋一次性權杖，跑 `e2e/asr-live.spec.ts`）：`samples/lecture-a.en.mp4`（282 秒英文 TTS）切 2 段、26.4 秒轉完、559 詞、沒有漏段提醒；字幕句子起點對 SRT 的誤差（20 句對上 13 句）平均 0.109 秒、中位數 0.062、p90 0.133。這是 TTS、句級的近似；§5.2 的詞級 ≤ 0.15 秒驗收等 D30 的真人錄影。閒置的 1 秒靜音 Muse 會幻聽出「Yeah」。
+- 還沒做：keywords 從講稿抽術語（介面還沒有講稿輸入）、DELTA 校正（等真人錄影量誤差再決定）。
+
 ### 5.3 SAM 3.1 遮罩（P1-5）
 
 1. 使用者輸入要遮的東西（例如「我的臉和桌上的名牌」）。P1 由 Muse Spark 轉成英文名詞片語（`face`、`name badge`）；P0 先讓使用者直接打英文。

@@ -4,6 +4,7 @@ import type { Media } from "../core/model";
 import { IMAGE_DURATION } from "../core/media";
 import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared } from "./Engine";
 import { classifyFile, webSupport } from "./webFormats";
+import { downsample, encodeWav } from "../asr/wav";
 
 /** 選檔對話框接受的類型 */
 const ACCEPT = "video/*,image/*,audio/*,.mov,.m4a";
@@ -240,8 +241,30 @@ export class WebEngine implements Engine {
     };
   }
 
-  async extractAsrAudio(_mediaId: string): Promise<Blob> {
-    throw new NotImplementedError("extractAsrAudio");
+  /** mediabunny 解出 [start, end) 的聲音，多聲道平均成單聲道、降到 16 kHz、編 WAV */
+  async extractAsrAudio(media: Media, start: number, end: number): Promise<Uint8Array> {
+    const mb = await loadMediabunny();
+    const src = await this.exportSource(media);
+    const input = new mb.Input({ source: typeof src === "string" ? new mb.UrlSource(src) : new mb.BlobSource(src), formats: mb.ALL_FORMATS });
+    try {
+      const track = await input.getPrimaryAudioTrack();
+      if (!track) throw new Error(`Media ${media.name ?? media.id} has no audio`);
+      const rate = await track.getSampleRate();
+      const mono = new Float32Array(Math.max(0, Math.round((end - start) * rate)));
+      for await (const sample of new mb.AudioSampleSink(track).samples(start, end)) {
+        const frames = sample.numberOfFrames;
+        const at = Math.round((sample.timestamp - start) * rate);
+        const tmp = new Float32Array(frames);
+        for (let ch = 0; ch < sample.numberOfChannels; ch++) {
+          sample.copyTo(tmp, { planeIndex: ch, format: "f32-planar" });
+          for (let i = Math.max(0, -at); i < frames && at + i < mono.length; i++) mono[at + i] += tmp[i] / sample.numberOfChannels;
+        }
+        sample.close();
+      }
+      return encodeWav(downsample(mono, rate));
+    } finally {
+      input.dispose();
+    }
   }
 
   /** 網頁版不做聲音分離（D28），介面應先依 capabilities 擋掉；直接呼叫時明確拒絕 */

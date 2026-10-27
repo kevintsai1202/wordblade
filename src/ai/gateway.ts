@@ -2,6 +2,7 @@
 // 目前用到 Vibe特效的三個端點；之後 ASR、AI 導演等照同樣方式加。
 import type { VibeResult } from "./vibe";
 import type { Vibe3dResult } from "./vibe3d";
+import type { AsrResponse } from "../asr/transcribe";
 
 /** 預設閘道（Zeabur，D23） */
 export const DEFAULT_GATEWAY = "https://wordblade-api.zeabur.app";
@@ -128,6 +129,27 @@ export class GatewayClient {
       await sleep(1000);
     }
     throw new GatewayError("The AI took too long. Try again.", 0);
+  }
+
+  /**
+   * Muse ASR（§5.2）：一段 16 kHz 單聲道 WAV（multipart）→ turn 級的文字與時間。
+   * 閘道忙回 503（GatewayError.status 帶著，呼叫端重試）；音訊格式不對回 400。
+   */
+  async transcribe(wav: Uint8Array, keywords: string[] = []): Promise<AsrResponse> {
+    const form = new FormData();
+    form.append("audio", new Blob([wav as Uint8Array<ArrayBuffer>], { type: "audio/wav" }), "audio.wav");
+    for (const k of keywords) form.append("keywords", k);
+    let res: Response;
+    try {
+      // multipart 的 content-type（含 boundary）由瀏覽器填，不能用 call() 的 JSON 標頭
+      res = await fetch(this.settings.url.replace(/\/$/, "") + "/v1/asr", { method: "POST", headers: { authorization: `Bearer ${this.settings.token}` }, body: form });
+    } catch {
+      throw new GatewayError("Can't reach the AI service. Check the address in AI settings and your connection.", 0);
+    }
+    if (res.status === 401) throw new GatewayError("The invite token isn't valid. Check it in AI settings.", 401);
+    if (res.status === 503) throw new GatewayError("The transcription service is busy. Try again in a moment.", 503);
+    if (!res.ok) throw new GatewayError(`Transcription failed (${res.status}).`, res.status);
+    return (await res.json()) as AsrResponse;
   }
 
   /** 「用說的」的提議檢查不過：送錯誤續跑 */

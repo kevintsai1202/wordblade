@@ -257,6 +257,31 @@ async function checkExport(paths: string[]): Promise<Record<string, unknown>[]> 
   return results;
 }
 
+/** ASR 音訊（§5.2）：每支有聲影片抽 [1, 3) 秒，檢查 WAV 檔頭是 16 kHz 單聲道 16-bit、長度約 2 秒 */
+async function checkAsrAudio(paths: string[]): Promise<Record<string, unknown>[]> {
+  const engine = createEngine();
+  const results: Record<string, unknown>[] = [];
+  for (const [i, path] of paths.filter((p) => /\.(mp4|mov|mp3)$/i.test(p) && !/alpha/i.test(p)).entries()) {
+    const out: Record<string, unknown> = { path };
+    try {
+      const media = await engine.probe({ kind: "path", path, name: path.split(/[\\/]/).pop()! }, `asr${i}`);
+      const t0 = performance.now();
+      const wav = await engine.extractAsrAudio(media, 1, 3);
+      const view = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);
+      Object.assign(out, {
+        ms: Math.round(performance.now() - t0),
+        riff: String.fromCharCode(...wav.subarray(0, 4)),
+        channels: view.getUint16(22, true), rate: view.getUint32(24, true), bits: view.getUint16(34, true),
+        seconds: view.getUint32(40, true) / 2 / view.getUint32(24, true),
+      });
+    } catch (e) {
+      out.error = String(e);
+    }
+    results.push(out);
+  }
+  return results;
+}
+
 /** 跑自我檢查：從回報伺服器拿要檢查的檔案清單，逐一檢查後把結果送回去 */
 export async function runSelftest(server: string) {
   const report: Record<string, unknown> = { origin: location.origin, userAgent: navigator.userAgent, startedAt: new Date().toISOString() };
@@ -272,6 +297,7 @@ export async function runSelftest(server: string) {
     report.three = await check3D();
     report.microphone = await checkMicrophone();
     report.export = await checkExport(paths);
+    report.asrAudio = await checkAsrAudio(paths);
   } catch (e) {
     report.error = String(e);
   }

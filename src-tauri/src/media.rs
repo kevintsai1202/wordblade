@@ -323,6 +323,22 @@ pub async fn media_envelope(app: AppHandle, path: String) -> Result<tauri::ipc::
     Ok(tauri::ipc::Response::new(bytes))
 }
 
+/// ASR 音訊（spec §5.2）：素材 [start, start+duration) 解成 16 kHz 單聲道 16 位元 PCM（little-endian，沒有 WAV 檔頭；
+/// 檔頭由前端補，ffmpeg 寫到管線時填不了 WAV 的長度欄位）
+#[tauri::command]
+pub async fn asr_pcm(app: AppHandle, path: String, start: f64, duration: f64) -> Result<tauri::ipc::Response, String> {
+    let ffmpeg = tool(&app, "ffmpeg");
+    let bytes = tauri::async_runtime::spawn_blocking(move || {
+        let mut cmd = command(&ffmpeg);
+        cmd.args(["-hide_banner", "-loglevel", "error", "-ss", &format!("{start:.3}"), "-t", &format!("{duration:.3}"), "-i", &path])
+            .args(["-vn", "-ac", "1", "-ar", "16000", "-f", "s16le", "-"]);
+        run(cmd)
+    })
+    .await
+    .map_err(|e| e.to_string())??;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
 /// 縮圖：取素材時間 at 的一格，寬 160 的 JPEG 位元組
 #[tauri::command]
 pub async fn media_thumbnail(app: AppHandle, path: String, at: f64) -> Result<tauri::ipc::Response, String> {

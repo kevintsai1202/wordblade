@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { ENVELOPE_RATE } from "../audio/envelope";
+import { pcm16ToWav } from "../asr/wav";
 import { IMAGE_DURATION } from "../core/media";
 import type { Media } from "../core/model";
 import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared } from "./Engine";
@@ -141,8 +142,11 @@ export class DesktopEngine implements Engine {
     };
   }
 
-  async extractAsrAudio(_mediaId: string): Promise<Blob> {
-    throw new NotImplementedError("extractAsrAudio");
+  /** ffmpeg 解成 16 kHz 單聲道 s16le，再補 WAV 檔頭 */
+  async extractAsrAudio(media: Media, start: number, end: number): Promise<Uint8Array> {
+    if (!media.path) throw new Error(`Media ${media.name ?? media.id} has no source`);
+    const pcm = await invoke<ArrayBuffer>("asr_pcm", { path: media.path, start, duration: end - start });
+    return pcm16ToWav(new Uint8Array(pcm));
   }
 
   async separateVocals(_mediaId: string): Promise<{ vocalsId: string; backgroundId: string }> {

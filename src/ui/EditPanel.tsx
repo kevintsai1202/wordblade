@@ -26,7 +26,7 @@ function TranscriptTab({ captions, playhead, dispatch }: { captions: Caption[]; 
 
 /**
  * 右側編輯面板（D33）。
- * tabs：由 App 組好的頁籤內容（頁籤 id → 內容，例如 media、vibe）；initialTab：一開始打開的頁籤（空專案先開素材頁籤）
+ * tabs：由 App 組好的頁籤內容（頁籤 id → 內容，例如 media、vibe；transcriptTools 放在逐字稿上方）；initialTab：一開始打開的頁籤（空專案先開素材頁籤）
  */
 export function EditPanel({ captions, playhead, dispatch, tabs, initialTab }: { captions: Caption[]; playhead: number; dispatch: Dispatch<Action>; tabs: Record<string, ReactNode>; initialTab: string }) {
   /** 目前打開的頁籤 */
@@ -46,7 +46,7 @@ export function EditPanel({ captions, playhead, dispatch, tabs, initialTab }: { 
       </nav>
       <div className="tab-pane">
         {tab === "transcript"
-          ? <TranscriptTab captions={captions} playhead={playhead} dispatch={dispatch} />
+          ? <>{tabs.transcriptTools}<TranscriptTab captions={captions} playhead={playhead} dispatch={dispatch} /></>
           : tabs[tab] ?? <p className="muted placeholder">{current.label} — coming soon</p>}
       </div>
     </aside>

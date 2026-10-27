@@ -13,6 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "wordblade")
 public record GatewayProperties(List<String> corsAllowedOrigins, String timezone, Models models) {
 
-    /** 模型 ID：spark 做苦工，wonder 統籌與 Vibe特效（D12、D31）。 */
-    public record Models(String spark, String wonder) {}
+    /** 模型 ID：spark 做苦工，wonder 統籌與 Vibe特效（D12、D31），asr 是 Muse Voice Transcribe。 */
+    public record Models(String spark, String wonder, String asr) {}
 }

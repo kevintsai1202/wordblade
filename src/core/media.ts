@@ -1,6 +1,6 @@
 // 素材庫與新專案（spec §4、§5.13）：純函式。素材的規格由 Engine 讀好（ffprobe／mediabunny）後當普通資料傳進來。
 import { produce } from "immer";
-import type { Media, Project, Seconds, Track } from "./model";
+import type { Media, Project, Seconds, Track, Word } from "./model";
 
 /** 圖片素材的「長度」：圖片沒有長度，給一個夠長的值讓修邊可以拉長 */
 export const IMAGE_DURATION: Seconds = 24 * 3600;
@@ -48,5 +48,17 @@ export function patchMedia(project: Project, id: string, patch: Partial<Omit<Med
   if (!project.media.some((m) => m.id === id)) return project;
   return produce(project, (draft) => {
     Object.assign(draft.media.find((m) => m.id === id)!, patch);
+  });
+}
+
+/**
+ * 換掉某支素材的整份逐字稿（Muse ASR 轉錄完，§5.2）：其他素材的詞不動，新的詞依起點排序；
+ * 指到被換掉的詞的字幕斷點（CaptionBreak）一起刪掉。
+ */
+export function setMediaWords(project: Project, mediaId: string, words: Word[]): Project {
+  const removed = new Set(project.words.filter((w) => w.mediaId === mediaId).map((w) => w.id));
+  return produce(project, (draft) => {
+    draft.words = [...draft.words.filter((w) => w.mediaId !== mediaId), ...[...words].sort((a, b) => a.start - b.start)];
+    draft.captionBreaks = draft.captionBreaks.filter((b) => !removed.has(b.wordId));
   });
 }
