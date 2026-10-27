@@ -6,7 +6,7 @@ import type { CameraKey, Effect, Plugin, Project, Seconds, Word } from "./model"
 import { setCaptionStyle, setMediaWords } from "./media";
 import { editWords } from "./transcriptEdit";
 import type { CaptionStyle } from "../captions/captionLayout";
-import { cutByWords, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip } from "./timeline";
+import { cutByWords, cutSourceRanges, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
 
 /** 一個編輯動作 */
 export type Edit =
@@ -25,7 +25,8 @@ export type Edit =
   | { kind: "setCameraKeys"; effectId: string; keys: CameraKey[] }
   | { kind: "setWords"; mediaId: string; words: Word[] }
   | { kind: "setCaptionStyle"; style: Partial<CaptionStyle> }
-  | { kind: "editWords"; wordIds: string[]; text: string };
+  | { kind: "editWords"; wordIds: string[]; text: string }
+  | { kind: "cutRanges"; ranges: SourceRange[] };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -46,6 +47,7 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "setWords": return setMediaWords(project, edit.mediaId, edit.words);
     case "setCaptionStyle": return setCaptionStyle(project, edit.style);
     case "editWords": return editWords(project, edit.wordIds, edit.text);
+    case "cutRanges": return cutSourceRanges(project, edit.ranges);
   }
 }
 

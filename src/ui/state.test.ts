@@ -170,3 +170,18 @@ describe("projectDuration 含特效", () => {
     expect(projectDuration(p)).toBe(3.5);
   });
 });
+
+describe("試聽：播到 stopAt 自動停", () => {
+  it("play 帶 stopAt：tick 超過時停在 stopAt；一般播放不受影響", () => {
+    let s = initialState(makeProject());
+    s = reducer(s, { type: "seek", time: 1 });
+    s = reducer(s, { type: "play", rate: 1, stopAt: 2 });
+    s = reducer(s, { type: "tick", time: 1.5 });
+    expect(s.playing).toBe(true);
+    s = reducer(s, { type: "tick", time: 2.04 });
+    expect(s).toMatchObject({ playing: false, playhead: 2 });
+    s = reducer(s, { type: "play", rate: 1 });
+    s = reducer(s, { type: "tick", time: 5 });
+    expect(s.playing).toBe(true);
+  });
+});

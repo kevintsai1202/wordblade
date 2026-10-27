@@ -46,6 +46,7 @@
 | D34 | 一鍵片頭（2026-10-27） | 開發者要求列入：使用者給多張封面圖＋標題（＋icon、可選自己的音樂），一鍵生成片頭——快速翻頁、閃光後閃入字卡加 icon，附翻頁與轉場音效和配樂；另外蒐集多種片頭風格，目的是快速產生片頭。調查見 `docs/research/intro-styles.md`；功能見 §5.23（P1-12） |
 | D35 | 2D 插件沿用原專案直譯器（2026-10-27） | 開發者選定：2D 插件用原專案（字導字演）的元件格式、受限 JavaScript 與直譯器（`draw(g, t, p, env, bg)`，原生 JS `render(ctx, …)` 不採用），直譯器放進沙盒 Worker 執行（雙層防護）；元件庫、API 說明、提示詞與 202 項測試一併沿用。3D 插件仍是沙盒 Worker 裡的原生 JS（§5.7） |
 | D36 | Muse Image 材質圖（2026-10-27） | 開發者選定：一句話產生**無縫材質圖**，用在內建 3D 場景表面、3D 插件（含 Vibe特效 3D）、2D 插件填色與 3D 背景；Muse Image 只產生顏色圖，**無縫化、去暗角與法線貼圖由 WordBlade 本機算**（不多花錢）；排 P1-14（11/3 做到哪算哪），併入 §5.12 |
+| D37 | 字幕自己用 Canvas 2D 畫（2026-10-28） | 開發者選定：取代原訂的 JASSUB（libass WASM）。預覽與匯出用同一個 `CaptionLayer`（`src/captions/`）畫在合成器最上層；三種外觀（描邊／底色塊／陰影，另有「不燒進畫面」）＋逐字高亮（填色／放大／底色），完全可控、好測，沒有 WASM 整合風險；不支援任意 ASS 特效（用不到）。字型隨程式打包：英文 Inter、中文 Noto Sans TC（OFL，中文分塊、用到的字才載入），預覽與匯出一致 |
 
 **Q1～Q7（開發者 2026-10-26 回覆「照建議」，以下「建議」欄即為決定）**
 
@@ -166,7 +167,7 @@
 - **專案檔** `<專案名>.wordblade.json`：素材庫、各軌片段、每支素材的逐字稿、字幕斷點 override、特效；遮罩的逐格資料放旁檔 `masks/<id>.bin`，JSON 只存參照；素材只存路徑（Windows 版）或 `FileSystemHandle`（網頁版，存在 IndexedDB，重開專案時請使用者重新授權）；代理檔放 `proxies/`、中間檔放 `mezzanine/`；復原歷史不存。
 - **ffmpeg** 以 Tauri sidecar 打包，只做代理檔、中間檔、抽 ASR 音訊（D24）。**打包 LGPL 版**（BtbN 的 `lgpl` 建置，不含 libx264）：代理檔與中間檔依序**實際試編 1 格**（只看編碼器清單不準：原專案 2026-09-17 在 Arc 機器上 `nvenc` 有列出卻載入失敗）`h264_qsv`（Intel 內顯）、`h264_nvenc`、`h264_amf`，都不行就用 `h264_mf`（Windows 內建的 Media Foundation 編碼器，每台 Windows 10／11 都有，LGPL 版也能用）。不需要 libx264 或 OpenH264。10/27 實測（`spikes/ffmpeg-encoders/`，Core Ultra 5 125H＋Arc 內顯）：`h264_qsv`、`h264_mf` 可用。開發機上的 gyan 版是 GPL 建置，只在本機開發用，不打包。10/27 定版：BtbN `autobuild-2026-10-26-14-25` 的 `ffmpeg-n9.0.2-…-win64-lgpl-shared-9.0.zip`（shared 版：exe＋DLL，比 static 小一半），只留 `ffmpeg.exe`、`ffprobe.exe`、DLL 與授權（約 150 MB 未壓縮），由 `scripts/fetch-ffmpeg.ps1` 下載到 `src-tauri/resources/ffmpeg/`（不進版控），打包時放 `$RESOURCE/ffmpeg/`；腳本會擋 GPL 建置並實測編碼器（qsv、mf、aac 可用）。執行時先找打包的，找不到才用 PATH 上的（開發機）。
 - **打包（原專案實測）**：大型二進位（ffmpeg、onnxruntime 等）放 Tauri `resources` 的資料夾形式，不要 onefile 的 `externalBin`（原專案引擎啟動從 13 秒降到 0.3 秒）；新增 IPC 指令要同時改 `build.rs`、`generate_handler!`、permission 三處；sidecar 不要拿 stdout 當協定通道（原專案曾因 log 寫 stdout 讓 IPC 斷線）；程式還開著時 `tauri build` 會因檔案被鎖失敗。安裝檔約 70～110 MB、打包 12～18 分鐘。
-- **repo 授權**：提交前公開時選定（建議 Apache-2.0）；README 列出第三方授權（ffmpeg、three.js MIT、MDX-Net 模型（Kim_Vocal_2 上游授權不明，見 §5.14）、python-audio-separator MIT、onnxruntime-directml 隨附的 `DirectML.dll`（Microsoft 專有授權，限 Windows）、acorn（MIT，2D 插件直譯器用，`src/anim/vendor/`）、原專案字導字演的動畫直譯器與元件庫（Apache-2.0，作者本人）、JASSUB／libass、mediabunny、soundtouchjs LGPL、MusicGen CC-BY-NC）。
+- **repo 授權**：提交前公開時選定（建議 Apache-2.0）；README 列出第三方授權（ffmpeg、three.js MIT、字型 Inter 與 Noto Sans TC（OFL，字幕用，D37）、MDX-Net 模型（Kim_Vocal_2 上游授權不明，見 §5.14）、python-audio-separator MIT、onnxruntime-directml 隨附的 `DirectML.dll`（Microsoft 專有授權，限 Windows）、acorn（MIT，2D 插件直譯器用，`src/anim/vendor/`）、原專案字導字演的動畫直譯器與元件庫（Apache-2.0，作者本人）、mediabunny、soundtouchjs LGPL、MusicGen CC-BY-NC）。
 
 ## 4. 資料模型（TS 核心）
 
@@ -264,7 +265,7 @@
 - 每一格由 TS 核心算出「這格要畫哪些圖層、各自的素材時間與變換」（純函式，Vitest 測），合成器照 §5.10 的順序畫：片段畫面（含變速的時間映射、局部放大、遮罩、淡入淡出、透明度、子母畫面的框）→ 3D 場景 → 疊加軌 → 2D／3D 插件 → 字幕。
 - 畫面來源是唯一的差別：預覽用 `<video>`／`<img>` 當貼圖（§5.13），匯出用 WebCodecs `VideoDecoder` 解原檔或中間檔（Q5）逐格餵進來。
 - 2D／3D 插件與 3D 場景：合成器把需要的當格畫面以 `ImageBitmap` 送進沙盒，插件畫完以 `ImageBitmap` 轉移回來（postMessage 的 transferable，不複製、不經 Rust；§5.7）。
-- 字幕：ASS 由 TS 核心從字幕資料產生（字型、描邊、底色三種預設；卡拉 OK 見 §5.18），用 libass 的 WASM 版（JASSUB）畫在合成器最上層。預覽與匯出同一個算繪器，字型度量、斷行、`\kf` 效果一致；字型檔隨程式打包，不用系統字型。
+- 字幕（D37）：`captionLayout`（純函式：置中、太寬整體縮小、逐字高亮狀態）＋`CaptionLayer`（Canvas 2D 畫在透明的 OffscreenCanvas，合成器疊在最上層）；預覽與匯出同一個類別，畫出來一致。字型 Inter＋Noto Sans TC 隨程式打包；Canvas 不會自己觸發字型分塊下載，預覽先用備用字型、載好再重畫，匯出開始前全部載好。樣式存在 `Project.captionStyle`（字幕樣式頁籤，`setCaptionStyle` 編輯）。
 
 **編碼與封裝**
 
@@ -282,7 +283,7 @@
 - 編碼器先用 `VideoEncoder.isConfigSupported` 問硬體，沒有就改軟體（無頭 Chromium 沒有 H.264 硬體編碼器，指定 prefer-hardware 會直接失敗）。
 - 寫檔：`Engine.openExportTarget`——Windows 版存檔對話框＋Rust `export_open／export_write（raw body，位置放標頭）／export_close／export_abort`；網頁版 `showSaveFilePicker` 的可寫串流，沒有對話框（或 e2e 設 `wordblade.exportToOpfs`）時寫進 OPFS。SRT：Windows 版寫在 MP4 旁邊，網頁版以下載給出。
 - 實測：e2e（`e2e/export.spec.ts`）3 項——影片＋聲音＋2D 特效（長度、解析度、48 kHz 聲音、紅框畫進去、特效後和原片同一格）、取消（不留半成品）、3D 場景（中段有木紋桌、開頭滿版）；WebView2 自我檢查（`src/selftest.ts` 的 `checkExport`）：asset 協定讀原檔、Rust 分塊寫檔都正常，1080p 30 秒片段 6.1 秒（4.9 倍即時，單一串流、無特效）。
-- 還沒做：字幕燒進畫面（JASSUB，11/1 和字幕一起）、遮罩、局部放大；變速片段預覽（`preservesPitch`）和匯出（WSOLA）聽起來差多少，等 P1-6 有變速介面時一起聽。
+- 字幕燒進畫面 10/28 已做（D37）。還沒做：遮罩、局部放大；變速片段預覽（`preservesPitch`）和匯出（WSOLA）聽起來差多少，等 P1-6 有變速介面時一起聽。
 
 **不採用的路線：ffmpeg 濾鏡圖匯出（10/27 實測後放棄，D24）**
 
@@ -544,6 +545,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 贅詞清單：英文 um、uh、erm、ah、hmm；中文 呃、嗯、欸。「like」「you know」「那個」「就是」這類有時是正常用詞，預設不勾，使用者可以加進清單。
 - 從逐字稿找出贅詞 → 列表（每條可試聽）→ 「Remove all」一次剪掉（同改字即剪：切開、刪掉、V1 漣漪補位），一次 snapshot 可 Ctrl+Z。
 - **Muse ASR 可能會保留贅詞**：原專案的中文實測（2026-09-16）Muse 保留「呃」「好」「吼」，吞掉的是 Groq 與 faster-whisper；英文沒測過，10/31 用英文錄影確認。沒有保留的話，改從聲音找：兩個詞之間有聲音、卻沒有對應文字的短片段（0.15～1 秒），列為「疑似贅詞」，一樣讓使用者試聽確認。
+- **實作（10/28）**：`findFillers`（V1 上用到的詞，比對時忽略大小寫與頭尾標點，前後各留 0.05 秒但不超過前後的詞）＋確認清單（逐字稿頁籤上方，和 §5.16b 共用；每條可試聽：播到該段結束自動停）＋「Remove selected」用 `cutRanges` 一次剪掉。真人英文實測（FOSDEM 180 秒）找到 17 條（um、uh、hmm、ah），Muse 有保留真人的語助詞，暫不需要聲音退路。
 - AI 導演的 `proposeCut` 也會把明顯的贅詞與口吃列進建議。
 
 ### 5.16b 清除無聲片段（P1-13，開發者 2026-10-27 要求列入）
@@ -552,6 +554,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 每段前後各留 0.15 秒，不切到逐字稿的詞（和詞重疊就縮到詞的邊界）；換算到 V1 上用到這支素材的片段。
 - 和去贅詞共用確認清單介面（每條可試聽、可取消勾選）→「Remove all」從後往前用 `rippleDelete` 剪（D25 跨軌規則），一次 Ctrl+Z 復原。
 - 純函式（輸入包絡、片段、詞與參數 → 範圍清單），Vitest 測；沒有逐字稿也能用（只看包絡）。
+- **實作（10/28）**：`findSilences`（詞在無聲段中間時拆成兩段）；範圍一律用素材時間記，`cutSourceRanges` 換算到 V1 片段、合併重疊（分開剪會多剪到往前補過來的內容）再從後往前 `rippleDelete`——改字即剪、去贅詞、清除無聲共用。e2e 素材 `e2e/fixtures/gaps.mp4`（兩段 1.5 秒無聲）。
 
 ### 5.17 發佈包（P1-7，D20）
 
@@ -565,7 +568,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 **逐字高亮字幕（P1-3）**
 
 - 字幕樣式多一個「Karaoke」：目前講到的詞變色（或放大、加底色），用 §5.2 重建的詞級時間。
-- 做法：TS 核心把字幕寫成 ASS，用 `\kf` 卡拉 OK 標籤（逐字填色）或逐詞拆成多個事件（放大效果）；預覽與輸出都由合成器裡的 JASSUB 畫同一份 ASS（§5.4），兩邊一致。
+- 做法（D37）：`wordStates` 依詞級時間算出每個詞是講過／講到／還沒講（詞與詞之間的空檔維持上一個詞；最後一個詞講完後全部算講過），`CaptionLayer` 依樣式畫：填色（講過與講到的上色）、放大（講到的放大 1.18 倍）、底色（講到的加底色塊）。預覽與匯出同一段程式。
 - 幾種預設：黃色填色、整詞放大、底色塊跳動；可調顏色與字型。
 
 **重配錄音卡拉 OK 模式（P1-9）**
@@ -619,7 +622,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 
 - 部署（2026-10-27 開發者決定）：網頁版是建置出來的靜態檔案，放 Zeabur 專案 `wordblade` 的獨立服務 `wordblade-web`（神奇網路主機，nginx 設 COOP／COEP 與單頁應用的回退），網址 `https://wordblade.zeabur.app`；部署 `pwsh scripts/web-zeabur.ps1`（`deploy/web/` 放 Dockerfile 與 nginx 設定）。閘道已放行這個網域的 CORS（§6）。
 - 範例專案的影片**不要**放在家用節點上：原專案實測神奇網路主機經閘道傳媒體約 470 KB/s、HTTP/3 會卡住（§11）。11/3 打包時另外找地方放（例如 GitHub Releases 或物件儲存），再決定。
-- WebCodecs、OffscreenCanvas、File System Access 需要的安全標頭（COOP／COEP，用來開 WASM 多執行緒）一起設好。Windows 版也一樣：10/27 實測 Tauri 預設 `crossOriginIsolated` 是 false，要在 Tauri 設定加上這兩個標頭（JASSUB 的多執行緒要用）。**10/27 已設**：`tauri.conf.json` 的 `app.security.headers`、Vite dev／preview 的 `headers`（開發與 e2e 才和正式環境一致）；實測 WebView2 與 Chromium 都是 `crossOriginIsolated = true`、有 `SharedArrayBuffer`，素材（asset 協定，CORS 模式）、畫布、Web Audio、回報 POST 都照常。
+- WebCodecs、OffscreenCanvas、File System Access 需要的安全標頭（COOP／COEP，用來開 SharedArrayBuffer 與 WASM 多執行緒）一起設好。Windows 版也一樣：10/27 實測 Tauri 預設 `crossOriginIsolated` 是 false，要在 Tauri 設定加上這兩個標頭（JASSUB 的多執行緒要用）。**10/27 已設**：`tauri.conf.json` 的 `app.security.headers`、Vite dev／preview 的 `headers`（開發與 e2e 才和正式環境一致）；實測 WebView2 與 Chromium 都是 `crossOriginIsolated = true`、有 `SharedArrayBuffer`，素材（asset 協定，CORS 模式）、畫布、Web Audio、回報 POST 都照常。
 - 伺服器沒有 GPU，所以 MusicGen、Demucs 這類要 GPU 的模型不能放 Zeabur，只能用 Modal／Baseten（合作夥伴額度）或不做。
 
 ### 5.22 範例專案、一鍵試用（P0，D22）
@@ -720,7 +723,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 | 10/29 | **核心①**：沙盒、2D 插件與範本、預覽；Vibe特效 2D（閘道 `/v1/ai/vibe`、錯誤回饋重寫）——**10/27 已提前完成**（`docs/plan-10-29.md`；閘道 10/27 重新部署）。空出的時間：10/28 起提前做核心②（3D），再補 2D 範本的音效擺位（§5.15）與粒子／計數器範本 |
 | 10/30 | **核心②**：3D 插件（three.js）、3D 範本（螢幕在桌上、吉祥物）、env 互動（當格畫面、定位點）；Vibe特效 3D；3D 場景與「用說的」——10/27 晚上起提前開始（`docs/plan-10-30.md`） |
 | 10/31 | **錄 2 分鐘英文範例短片**（D30）；~~MP4 匯出~~、~~Muse ASR~~——**10/27 已提前完成**（`docs/plan-10-31.md`；§5.4、§5.2：WebView2 1080p 30 秒約 6～7 秒匯出；詞級時間改用 DELTA 錨點，句首平均誤差 0.04～0.07 秒）。10/31 剩：用範例短片做英文真人錄音的逐字驗收（≤ 0.15 秒）、變速片段的預覽與匯出聽感比較 |
-| 11/1 | 逐字稿面板、改字即剪、字幕與 SRT、逐字高亮字幕、一鍵去贅詞＋清除無聲片段（P1-13，共用確認清單）、局部放大；**檢查點**：依 §2 決定 P1 後段砍到哪 |
+| 11/1 | **逐字稿面板、改字即剪、字幕燒錄、逐字高亮、一鍵去贅詞＋清除無聲片段——10/28 已提前完成**（`docs/plan-11-01.md`）；原列：逐字稿面板、改字即剪、字幕與 SRT、逐字高亮字幕、一鍵去贅詞＋清除無聲片段（P1-13，共用確認清單）、局部放大；**檢查點**：依 §2 決定 P1 後段砍到哪 |
 | 11/2 | AI 導演（Spark 逐段＋Wonder 統籌，含 proposeZoom）；SAM 遮罩；片段變速 |
 | 11/3 | **範例專案打包**（§5.22，素材 10/31 已錄）；上午先做翻頁式片頭（P1-12，§5.23；要 10/30 的 3D 插件，也當宣傳影片的開場）；照 P1 順序做到哪算哪：發佈包、AI 音效、重配錄音卡拉 OK、聲音分離、AI 音樂、Muse Image 材質圖（P1-14）；修 bug；正式版安裝檔；**晚上錄宣傳影片素材** |
 | 11/4 | **停止加功能**：用 WordBlade 剪自己的宣傳影片、寫 README、repo 公開；台灣 11/4 晚上提交 |

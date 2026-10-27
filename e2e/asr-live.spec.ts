@@ -57,6 +57,13 @@ test("Muse ASR 實機：英文 TTS 講課片轉錄，字幕句子起點對 SRT �
   const raw = await page.evaluate(() => (window as unknown as { __wordbladeAsr?: unknown }).__wordbladeAsr ?? null);
   const warning = await page.getByTestId("transcribe-warning").count() ? await page.getByTestId("transcribe-warning").innerText() : null;
 
+  // 一鍵去贅詞與清除無聲片段（§5.16、§5.16b）在這支片上找到幾條（只找、不剪）
+  await page.getByTestId("find-fillers").click();
+  const fillerItems = await page.getByTestId("cleanup-item").count();
+  const fillerLabels = await page.getByTestId("cleanup-item").locator(".label").allInnerTexts();
+  await page.getByTestId("find-pauses").click();
+  const pauseItems = await page.getByTestId("cleanup-item").count();
+
   // 字幕：逐字稿頁籤每段的時間碼（MM:SS:FF，30 fps）與文字
   const captions = await page.locator(".transcript li").evaluateAll((items) => items.map((li) => ({
     code: li.querySelector(".timecode")?.textContent ?? "",
@@ -91,6 +98,7 @@ test("Muse ASR 實機：英文 TTS 講課片轉錄，字幕句子起點對 SRT �
     retakeFound = all.includes("say that again");
   }
   const result = {
+    cleanup: { fillers: fillerItems, fillerLabels, pauses: pauseItems },
     sample: BASE, maxSegment: process.env.WORDBLADE_ASR_MAX_SEGMENT ?? "default", fillers, retakeFound,
     seconds, status, warning, captions: parsed.length, srtCues: srt.length, matched: errors.length,
     meanStartError: Number(mean.toFixed(3)), medianStartError: Number((abs[Math.floor(abs.length / 2)] ?? 0).toFixed(3)),
@@ -98,6 +106,7 @@ test("Muse ASR 實機：英文 TTS 講課片轉錄，字幕句子起點對 SRT �
   };
   mkdirSync(path.join(import.meta.dirname, "..", "output"), { recursive: true });
   writeFileSync(path.join(import.meta.dirname, "..", "output", "asr-live.json"), JSON.stringify(result, null, 2));
+  console.log(`清理清單：贅詞 ${fillerItems} 條（${[...new Set(fillerLabels.map((l) => l.toLowerCase()))].join("、")}）、≥ 1 秒的停頓 ${pauseItems} 段`);
   if (fillers) console.log(`語助詞（找到／講稿）：${Object.entries(fillers).map(([w, v]) => `${w} ${v.found}/${v.expected}`).join("、")}；重講句${retakeFound ? "有" : "沒有"}轉出來`);
   console.log(`ASR 實機：${seconds.toFixed(1)} 秒，${status}；SRT ${srt.length} 句、對上 ${errors.length} 句，起點誤差平均 ${result.meanStartError} 秒、中位數 ${result.medianStartError}、p90 ${result.p90StartError}${warning ? `；${warning}` : ""}`);
   await page.screenshot({ path: "output/ui-shots/asr-live.png" });

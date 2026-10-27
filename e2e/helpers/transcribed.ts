@@ -5,8 +5,17 @@ import path from "node:path";
 const FIXTURES = path.join(import.meta.dirname, "..", "fixtures");
 const GATEWAY = "http://fake-gateway.test";
 
-/** 匯入 talk.mp4、放上 V1、用假閘道轉錄（"Hello world." 0～2 秒、"Again." 2.5～4 秒） */
-export async function transcribed(page: Page) {
+/** 一段假的轉錄結果 */
+export type FakeTurn = { transcript: string; startMs: number; endMs: number };
+
+/** 預設的轉錄結果："Hello world." 0～2 秒、"Again." 2.5～4 秒 */
+const DEFAULT_TURNS: FakeTurn[] = [
+  { transcript: "Hello world.", startMs: 0, endMs: 2000 },
+  { transcript: "Again.", startMs: 2500, endMs: 4000 },
+];
+
+/** 匯入 talk.mp4、放上 V1、用假閘道轉錄（turns 可換） */
+export async function transcribed(page: Page, turns: FakeTurn[] = DEFAULT_TURNS) {
   await page.addInitScript((url) => {
     localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: "t" }));
     localStorage.setItem("wordblade.consent.asr", "yes");
@@ -14,10 +23,7 @@ export async function transcribed(page: Page) {
   }, GATEWAY);
   await page.route(`${GATEWAY}/v1/asr`, (route) => route.fulfill({
     status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
-    body: JSON.stringify({ transcript: "Hello world. Again.", audioDurationMs: 4000, turns: [
-      { transcript: "Hello world.", startMs: 0, endMs: 2000, speaker: "A" },
-      { transcript: "Again.", startMs: 2500, endMs: 4000, speaker: "A" },
-    ] }),
+    body: JSON.stringify({ transcript: turns.map((t) => t.transcript).join(" "), audioDurationMs: 4000, turns: turns.map((t) => ({ ...t, speaker: "A" })) }),
   }));
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto("/");
@@ -29,6 +35,6 @@ export async function transcribed(page: Page) {
   await page.locator('[data-tab="transcript"]').click();
   await expect(page.getByTestId("transcribe-start")).toBeEnabled({ timeout: 20_000 });
   await page.getByTestId("transcribe-start").click();
-  await expect(page.getByTestId("transcribe-status")).toContainText("3 words", { timeout: 20_000 });
+  await expect(page.getByTestId("transcribe-status")).toContainText("words", { timeout: 20_000 });
 }
 

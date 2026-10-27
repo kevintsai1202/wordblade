@@ -23,6 +23,8 @@ export interface AppState {
   playing: boolean;
   /** 播放速度：正的前進、負的倒退（J／L 連按 1、2、4、8 倍） */
   rate: number;
+  /** 試聽：播到這個時間自動停（null：不限） */
+  stopAt?: Seconds | null;
 }
 
 /** 介面動作 */
@@ -35,7 +37,7 @@ export type Action =
   | { type: "selectEffect"; effectId: string | null }
   | { type: "deleteSelected" }
   | { type: "zoom"; pxPerSecond: number }
-  | { type: "play"; rate: number }
+  | { type: "play"; rate: number; stopAt?: Seconds }
   | { type: "pause" }
   | { type: "tick"; time: Seconds }
   | { type: "importMedia"; media: Media[] }
@@ -86,7 +88,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case "zoom":
       return { ...state, pxPerSecond: Math.min(400, Math.max(2, action.pxPerSecond)) };
     case "play":
-      return { ...state, playing: true, rate: action.rate };
+      return { ...state, playing: true, rate: action.rate, stopAt: action.stopAt ?? null };
     case "pause":
       return { ...state, playing: false };
     case "importMedia":
@@ -102,6 +104,8 @@ export function reducer(state: AppState, action: Action): AppState {
       const max = projectDuration(state.history.present);
       const time = roundTime(Math.min(max, Math.max(0, action.time)));
       const atEdge = (state.rate > 0 && time >= max) || (state.rate < 0 && time <= 0);
+      // 試聽：播到 stopAt 就停在那裡
+      if (state.stopAt != null && state.rate > 0 && time >= state.stopAt) return { ...state, playhead: state.stopAt, playing: false, stopAt: null };
       return { ...state, playhead: time, playing: state.playing && !atEdge };
     }
   }

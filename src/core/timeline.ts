@@ -161,8 +161,7 @@ export function rippleDelete(project: Project, a: Seconds, b: Seconds): Project 
  */
 export function cutByWords(project: Project, wordIds: string[]): Project {
   const selected = new Set(wordIds);
-  const v1 = v1TrackId(project);
-  const ranges: [Seconds, Seconds][] = [];
+  const ranges: SourceRange[] = [];
   const mediaIds = new Set(project.words.filter((w) => selected.has(w.id)).map((w) => w.mediaId));
   for (const mediaId of mediaIds) {
     const words = project.words.filter((w) => w.mediaId === mediaId).sort((x, y) => x.start - y.start);
@@ -174,17 +173,46 @@ export function cutByWords(project: Project, wordIds: string[]): Project {
       while (j + 1 < words.length && selected.has(words[j + 1].id)) j++;
       const lo = Math.max(words[i].start - WORD_PAD, words[i - 1]?.end ?? 0);
       const hi = Math.min(words[j].end + WORD_PAD, words[j + 1]?.start ?? duration);
-      for (const clip of project.clips) {
-        if (clip.trackId !== v1 || clip.mediaId !== mediaId || clip.freeze) continue;
-        const s0 = Math.max(lo, clip.srcIn);
-        const s1 = Math.min(hi, clip.srcOut);
-        if (s1 <= s0) continue;
-        ranges.push([sourceToTimeline(clip, s0)!, sourceToTimeline(clip, s1)!]);
-      }
+      ranges.push({ mediaId, start: lo, end: hi });
       i = j;
     }
   }
-  return ranges.sort((x, y) => y[0] - x[0]).reduce((p, [a, b]) => rippleDelete(p, a, b), project);
+  return cutSourceRanges(project, ranges);
+}
+
+/** 一段素材範圍（素材時間） */
+export interface SourceRange {
+  mediaId: string;
+  start: Seconds;
+  end: Seconds;
+}
+
+/**
+ * 剪掉幾段素材範圍（改字即剪、一鍵去贅詞、清除無聲片段共用，§5.1、§5.16、§5.16b）：
+ * 換算到 V1 上用到這些素材的片段 → 時間軸範圍合併重疊 → 從後往前 rippleDelete（D25 跨軌規則）。
+ * 用素材時間記，幾種範圍可以一起剪：先剪的不會讓後面的位置失準。
+ */
+export function cutSourceRanges(project: Project, ranges: SourceRange[]): Project {
+  const v1 = v1TrackId(project);
+  const timeline: [Seconds, Seconds][] = [];
+  for (const r of ranges) {
+    for (const clip of project.clips) {
+      if (clip.trackId !== v1 || clip.mediaId !== r.mediaId || clip.freeze) continue;
+      const s0 = Math.max(r.start, clip.srcIn);
+      const s1 = Math.min(r.end, clip.srcOut);
+      if (s1 <= s0) continue;
+      timeline.push([sourceToTimeline(clip, s0)!, sourceToTimeline(clip, s1)!]);
+    }
+  }
+  // 合併重疊（重疊的範圍分開剪，後剪的那段會多剪到已經往前補過來的內容）
+  timeline.sort((x, y) => x[0] - y[0]);
+  const merged: [Seconds, Seconds][] = [];
+  for (const r of timeline) {
+    const last = merged[merged.length - 1];
+    if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+    else merged.push([r[0], r[1]]);
+  }
+  return merged.reverse().reduce((p, [a, b]) => rippleDelete(p, a, b), project);
 }
 
 /** 刪除片段：V1 片段用漣漪刪除（D25 跨軌規則）；其他軌只拿掉這個片段、不補位 */
