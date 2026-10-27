@@ -256,7 +256,8 @@ function CameraKeysEditor({ effect, playhead, dispatch }: { effect: Effect; play
       {keys.map((k, i) => (
         <div key={i} className="camera-key" data-key-index={i}>
           <label className="param-field"><span>Time (sec)</span>
-            <input type="number" min={0} max={length} step={0.1} value={k.t} data-key-field="t" onChange={(e) => patch(i, { t: Math.min(length, Math.max(0, Number(e.target.value))) })} />
+            {/* 時間改了會重新排序，輸入中途不寫回（否則列會換位、焦點跑到別的關鍵幀）；離開欄位或按 Enter 才寫回 */}
+            <KeyTimeInput key={`${i}-${k.t}`} value={k.t} max={length} onCommit={(t) => patch(i, { t })} />
           </label>
           <label className="param-field"><span>Position</span><span className="vec3">{vec(i, "position", k.position)}</span></label>
           <label className="param-field"><span>Look at</span><span className="vec3">{vec(i, "target", k.target)}</span></label>
@@ -268,5 +269,21 @@ function CameraKeysEditor({ effect, playhead, dispatch }: { effect: Effect; play
       ))}
       <button type="button" data-testid="camera-key-add" onClick={add}>Add keyframe at playhead</button>
     </fieldset>
+  );
+}
+
+/** 關鍵幀時間欄位：打字時只改本地草稿，blur 或 Enter 才寫回（夾在 0～區段長度） */
+function KeyTimeInput({ value, max, onCommit }: { value: number; max: number; onCommit: (t: number) => void }) {
+  const [draft, setDraft] = useState(String(value));
+  /** 寫回：數字有效且有變才送出，否則還原 */
+  const commit = () => {
+    const t = Math.round(Math.min(max, Math.max(0, Number(draft))) * 100) / 100;
+    if (draft.trim() === "" || Number.isNaN(t)) setDraft(String(value));
+    else if (t !== value) onCommit(t);
+    else setDraft(String(value));
+  };
+  return (
+    <input type="number" min={0} max={max} step={0.1} value={draft} data-key-field="t"
+      onChange={(e) => setDraft(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
   );
 }

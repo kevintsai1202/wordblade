@@ -212,6 +212,19 @@ test("鏡頭關鍵幀：在播放頭加一個關鍵幀、把鏡頭推到螢幕�
   await expect.poll(() => woodRatio(page), { timeout: 30_000 }).toBeLessThan(0.02);
   await page.screenshot({ path: "output/ui-shots/three-camera-keys.png" });
 
+  // 第二個關鍵幀（播放頭已有關鍵幀 → 放在最後一個之後 1 秒）；把第一個的時間改到它後面：
+  // 排序後兩列對調，欄位顯示的值跟著關鍵幀走（不會改到別的關鍵幀）
+  await editor.getByTestId("camera-key-add").click();
+  await expect(editor.locator(".camera-key")).toHaveCount(2);
+  await expect(editor.locator('[data-key-index="1"] [data-key-field="t"]')).toHaveValue("3");
+  const firstTime = editor.locator('[data-key-index="0"] [data-key-field="t"]');
+  await firstTime.fill("4.5");
+  await firstTime.press("Enter");
+  await expect(editor.locator('[data-key-index="0"] [data-key-field="t"]')).toHaveValue("3");
+  await expect(editor.locator('[data-key-index="1"] [data-key-field="t"]')).toHaveValue("4.5");
+  await expect(editor.locator('[data-key-index="1"] [data-key-field="position-2"]')).toHaveValue("2.8");
+  await editor.locator('[data-key-index="0"]').getByTestId("camera-key-delete").click();
+
   // 刪掉關鍵幀：回到預設運鏡，又看得到桌子
   await editor.getByTestId("camera-key-delete").click();
   await expect(editor.locator(".camera-key")).toHaveCount(0);
