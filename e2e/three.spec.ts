@@ -64,3 +64,40 @@ test("桌上螢幕：3D 沙盒畫出木紋桌與播影片的螢幕，頭尾接�
   await expect(page.locator('iframe[data-testid="plugin-sandbox-3d"]')).toHaveAttribute("sandbox", "allow-scripts");
   expect(await page.evaluate(() => self.crossOriginIsolated)).toBe(true);
 });
+
+test("漂浮的板子：中段板子縮小、背景是攝影棚；Inspector 換背景", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/");
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByTestId("import-media").click();
+  await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
+  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
+  await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
+  await page.locator('[data-tab="vibe"]').click();
+  await page.locator('[data-template="board-float"]').click();
+  await expect(page.locator(".effect-chip")).toHaveCount(1);
+
+  /** 左上角（板子縮到 0.8 時露出背景）的平均顏色 */
+  const corner = () => page.getByTestId("preview-canvas").evaluate((c: HTMLCanvasElement) => {
+    const p = document.createElement("canvas");
+    p.width = 160;
+    p.height = 90;
+    const ctx = p.getContext("2d")!;
+    ctx.drawImage(c, 0, 0, 160, 90);
+    const d = ctx.getImageData(2, 2, 8, 6).data;
+    let r = 0, g = 0, b = 0;
+    for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+    const n = d.length / 4;
+    return [r / n, g / n, b / n];
+  });
+  // 中段（2 秒）：左上角是攝影棚的深灰藍（藍 ≥ 紅），不是影片
+  await page.locator(".ruler").click({ position: { x: 40, y: 5 } });
+  await expect.poll(async () => { const [r, , b] = await corner(); return b >= r && b > 20 && b < 140; }, { timeout: 60_000 }).toBe(true);
+  // Inspector：背景換純色
+  await page.locator(".effect-chip").click();
+  await page.locator('[data-tab="inspector"]').click();
+  await page.locator('[data-param="background"] select').selectOption("color");
+  await expect.poll(async () => { const [r, g, b] = await corner(); return Math.abs(r - 32) < 8 && Math.abs(g - 32) < 8 && Math.abs(b - 32) < 8; }, { timeout: 30_000 }).toBe(true);
+  await page.screenshot({ path: "output/ui-shots/three-board.png" });
+});

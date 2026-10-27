@@ -77,6 +77,7 @@ function ParamField({ name, def, label, labels, value, onChange }: { name: strin
 export function InspectorTab({ project, effectId, dispatch }: { project: Project; effectId: string | null; dispatch: Dispatch<Action> }) {
   const effect: Effect | undefined = project.effects.find((e) => e.id === effectId);
   if (!effect) return <p className="muted placeholder">Select an effect on the timeline to edit it.</p>;
+  if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} dispatch={dispatch} />;
   const box = effect.params.box as Box;
   const layers = (effect.params.layers ?? []) as Layer[];
 
@@ -113,6 +114,29 @@ export function InspectorTab({ project, effectId, dispatch }: { project: Project
           </fieldset>
         );
       })}
+    </div>
+  );
+}
+
+/** 3D 特效的設定：依 3D 元件的參數定義產生表單；關鍵幀這類複雜參數先唯讀顯示（用「用說的」或範本改） */
+function Inspector3D({ project, effect, dispatch }: { project: Project; effect: Effect; dispatch: Dispatch<Action> }) {
+  const plugin = project.plugins.find((p) => p.hash === effect.pluginId);
+  const component = plugin?.component as { name?: string; params?: Record<string, ParamDef> } | undefined;
+  const values = ((effect.params as { params?: Record<string, unknown> }).params ?? {}) as Record<string, unknown>;
+  /** 改一個參數（一筆可復原的編輯） */
+  const set = (key: string, value: unknown) =>
+    dispatch({ type: "commit", edits: [{ kind: "setEffectParams", effectId: effect.id, params: { ...effect.params, params: { ...values, [key]: value } } }] });
+  return (
+    <div className="inspector" data-testid="inspector">
+      <h3 className="section-title">{String(effect.params.title ?? component?.name ?? "3D effect")}</h3>
+      <p className="muted">{effect.start.toFixed(2)}s – {effect.end.toFixed(2)}s · {effect.kind === "scene3d" ? "3D scene (replaces the main track)" : "3D overlay"}</p>
+      <fieldset className="param-group">
+        <legend>{component?.name ?? "Settings"}</legend>
+        {Object.entries(component?.params ?? {}).map(([key, def]) =>
+          ["keys", "float"].includes(def.type)
+            ? <label key={key} className="param-field" data-param={key}><span>{def.label ?? key}</span><code className="muted">{JSON.stringify(values[key] ?? def.default)?.slice(0, 120)}</code></label>
+            : <ParamField key={key} name={key} def={def} label={def.label ?? key} labels={def.labels} value={values[key]} onChange={(v) => set(key, v)} />)}
+      </fieldset>
     </div>
   );
 }
