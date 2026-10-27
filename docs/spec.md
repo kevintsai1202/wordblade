@@ -218,7 +218,7 @@
 
 流程：
 
-1. ffmpeg 抽 16 kHz mono WAV；在靜音處切成 ≤ 9 分鐘的段（每段 < 32 MB）。
+1. 抽 16 kHz mono WAV（Windows 版 ffmpeg、網頁版 mediabunny）；在靜音處切成 ≤ 60 秒的段（原訂 9 分鐘，10/27 實測後改，原因見下方「每段 60 秒」）。
 2. 每段帶 `keywords`（講稿抽出的術語）經閘道送出，最多 3 段平行。
 3. 詞級時間重建（Muse 沒有詞級時間，官方文件明列不提供；10/27 改用 DELTA 錨點）：
    - **DELTA 錨點（主要做法）**：閘道向 Meta 送 `partialMode: DELTA`＋`Accept: text/event-stream`，把串流整理成 JSON 回傳——`deltas`（每個文字事件的一兩個字＋`audioProcessedMs`）與 `turns`（speechStart／speechEnd／speechComplete＋說話者）。10/27 實測：文字事件約每 0.32 秒一個、每個約 1.2 字，事件時間比字的結尾晚約 0.35 秒。
