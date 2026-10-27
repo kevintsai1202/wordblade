@@ -11,6 +11,7 @@ export default defineConfig({
     command: `pnpm build && pnpm preview --port ${port} --strictPort`,
     url: `http://localhost:${port}`,
     reuseExistingServer: false,
-    timeout: 120_000,
+    // 機器忙（其他專案的 vite、MCP 服務）時建置會慢到 1～2 分鐘，多留一點
+    timeout: 300_000,
   },
 });

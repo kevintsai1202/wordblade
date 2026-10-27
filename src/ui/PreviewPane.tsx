@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useRef, type Dispatch } from "react";
+import { useEffect, useMemo, useRef, type Dispatch, type ReactNode } from "react";
 import { ensureAudioGraph } from "../audio/audioGraph";
 import { duckingCurve } from "../audio/ducking";
 import { timelineWords, type Caption } from "../core/captions";
-import type { Zoom } from "../core/zoom";
-import { ZoomOverlay } from "./ZoomOverlay";
 import type { Project } from "../core/model";
 import { EffectRenderer } from "../anim/effectRenderer";
 import type { PluginService } from "../anim/pluginService";
@@ -30,12 +28,11 @@ export function PreviewPane(props: {
   plugins: PluginService;
   /** 選取中的特效（預覽上顯示它的目標框） */
   selectedEffectId: string | null;
-  /** 局部放大正在選範圍：拉框結果交回這裡（null：不在選） */
-  onZoomPick?: ((zoom: Zoom) => void) | null;
-  onZoomCancel?: () => void;
+  /** 疊在預覽上的調框層（局部放大的放大框；有它時不顯示特效的目標框） */
+  overlay?: ReactNode;
   dispatch: Dispatch<Action>;
 }) {
-  const { project, playhead, playing, rate, duration, captions, engine, library, plugins, selectedEffectId, onZoomPick, onZoomCancel, dispatch } = props;
+  const { project, playhead, playing, rate, duration, captions, engine, library, plugins, selectedEffectId, overlay, dispatch } = props;
   const frameRef = useRef<HTMLDivElement>(null);
   // 有目標框的特效（2D 與疊加的 3D）才在預覽上顯示框
   const selectedEffect = project.effects.find((e) => e.id === selectedEffectId && (e.kind === "anim2d" || e.kind === "anim3d") && !!e.params.box);
@@ -112,8 +109,8 @@ export function PreviewPane(props: {
       <div className="viewer">
         <div className="frame" ref={frameRef}>
           <canvas ref={canvasRef} width={PREVIEW_WIDTH} height={PREVIEW_HEIGHT} data-testid="preview-canvas" data-caption={caption?.lines.join(" ") ?? ""} />
-          {selectedEffect && !playing && !onZoomPick && <BoxOverlay effect={selectedEffect} frame={frameRef.current} dispatch={dispatch} />}
-          {onZoomPick && !playing && <ZoomOverlay onPick={onZoomPick} onCancel={() => onZoomCancel?.()} />}
+          {selectedEffect && !playing && !overlay && <BoxOverlay effect={selectedEffect} frame={frameRef.current} dispatch={dispatch} />}
+          {!playing && overlay}
         </div>
       </div>
       <div className="transport">

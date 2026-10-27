@@ -2,10 +2,10 @@
 // 例如「去贅詞 Remove all」、AI 導演採用一條建議，都只要一次 Ctrl+Z（§5.11、§5.16）。
 // 歷史存的是整份專案的快照；timeline 的函式用 Immer 做結構共享，快照之間沒改到的部分是同一個物件。
 import { addEffect, deleteEffect, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
-import type { CameraKey, Effect, Plugin, Project, Seconds, Word, ZoomKey } from "./model";
+import type { CameraKey, Effect, Plugin, Project, Seconds, Word, ZoomRegion } from "./model";
 import { setCaptionStyle, setMediaWords } from "./media";
 import { editWords } from "./transcriptEdit";
-import { setClipZoomKeys } from "./zoom";
+import { addZoom, deleteZoom, setZoom } from "./zoom";
 import type { CaptionStyle } from "../captions/captionLayout";
 import { cutByWords, cutSourceRanges, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
 
@@ -28,7 +28,9 @@ export type Edit =
   | { kind: "setCaptionStyle"; style: Partial<CaptionStyle> }
   | { kind: "editWords"; wordIds: string[]; text: string }
   | { kind: "cutRanges"; ranges: SourceRange[] }
-  | { kind: "setZoomKeys"; clipId: string; keys: ZoomKey[] };
+  | { kind: "addZoom"; zoom: ZoomRegion }
+  | { kind: "setZoom"; zoom: ZoomRegion }
+  | { kind: "deleteZoom"; zoomId: string };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -50,7 +52,9 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "setCaptionStyle": return setCaptionStyle(project, edit.style);
     case "editWords": return editWords(project, edit.wordIds, edit.text);
     case "cutRanges": return cutSourceRanges(project, edit.ranges);
-    case "setZoomKeys": return setClipZoomKeys(project, edit.clipId, edit.keys);
+    case "addZoom": return addZoom(project, edit.zoom);
+    case "setZoom": return setZoom(project, edit.zoom);
+    case "deleteZoom": return deleteZoom(project, edit.zoomId);
   }
 }
 

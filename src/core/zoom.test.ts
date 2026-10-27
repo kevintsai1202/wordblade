@@ -1,91 +1,121 @@
 import { describe, expect, it } from "vitest";
-import { makeClip, makeProject } from "./fixtures";
-import { applyEdits } from "./history";
 import { framePlan } from "../compositor/framePlan";
-import { splitClip } from "./timeline";
-import { insertZoomKey, ZOOM_RAMP, zoomAt, zoomCrop } from "./zoom";
+import { makeProject } from "./fixtures";
+import { applyEdits } from "./history";
+import type { ZoomRegion } from "./model";
+import { centerAt, ease, moveZoom, progress, rampSeconds, trimZoom, zoomCrop, zoomFromRange, zoomState } from "./zoom";
 
-/** 一個有兩個關鍵幀（3 秒與 5 秒、放大 2 倍、中心 0.6, 0.4）的片段 */
-const clip = makeClip({ id: "c", mediaId: "m1", trackId: "V1", srcIn: 0, srcOut: 10, start: 0, zoomKeys: [
-  { src: 3, scale: 2, cx: 0.6, cy: 0.4 },
-  { src: 5, scale: 2, cx: 0.6, cy: 0.4 },
-] });
+// 局部放大（spec §5.19，照字導字演）：數學照搬原專案 backend/zoom_math.py 與它的測試（格數 ÷ 30 換成秒）。
 
-describe("zoomAt（局部放大的每格倍率與中心）", () => {
-  it("第一個關鍵幀前 0.5 秒以外、最後一個之後 0.5 秒以外是原畫面", () => {
-    expect(zoomAt(clip, 2).scale).toBe(1);
-    expect(zoomAt(clip, 6).scale).toBe(1);
+/** 建一個放大區段 */
+function region(partial: Partial<ZoomRegion>): ZoomRegion {
+  return { id: "z1", mediaId: "m1", start: 0, end: 10, w: 0.5, path: [{ src: 0, cx: 0.5, cy: 0.5 }], enabled: true, ...partial };
+}
+
+describe("原專案 zoom_math 的對照", () => {
+  it("頭尾緩動：固定 1 秒；區間短於 2 秒時取一半", () => {
+    expect(rampSeconds(0, 10)).toBe(1);
+    expect(rampSeconds(0, 40 / 30)).toBeCloseTo(20 / 30);
   });
 
-  it("兩個關鍵幀之間停留；推進一半時的倍率在 1 與 2 之間（對數內插：√2）", () => {
-    expect(zoomAt(clip, 4)).toMatchObject({ scale: 2, cx: 0.6, cy: 0.4 });
-    const mid = zoomAt(clip, 3 - ZOOM_RAMP / 2);
-    expect(mid.scale).toBeGreaterThan(1);
-    expect(mid.scale).toBeLessThan(2);
-    // 緩動是 smoothstep，正中間剛好一半：對數內插的一半＝√2
-    expect(mid.scale).toBeCloseTo(Math.SQRT2, 3);
-    // 推進時中心直接對著目標
-    expect(mid.cx).toBeCloseTo(0.6);
+  it("ease：端點與對稱（ease-in-out quad）", () => {
+    expect(ease(0)).toBe(0);
+    expect(ease(1)).toBe(1);
+    expect(ease(0.5)).toBeCloseTo(0.5);
+    expect(ease(0.25) + ease(0.75)).toBeCloseTo(1);
   });
 
-  it("關鍵幀之間沿路徑移動；倍率 1 的關鍵幀結束這一段", () => {
-    const c = makeClip({ id: "d", mediaId: "m1", trackId: "V1", srcIn: 0, srcOut: 10, start: 0, zoomKeys: [
-      { src: 1, scale: 2, cx: 0.2, cy: 0.5 },
-      { src: 3, scale: 2, cx: 0.8, cy: 0.5 },
-      { src: 4, scale: 1, cx: 0.5, cy: 0.5 },
-    ] });
-    const z = zoomAt(c, 2);
-    expect(z.cx).toBeGreaterThan(0.2);
-    expect(z.cx).toBeLessThan(0.8);
-    expect(zoomAt(c, 4.2).scale).toBe(1);
+  it("progress：起點後漸入、終點前漸出、中段 1、區間外 0", () => {
+    const [s, e, r] = [100 / 30, 400 / 30, 1];
+    expect(progress(100 / 30, s, e, r)).toBe(0);
+    expect(progress(130 / 30, s, e, r)).toBeCloseTo(1);
+    expect(progress(250 / 30, s, e, r)).toBe(1);
+    expect(progress(400 / 30, s, e, r)).toBe(0);
+    expect(progress(115 / 30, s, e, r)).toBeCloseTo(0.5);
+    expect(progress(385 / 30, s, e, r)).toBeCloseTo(0.5);
+    expect(progress(50 / 30, s, e, r)).toBe(0);
+    expect(progress(500 / 30, s, e, r)).toBe(0);
   });
 
-  it("沒有關鍵幀是原畫面；倍率夾在 1～4", () => {
-    expect(zoomAt(makeClip({ id: "e", mediaId: "m1", trackId: "V1", srcIn: 0, srcOut: 10, start: 0 }), 3).scale).toBe(1);
-    const big = makeClip({ id: "f", mediaId: "m1", trackId: "V1", srcIn: 0, srcOut: 10, start: 0, zoomKeys: [{ src: 2, scale: 9, cx: 0.5, cy: 0.5 }, { src: 4, scale: 9, cx: 0.5, cy: 0.5 }] });
-    expect(zoomAt(big, 3).scale).toBe(4);
+  it("centerAt：第一點前與最後一點後停住；兩點相同停住、不同時 ease 移動", () => {
+    const path = [{ src: 10, cx: 0.3, cy: 0.5 }, { src: 500 / 30, cx: 0.3, cy: 0.5 }, { src: 700 / 30, cx: 0.7, cy: 0.5 }, { src: 30, cx: 0.7, cy: 0.75 }];
+    expect(centerAt(path, 100 / 30)).toEqual({ cx: 0.3, cy: 0.5 });
+    expect(centerAt(path, 400 / 30)).toEqual({ cx: 0.3, cy: 0.5 });
+    expect(centerAt(path, 600 / 30).cx).toBeCloseTo(0.5);
+    expect(centerAt(path, 650 / 30).cx).toBeCloseTo(0.3 + 0.4 * ease(0.75));
+    expect(centerAt(path, 700 / 30)).toEqual({ cx: 0.7, cy: 0.5 });
+    expect(centerAt(path, 800 / 30).cy).toBeCloseTo(0.625);
+    expect(centerAt(path, 40)).toEqual({ cx: 0.7, cy: 0.75 });
+  });
+
+  it("zoomState：1.95 倍拖到最右上角，中段看的正是那一角；區間外是原畫面", () => {
+    const w = 1 / 1.95;
+    const z = region({ start: 0, end: 10, w, path: [{ src: 0, cx: 1 - w / 2, cy: w / 2 }] });
+    const mid = zoomState(z, 5);
+    expect(mid.scale).toBeCloseTo(1.95);
+    expect(mid.cx).toBeCloseTo(1 - w / 2);
+    expect(mid.cy).toBeCloseTo(w / 2);
+    expect(zoomCrop(mid).x + zoomCrop(mid).w).toBeCloseTo(1);
+    expect(zoomCrop(mid).y).toBeCloseTo(0);
+    expect(zoomState(z, 0)).toEqual({ scale: 1, cx: 0.5, cy: 0.5 });
+  });
+
+  it("zoomState 用路徑的中心：中心已移到 0.75 時看的是 0.75", () => {
+    const z = region({ start: 0, end: 20, w: 0.5, path: [{ src: 0, cx: 0.5, cy: 0.5 }, { src: 10, cx: 0.75, cy: 0.5 }] });
+    const s = zoomState(z, 15);
+    expect(s.scale).toBeCloseTo(2);
+    expect(s.cx).toBeCloseTo(0.75);
   });
 });
 
-describe("zoomCrop（要取的畫面範圍）", () => {
-  it("寬高都是 1/倍率（比例跟畫面一樣），以中心為準，超出畫面就夾回來", () => {
-    expect(zoomCrop({ scale: 2, cx: 0.5, cy: 0.5 })).toEqual({ x: 0.25, y: 0.25, w: 0.5, h: 0.5 });
-    expect(zoomCrop({ scale: 2, cx: 0.1, cy: 0.95 })).toEqual({ x: 0, y: 0.5, w: 0.5, h: 0.5 });
-    expect(zoomCrop({ scale: 1, cx: 0.9, cy: 0.9 })).toEqual({ x: 0, y: 0, w: 1, h: 1 });
+describe("推進中的倍率與中心（原專案的平移公式換算）", () => {
+  it("漸入一半：倍率在 1 與 1/w 之間，看的中心在畫面中央與目標之間", () => {
+    const z = region({ start: 0, end: 10, w: 0.25, path: [{ src: 0, cx: 0.2, cy: 0.5 }] });
+    const s = zoomState(z, 0.5);
+    expect(s.scale).toBeCloseTo(1 + 3 * 0.5);
+    expect(s.cx).toBeGreaterThan(0.2);
+    expect(s.cx).toBeLessThan(0.5);
   });
 });
 
-describe("framePlan 與編輯", () => {
-  it("有放大的片段，影像圖層帶裁切範圍；沒放大的不帶", () => {
+describe("編輯", () => {
+  it("zoomFromRange：時間軸範圍 → 這段 V1 片段的素材範圍、預設框寬 0.5、一個路徑點在中央", () => {
     const p = makeProject();
-    p.clips = p.clips.map((c) => (c.id === "v1a" ? { ...c, zoomKeys: clip.zoomKeys } : c));
-    const layer = framePlan(p, 4).find((l) => l.clipId === "v1a")!;
-    expect(layer.crop).toEqual({ x: 0.35, y: 0.15, w: 0.5, h: 0.5 });
-    expect(framePlan(p, 1).find((l) => l.clipId === "v1a")!.crop).toBeUndefined();
-    expect(framePlan(p, 21).find((l) => l.clipId === "v1c")!.crop).toBeUndefined();
+    // v1b：時間軸 10～20 秒＝素材 20～30 秒
+    const z = zoomFromRange(p, { start: 12, end: 15 }, "zx")!;
+    expect(z).toMatchObject({ id: "zx", mediaId: "m1", start: 22, end: 25, w: 0.5, enabled: true });
+    expect(z.path).toEqual([{ src: 22, cx: 0.5, cy: 0.5 }]);
+    // 跨到下一個片段：夾在起點所在的片段裡
+    expect(zoomFromRange(p, { start: 18, end: 24 }, "zy")!.end).toBe(30);
   });
 
-  it("setZoomKeys 依素材時間排序、可以復原；片段切開後兩段都帶著關鍵幀", () => {
+  it("moveZoom 平移起訖與所有路徑點（夾在片段的素材範圍內）；trimZoom 只改起訖、路徑點夾回範圍", () => {
+    const z = region({ start: 2, end: 4, path: [{ src: 2, cx: 0.5, cy: 0.5 }, { src: 3, cx: 0.6, cy: 0.5 }] });
+    const moved = moveZoom(z, 1, 0, 10);
+    expect([moved.start, moved.end, moved.path[1].src]).toEqual([3, 5, 4]);
+    expect(moveZoom(z, 20, 0, 10).end).toBe(10);
+    const trimmed = trimZoom(z, "start", 3.5, 0, 10);
+    expect(trimmed.start).toBe(3.5);
+    expect(trimmed.path.every((p) => p.src >= 3.5)).toBe(true);
+  });
+
+  it("framePlan：放大區段內的影像圖層帶裁切範圍；停用的不放大", () => {
     const p = makeProject();
-    const next = applyEdits(p, [{ kind: "setZoomKeys", clipId: "v1a", keys: [{ src: 5, scale: 2, cx: 0.5, cy: 0.5 }, { src: 3, scale: 2, cx: 0.5, cy: 0.5 }] }]);
-    expect(next.clips.find((c) => c.id === "v1a")!.zoomKeys!.map((k) => k.src)).toEqual([3, 5]);
-    expect(p.clips.find((c) => c.id === "v1a")!.zoomKeys).toBeUndefined();
-    const split = splitClip(next, "v1a", 4);
-    const parts = split.clips.filter((c) => c.trackId === "V1" && c.mediaId === "m1" && c.srcIn < 10);
-    expect(parts).toHaveLength(2);
-    for (const c of parts) expect(c.zoomKeys).toHaveLength(2);
+    p.zooms = [region({ mediaId: "m1", start: 22, end: 26, w: 0.5, path: [{ src: 22, cx: 0.5, cy: 0.5 }] })];
+    // 時間軸 14 秒＝素材 24 秒（中段）
+    expect(framePlan(p, 14).find((l) => l.clipId === "v1b")!.crop).toEqual({ x: 0.25, y: 0.25, w: 0.5, h: 0.5 });
+    expect(framePlan(p, 11).find((l) => l.clipId === "v1b")!.crop).toBeUndefined();
+    p.zooms[0].enabled = false;
+    expect(framePlan(p, 14).find((l) => l.clipId === "v1b")!.crop).toBeUndefined();
   });
-});
 
-describe("insertZoomKey（在預覽拖框加關鍵幀）", () => {
-  const k = (src: number, scale = 2) => ({ src, scale, cx: 0.5, cy: 0.5 });
-  it("第一次：同時建 2 秒後同一個框（不超過片段結尾）", () => {
-    expect(insertZoomKey([], k(3), 10).map((x) => x.src)).toEqual([3, 5]);
-    expect(insertZoomKey([], k(9), 10).map((x) => x.src)).toEqual([9, 10]);
-  });
-  it("之後：一格之內取代，否則依時間插入", () => {
-    const keys = [k(3), k(5)];
-    expect(insertZoomKey(keys, k(5.01, 3), 10).map((x) => [x.src, x.scale])).toEqual([[3, 2], [5.01, 3]]);
-    expect(insertZoomKey(keys, k(4, 3), 10).map((x) => x.src)).toEqual([3, 4, 5]);
+  it("addZoom／setZoom／deleteZoom 編輯，可以復原", () => {
+    const p = makeProject();
+    const added = applyEdits(p, [{ kind: "addZoom", zoom: region({}) }]);
+    expect(added.zooms).toHaveLength(1);
+    const changed = applyEdits(added, [{ kind: "setZoom", zoom: region({ w: 0.3 }) }]);
+    expect(changed.zooms![0].w).toBe(0.3);
+    expect(applyEdits(changed, [{ kind: "deleteZoom", zoomId: "z1" }]).zooms).toHaveLength(0);
+    expect(p.zooms ?? []).toHaveLength(0);
   });
 });

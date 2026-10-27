@@ -47,6 +47,7 @@
 | D35 | 2D 插件沿用原專案直譯器（2026-10-27） | 開發者選定：2D 插件用原專案（字導字演）的元件格式、受限 JavaScript 與直譯器（`draw(g, t, p, env, bg)`，原生 JS `render(ctx, …)` 不採用），直譯器放進沙盒 Worker 執行（雙層防護）；元件庫、API 說明、提示詞與 202 項測試一併沿用。3D 插件仍是沙盒 Worker 裡的原生 JS（§5.7） |
 | D36 | Muse Image 材質圖（2026-10-27） | 開發者選定：一句話產生**無縫材質圖**，用在內建 3D 場景表面、3D 插件（含 Vibe特效 3D）、2D 插件填色與 3D 背景；Muse Image 只產生顏色圖，**無縫化、去暗角與法線貼圖由 WordBlade 本機算**（不多花錢）；排 P1-14（11/3 做到哪算哪），併入 §5.12 |
 | D37 | 字幕自己用 Canvas 2D 畫（2026-10-28） | 開發者選定：取代原訂的 JASSUB（libass WASM）。預覽與匯出用同一個 `CaptionLayer`（`src/captions/`）畫在合成器最上層；三種外觀（描邊／底色塊／陰影，另有「不燒進畫面」）＋逐字高亮（填色／放大／底色），完全可控、好測，沒有 WASM 整合風險；不支援任意 ASS 特效（用不到）。字型隨程式打包：英文 Inter、中文 Noto Sans TC（OFL，中文分塊、用到的字才載入），預覽與匯出一致 |
+| D38 | 局部放大與特效照字導字演的做法（2026-10-28） | 開發者要求：先在時間軸框選範圍（Shift＋拖曳，以播放頭為錨點；I／O 也可）→ 範圍上方的動作列建立放大或特效。局部放大改成**區段**（`Project.zooms`：素材時間的起訖、固定框寬、框中心沿路徑點移動），取代 10/28 上午做的片段關鍵幀版；數學照搬原專案 `backend/zoom_math.py`（頭尾各 1 秒 ease-in-out、路徑點之間 ease）；V1 上的放大條可拖、可修邊、菱形是路徑點；預覽上的放大框可拖（整段平移／選了點只改那一點）、拖角落等比縮放 |
 
 **Q1～Q7（開發者 2026-10-26 回覆「照建議」，以下「建議」欄即為決定）**
 
@@ -175,11 +176,12 @@
 | --- | --- | --- |
 | `Media` | id、path（Windows 版）或 handleKey（網頁版，指向 IndexedDB 裡的 `FileSystemHandle`）、kind（video／image／audio）、duration、fps、width、height、hasAlpha、audio、proxyPath?、mezzaninePath? | 素材庫的一筆；ffprobe（網頁版用 mediabunny）讀出 |
 | `Track` | id、kind（video／audio）、role（音軌才有：dialogue／music／sfx）、index、muted、locked、volume | V1 是主軌（片段首尾相接、漣漪剪輯）；V2 以上與 A 軌可以有空隙。配樂壓低看 role（music 被 dialogue 壓）；聲音分離新增的軌是 music |
-| `Clip` | id、mediaId、trackId、srcIn、srcOut、start（時間軸秒）、speed、opacity、transform（全畫面或子母畫面的框）、fadeIn、fadeOut、volume、zoomKeys?、freeze? | 時間軸上的一段；剪輯就是切開、刪除、移動片段。`zoomKeys`（局部放大，§5.19）用**素材時間**記，片段被切開時跟著素材走，不必另外處理漣漪；`freeze`（定格，§5.20）記凍結的素材時間與長度 |
+| `Clip` | id、mediaId、trackId、srcIn、srcOut、start（時間軸秒）、speed、opacity、transform（全畫面或子母畫面的框）、fadeIn、fadeOut、volume、freeze? | 時間軸上的一段；剪輯就是切開、刪除、移動片段。`freeze`（定格，§5.20）記凍結的素材時間與長度 |
 | `Word` | id、mediaId、text、start、end | 素材時間；每支素材自己的逐字稿 |
 | `CaptionBreak` | wordId、kind（breakAfter／joinAfter／lineBreakAfter） | 使用者調過的斷點，以詞的 id 為鍵；斷句規則算出的斷點遇到 override 就照 override |
 | `MaskObject` | id、mediaId、prompt、label、framesRef（指向 `masks/<id>.bin`：每格的框與遮罩，SAM 回的格式見 §5.3）、effect、enabled | 素材時間；遮罩跟著素材走，片段移到哪裡都套得上 |
 | `Effect` | id、kind（anim2d／anim3d／scene3d）、start、end、pluginId、params、cameraKeys?、anchors | 時間軸時間；2D／3D 插件與 3D 場景（§5.7、§5.8、§5.10 的順序）；`cameraKeys` 的時間相對於區段開頭 |
+| `ZoomRegion` | id、mediaId、start、end（素材秒）、w（框寬 0.25～1，倍率 1/w）、path（路徑點：素材秒、cx、cy）、enabled | 局部放大的一段（§5.19、D38），存在 `Project.zooms`；用素材時間記，剪輯後跟著素材走 |
 | `Plugin` | id、kind（2d／3d）、code、paramSchema、soundIds?、source（builtin／vibe）、hash | 插件與 AI 生成的程式；存在專案裡，載入時重新跑沙盒驗證。2D 插件要音效時引用 `Synth` 的 id，不自己發聲 |
 | `Synth` | id、kind（sound／music）、spec（宣告式 JSON）、source（builtin／ai）、renderedMediaId? | AI 音效與配樂（D27）；`spec` 由我們的程式解讀成 WAV，再變成素材 |
 | `Anchor` | id、mediaId? 或時間軸時間、x、y（0～1）、label、from（user／sam／director） | 定位點：插件、鏡頭跟著它（§5.7 的 `env`） |
@@ -200,7 +202,7 @@
    - 整段在 `b` 之後的片段左移 `d`。
    - 跨在 `[a, b)` 上的片段：同一支素材的 A 片段一起剪掉那段（影音才不會錯開）；其他片段（疊加、配樂、音效）也剪掉落在 `[a, b)` 內的部分，後半段左移。想讓配樂保持連續，就先鎖定配樂軌。
 3. `Effect` 與時間軸時間的 `Anchor`：整段在 `b` 之後的左移 `d`；整段落在 `[a, b)` 內的刪除；跨在上面的，長度減掉重疊的部分，`cameraKeys` 依比例壓縮。
-4. 用素材時間記的資料（`Word`、`MaskObject`、`Suggestion`、`Clip.zoomKeys`）不用動，它們跟著片段走。
+4. 用素材時間記的資料（`Word`、`MaskObject`、`Suggestion`、`ZoomRegion`）不用動，它們跟著片段走。
 
 所有編輯都是「舊狀態 → 新狀態」的純函式，復原堆疊存狀態快照；狀態用結構共享（Immer），沒改到的部分（例如遮罩資料）在快照之間共用，不會每次編輯都複製一份。
 
@@ -211,6 +213,7 @@
 - 熱鍵照 DaVinci Resolve 預設鍵盤設定（開工時對照 Resolve 20 的鍵盤設定逐一核對）：J／K／L 倒退／停／前進（連按加速）、I／O 設入出點、Ctrl+B 在播放頭切割、漣漪刪除、← → 逐格、↑ ↓ 跳到上／下一個剪輯點、Ctrl+Z／Ctrl+Shift+Z 復原與重做、Space 播放。J 倒放不能用負的 `playbackRate`（瀏覽器不支援），用 rAF 每格回退 `currentTime`（無聲）；L 連按 2／4／8 倍用 `playbackRate`。時間換成格數一律 `Math.round`（`currentTime` 只到微秒，`floor` 會卡格，原專案 2026-09-16）。
 - 漣漪時間軸：V1 刪掉的段落不留空隙，其他軌照 §4 的跨軌規則一起移動（鎖定軌不動）；V2 以上與音軌可以自由擺放；拖曳片段、修邊、吸附到播放頭與片段邊界；時間軸上可以看到剪輯點，點了跳過去。
 - 改字即剪：在逐字稿點選或拖選詞，按 Delete 就在對應片段的素材時間切開、刪掉中間（頭尾吸附到詞的邊界，前後各留 0.05 秒；V1 漣漪補位，其他軌照 §4 的跨軌規則）。
+- **時間軸範圍選取（D38，照字導字演）**：Shift＋按住軌道拖曳，以播放頭為錨點拉出範圍（I 設入點、O 設出點）；範圍上方的動作列：🔍 Zoom（建立局部放大）、✨ Effect（切到 Vibe 頁籤，範本與 AI 特效蓋住整段範圍）、✂ Delete（漣漪刪除，同 Delete 鍵）、✕（同 Esc）。
 - 預覽：見 §5.13 的多軌合成預覽。
 
 ### 5.2 Muse ASR 字幕
@@ -338,6 +341,8 @@
 - **畫格傳輸量**：`ImageBitmap` 是 transferable，postMessage 不複製畫素；成本主要在 GPU 排隊。10/27 實測 60 秒 3D 區段每格只多 4～7 ms。軟體算繪的電腦上 3D 圖層用 720p 算再放大（§5.21）。
 - **把畫面貼進 three.js 要用 `NoColorSpace`**（RGBA8）＋原樣輸出的材質：10/27 實測用 `SRGBColorSpace` 時每格多 40 ms（60 秒 3D 多 40 秒以上）。畫面本來就是 sRGB 值，不需要轉換。3D 範本與 Vibe特效給模型的 3D API 文件都要寫明。
 - 進度與每格限時要以「畫格傳回」為準，不是以命令送出為準（GPU 工作是非同步排隊的）。
+
+- **特效也先框選（D38）**：時間軸有選範圍時，Vibe 的 2D／3D 範本與 AI 產生的特效用範圍的起訖（動作列的「✨ Effect」切到 Vibe 頁籤）；沒有範圍才放在播放頭、用預設長度。
 
 ### 5.8 3D 場景與「用說的」（P0 核心，three.js，D19）
 
@@ -580,14 +585,20 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 麥克風：WebView2 的 `getUserMedia`。10/27 實測（`spikes/tauri-env/`）：WebView2 會跳權限詢問，沒人按就一直等。做法：Rust 端處理 WebView2 的 `PermissionRequested`，自動允許麥克風（不跳詢問）。**10/27 已做**：Tauri 2.12 的 `Builder::on_permission_request` 只放行 `PermissionKind::Microphone`、其他照平台預設（不必自己接 COM）；實測不再逾時，權限放行後在作者公司電腦回 `NotReadableError`，同機的 Edge 也一樣（`scripts/desktop-selftest/mic-edge-check.mjs`），是裝置層被擋（下句的 Kaspersky），實際錄音要換電腦驗。作者的公司電腦上 Kaspersky 依程式信任等級擋錄音（原專案 2026-10-18：所有 WASAPI 初始化都回 `0x80070057`，Rust／ffmpeg 一樣被擋，只有微軟簽章的程式能錄），所以「改由 Rust 錄音」不是有效備案。**退路（開發者 2026-10-27 決定，P1-9 實作）**：預設用 `getUserMedia`＋`MediaRecorder`；Windows 版遇到 `NotReadableError`、`NotAllowedError` 或 8 秒逾時，自動改用原專案（字導字演）的做法——Rust 以內嵌的 ASCII PowerShell 腳本（`powershell.exe` 5.1）從 `shell:AppsFolder` 喚起 Windows 內建錄音機（`Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe`，微軟簽章、不是本程式的子程序），用 UI Automation 按 `RecordButton`／`StopRecordingButton`、把視窗縮到最小尺寸停在右下角；起訖時間讀 `HKCU\...\CapabilityAccessManager\ConsentStore\microphone\<套件>` 的 `LastUsedTimeStart`／`Stop`（FILETIME，毫秒級）；停止後在「文件」底下找修改時間最接近停止時刻的 `.m4a`，搬進 app 資料夾再匯入（原專案 `backend/narration.py`，2026-10-19 在 Kaspersky 機器實測可錄）。`NotFoundError`（沒有麥克風）不退，直接提示；網頁版沒有退路，只提示。提詞器顯示這次用了哪種方式。錄前先試開麥克風、錄後檢查峰值，削峰時提示（原專案的爆音主因是錄音裝置增益 96%，`adeclip` 可後製去削峰）。
 - 和 AI 重生語音（§5.6，P2）是兩種選擇：自己念，或讓 AI 用你的聲音念。
 
-### 5.19 局部放大（P1-2，D20）
+### 5.19 局部放大（P1-2，D20、D38）
 
-- 片段層級的縮放與平移關鍵幀（`Clip.zoomKeys`，素材時間，§4）：每個關鍵幀記放大倍率（1～4 倍）與中心點，關鍵幀之間用緩動；可以設多個關鍵幀讓畫面沿路徑移動（例如跟著滑鼠游標）。
-- 操作：在預覽上拖一個框＝這個時間點要看的範圍；播放頭移到別的時間再拖一次＝新的關鍵幀。頭尾自動加 0.5 秒平滑進出。
-- 預覽與輸出：合成器在畫那個片段時改貼圖座標（UV）達到放大與平移，同一份 TS 內插函式算每格的倍率與中心（D24）。（ffmpeg 寫法留在 §5.4 的不採用路線，供參考）。
-- AI 導演多一個工具 `proposeZoom(start, end, region)`：Muse Spark 看到畫面上正在操作的地方（游標、正在打字的區域）就提議放大。
-- 和 3D 場景的順序：局部放大在片段上先做，3D 場景拿放大後的畫面當貼圖。
-- **實作（10/28）**：`src/core/zoom.ts`——`zoomAt`（關鍵幀之間 smoothstep 緩動、倍率取對數內插；頭尾 0.5 秒是素材時間，2 倍速片段在時間軸上是 0.25 秒；倍率 1 的關鍵幀結束一段放大）、`zoomCrop`（寬高 1/倍率、超出畫面夾回）、`insertZoomKey`（第一次拉框同時建 2 秒後同一個框，開發者選定；之後一格內取代、否則插入）；`framePlan` 的影像圖層帶 `crop`，`GlCompositor` 改貼圖座標，預覽與匯出共用；預覽的下層狀態含放大範圍，3D 場景會跟著重畫。Zoom 頁籤（Pick region、Zoom out here、改倍率、刪除），`setZoomKeys` 編輯。**目前只支援 V1 的片段**（子母畫面的框要另外換算座標）。e2e：拉框後預覽與匯出都放大、Ctrl+Z 回原畫面。
+照字導字演的做法（開發者 2026-10-28 要求）：
+- **建立**：時間軸 Shift＋拖曳選範圍 →「🔍 Zoom」→ 範圍起點所在的 V1 片段的素材範圍變成一段放大（預設框寬 0.5＝2 倍、一個路徑點在中央），接著進入調框。
+- **資料**：`Project.zooms`（`ZoomRegion`，§4）：素材時間的起訖、固定框寬 w、框中心的路徑點；用素材時間記，剪輯後跟著素材走，一段放大跨過剪接點時在時間軸上會變成兩條。
+- **數學**（`src/core/zoom.ts`，照搬原專案 `backend/zoom_math.py` 與它的測試）：頭尾緩動固定 1 秒（區段短於 2 秒取一半），ease-in-out quad；路徑點：第一點前與最後一點後停住，兩點相同停住、不同時 ease 移動；倍率 S＝1＋(1/w−1)·p，原專案的平移換算成畫面中央看到的素材位置＝0.5＋(c−0.5)·(1/w)·p／S，再換成要取的畫面範圍（`zoomCrop`）。
+- **時間軸**：V1 底部的放大條（`ZoomBands`）：拖條本身移動整段（路徑點跟著走）、拖兩端修邊（都夾在那個片段的素材範圍內，不跨片段）、菱形是路徑點（點一下選取並跳過去、Delete 刪那一點，至少留一點）、條本身 Delete 刪整段。放開才寫回（一筆可復原的編輯）。
+- **預覽上的放大框**（`ZoomEditOverlay`）：調框時預覽顯示沒放大的畫面；拖框：沒選路徑點時整段平移（位移先夾到每一點都不出界），選了點就只改那一點；播放頭離開那一點超過 2 格就取消選取。拖右下角等比改框的大小（1～4 倍）。「＋ Keyframe」在播放頭加一個路徑點（2 格內已有點就選它）。Done／Esc 離開。
+- **Zoom 頁籤**：清單（開關、時間、倍率、調整、刪除）。
+- 預覽與輸出：`framePlan` 的影像圖層帶裁切範圍，`GlCompositor` 改貼圖座標（D24，預覽與匯出同一份）；預覽的下層狀態含放大範圍，讀下層畫面的 3D 場景會跟著重畫。和 3D 場景的順序：局部放大在片段上先做，3D 場景拿放大後的畫面當貼圖。
+- 目前只支援 V1 的片段（子母畫面的框要另外換算座標）；放大條不吸附剪接點（原專案有，之後要再加）。
+- AI 導演多一個工具 `proposeZoom(start, end, region)`：Muse Spark 看到畫面上正在操作的地方（游標、正在打字的區域）就提議放大（11/2 和 AI 導演一起做）。
+- 實作紀錄：10/28 上午先做了片段關鍵幀版（commit 478b1f6、a95f398），同日依開發者要求改成上述區段版（D38）。
+- 驗收：Vitest（照搬原專案的數學測試、建立／平移／修邊、framePlan 裁切）；e2e（選範圍建立、縮成 4 倍拖到紅色色條、範圍外原畫面、加路徑點只移動那一點、匯出也放大、Delete 與復原）。
 
 ### 5.20 片段變速、定格與其他特效（D20）
 

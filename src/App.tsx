@@ -19,9 +19,11 @@ import { TranscribePanel } from "./ui/TranscribePanel";
 import { CaptionStyleTab } from "./ui/CaptionStyleTab";
 import { TranscriptTab } from "./ui/TranscriptTab";
 import { CleanupPanel } from "./ui/CleanupPanel";
-import { ZoomTab, zoomableClip } from "./ui/ZoomTab";
-import { insertZoomKey, type Zoom } from "./core/zoom";
-import { timelineToSource } from "./core/timeline";
+import { ZoomTab } from "./ui/ZoomTab";
+import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
+import type { ZoomEdit } from "./ui/ZoomBands";
+import { zoomFromRange } from "./core/zoom";
+import { clipEnd, timelineToSource } from "./core/timeline";
 import "./App.css";
 
 /** 網址帶 ?demo=1 就直接開示範專案（e2e 用）；否則開空專案 */
@@ -46,24 +48,43 @@ function App() {
   /** 要求右側面板切到某個頁籤（範圍動作列的「特效」「放大」） */
   const [tabRequest, setTabRequest] = useState<{ tab: string; seq: number } | null>(null);
   const openTab = (tab: string) => setTabRequest((r) => ({ tab, seq: (r?.seq ?? 0) + 1 }));
-  /** 局部放大：正在預覽上選範圍（Zoom 頁籤的 Pick region） */
-  const [zoomPicking, setZoomPicking] = useState(false);
-  const zoomClip = zoomableClip(project, state.selectedClipId);
-  // 選的片段不能放大了（換選、被刪）就結束選範圍
-  useEffect(() => { if (!zoomClip) setZoomPicking(false); }, [zoomClip]);
-  /** 拉框完成：在播放頭加一個放大關鍵幀（第一次同時建 2 秒後同一個框） */
-  const onZoomPick = (z: Zoom) => {
-    if (!zoomClip) return;
-    const key = { src: timelineToSource(zoomClip, state.playhead), scale: z.scale, cx: z.cx, cy: z.cy };
-    dispatch({ type: "commit", edits: [{ kind: "setZoomKeys", clipId: zoomClip.id, keys: insertZoomKey(zoomClip.zoomKeys ?? [], key, zoomClip.srcOut) }] });
-    setZoomPicking(false);
+  /** 局部放大：正在調的那一段與選取的路徑點（照字導字演：點放大條或「Adjust」進入，Done／Esc 離開） */
+  const [zoomEdit, setZoomEdit] = useState<ZoomEdit | null>(null);
+  const editingZoom = zoomEdit ? project.zooms?.find((z) => z.id === zoomEdit.zoomId) ?? null : null;
+  const v1Track = project.tracks.filter((t) => t.kind === "video").sort((a, b) => a.index - b.index)[0]?.id;
+  /** 播放頭所在、用到這段放大的素材的 V1 片段 */
+  const zoomClip = editingZoom ? project.clips.find((c) => c.trackId === v1Track && c.mediaId === editingZoom.mediaId && !c.freeze && c.start <= state.playhead && state.playhead < clipEnd(c)) ?? null : null;
+  // 那一段被刪了（或復原掉了）就離開調框
+  useEffect(() => { if (zoomEdit && !editingZoom) setZoomEdit(null); }, [zoomEdit, editingZoom]);
+  // 播放頭離開選取的路徑點（超過 2 格）就取消選取，拖框改回整段平移（照字導字演）
+  useEffect(() => {
+    if (!zoomEdit || zoomEdit.point === null || !editingZoom) return;
+    const point = editingZoom.path[zoomEdit.point];
+    const src = zoomClip ? timelineToSource(zoomClip, state.playhead) : null;
+    if (!point || src === null || Math.abs(src - point.src) > 2 / 30) setZoomEdit({ ...zoomEdit, point: null });
+  }, [state.playhead, zoomEdit, editingZoom, zoomClip]);
+  /** 範圍動作列的「放大」：從選的範圍建立一段放大，進入調框 */
+  const createZoom = () => {
+    if (!state.range) return;
+    const zoom = zoomFromRange(project, state.range, `zoom-${crypto.randomUUID().slice(0, 8)}`);
+    if (!zoom) {
+      setNotice("Start the range on a clip in V1 to zoom.");
+      return;
+    }
+    dispatch({ type: "commit", edits: [{ kind: "addZoom", zoom }] });
+    dispatch({ type: "clearRange" });
+    dispatch({ type: "seek", time: state.range.start });
+    setZoomEdit({ zoomId: zoom.id, point: null });
+    openTab("zoom");
   };
   /** 預覽畫面看到的專案：有 AI 預覽時套上提議 */
   const shownProject = useMemo(() => {
-    if (!aiPreview) return project;
-    const effect = project.effects.find((e) => e.id === aiPreview.effectId);
-    return effect ? setEffectParams(project, effect.id, { ...effect.params, params: aiPreview.params }) : project;
-  }, [project, aiPreview]);
+    // 調框中：預覽顯示沒放大的畫面（照字導字演），才看得到要框哪裡
+    const base = zoomEdit ? { ...project, zooms: (project.zooms ?? []).map((z) => (z.id === zoomEdit.zoomId ? { ...z, enabled: false } : z)) } : project;
+    if (!aiPreview) return base;
+    const effect = base.effects.find((e) => e.id === aiPreview.effectId);
+    return effect ? setEffectParams(base, effect.id, { ...effect.params, params: aiPreview.params }) : base;
+  }, [project, aiPreview, zoomEdit?.zoomId]);
   // 選取的特效換了就結束 AI 預覽
   useEffect(() => { if (aiPreview && aiPreview.effectId !== state.selectedEffectId) setAiPreview(null); }, [state.selectedEffectId, aiPreview]);
   /** 標題列的狀態訊息（例如找不到示範素材） */
@@ -117,7 +138,24 @@ function App() {
         <button disabled title="Export — coming soon">Export</button>
       </header>
       <main className="workspace">
-        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId} onZoomPick={zoomPicking && zoomClip ? onZoomPick : null} onZoomCancel={() => setZoomPicking(false)} dispatch={dispatch} />
+        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId}
+          overlay={editingZoom && zoomEdit ? (
+            <ZoomEditOverlay
+              zoom={editingZoom} clip={zoomClip} playhead={state.playhead} edit={zoomEdit}
+              onCommit={(z) => dispatch({ type: "commit", edits: [{ kind: "setZoom", zoom: z }] })}
+              onAddPoint={(src, cx, cy) => {
+                // 2 格內已經有點就選那一點，否則加一點並選取
+                const near = editingZoom.path.findIndex((p) => Math.abs(p.src - src) <= 2 / 30);
+                if (near >= 0) { setZoomEdit({ ...zoomEdit, point: near }); return; }
+                const path = [...editingZoom.path, { src, cx, cy }].sort((a, b) => a.src - b.src);
+                dispatch({ type: "commit", edits: [{ kind: "setZoom", zoom: { ...editingZoom, path } }] });
+                setZoomEdit({ ...zoomEdit, point: path.findIndex((p) => p.src === src) });
+              }}
+              onDone={() => setZoomEdit(null)}
+              onDelete={() => { dispatch({ type: "commit", edits: [{ kind: "deleteZoom", zoomId: editingZoom.id }] }); setZoomEdit(null); }}
+            />
+          ) : null}
+          dispatch={dispatch} />
         <EditPanel
           request={tabRequest}
           initialTab={START_WITH_DEMO ? "transcript" : "media"}
@@ -126,14 +164,14 @@ function App() {
             vibe: <VibeTab plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
-            zoom: <ZoomTab project={project} clipId={state.selectedClipId} playhead={state.playhead} picking={zoomPicking} onPicking={setZoomPicking} dispatch={dispatch} />,
+            zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
             inspector: <InspectorTab project={project} effectId={state.selectedEffectId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
           }}
         />
       </main>
-      <Timeline state={state} dispatch={dispatch} captions={captions} library={library} onRangeAction={(kind) => openTab(kind === "effect" ? "vibe" : "zoom")} />
+      <Timeline state={state} dispatch={dispatch} captions={captions} library={library} zoomEdit={zoomEdit} onZoomEdit={setZoomEdit} onRangeAction={(kind) => (kind === "effect" ? openTab("vibe") : createZoom())} />
       <footer className="status-bar">
         Space play · J / K / L reverse / stop / forward · Click to select · Delete ripple delete · Ctrl+B split at playhead · Ctrl+Z / Ctrl+Shift+Z undo / redo · ← → frame · ↑ ↓ edit points · Ctrl+wheel zoom
       </footer>

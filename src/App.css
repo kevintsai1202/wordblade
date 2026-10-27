@@ -171,18 +171,28 @@ button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor
 .cleanup-list .tag { font-size: 11px; padding: 0 6px; border-radius: 3px; background: #3a3f4b; }
 .cleanup-list .tag.filler { background: #5a3d2b; }
 
-/* 局部放大：預覽上拉框、Zoom 頁籤 */
-.zoom-overlay { position: absolute; inset: 0; cursor: crosshair; z-index: 5; outline: 2px dashed rgba(255, 212, 0, 0.6); }
-.zoom-overlay .zoom-box { position: absolute; border: 2px solid #ffd400; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35); pointer-events: none; }
-.zoom-overlay .zoom-hint { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.6); padding: 2px 10px; border-radius: 4px; font-size: 12px; pointer-events: none; }
-.zoom-tab { display: flex; flex-direction: column; gap: 8px; }
-.zoom-actions { display: flex; gap: 8px; }
-.zoom-actions .active { background: #5a4a10; }
-.zoom-keys { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.zoom-keys li { display: flex; align-items: center; gap: 8px; }
-.zoom-keys input[type="number"] { width: 4em; }
 
 /* 時間軸範圍選取（Shift＋拖曳）與上方的動作列 */
 .range-overlay { position: absolute; top: 22px; bottom: 0; background: rgba(255, 212, 0, 0.13); border-left: 1px solid #ffd400; border-right: 1px solid #ffd400; pointer-events: none; z-index: 6; }
 .range-actions { position: absolute; top: 24px; z-index: 11; display: flex; gap: 4px; align-items: center; background: #2a2d35; border: 1px solid #ffd400; border-radius: 4px; padding: 2px 4px; white-space: nowrap; }
 .range-actions button { padding: 1px 6px; font-size: 12px; }
+
+/* 局部放大（照字導字演）：V1 底部的放大條、菱形路徑點、預覽上的放大框、清單 */
+.zoomband { position: absolute; bottom: 1px; height: 12px; background: rgba(0, 190, 170, 0.75); border-radius: 3px; cursor: grab; z-index: 2; outline: none; }
+.zoomband.selected { box-shadow: 0 0 0 2px #ffd400; }
+.zoomband.disabled { opacity: 0.4; }
+.zoomband:focus { box-shadow: 0 0 0 2px #fff; }
+.zoomband .zhandle { position: absolute; top: 0; bottom: 0; width: 5px; cursor: ew-resize; background: rgba(255, 255, 255, 0.35); }
+.zoomband .zhandle.start { left: 0; border-radius: 3px 0 0 3px; }
+.zoomband .zhandle.end { right: 0; border-radius: 0 3px 3px 0; }
+.zoompt { position: absolute; top: 2px; width: 8px; height: 8px; margin-left: -4px; background: #fff; transform: rotate(45deg); cursor: pointer; outline: none; }
+.zoompt.selected, .zoompt:focus { background: #ffd400; }
+.zoom-edit { position: absolute; inset: 0; z-index: 5; outline: none; }
+.zoom-edit .zoom-frame { position: absolute; border: 2px solid #ffd400; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35); cursor: move; }
+.zoom-edit .zoom-scale { position: absolute; left: 4px; top: 2px; font-size: 11px; color: #ffd400; text-shadow: 0 0 2px #000; pointer-events: none; }
+.zoom-edit .zoom-resize { position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: #ffd400; cursor: nwse-resize; }
+.zoom-edit .zoom-outside { position: absolute; top: 40%; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.7); padding: 4px 10px; border-radius: 4px; }
+.zoom-edit .zoom-toolbar { position: absolute; top: 6px; right: 6px; display: flex; gap: 6px; }
+.zoom-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.zoom-list li { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
+.zoom-list li.selected { background: #263248; }

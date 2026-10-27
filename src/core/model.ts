@@ -41,11 +41,27 @@ export interface Track {
 }
 
 /** 局部放大的關鍵幀（§5.19）；用素材時間記，片段被切開時跟著素材走 */
-export interface ZoomKey {
+/** 放大框中心的路徑點（素材時間；§5.19） */
+export interface ZoomPoint {
   src: Seconds;
-  scale: number;
   cx: number;
   cy: number;
+}
+
+/**
+ * 局部放大的一段（spec §5.19、D38，照字導字演）：素材時間的區段，固定框寬 w（倍率 1/w），框中心沿 path 移動；
+ * 用素材時間記，剪輯後跟著素材走。
+ */
+export interface ZoomRegion {
+  id: string;
+  mediaId: string;
+  start: Seconds;
+  end: Seconds;
+  /** 框寬（畫面寬的比例，0.25～1） */
+  w: number;
+  /** 路徑點（至少一個，依時間排序） */
+  path: ZoomPoint[];
+  enabled: boolean;
 }
 
 /** 子母畫面的框（0～1，相對於畫面） */
@@ -74,7 +90,6 @@ export interface Clip {
   fadeIn: Seconds;
   fadeOut: Seconds;
   volume: number;
-  zoomKeys?: ZoomKey[];
   /** 定格片段（§5.20）：整段一直顯示素材時間 at 那一格，長度 hold；這時 srcIn＝srcOut＝at、speed 不用 */
   freeze?: { at: Seconds; hold: Seconds };
 }
@@ -194,6 +209,8 @@ export interface Project {
   plugins: Plugin[];
   synths: Synth[];
   stems: Stem[];
+  /** 局部放大（§5.19；舊專案沒有這個欄位） */
+  zooms?: ZoomRegion[];
   /** 燒進畫面的字幕樣式（§5.4、§5.18；沒設就用預設：白字黑描邊） */
   captionStyle?: CaptionStyle;
 }

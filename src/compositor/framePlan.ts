@@ -2,7 +2,7 @@
 // 由下到上：V1 主軌 → V2、V3…疊加軌；3D 場景、插件、字幕之後在合成器裡接著疊。
 import type { Clip, Project, Rect, Seconds } from "../core/model";
 import { clipDuration, clipEnd, timelineToSource } from "../core/timeline";
-import { zoomAt, zoomCrop } from "../core/zoom";
+import { zoomCrop, zoomState } from "../core/zoom";
 
 /** 全畫面的框 */
 const FULL: Rect = { x: 0, y: 0, w: 1, h: 1 };
@@ -54,7 +54,9 @@ export function framePlan(project: Project, t: Seconds): VideoLayer[] {
     for (const clip of project.clips) {
       if (clip.trackId !== track.id || !covers(clip, t)) continue;
       const srcTime = timelineToSource(clip, t);
-      const zoom = clip.zoomKeys?.length ? zoomAt(clip, srcTime) : null;
+      // 局部放大：這支素材啟用中、包含這個素材時間的那一段（§5.19）
+      const region = project.zooms?.find((z) => z.enabled && z.mediaId === clip.mediaId && srcTime >= z.start && srcTime <= z.end);
+      const zoom = region ? zoomState(region, srcTime) : null;
       layers.push({
         clipId: clip.id,
         mediaId: clip.mediaId,

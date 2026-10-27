@@ -32,6 +32,7 @@ export function emptyProject(): Project {
     plugins: [],
     synths: [],
     stems: [],
+    zooms: [],
   };
 }
 

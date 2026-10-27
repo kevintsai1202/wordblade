@@ -5,6 +5,7 @@ import type { Clip, Effect, Project, Track } from "../core/model";
 import { clipDuration, clipEnd } from "../core/timeline";
 import { formatTimecode, projectDuration, snapTime, type Action, type AppState } from "./state";
 import type { Library } from "./useMediaLibrary";
+import { ZoomBands, type ZoomEdit } from "./ZoomBands";
 
 /** 片段兩端可以抓來修邊的寬度（像素） */
 const EDGE_GRAB = 6;
@@ -115,13 +116,16 @@ function rulerStep(pxPerSecond: number): number {
 }
 
 /** 下方多軌時間軸（D33）：工具列、尺規、各軌片段、特效標籤、字幕軌、播放頭 */
-export function Timeline({ state, dispatch, captions, library, onRangeAction }: {
+export function Timeline({ state, dispatch, captions, library, onRangeAction, zoomEdit = null, onZoomEdit }: {
   state: AppState;
   dispatch: Dispatch<Action>;
   captions: Caption[];
   library: Library;
   /** 範圍動作列的「放大」「特效」（照字導字演：先框選時間，再從範圍建立） */
   onRangeAction?: (kind: "zoom" | "effect") => void;
+  /** 局部放大：正在調的那一段（放大條標亮）與切換 */
+  zoomEdit?: ZoomEdit | null;
+  onZoomEdit?: (edit: ZoomEdit | null) => void;
 }) {
   const project = state.history.present;
   const { pxPerSecond, playhead } = state;
@@ -344,6 +348,9 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction }: 
                         <span className="edge out" />
                       </div>
                     ))}
+                {r.id === trackRows.find((x) => x.kind === "video" && x.track?.index === 0)?.id && (
+                  <ZoomBands project={project} pxPerSecond={pxPerSecond} edit={zoomEdit} onEdit={(e) => onZoomEdit?.(e)} dispatch={dispatch} />
+                )}
                 {r.id === trackRows.find((x) => x.kind === "video" && x.track?.index === 0)?.id &&
                   project.effects.map((fx) => (
                     <div

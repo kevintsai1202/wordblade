@@ -1,15 +1,15 @@
-// 局部放大（spec §5.19，P1-2）：片段的縮放與平移關鍵幀（Clip.zoomKeys，素材時間）。純函式，預覽與匯出共用（D24）：
-// framePlan 用 zoomAt 算出每格的倍率與中心，再用 zoomCrop 換成要取的畫面範圍，合成器只改貼圖座標。
-// 關鍵幀之間用 smoothstep 緩動、倍率取對數內插（1→4 倍時看起來等速）；第一個關鍵幀前與最後一個之後各 0.5 秒
-// （素材時間；片段 2 倍速時在時間軸上是 0.25 秒）從原畫面推進、退回原畫面；倍率 1 的關鍵幀結束一段放大。
+// 局部放大（spec §5.19、D38，照字導字演）：一段放大是素材時間的區段 [start, end]，固定框寬 w（倍率 1/w），
+// 框中心沿路徑點移動。數學照搬原專案 backend/zoom_math.py（預覽與成品一致）：
+// - 頭尾緩動固定 1 秒（區段短於 2 秒取一半），ease-in-out quad；
+// - 路徑：第一點前與最後一點後停住，兩點相同停住、不同時 ease 移動；
+// - 倍率 S＝1＋(1/w−1)·p，原專案的平移 −(c−0.5)·(1/w)·p 換算成「畫面中央看到的素材位置」＝0.5＋(c−0.5)·(1/w)·p／S。
+// 純函式，Vitest 測（照搬原專案的測試）；framePlan 用 zoomState＋zoomCrop 算每格要取的畫面範圍，合成器只改貼圖座標。
 import { produce } from "immer";
-import type { Clip, Project, Rect, Seconds, ZoomKey } from "./model";
+import type { Project, Rect, Seconds, ZoomPoint, ZoomRegion } from "./model";
+import { clipEnd, timelineToSource } from "./timeline";
 
-/** 頭尾推進／退回的時間（素材秒） */
-export const ZOOM_RAMP: Seconds = 0.5;
-/** 倍率範圍 */
-const MIN_SCALE = 1;
-const MAX_SCALE = 4;
+/** 框寬下限（最大 4 倍） */
+export const MIN_W = 0.25;
 
 /** 某一格的放大狀態 */
 export interface Zoom {
@@ -21,85 +21,107 @@ export interface Zoom {
 /** 原畫面 */
 const IDENTITY: Zoom = { scale: 1, cx: 0.5, cy: 0.5 };
 
-/** 平滑（頭尾慢、中間快） */
-function smooth(u: number): number {
+/** 頭尾緩動長度（秒）：固定 1 秒；區段短於 2 秒時取一半 */
+export function rampSeconds(start: Seconds, end: Seconds): Seconds {
+  return Math.min(1, (end - start) / 2);
+}
+
+/** ease-in-out quad，u ∈ [0,1] */
+export function ease(u: number): number {
   const x = Math.min(1, Math.max(0, u));
-  return x * x * (3 - 2 * x);
+  return x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
 }
 
-/** 兩個放大狀態之間內插（倍率取對數） */
-function lerp(a: Zoom, b: Zoom, u: number): Zoom {
-  const k = smooth(u);
-  return {
-    scale: Math.exp(Math.log(a.scale) + (Math.log(b.scale) - Math.log(a.scale)) * k),
-    cx: a.cx + (b.cx - a.cx) * k,
-    cy: a.cy + (b.cy - a.cy) * k,
-  };
+/** 素材時間 s 的放大進度 0～1：起點後 ramp 秒內漸入、終點前 ramp 秒漸出、中段 1、區段外 0 */
+export function progress(s: Seconds, start: Seconds, end: Seconds, ramp: Seconds): number {
+  if (s < start || s > end) return 0;
+  if (ramp <= 0) return 1;
+  if (s < start + ramp) return ease((s - start) / ramp);
+  if (s > end - ramp) return ease((end - s) / ramp);
+  return 1;
 }
 
-/** 關鍵幀 → 放大狀態（倍率夾在 1～4） */
-function keyZoom(k: ZoomKey): Zoom {
-  return { scale: Math.min(MAX_SCALE, Math.max(MIN_SCALE, k.scale)), cx: k.cx, cy: k.cy };
-}
-
-/** 片段在素材時間 s 的倍率與中心 */
-export function zoomAt(clip: Clip, s: Seconds): Zoom {
-  const keys = [...(clip.zoomKeys ?? [])].sort((a, b) => a.src - b.src);
-  if (!keys.length) return IDENTITY;
-  // 第一個放大的關鍵幀之前：前 0.5 秒從原畫面推進（中心直接對著目標）
-  const first = keys[0];
-  if (s <= first.src) {
-    if (first.scale <= MIN_SCALE || s <= first.src - ZOOM_RAMP) return IDENTITY;
-    const target = keyZoom(first);
-    return lerp({ ...target, scale: 1 }, target, (s - (first.src - ZOOM_RAMP)) / ZOOM_RAMP);
-  }
-  // 關鍵幀之間：緩動；倍率 1 的關鍵幀之後到下一個放大的關鍵幀前 0.5 秒是原畫面
-  for (let i = 0; i + 1 < keys.length; i++) {
-    const a = keys[i];
-    const b = keys[i + 1];
-    if (s > b.src) continue;
-    if (a.scale <= MIN_SCALE) {
-      if (b.scale <= MIN_SCALE || s <= b.src - ZOOM_RAMP) return IDENTITY;
-      const target = keyZoom(b);
-      return lerp({ ...target, scale: 1 }, target, (s - Math.max(a.src, b.src - ZOOM_RAMP)) / Math.min(ZOOM_RAMP, b.src - a.src));
+/** 素材時間 s 的框中心：第一點前／最後一點後停住；兩點之間位置不同時 ease 移動、相同時停住 */
+export function centerAt(path: ZoomPoint[], s: Seconds): { cx: number; cy: number } {
+  const first = path[0];
+  const last = path[path.length - 1];
+  if (s <= first.src) return { cx: first.cx, cy: first.cy };
+  if (s >= last.src) return { cx: last.cx, cy: last.cy };
+  for (let i = 0; i + 1 < path.length; i++) {
+    const [a, b] = [path[i], path[i + 1]];
+    if (a.src <= s && s < b.src) {
+      const u = ease((s - a.src) / (b.src - a.src));
+      return { cx: a.cx + (b.cx - a.cx) * u, cy: a.cy + (b.cy - a.cy) * u };
     }
-    return lerp(keyZoom(a), keyZoom(b), (s - a.src) / Math.max(1e-6, b.src - a.src));
   }
-  // 最後一個關鍵幀之後：0.5 秒退回原畫面
-  const last = keys[keys.length - 1];
-  if (last.scale <= MIN_SCALE || s >= last.src + ZOOM_RAMP) return IDENTITY;
-  const from = keyZoom(last);
-  return lerp(from, { ...from, scale: 1 }, (s - last.src) / ZOOM_RAMP);
+  return { cx: last.cx, cy: last.cy };
+}
+
+/** 一段放大在素材時間 s 的倍率與畫面中央看到的素材位置 */
+export function zoomState(zoom: ZoomRegion, s: Seconds): Zoom {
+  const p = progress(s, zoom.start, zoom.end, rampSeconds(zoom.start, zoom.end));
+  if (p <= 0) return IDENTITY;
+  const full = 1 / Math.max(MIN_W, Math.min(1, zoom.w));
+  const scale = 1 + (full - 1) * p;
+  const c = centerAt(zoom.path, s);
+  return { scale, cx: 0.5 + ((c.cx - 0.5) * full * p) / scale, cy: 0.5 + ((c.cy - 0.5) * full * p) / scale };
 }
 
 /** 放大狀態 → 要取的畫面範圍（0～1；寬高 1/倍率，比例和畫面一樣；超出畫面就夾回來） */
 export function zoomCrop(z: Zoom): Rect {
-  const w = 1 / Math.min(MAX_SCALE, Math.max(MIN_SCALE, z.scale));
+  const w = 1 / Math.max(1, Math.min(1 / MIN_W, z.scale));
   const clamp = (c: number) => Math.min(1 - w, Math.max(0, c - w / 2));
   const r = (v: number) => Math.round(v * 1e6) / 1e6;
   return { x: r(clamp(z.cx)), y: r(clamp(z.cy)), w: r(w), h: r(w) };
 }
 
-/** 換掉片段的整組放大關鍵幀（依素材時間排序） */
-export function setClipZoomKeys(project: Project, clipId: string, keys: ZoomKey[]): Project {
-  if (!project.clips.some((c) => c.id === clipId)) return project;
+/** 框中心夾在框不會超出畫面的範圍 */
+export function clampCenter(c: number, w: number): number {
+  return Math.min(1 - w / 2, Math.max(w / 2, c));
+}
+
+/**
+ * 時間軸範圍 → 新的放大區段：取範圍起點所在的 V1 片段，換成那支素材的時間（超出這個片段的部分夾掉）；
+ * 預設框寬 0.5（2 倍）、一個路徑點在畫面中央。起點不在 V1 片段上回 null。
+ */
+export function zoomFromRange(project: Project, range: { start: Seconds; end: Seconds }, id: string): ZoomRegion | null {
+  const v1 = project.tracks.filter((t) => t.kind === "video").sort((a, b) => a.index - b.index)[0]?.id;
+  const clip = project.clips.find((c) => c.trackId === v1 && !c.freeze && c.start <= range.start && range.start < clipEnd(c));
+  if (!clip) return null;
+  const start = timelineToSource(clip, range.start);
+  const end = timelineToSource(clip, Math.min(range.end, clipEnd(clip)));
+  if (end - start < 0.1) return null;
+  return { id, mediaId: clip.mediaId, start, end: Math.min(end, clip.srcOut), w: 0.5, path: [{ src: start, cx: 0.5, cy: 0.5 }], enabled: true };
+}
+
+/** 平移整段（起訖與所有路徑點一起），夾在 [lo, hi]（片段的素材範圍）內 */
+export function moveZoom(zoom: ZoomRegion, ds: Seconds, lo: Seconds, hi: Seconds): ZoomRegion {
+  const d = Math.min(hi - zoom.end, Math.max(lo - zoom.start, ds));
+  return { ...zoom, start: zoom.start + d, end: zoom.end + d, path: zoom.path.map((p) => ({ ...p, src: p.src + d })) };
+}
+
+/** 修邊：改起點或終點（至少留 0.2 秒、夾在 [lo, hi]），路徑點夾回區段內 */
+export function trimZoom(zoom: ZoomRegion, edge: "start" | "end", s: Seconds, lo: Seconds, hi: Seconds): ZoomRegion {
+  const start = edge === "start" ? Math.min(zoom.end - 0.2, Math.max(lo, s)) : zoom.start;
+  const end = edge === "end" ? Math.max(zoom.start + 0.2, Math.min(hi, s)) : zoom.end;
+  return { ...zoom, start, end, path: zoom.path.map((p) => ({ ...p, src: Math.min(end, Math.max(start, p.src)) })) };
+}
+
+/** 新增一段放大 */
+export function addZoom(project: Project, zoom: ZoomRegion): Project {
+  return produce(project, (draft) => { draft.zooms = [...(draft.zooms ?? []), zoom]; });
+}
+
+/** 換掉一段放大（依 id；路徑點依時間排序） */
+export function setZoom(project: Project, zoom: ZoomRegion): Project {
+  if (!project.zooms?.some((z) => z.id === zoom.id)) return project;
   return produce(project, (draft) => {
-    draft.clips.find((c) => c.id === clipId)!.zoomKeys = [...keys].sort((a, b) => a.src - b.src);
+    draft.zooms = draft.zooms!.map((z) => (z.id === zoom.id ? { ...zoom, path: [...zoom.path].sort((a, b) => a.src - b.src) } : z));
   });
 }
 
-/** 單拖一次框時，放大停留幾秒（開發者 2026-10-28 選定） */
-export const FIRST_HOLD: Seconds = 2;
-
-/**
- * 在預覽拖框加一個關鍵幀：片段還沒有關鍵幀時，同時建 2 秒後同一個框（不超過素材範圍的結尾 srcOut），單拖一次就會停留；
- * 已經有了就和差不到一格（1/30 秒）的關鍵幀取代，否則依時間插入。
- */
-export function insertZoomKey(keys: ZoomKey[], key: ZoomKey, srcOut: Seconds): ZoomKey[] {
-  if (!keys.length) {
-    const hold = Math.min(srcOut, key.src + FIRST_HOLD);
-    return hold > key.src ? [key, { ...key, src: hold }] : [key];
-  }
-  const rest = keys.filter((k) => Math.abs(k.src - key.src) >= 1 / 30);
-  return [...rest, key].sort((a, b) => a.src - b.src);
+/** 刪掉一段放大 */
+export function deleteZoom(project: Project, zoomId: string): Project {
+  if (!project.zooms?.some((z) => z.id === zoomId)) return project;
+  return produce(project, (draft) => { draft.zooms = draft.zooms!.filter((z) => z.id !== zoomId); });
 }
