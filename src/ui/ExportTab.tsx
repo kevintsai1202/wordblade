@@ -1,6 +1,7 @@
 // 匯出頁籤（spec §5.4）：選解析度 → 選存檔位置 → 逐格合成、編碼成 MP4（有進度、可取消），同時輸出 SRT。
 import { beginBusy } from "../core/busy";
 import { useMemo, useRef, useState } from "react";
+import { createImageSource } from "../anim/effectImages";
 import { EffectRenderer } from "../anim/effectRenderer";
 import type { PluginService } from "../anim/pluginService";
 import { duckingCurve } from "../audio/ducking";
@@ -55,7 +56,8 @@ export function ExportTab({ project, captions, engine, plugins, envelopes, sugge
     setStatus({ kind: "running", frame: 0, total: plan.frames, startedAt });
     /** 匯出是重工作：期間背景縮圖排程停下來（§5.21） */
     const endBusy = beginBusy();
-    const effects = new EffectRenderer(plugins.host, plugins.three, () => undefined);
+    const images = createImageSource((m) => engine.mediaUrl(m), (id) => project.media.find((m) => m.id === id));
+    const effects = new EffectRenderer(plugins.host, plugins.three, () => undefined, images);
     try {
       await effects.syncPlugins(project.plugins);
       const { canEncodeAudio } = await import("mediabunny");
@@ -76,6 +78,7 @@ export function ExportTab({ project, captions, engine, plugins, envelopes, sugge
       setStatus(e instanceof ExportCancelled ? { kind: "idle" } : { kind: "error", message: e instanceof Error ? e.message : String(e) });
     } finally {
       abortRef.current = null;
+      images.dispose();
       endBusy();
     }
   };

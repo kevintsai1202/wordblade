@@ -9,6 +9,7 @@ import { setCaptionStyle, setMediaWords } from "./media";
 import { editWords } from "./transcriptEdit";
 import { addZoom, deleteZoom, setZoom } from "./zoom";
 import { setClipSpeed } from "./speed";
+import { insertIntro, type IntroInsert } from "../intro/insert";
 import type { CaptionStyle } from "../captions/captionLayout";
 import { cutByWords, cutSourceRanges, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
 
@@ -39,7 +40,8 @@ export type Edit =
   | { kind: "setMask"; mask: MaskObject }
   | { kind: "deleteMasks"; ids: string[] }
   | { kind: "setSuggestions"; mediaId: string; suggestions: Suggestion[] }
-  | { kind: "setSuggestionStatus"; id: string; status: Suggestion["status"] };
+  | { kind: "setSuggestionStatus"; id: string; status: Suggestion["status"] }
+  | { kind: "insertIntro"; intro: IntroInsert };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -52,6 +54,7 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "delete": return deleteClip(project, edit.clipId);
     case "place": return placeMedia(project, edit.mediaId, edit.trackId, edit.t);
     case "addEffect": return addEffect(project, edit.effect, edit.plugins);
+    case "insertIntro": return insertIntro(project, edit.intro);
     case "moveEffect": return moveEffect(project, edit.effectId, edit.start);
     case "trimEffect": return trimEffect(project, edit.effectId, edit.edge, edit.t);
     case "deleteEffect": return deleteEffect(project, edit.effectId);

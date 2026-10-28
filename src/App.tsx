@@ -22,6 +22,7 @@ import { CleanupPanel } from "./ui/CleanupPanel";
 import { ZoomTab } from "./ui/ZoomTab";
 import { MaskTab } from "./ui/MaskTab";
 import { DirectorTab } from "./ui/DirectorTab";
+import { IntroTab } from "./ui/IntroTab";
 import { SoundTab } from "./ui/SoundTab";
 import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
 import type { ZoomEdit } from "./ui/ZoomBands";
@@ -270,6 +271,7 @@ function App() {
             mask: <MaskTab project={project} engine={engine} range={state.range} playhead={state.playhead} dispatch={dispatch} />,
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
+            intro: <IntroTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab suggestedName={exportPathFor(folder.location, "mp4")} project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
             inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,

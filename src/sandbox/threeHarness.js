@@ -6,8 +6,10 @@
 //   const pure = true;                          選填：畫面只由 t 決定（不在 update 之間累積狀態），跳格時不必從頭推
 // env：width、height（畫格像素）、duration、fps、frame、t、progress、params、box（0～1）、rand(i)（固定種子）、
 //      frameTexture（當格畫面的貼圖：NoColorSpace、不翻轉）、frameMaterial()（原樣貼當格畫面的材質，已處理上下顛倒與色彩）、
-//      toWorld(x, y, z = 0)（畫面座標 0～1、y 往下 → 世界座標：用目前鏡頭算 z 平面上的點，對準目標框用）。
-// 協定同 2D harness：render {frame, fps, duration, width, height, params, box, background?} → ImageBitmap；vet {…} → {lit}。
+//      toWorld(x, y, z = 0)（畫面座標 0～1、y 往下 → 世界座標：用目前鏡頭算 z 平面上的點，對準目標框用）、
+//      images（params.imageIds 依序解碼好的 ImageBitmap，唯讀；第一列在最上，貼圖要在 shader 翻 v；沒有就是空陣列）。
+// 協定同 2D harness：render {frame, fps, duration, width, height, params, box, background?} → ImageBitmap；vet {…} → {lit}；
+//   images {images: ImageBitmap[]} → true（換一組圖片，下一格從區段開頭重建場景）。
 (function (g) {
   'use strict';
   /* global THREE, setup, update, pure */
@@ -28,6 +30,8 @@
   let frameTexture = null;
   /** 沒有下層畫面時用的 1×1 黑格 */
   const black = new ImageData(1, 1);
+  /** 插件用的圖片（主程式依 params.imageIds 送進來） */
+  let images = [];
 
   /** 錯誤轉成可序列化的物件（行號從堆疊裡找插件的那一行） */
   function serializeError(e) {
@@ -89,7 +93,7 @@
       width: d.width, height: d.height, duration: d.duration, fps: d.fps, frame, t,
       progress: d.duration > 0 ? Math.min(1, t / d.duration) : 1,
       params: d.params || {}, box: d.box || { cx: 0.5, cy: 0.5, w: 0.3, h: 0.2 },
-      rand: rand(d.seed || 1), frameTexture, frameMaterial, toWorld,
+      rand: rand(d.seed || 1), frameTexture, frameMaterial, toWorld, images,
     };
   }
 
@@ -165,6 +169,14 @@
       case 'render': {
         const bitmap = renderFrame(d);
         return [bitmap, [bitmap]];
+      }
+      case 'images': {
+        // 換圖片：舊的釋放，場景下一格重建（setup 才會拿到新圖）
+        for (const b of images) b.close();
+        images = d.images || [];
+        if (inst) disposeScene(inst.scene);
+        inst = null;
+        return [true, []];
       }
       case 'vet': {
         // 開頭、中間、結尾各畫一格（從頭建場景），至少一格有畫東西

@@ -3,6 +3,7 @@
 // 雜湊是穩定 JSON 的 SHA-256（2D 的雜湊由直譯器算，3D 不經直譯器，在主程式算）。
 import type { Effect, Plugin } from "../core/model";
 import deskScreenCode from "./builtins/deskScreen.js?raw";
+import flipIntroCode from "./builtins/flipIntro.js?raw";
 import floatingBoardCode from "./builtins/floatingBoard.js?raw";
 import mascotCode from "./builtins/mascot.js?raw";
 import boardGeometryCode from "./boardGeometry.js?raw";
@@ -83,6 +84,18 @@ ${floatingBoardCode}`,
       walk: { type: "duration", min: 0.3, max: 4, default: 1.6, label: "Walk time (sec)" },
     },
     code: mascotCode,
+  },
+  {
+    // 一鍵片頭（§5.23）：時間表與圖片由 intro/flip.ts 產生，放在特效參數裡；這裡只列可以在檢視器微調的外觀
+    id: "flip-intro", kind: "3d", effectKind: "scene3d", name: "Flip intro",
+    description: "Cover images flip past faster and faster, a flash, then the title punches in",
+    params: {
+      tone: { type: "enum", values: ["duotone", "original"], labels: ["Two-tone", "Original colors"], default: "duotone", label: "Covers" },
+      accent: { type: "color", default: "#2f5bff", label: "Title block" },
+      dark: { type: "color", default: "#141a4a", label: "Two-tone dark" },
+      light: { type: "color", default: "#a9b8ff", label: "Two-tone light" },
+    },
+    code: flipIntroCode,
   },
 ];
 

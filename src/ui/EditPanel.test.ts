@@ -9,9 +9,9 @@ describe("EditPanel 分組", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("特效下分 2D／3D／Zoom／Mask／Sound；子頁籤找得到所屬大類別", () => {
+  it("特效下分 2D／3D／Zoom／Mask／Sound／Intro；子頁籤找得到所屬大類別", () => {
     expect(groupOf("vibe").id).toBe("effects");
-    expect(TAB_GROUPS.find((g) => g.id === "effects")!.leaves.map((l) => l.label)).toEqual(["2D", "3D", "Zoom", "Mask", "Sound"]);
+    expect(TAB_GROUPS.find((g) => g.id === "effects")!.leaves.map((l) => l.label)).toEqual(["2D", "3D", "Zoom", "Mask", "Sound", "Intro"]);
     expect(groupOf("vibe3d").id).toBe("effects");
     expect(groupOf("style").id).toBe("transcript");
     expect(groupOf("publish").id).toBe("export");

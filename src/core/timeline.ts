@@ -310,7 +310,7 @@ function insertIntoEffect(effect: Draft<Effect>, p: Seconds, d: Seconds) {
  * 漣漪插入（D25 的反向）：在時間軸時間 p 空出長度 d。鎖定的軌不動；
  * 其他軌整段在 p 之後的片段右移、跨在 p 上的切開後半段右移；特效與時間軸定位點同樣右移。
  */
-function rippleInsertDraft(draft: Draft<Project>, p: Seconds, d: Seconds) {
+export function rippleInsertDraft(draft: Draft<Project>, p: Seconds, d: Seconds) {
   const locked = new Set(draft.tracks.filter((t) => t.locked).map((t) => t.id));
   for (const clip of [...draft.clips]) {
     if (locked.has(clip.trackId) || clipEnd(clip) <= p) continue;

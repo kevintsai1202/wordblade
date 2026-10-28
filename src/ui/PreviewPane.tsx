@@ -3,6 +3,7 @@ import { ensureAudioGraph } from "../audio/audioGraph";
 import { duckingCurve } from "../audio/ducking";
 import { timelineWords, type Caption } from "../core/captions";
 import type { Project } from "../core/model";
+import { createImageSource } from "../anim/effectImages";
 import { EffectRenderer } from "../anim/effectRenderer";
 import type { PluginService } from "../anim/pluginService";
 import { PreviewPlayer } from "../compositor/previewPlayer";
@@ -46,6 +47,9 @@ export function PreviewPane(props: {
   /** 播放迴圈要讀的最新值（避免每格重建迴圈） */
   const latest = useRef({ playhead, playing, rate });
   latest.current = { playhead, playing, rate };
+  /** 目前的專案（3D 插件的圖片來源用 id 找素材） */
+  const projectRef = useRef(project);
+  projectRef.current = project;
 
   /** 2D 特效的畫格管理（沙盒） */
   const effectsRef = useRef<EffectRenderer | null>(null);
@@ -57,12 +61,13 @@ export function PreviewPane(props: {
       if (!p) requestAnimationFrame(() => playerRef.current?.render(latest.current.playhead ?? t, false, r));
     };
     const player = new PreviewPlayer(canvasRef.current!, (m) => engine.mediaUrl(m), redraw);
-    const effects = new EffectRenderer(plugins.host, plugins.three, redraw);
+    const images = createImageSource((m) => engine.mediaUrl(m), (id) => projectRef.current.media.find((m) => m.id === id));
+    const effects = new EffectRenderer(plugins.host, plugins.three, redraw, images);
     player.setEffectRenderer(effects, FPS);
     if (thumbs) player.setThumbs(thumbs);
     playerRef.current = player;
     effectsRef.current = effects;
-    return () => { player.dispose(); effects.dispose(); playerRef.current = null; effectsRef.current = null; };
+    return () => { player.dispose(); effects.dispose(); images.dispose(); playerRef.current = null; effectsRef.current = null; };
   }, [engine, plugins, thumbs]);
 
   // 專案變了（編輯後）就交給播放器；新插件送進沙盒後再重畫

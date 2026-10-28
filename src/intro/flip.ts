@@ -51,6 +51,9 @@ export interface FlipRequest {
 
 /** 計畫 */
 export interface FlipPlan {
+  title: string;
+  subtitle?: string;
+  iconId?: string;
   duration: number;
   reveal: number;
   cues: IntroCue[];
@@ -129,6 +132,7 @@ export function flipIntro(req: FlipRequest): FlipPlan {
   const rand = random(req.seed);
   const pages = cues.filter((c) => c.kind === "page").length;
   return {
+    title: req.title, subtitle: req.subtitle, iconId: req.iconId,
     duration, reveal, cues, params, warnings,
     pageImages: pick(req.imageIds, pages, rand),
     titleFills: pick(req.imageIds, params.titleFills, rand),

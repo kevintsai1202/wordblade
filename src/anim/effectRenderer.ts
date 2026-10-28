@@ -6,6 +6,9 @@ import type { Effect, Plugin, Project } from "../core/model";
 import { PluginError, type SandboxHost } from "../sandbox/sandboxHost";
 import type { ThreeHost } from "../sandbox/threeHost";
 
+/** 依素材 id 取得解碼好的圖片（3D 插件的 env.images；一鍵片頭的封面） */
+export type ImageSource = (ids: string[]) => Promise<ImageBitmap[]>;
+
 /** 畫格的請求內容（不含特效本身） */
 export interface FrameRequest {
   frame: number;
@@ -51,8 +54,9 @@ export class EffectRenderer {
    * @param host 2D 沙盒
    * @param three 3D 沙盒
    * @param onFrame 新畫格回來時呼叫（讓預覽重畫）
+   * @param images 3D 插件要的圖片（params.imageIds）；沒給的話插件拿到空陣列
    */
-  constructor(private readonly host: SandboxHost, private readonly three: ThreeHost, private readonly onFrame: () => void) {}
+  constructor(private readonly host: SandboxHost, private readonly three: ThreeHost, private readonly onFrame: () => void, private readonly images: ImageSource | null = null) {}
 
   /** 把專案裡還沒送進沙盒的插件送進去（2D 送進直譯器驗證；3D 只記住程式，畫的時候才建 Worker） */
   async syncPlugins(plugins: Plugin[]): Promise<void> {
@@ -100,7 +104,9 @@ export class EffectRenderer {
       const p = effect.params as { params?: Record<string, unknown>; box?: unknown };
       // 鏡頭關鍵幀（3D 場景）跟著參數送進插件
       const params = effect.cameraKeys?.length ? { ...(p.params ?? {}), cameraKeys: effect.cameraKeys } : p.params ?? {};
-      return this.three.render(effect.id, code, { ...req, params, box: p.box ?? null, seed: 1 }, background);
+      const ids = Array.isArray(params.imageIds) ? (params.imageIds as string[]) : [];
+      const images = ids.length && this.images ? { key: ids.join(","), load: () => this.images!(ids) } : null;
+      return this.three.render(effect.id, code, { ...req, params, box: p.box ?? null, seed: 1 }, background, images);
     }
     return this.host.request<ImageBitmap>("render", { instance: instanceOf(effect), ...req, background }, background ? [background] : []);
   }

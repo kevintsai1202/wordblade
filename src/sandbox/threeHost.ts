@@ -31,6 +31,14 @@ interface Slot {
   code: string;
   /** 畫過第一格了嗎（決定逾時） */
   warm: boolean;
+  /** 已送進 Worker 的圖片組（imageIds 串起來的鍵；沒有送過是 ""） */
+  imagesKey: string;
+}
+
+/** 插件要的圖片：鍵（換了才重送）與載入函式（回傳的 ImageBitmap 由呼叫端保管，這裡複製後轉移） */
+export interface EffectImages {
+  key: string;
+  load: () => Promise<ImageBitmap[]>;
 }
 
 /** 3D 沙盒宿主 */
@@ -71,7 +79,7 @@ export class ThreeHost {
       });
       const port = await this.frame!.startWorker(workerId, `${base}\n;\n${code}\n;\n${harness}`);
       const channel = await Promise.race([WorkerChannel.open(port, () => this.kill(effectId), FIRST_TIMEOUT), loadError]);
-      return { channel, code, warm: false };
+      return { channel, code, warm: false, imagesKey: "" };
     })();
     this.slots.set(effectId, created);
     created.catch(() => this.slots.delete(effectId));
@@ -88,9 +96,16 @@ export class ThreeHost {
     this.kills++;
   }
 
-  /** 畫一格（background：下層畫面，會轉移進沙盒） */
-  async render(effectId: string, code: string, payload: Record<string, unknown>, background: ImageBitmap | null): Promise<ImageBitmap> {
+  /** 畫一格（background：下層畫面，會轉移進沙盒；images：插件要的圖片，Worker 裡沒有這組才送） */
+  async render(effectId: string, code: string, payload: Record<string, unknown>, background: ImageBitmap | null, images: EffectImages | null = null): Promise<ImageBitmap> {
     const s = await this.slot(effectId, code);
+    if (images && s.imagesKey !== images.key) {
+      // 複製後轉移：快取裡的原圖留給下一個 Worker（重建或匯出）用
+      const copies = await Promise.all((await images.load()).map((b) => createImageBitmap(b)));
+      await s.channel.send("images", { images: copies }, copies, FIRST_TIMEOUT);
+      s.imagesKey = images.key;
+      s.warm = false;
+    }
     const timeout = s.warm ? FRAME_TIMEOUT : FIRST_TIMEOUT;
     const bitmap = await s.channel.send<ImageBitmap>("render", { ...payload, background }, background ? [background] : [], timeout);
     s.warm = true;
