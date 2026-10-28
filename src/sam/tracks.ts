@@ -31,7 +31,7 @@ export interface SamPass {
   start: number;
   /** 取樣率（每秒幾格） */
   fps: number;
-  /** 小檔寬高（SAM 框的座標系） */
+  /** 小檔寬高（記錄沒帶 w／h 時才用；SAM 的記錄都帶自己看到的畫面寬高） */
   clipW: number;
   clipH: number;
   frames: SamFrame[];
@@ -43,7 +43,8 @@ export interface SamPass {
 export interface Part {
   pass: number;
   oid: number;
-  boxes: { sample: number; x1: number; y1: number; x2: number; y2: number; mask: SamFrame["records"][number]["mask"] }[];
+  /** 取樣、框、SAM 回報的畫面寬高（正規化用它，不用我們以為上傳的尺寸）、遮罩 */
+  boxes: { sample: number; x1: number; y1: number; x2: number; y2: number; w: number; h: number; mask: SamFrame["records"][number]["mask"] }[];
 }
 
 /** 中位數 */
@@ -111,7 +112,7 @@ export function buildParts(pass: SamPass, passNo = 0): Part[] {
   for (const f of [...pass.frames].sort((a, b) => a.frame - b.frame)) {
     for (const r of f.records) {
       if (!byId.has(r.id)) byId.set(r.id, []);
-      byId.get(r.id)!.push({ sample: f.frame, x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2, mask: r.mask });
+      byId.get(r.id)!.push({ sample: f.frame, x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2, w: r.w || pass.clipW, h: r.h || pass.clipH, mask: r.mask });
     }
   }
   const parts: Part[] = [];
@@ -151,7 +152,7 @@ export function linkPasses(passes: SamPass[]): LinkedObject[] {
   /** 某段在素材時間 t 的框（座標正規化，跨請求才比得了） */
   const boxAt = (it: (typeof items)[number], t: number) => {
     const b = it.part.boxes.find((x) => Math.abs(it.pass.start + x.sample / it.pass.fps - t) < EPS);
-    return b && { x1: b.x1 / it.pass.clipW, y1: b.y1 / it.pass.clipH, x2: b.x2 / it.pass.clipW, y2: b.y2 / it.pass.clipH };
+    return b && { x1: b.x1 / b.w, y1: b.y1 / b.h, x2: b.x2 / b.w, y2: b.y2 / b.h };
   };
   for (let k = 1; k < passes.length; k++) {
     const t = passes[k].start;
@@ -195,8 +196,8 @@ export function toMaskObjects(objects: LinkedObject[], opts: { mediaId: string; 
         const m = b.mask;
         byTime.set(t, {
           t,
-          box: [b.x1 / pass.clipW, b.y1 / pass.clipH, b.x2 / pass.clipW, b.y2 / pass.clipH],
-          mask: m ? { x: (b.x1 + m.x) / pass.clipW, y: (b.y1 + m.y) / pass.clipH, w: m.w / pass.clipW, h: m.h / pass.clipH, cols: m.w, rows: m.h, payload: m.payload } : null,
+          box: [b.x1 / b.w, b.y1 / b.h, b.x2 / b.w, b.y2 / b.h],
+          mask: m ? { x: (b.x1 + m.x) / b.w, y: (b.y1 + m.y) / b.h, w: m.w / b.w, h: m.h / b.h, cols: m.w, rows: m.h, payload: m.payload } : null,
         });
       }
     }
