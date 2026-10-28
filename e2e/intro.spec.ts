@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { openTab } from "./helpers/tabs";
 
@@ -104,4 +106,70 @@ test("翻頁式片頭：插在開頭、翻頁段是雙色調封面、揭曉後�
   await page.keyboard.press("Control+z");
   await expect(page.locator(".effect-chip")).toHaveCount(0);
   await expect(page.locator('[data-track-id="A3"] .clip')).toHaveCount(0);
+});
+
+/** 匯入影片放上 V1、匯入 8 張封面、在 Intro 頁籤產生片頭 */
+async function setupIntro(page: Page) {
+  let chooser = page.waitForEvent("filechooser");
+  await page.getByTestId("import-media").click();
+  await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
+  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
+  await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
+  chooser = page.waitForEvent("filechooser");
+  await page.getByTestId("import-media").click();
+  await (await chooser).setFiles(await makeCovers(page, 8));
+  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
+  await openTab(page, "intro");
+  await page.getByTestId("intro-title").fill("WORDBLADE");
+  await page.getByTestId("intro-generate").click();
+  await expect(page.getByTestId("intro-notice")).toContainText("intro at the start");
+}
+
+test("片頭也匯出：成片 12 秒，翻頁段是雙色調、揭曉後中央有藍方塊與白字、片頭有聲音", async ({ page }) => {
+  test.setTimeout(240_000);
+  await page.addInitScript(() => localStorage.setItem("wordblade.exportToOpfs", "1"));
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/");
+  await setupIntro(page);
+  await openTab(page, "export");
+  await page.getByTestId("export-start").click();
+  await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 200_000 });
+  await expect(page.getByTestId("export-status")).not.toContainText("skipped");
+
+  // 從 OPFS 拿出成片
+  const b64 = await page.evaluate(async () => {
+    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("exports");
+    const bytes = new Uint8Array(await (await (await dir.getFileHandle("wordblade-export.mp4")).getFile()).arrayBuffer());
+    let s = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return btoa(s);
+  });
+  const out = path.join(import.meta.dirname, "..", "output", "e2e-export");
+  mkdirSync(out, { recursive: true });
+  const file = path.join(out, "export-intro.mp4");
+  writeFileSync(file, Buffer.from(b64, "base64"));
+
+  const duration = Number(spawnSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], { encoding: "utf8" }).stdout);
+  expect(duration).toBeGreaterThan(11.9);
+  /** 某秒畫面縮成 160×90 後某區域的藍紫、白色比例 */
+  const frameStats = (t: number, [x0, y0, x1, y1]: number[]) => {
+    const raw = spawnSync("ffmpeg", ["-v", "error", "-ss", String(t), "-i", file, "-frames:v", "1", "-vf", "scale=160:90", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]).stdout as Buffer;
+    let blue = 0;
+    let white = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const i = (y * 160 + x) * 3;
+      const [R, G, B] = [raw[i], raw[i + 1], raw[i + 2]];
+      if (B > 90 && B > R * 1.25 && B > G * 1.1) blue++;
+      if (R > 200 && G > 200 && B > 200) white++;
+    }
+    const n = (x1 - x0) * (y1 - y0);
+    return { blue: blue / n, white: white / n };
+  };
+  expect(frameStats(3, [0, 0, 160, 90]).blue).toBeGreaterThan(0.25);
+  const title = frameStats(5, [40, 33, 120, 57]);
+  expect(title.blue).toBeGreaterThan(0.2);
+  expect(title.white).toBeGreaterThan(0.03);
+  // 片頭 8 秒內有聲音（翻頁、上升音、重擊、配樂）
+  const log = spawnSync("ffmpeg", ["-v", "info", "-t", "8", "-i", file, "-af", "volumedetect", "-vn", "-f", "null", "-"], { encoding: "utf8" }).stderr;
+  expect(Number(/mean_volume: (-?[\d.]+) dB/.exec(log)?.[1] ?? "-999")).toBeGreaterThan(-35);
 });

@@ -703,6 +703,18 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 6. Worker 裡載入字型（`FontFace`／`self.fonts`）要在 WebView2 實測。
 7. 排程（開發者 2026-10-27 授權自行安排）：11/3 上午（翻頁式需要 10/29～10/30 的沙盒與 3D 插件；成品也當宣傳影片的開場）；11/1 檢查點可以再調。
 
+**實作（10/29，計畫 `docs/plan-10-28-intro.md`）**
+
+- 待決定 1～5 照建議（開發者 2026-10-28）：3D 沙盒加 `images` 協定，`params.imageIds` 由主程式解碼（寬 ≤ 1280）後放進 `env.images`；每個音效 cue 一個 A3 片段，共用同一支 WAV；V1 佔位是產生的黑色 PNG（`intro-black.png`）；雙色調在 shader 做；音效 spec 加 `am {rate, depth}`。
+- 程式：`intro/flip.ts`（cue 表）→ `intro/insert.ts`（`flipEffect`、`insertIntro` 編輯，一次復原）→ `three/builtins/flipIntro.js`（插件）；聲音在 `intro/sounds.ts`；介面在 Effects › Intro。
+- 和上面的出入：
+  - 有內建配樂時揭曉在 4.0 秒、片頭 8 秒（120 BPM 第 3 小節）；不要配樂時揭曉 3.2 秒、片頭 6.2 秒。
+  - 標題用系統字（Worker 裡的 `sans-serif` 粗體），沒有載 FontFace（第 6 項沒做）。
+  - 使用者自己的音樂與 BPM／重拍偵測沒做（I6，建議砍）。
+  - 「改參數重算」目前是再按一次 Generate，會在開頭**再插一段**，舊的往後推；要換掉得先 Ctrl+Z。
+  - 內建配樂用 `renderMusic` 算，它會把尾巴疊回開頭（為了循環），片頭第一拍可能不是完全安靜。
+- 驗證：Vitest（cue 表、插入、音效 spec 與實際算圖）；e2e `intro.spec.ts`（預覽：翻頁段雙色調、揭曉後藍方塊白字、A3 有 18 個片段、Ctrl+Z；匯出成 MP4 後用 ffmpeg 檢查畫面與音量）。WebView2 只驗過 PNG 佔位的匯入，片頭本身還沒在 Windows 版算過。
+
 ## 6. 閘道
 
 - **技術**：Java 21、Spring Boot 4.1、Spring AI 2.0、PostgreSQL（Flyway）；部署在 Zeabur。報名稿寫的就是這個架構（D10）。
