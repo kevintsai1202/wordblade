@@ -21,6 +21,7 @@ import { TranscriptTab } from "./ui/TranscriptTab";
 import { CleanupPanel } from "./ui/CleanupPanel";
 import { ZoomTab } from "./ui/ZoomTab";
 import { MaskTab } from "./ui/MaskTab";
+import { DirectorTab } from "./ui/DirectorTab";
 import { SoundTab } from "./ui/SoundTab";
 import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
 import type { ZoomEdit } from "./ui/ZoomBands";
@@ -186,6 +187,7 @@ function App() {
             vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
+            director: <DirectorTab project={project} engine={engine} envelopes={library.envelopes} plugins={plugins} playhead={state.playhead} dispatch={dispatch} />,
             mask: <MaskTab project={project} engine={engine} range={state.range} playhead={state.playhead} dispatch={dispatch} />,
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,

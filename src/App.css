@@ -135,6 +135,16 @@ button:disabled { opacity: 0.4; cursor: default; }
 .media-status { font-size: 11px; color: #e0b050; }
 .media-status.failed { color: #ff7a7a; white-space: normal; }
 .media-ghost { position: fixed; z-index: 100; pointer-events: none; padding: 3px 8px; background: #2d6cdf; color: #fff; border-radius: 3px; font-size: 12px; white-space: nowrap; }
+/* AI 導演頁籤（§5.11） */
+.director-tab { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.director-list { list-style: none; margin: 0; padding: 0; outline: none; }
+.director-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 6px 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 12px; }
+.director-list li.selected { background: rgba(74, 141, 255, 0.15); }
+.director-list li.applied, .director-list li.skipped { opacity: 0.55; }
+.director-kind { font-weight: 600; min-width: 5.5em; }
+.director-reason { flex: 1 1 100%; min-width: 0; }
+.director-actions { display: flex; gap: 4px; margin-left: auto; }
+.director-status { margin-left: auto; }
 /* 遮罩頁籤（SAM，§5.3） */
 .mask-tab { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
 .mask-targets { display: flex; flex-wrap: wrap; gap: 4px; }

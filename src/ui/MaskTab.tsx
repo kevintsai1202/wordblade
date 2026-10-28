@@ -9,9 +9,9 @@ import type { MaskObject, Project } from "../core/model";
 import { clipEnd, sourceToTimeline } from "../core/timeline";
 import type { Engine } from "../engine/Engine";
 import { SamApi } from "../sam/api";
-import { makeSamClip } from "../sam/clip";
 import { estimateUsd, planChunks } from "../sam/plan";
-import { runSam, type SamProgress } from "../sam/run";
+import type { SamProgress } from "../sam/run";
+import { runMaskJob } from "../sam/runMask";
 import { formatTimecode, type Action } from "./state";
 
 /** 常用目標（SAM 的英文名詞片語；照原專案 FACE_TARGETS） */
@@ -97,12 +97,7 @@ export function MaskTab({ project, engine, range, playhead, dispatch }: {
         phrase = await api.phrase(phrase);
         if (!phrase) throw new GatewayError("That doesn't look like something visible in the video. Try a short noun, e.g. \"license plate\".", 400);
       }
-      const src = await engine.exportSource(media);
-      const result = await runSam({
-        mediaId: media.id, prompt: phrase, start: source.start, end: source.end, fps,
-        makeClip: (s, e) => makeSamClip(src, s, e, { fps, maxWidth: 1280, videoW: media.width ?? 1280, videoH: media.height ?? 720, signal: abort.signal }),
-        api, signal: abort.signal, onProgress: setProgress,
-      });
+      const result = await runMaskJob({ engine, media, phrase, start: source.start, end: source.end, fps, signal: abort.signal, onProgress: setProgress });
       if (result.objects.length) dispatch({ type: "commit", edits: [{ kind: "addMasks", masks: result.objects }] });
       setMessage(result.objects.length
         ? { kind: result.capped ? "warning" : "info", text: `Found ${result.objects.length} × "${phrase}".${result.capped ? " SAM tracks at most 16 objects at a time — some may be missing; try a shorter range." : ""}` }
