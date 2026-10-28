@@ -28,6 +28,7 @@ import type { ZoomEdit } from "./ui/ZoomBands";
 import { zoomFromRange } from "./core/zoom";
 import { clipEnd, timelineToSource } from "./core/timeline";
 import { useLayout } from "./ui/layout";
+import { SESSION_KEY, restoreSession, serializeSession, shouldSave } from "./core/session";
 import { isBusy } from "./core/busy";
 import { ThumbScheduler, ThumbStore } from "./media/thumbStore";
 import { Splitter } from "./ui/Splitter";
@@ -111,6 +112,40 @@ function App() {
   /** 標題列的狀態訊息（例如找不到示範素材） */
   const [notice, setNotice] = useState<string | null>(null);
 
+  /** 目前是不是剛載入、還沒編輯過的示範專案（不自動存，免得蓋掉上次的工作） */
+  const [isDemo, setIsDemo] = useState(START_WITH_DEMO);
+  /** 上次的工作（開啟時讀一次；使用者按還原才載入，不自動還原） */
+  const [lastSession, setLastSession] = useState(() => {
+    if (START_WITH_DEMO) return null;
+    try {
+      return restoreSession(localStorage.getItem(SESSION_KEY));
+    } catch {
+      return null;
+    }
+  });
+  // 自動存檔：使用者編輯後 2 秒存進這台電腦；太大存不下就暫停並提示
+  useEffect(() => {
+    if (!shouldSave(project, state.history.past.length, isDemo)) return;
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(SESSION_KEY, serializeSession(project, Date.now()));
+      } catch {
+        setNotice("Autosave paused — this project is too large to keep in the browser.");
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [project, state.history.past.length, isDemo]);
+  /** 還原上次的工作：載入專案、素材照常在背景準備（桌面版路徑還在；網頁版要重新匯入檔案） */
+  const restoreLast = () => {
+    if (!lastSession) return;
+    reset(project.media);
+    dispatch({ type: "load", project: lastSession.project });
+    for (const m of lastSession.project.media) enqueuePrepare(m);
+    setIsDemo(false);
+    setLastSession(null);
+    if (engine.kind === "web") setNotice("Restored. On the web, import the video files again to see them.");
+  };
+
   // Resolve 風格熱鍵；焦點在輸入框時不攔
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -138,6 +173,8 @@ function App() {
       return;
     }
     setNotice(null);
+    setIsDemo(true);
+    setLastSession(null);
     const demo = demoProject(root);
     reset(project.media);
     dispatch({ type: "load", project: demo });
@@ -153,6 +190,13 @@ function App() {
         <span className="brand">WordBlade</span>
         <span className="project-path">{project.media.length ? "untitled project" : "new project"}</span>
         <button title="Open the sample project (local samples/ folder)" data-testid="load-demo" onClick={() => void onLoadDemo()}>Load demo</button>
+        {lastSession && !project.media.length && (
+          <span className="restore-bar" data-testid="restore-bar">
+            Last session: {lastSession.project.clips.length} clips, saved {new Date(lastSession.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            <button data-testid="restore-session" onClick={restoreLast}>Restore</button>
+            <button title="Keep it for later" onClick={() => setLastSession(null)}>✕</button>
+          </span>
+        )}
         {notice && <span className="muted" data-testid="notice">{notice}</span>}
         <span className="spacer" />
         <span className="muted" data-testid="engine-kind">Engine: {engine.kind}</span>
