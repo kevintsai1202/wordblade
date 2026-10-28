@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "retakes", "privacy", "highlights", "misheard"],
+  "properties": {
+    "summary": { "type": "string" },
+    "retakes": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": false, "required": ["start", "end", "reason"],
+        "properties": { "start": { "type": "number" }, "end": { "type": "number" }, "reason": { "type": "string" } } }
+    },
+    "privacy": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": false, "required": ["start", "end", "target", "x", "y", "w", "h"],
+        "properties": { "start": { "type": "number" }, "end": { "type": "number" }, "target": { "type": "string" },
+          "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" }, "h": { "type": "number" } } }
+    },
+    "highlights": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": false, "required": ["start", "end", "kind", "description", "x", "y", "w", "h"],
+        "properties": { "start": { "type": "number" }, "end": { "type": "number" }, "kind": { "type": "string", "enum": ["effect", "zoom", "camera"] },
+          "description": { "type": "string" }, "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" }, "h": { "type": "number" } } }
+    },
+    "misheard": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": false, "required": ["wordIds", "heard", "correct"],
+        "properties": { "wordIds": { "type": "array", "items": { "type": "string" } }, "heard": { "type": "string" }, "correct": { "type": "string" } } }
+    }
+  }
+}

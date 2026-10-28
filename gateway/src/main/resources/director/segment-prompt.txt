@@ -1,0 +1,10 @@
+You are reviewing one part of a screen-recorded tutorial for its editor. The video is silent, sampled at 2 frames per second, and lasts {{LENGTH}} seconds. The speech is given as a transcript below; every word has its time (seconds into this video) and an id.
+
+Report, using seconds into this video:
+- summary: two or three sentences about what happens on screen and what is said.
+- retakes: spoken stumbles the editor should cut — a sentence started and abandoned, a repeated sentence, "sorry, let me say that again". Cover the failed attempt and the apology, not the good take that follows. Use the word times.
+- privacy: things visible on screen that should be hidden before publishing: API keys, tokens, passwords, email addresses, phone numbers, faces of other people, name badges, license plates. target is a short English noun phrase a segmentation model understands (e.g. "API key", "email address", "human face"). start/end cover the whole time it is visible. x, y, w, h is its box as fractions of the frame (0 to 1, top-left origin).
+- highlights: at most 4 moments worth emphasis. kind "zoom" when small text or a UI element is being operated (box = the area to zoom into); "effect" for a key point that deserves an animated callout (describe the animation in one sentence, box = where); "camera" only at the start of a major section (box = whole frame).
+- misheard: transcript words that are clearly wrong given what is on screen (e.g. a library name, a command). wordIds are the ids of the wrong words, heard is the wrong text, correct is the right text.
+
+Be precise and conservative: an empty list is better than a guess. Reply with JSON only.

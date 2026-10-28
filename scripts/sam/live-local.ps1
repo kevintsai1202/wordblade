@@ -1,9 +1,10 @@
 # SAM 3.1 實測（spec §5.3，docs/plan-10-28-sam.md）：起臨時 PostgreSQL（Docker，55432）與本機閘道（18080）→ 建一次性邀請權杖（只存雜湊）→
 # 預設跑 scripts/sam/gateway-check.mjs（100 格計費、取消要多久、目標翻譯）；-E2E 時改跑 e2e/sam-live.spec.ts（網頁版完整流程）→ 收掉閘道與資料庫。
 # 金鑰從 repo 的 .env 讀進這個行程的環境變數，不印出、不寫檔；權杖明文也只放環境變數。會實際呼叫 SAM（約 US$0.1 以內）。
-# 用法（repo 根目錄，PowerShell 7）：pwsh scripts/sam/live-local.ps1 [-E2E] [-WebPort 4173]
+# 用法（repo 根目錄，PowerShell 7）：pwsh scripts/sam/live-local.ps1 [-E2E] [-Spec e2e/xxx.spec.ts] [-Check scripts/xxx.mjs] [-WebPort 4173]
+#   -Check 換別的閘道檢查腳本（例如 scripts/director/gateway-check.mjs）；-Spec 換 -E2E 時跑的 spec
 # 紀錄：logs/sam-live.log（閘道的輸出另存 logs/sam-live-gateway.log）；結果：output/sam-gateway-check.json
-param([switch]$E2E, [int]$WebPort = 4173)
+param([switch]$E2E, [string]$Spec = 'e2e/sam-live.spec.ts', [string]$Check = 'scripts/sam/gateway-check.mjs', [int]$WebPort = 4173)
 $ErrorActionPreference = 'Stop'
 
 $Root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
@@ -62,8 +63,8 @@ try {
   $env:WORDBLADE_LIVE_GATEWAY = "http://localhost:$Port"
   $env:WORDBLADE_LIVE_TOKEN = $token
   Push-Location $Root
-  if ($E2E) { pnpm playwright test e2e/sam-live.spec.ts 2>&1 | ForEach-Object { Write-Log $_ } }
-  else { node scripts/sam/gateway-check.mjs 2>&1 | ForEach-Object { Write-Log $_ } }
+  if ($E2E) { pnpm playwright test $Spec 2>&1 | ForEach-Object { Write-Log $_ } }
+  else { node $Check 2>&1 | ForEach-Object { Write-Log $_ } }
   Pop-Location
   $usage = docker exec $Db psql -U wordblade -d wordblade -t -c "SELECT route, COUNT(*), SUM(units) FROM usage_log GROUP BY route" | Out-String
   Write-Log "用量：$($usage.Trim())"
