@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch } from "react";
 import type { Media, Project } from "../core/model";
 import { shouldSave } from "../core/session";
 import type { Engine, ProjectLocation } from "../engine/Engine";
-import { RECENT_KEY, loadProjectText, projectText, pushRecent, type RecentProject } from "../project/session";
+import { RECENT_KEY, loadProjectText, projectText, pushRecent, relinkMissing, type MissingMedia, type RecentProject } from "../project/session";
 import type { Action } from "./state";
 
 /** 讀最近開啟（讀不到回空） */
@@ -35,8 +35,8 @@ export function useProjectFolder(opts: {
   /** 存檔狀態：saving、saved（含時間）、error */
   const [status, setStatus] = useState<{ kind: "saving" | "saved" | "error"; at?: number; message?: string } | null>(null);
   const [recent, setRecent] = useState<RecentProject[]>(loadRecent);
-  /** 開專案時找不到的素材名稱 */
-  const [missing, setMissing] = useState<string[]>([]);
+  /** 開專案時找不到的素材 */
+  const [missing, setMissing] = useState<MissingMedia[]>([]);
   /** 素材指紋（同一支只算一次） */
   const fingerprints = useRef(new Map<string, string>());
   /** 剛載入的專案不要立刻回存（沒改東西） */
@@ -111,5 +111,26 @@ export function useProjectFolder(opts: {
     return opened ? load(opened) : `Can't open ${loc.dir} — it may have been moved or deleted.`;
   }, [engine, load]);
 
-  return { location, status, recent, missing, saveAs, open, reopen, dismissMissing: () => setMissing([]) };
+  /**
+   * 重新連結一支找不到的素材：使用者選檔，同資料夾裡其他找不到的素材一起找回；
+   * 換掉路徑（舊的代理檔不用）、重新準備，改動會由上面的自動存檔寫進 project.json。回傳錯誤訊息或 null。
+   */
+  const relink = useCallback(async (id: string): Promise<string | null> => {
+    const target = project.media.find((m) => m.id === id);
+    if (!target) return null;
+    const [source] = await engine.pickFiles();
+    if (!source) return null;
+    if (source.kind !== "path") return "Relinking needs the Windows app.";
+    const found = await relinkMissing(target, source.path, project.media, missing, (m, c, fp) => engine.locateMedia(m, c, fp));
+    if (!found.length) return `Can't open ${source.name}.`;
+    for (const { id: mid, path } of found) {
+      const m = project.media.find((x) => x.id === mid)!;
+      dispatch({ type: "patchMedia", id: mid, patch: { path, proxyPath: undefined } });
+      enqueuePrepare({ ...m, path, proxyPath: undefined });
+    }
+    setMissing((list) => list.filter((x) => !found.some((f) => f.id === x.id)));
+    return null;
+  }, [engine, project.media, missing, dispatch, enqueuePrepare]);
+
+  return { location, status, recent, missing, saveAs, open, reopen, relink, dismissMissing: () => setMissing([]) };
 }

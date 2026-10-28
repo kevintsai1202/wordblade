@@ -217,8 +217,10 @@ function App() {
           </>
         )}
         {folder.missing.length > 0 && (
-          <span className="warning" data-testid="missing-media" title={folder.missing.join(", ")}>
-            {folder.missing.length} media file{folder.missing.length > 1 ? "s" : ""} not found: {folder.missing.slice(0, 2).join(", ")}{folder.missing.length > 2 ? "…" : ""}
+          <span className="warning" data-testid="missing-media" title={folder.missing.map((m) => m.name).join(", ")}>
+            {folder.missing.length} media file{folder.missing.length > 1 ? "s" : ""} not found: {folder.missing.slice(0, 2).map((m) => m.name).join(", ")}{folder.missing.length > 2 ? "…" : ""}
+            {/* 一次連一支（從第一支開始）；同資料夾裡的其他支會一起找回 */}
+            <button data-testid="relink-media" title={`Locate ${folder.missing[0].name}; others in the same folder are found automatically`} onClick={() => void folder.relink(folder.missing[0].id).then((err) => err && setNotice(err))}>Locate {folder.missing[0].name}…</button>
             <button onClick={folder.dismissMissing}>✕</button>
           </span>
         )}

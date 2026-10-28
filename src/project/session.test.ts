@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { makeProject } from "../core/fixtures";
 import { fromProjectFile } from "../core/projectFile";
 import type { Media } from "../core/model";
-import { exportPathFor, loadProjectText, projectText, pushRecent } from "./session";
+import { exportPathFor, loadProjectText, projectText, pushRecent, relinkMissing } from "./session";
 
 // 專案資料夾的存與開（D41）：存的時候補上素材指紋（算過的記住）、開的時候逐支找回素材、最近開啟清單、匯出預設位置。
 const location = { name: "MyTalk", dir: "D:\\videos\\MyTalk.wordblade" };
@@ -31,9 +31,33 @@ describe("loadProjectText：開專案", () => {
     const result = await loadProjectText(text, moved, async (m, candidates) => (m.id === p.media[0].id ? { ...m, path: candidates[0] } : null));
     if ("error" in result) throw new Error(result.error);
     expect(result.project.media[0].path).toBe("E:\\moved\\clip-0.mp4");
-    expect(result.missing).toEqual(p.media.slice(1).map((m) => m.name));
+    expect(result.missing.map((x) => x.name)).toEqual(p.media.slice(1).map((m) => m.name));
+    expect(result.missing[0].id).toBe(p.media[1].id);
     const bad = await loadProjectText("{", moved, async () => null);
     expect(bad).toEqual({ error: expect.stringContaining("project.json") });
+  });
+});
+
+describe("relinkMissing：重新連結一支，同資料夾裡其他遺失的素材一起找回", () => {
+  it("選的檔直接採用；其他遺失的用原檔名在同一個資料夾找（比指紋）", async () => {
+    const media = ["a.mp4", "b.mp4", "c.mp4"].map((name, i) => ({ ...makeProject().media[0], id: `m${i}`, name, path: `D:\\old\\${name}` }));
+    const missing = media.map((m) => ({ id: m.id, name: m.name, fingerprint: `fp-${m.id}` }));
+    const calls: { id: string; candidates: string[]; fingerprint?: string }[] = [];
+    const found = await relinkMissing(media[0], "E:\\new\\a-renamed.mp4", media, missing, async (m, candidates, fingerprint) => {
+      calls.push({ id: m.id, candidates, fingerprint });
+      return m.id === "m2" ? null : { ...m, path: candidates[0] };
+    });
+    expect(calls[0]).toEqual({ id: "m0", candidates: ["E:\\new\\a-renamed.mp4"], fingerprint: undefined });
+    expect(calls.slice(1)).toEqual([
+      { id: "m1", candidates: ["E:\\new\\b.mp4"], fingerprint: "fp-m1" },
+      { id: "m2", candidates: ["E:\\new\\c.mp4"], fingerprint: "fp-m2" },
+    ]);
+    expect(found).toEqual([{ id: "m0", path: "E:\\new\\a-renamed.mp4" }, { id: "m1", path: "E:\\new\\b.mp4" }]);
+  });
+
+  it("選的檔打不開就什麼都不換", async () => {
+    const m = { ...makeProject().media[0], path: "D:\\old\\a.mp4" };
+    expect(await relinkMissing(m, "E:\\x.mp4", [m], [{ id: m.id, name: "a" }], async () => null)).toEqual([]);
   });
 });
 

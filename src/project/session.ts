@@ -36,16 +36,48 @@ export async function projectText(
   return toProjectFile(project, { projectDir: location.dir, savedAt, fingerprints });
 }
 
-/** 開專案：讀 project.json、逐支找回素材；回傳專案與找不到的素材名稱，檔案壞掉回錯誤訊息 */
+/** 開專案時找不到的素材（重新連結用：id、顯示名稱、存檔時的指紋） */
+export interface MissingMedia {
+  id: string;
+  name: string;
+  fingerprint?: string;
+}
+
+/** 找素材的平台函式（Engine.locateMedia） */
+type Locate = (media: Media, candidates: string[], fingerprint?: string) => Promise<Media | null>;
+
+/** 開專案：讀 project.json、逐支找回素材；回傳專案與找不到的素材，檔案壞掉回錯誤訊息 */
 export async function loadProjectText(
   text: string,
   location: ProjectLocation,
-  locate: (media: Media, candidates: string[], fingerprint?: string) => Promise<Media | null>,
-): Promise<{ project: Project; missing: string[]; savedAt: number } | { error: string }> {
+  locate: Locate,
+): Promise<{ project: Project; missing: MissingMedia[]; savedAt: number } | { error: string }> {
   const parsed = fromProjectFile(text);
   if (!parsed) return { error: `This folder's project.json can't be read (damaged, or made by a newer WordBlade).` };
   const { project, missing } = await relinkProject(parsed.project, parsed.refs, location.dir, locate);
-  return { project, savedAt: parsed.savedAt, missing: missing.map((id) => project.media.find((m) => m.id === id)?.name ?? id) };
+  return {
+    project,
+    savedAt: parsed.savedAt,
+    missing: missing.map((id) => ({ id, name: project.media.find((m) => m.id === id)?.name ?? id, fingerprint: parsed.refs[id]?.fingerprint })),
+  };
+}
+
+/**
+ * 重新連結：使用者替 target 選了 picked，直接採用（使用者自己選的，不比指紋）；
+ * 其他遺失的素材多半是一起搬走的，用原檔名在 picked 的同一個資料夾找（比指紋）。回傳找到的 id 與新路徑。
+ */
+export async function relinkMissing(target: Media, picked: string, media: Media[], missing: MissingMedia[], locate: Locate): Promise<{ id: string; path: string }[]> {
+  const first = await locate(target, [picked]);
+  if (!first?.path) return [];
+  const found = [{ id: target.id, path: first.path }];
+  for (const miss of missing) {
+    const m = media.find((x) => x.id === miss.id);
+    if (!m || m.id === target.id || !m.path) continue;
+    const base = m.path.split(/[\\/]/).pop() ?? m.name;
+    const hit = await locate(m, [joinPath(picked, `../${base}`)], miss.fingerprint);
+    if (hit?.path) found.push({ id: m.id, path: hit.path });
+  }
+  return found;
 }
 
 /** 最近開啟加一筆：最新的在前、同一個資料夾只留一筆、最多 8 筆 */

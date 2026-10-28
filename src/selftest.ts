@@ -11,7 +11,8 @@ import { PluginService } from "./anim/pluginService";
 import { instanceOf } from "./anim/effectRenderer";
 import { TEMPLATES_3D, builtinPlugins3D } from "./three/builtins";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import type { Project } from "./core/model";
+import type { Media, Project } from "./core/model";
+import { relinkMissing } from "./project/session";
 import { emptyProject } from "./core/media";
 import { placeMedia } from "./core/timeline";
 import { mixAudio } from "./export/audioMix";
@@ -407,7 +408,16 @@ async function checkProjectFolder(paths: string[]): Promise<Record<string, unkno
     const fingerprint = await invoke<string>("media_fingerprint", { path: talk });
     const located = await invoke<string | null>("media_locate", { candidates: ["Z:\\nope\\talk.mp4", talk], fingerprint });
     const wrong = await invoke<string | null>("media_locate", { candidates: [talk], fingerprint: "1:0000000000000000" });
-    return { dir: readDir, roundTrip: text === JSON.stringify({ hello: 1 }), fingerprint, located, wrongFingerprint: wrong };
+    // 重新連結（D41）：兩支素材原本在已不存在的資料夾；使用者替 talk.mp4 選了新位置，同資料夾的 gaps.mp4 依指紋自動找回
+    const engine = createEngine();
+    const gaps = talk.replace(/talk\.mp4$/i, "gaps.mp4");
+    const gone = (name: string, id: string) => ({ id, name, kind: "video" as const, duration: 1, path: `Z:\\gone\\${name}` }) as Media;
+    const moved = [gone("talk.mp4", "r0"), gone("gaps.mp4", "r1")];
+    const relinked = await relinkMissing(moved[0], talk, moved, [
+      { id: "r0", name: "talk.mp4" },
+      { id: "r1", name: "gaps.mp4", fingerprint: await invoke<string>("media_fingerprint", { path: gaps }) },
+    ], (m, c, fp) => engine.locateMedia(m, c, fp));
+    return { dir: readDir, roundTrip: text === JSON.stringify({ hello: 1 }), fingerprint, located, wrongFingerprint: wrong, relinked };
   } catch (e) {
     return { error: String(e) };
   }
