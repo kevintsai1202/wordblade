@@ -282,6 +282,48 @@ async function checkAsrAudio(paths: string[]): Promise<Record<string, unknown>[]
   return results;
 }
 
+/**
+ * 縮圖序列（D39）：每支影片做第 0 層第 0 段（原檔只解關鍵幀）與第 2 層第 0 段（代理檔），
+ * 讀回完成標記，並用 asset 協定載入第一張、畫到 canvas 讀像素（確認資料夾有放行、跨來源不會汙染畫布）
+ */
+async function checkThumbs(paths: string[]): Promise<Record<string, unknown>[]> {
+  const engine = createEngine();
+  const results: Record<string, unknown>[] = [];
+  for (const [i, path] of paths.filter((p) => /\.(mp4|mov)$/i.test(p)).entries()) {
+    const out: Record<string, unknown> = { path };
+    try {
+      let media = await engine.probe({ kind: "path", path, name: path.split(/[\\/]/).pop()! }, `th${i}`);
+      const prepared = await engine.prepare(media, () => undefined);
+      media = { ...media, proxyPath: prepared.proxyPath };
+      let t0 = performance.now();
+      await engine.makeThumbs(media, 0, 0);
+      out.tier0Ms = Math.round(performance.now() - t0);
+      t0 = performance.now();
+      await engine.makeThumbs(media, 2, 0);
+      out.tier2Ms = Math.round(performance.now() - t0);
+      out.done = await engine.thumbStatus(media);
+      const url = await engine.thumbUrl(media, 2, 0);
+      out.url = url;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      await new Promise<void>((ok, fail) => { img.onload = () => ok(); img.onerror = () => fail(new Error("thumbnail did not load")); img.src = url!; });
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let lit = 0;
+      for (let k = 0; k < px.length; k += 4) if (px[k] + px[k + 1] + px[k + 2] > 60) lit++;
+      Object.assign(out, { width: img.naturalWidth, height: img.naturalHeight, litRatio: Number((lit / (px.length / 4)).toFixed(2)) });
+    } catch (e) {
+      out.error = String(e);
+    }
+    results.push(out);
+  }
+  return results;
+}
+
 /** 跑自我檢查：從回報伺服器拿要檢查的檔案清單，逐一檢查後把結果送回去 */
 export async function runSelftest(server: string) {
   const report: Record<string, unknown> = { origin: location.origin, userAgent: navigator.userAgent, startedAt: new Date().toISOString() };
@@ -298,6 +340,7 @@ export async function runSelftest(server: string) {
     report.microphone = await checkMicrophone();
     report.export = await checkExport(paths);
     report.asrAudio = await checkAsrAudio(paths);
+    report.thumbs = await checkThumbs(paths);
   } catch (e) {
     report.error = String(e);
   }

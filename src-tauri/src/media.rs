@@ -214,11 +214,13 @@ pub async fn thumbs_status(app: AppHandle, path: String, tiers: u32, chunks: u32
 }
 
 /// 產生某支原檔第 tier 層的第 chunk 段縮圖：從 source（原檔或代理檔）的 start 秒起 duration 秒，每 interval 秒一張、寬 width，
-/// 存成 t<層>/<索引>.jpg（索引從 first_index 起），做完寫完成標記。key_only：只解關鍵幀（匯入時從原檔做第 0 層，快很多，位置差在一個 GOP 內）。
+/// 存成 t<層>/<索引>.jpg（索引從 first_index 起、共 count 張），做完寫完成標記。key_only：只解關鍵幀（匯入時從原檔做第 0 層，快很多，位置差在一個 GOP 內）。
 /// 和代理檔共用重工作鎖，不會同時跑。
+/// fps 濾鏡加 eof_action=pass：片段比間隔短（或最後一段）時最後一張才不會被丟掉；再用 -frames:v 限制張數，免得多寫一張蓋到下一段。
+/// mjpeg 編碼器不收有限範圍的 YUV（ffmpeg 9 直接報錯），先轉成全範圍。
 #[tauri::command]
 #[allow(clippy::too_many_arguments)]
-pub async fn thumbs_make(app: AppHandle, path: String, source: String, tier: u32, chunk: u32, start: f64, duration: f64, interval: f64, width: u32, first_index: u32, key_only: bool) -> Result<(), String> {
+pub async fn thumbs_make(app: AppHandle, path: String, source: String, tier: u32, chunk: u32, start: f64, duration: f64, interval: f64, width: u32, first_index: u32, count: u32, key_only: bool) -> Result<(), String> {
     let dir = thumbs_root(&app)?.join(source_key(&path)?).join(format!("t{tier}"));
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let ffmpeg = tool(&app, "ffmpeg");
@@ -230,7 +232,8 @@ pub async fn thumbs_make(app: AppHandle, path: String, source: String, tier: u32
             cmd.args(["-skip_frame", "nokey"]);
         }
         cmd.args(["-ss", &format!("{start:.3}"), "-t", &format!("{duration:.3}"), "-i", &source])
-            .args(["-an", "-vf", &format!("fps={},scale={width}:-2", 1.0 / interval), "-q:v", "5"])
+            .args(["-an", "-vf", &format!("fps={}:eof_action=pass,scale={width}:-2:out_range=full,format=yuvj420p", 1.0 / interval)])
+            .args(["-frames:v", &count.max(1).to_string(), "-q:v", "5"])
             .args(["-start_number", &first_index.to_string(), "-f", "image2"])
             .arg(dir.join("%d.jpg"));
         run(cmd)?;

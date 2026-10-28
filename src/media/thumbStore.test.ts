@@ -63,6 +63,33 @@ describe("ThumbStore", () => {
     expect(await store.thumbnailAt("zzz", 1)).toBeNull();
   });
 
+  it("影格條同時要上千張時不會互相擠掉一直重抓；同一輪的變動只通知一次", async () => {
+    const { engine, urlCalls } = fakeEngine({ a: [[0, 1, 2, 3, 4, 5, 6, 7], [], [0, 1, 2, 3, 4, 5, 6, 7]] });
+    const store = new ThumbStore(engine);
+    await store.sync([video("a", 480)]);
+    let notified = 0;
+    store.subscribe(() => notified++);
+    const refs = Array.from({ length: 900 }, (_, i) => ({ tier: 2, index: i }));
+    for (const r of refs) store.url("a", r);
+    await until(() => refs.every((r) => store.url("a", r) !== null));
+    expect(urlCalls()).toBe(900);
+    expect(store.url("a", refs[0])).toBe("u:a:2:0");
+    expect(notified).toBeLessThan(50);
+  });
+
+  it("取不到的縮圖不會每次都再問", async () => {
+    const { engine } = fakeEngine({ a: [[0], [], []] });
+    let calls = 0;
+    engine.thumbUrl = async () => { calls++; return null; };
+    const store = new ThumbStore(engine);
+    await store.sync([video("a", 30)]);
+    store.url("a", { tier: 0, index: 0 });
+    await new Promise((r) => setTimeout(r, 10));
+    store.url("a", { tier: 0, index: 0 });
+    store.url("a", { tier: 0, index: 0 });
+    expect(calls).toBe(1);
+  });
+
   it("runTier：一層的每一段依序做完", async () => {
     const { engine, made } = fakeEngine();
     const store = new ThumbStore(engine);

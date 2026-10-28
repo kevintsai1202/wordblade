@@ -122,7 +122,7 @@ export class DesktopEngine implements Engine {
     await invoke("thumbs_make", {
       path: media.path, source: tier > 0 && media.proxyPath ? media.proxyPath : media.path, tier, chunk,
       start, duration: Math.max(interval, Math.min(CHUNK, media.duration - start)), interval, width,
-      firstIndex: indices[0] ?? 0, keyOnly: tier === 0,
+      firstIndex: indices[0] ?? 0, count: indices.length, keyOnly: tier === 0,
     });
   }
 

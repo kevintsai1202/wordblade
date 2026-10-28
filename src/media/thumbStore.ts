@@ -7,8 +7,11 @@ import { TIERS, chunkCount, nextJob, pickThumb, type DoneMap, type ThumbItem, ty
 /** ThumbStore 用到的 Engine 功能（測試換成假的） */
 export type ThumbEngine = Pick<Engine, "makeThumbs" | "thumbStatus" | "thumbUrl">;
 
-/** 網址快取的上限：網頁版是 blob: 網址，超過就釋放最久沒用的（一小時影片的第三層有 7200 張，不能全留著） */
-const MAX_URLS = 800;
+/**
+ * 網址快取的上限：網頁版是 blob: 網址，超過就釋放最久沒用的（一小時影片的第三層有 7200 張，不能全留著）。
+ * 要遠大於畫面上同時要用的張數（每個片段的影格條最多 300 格 × 幾個片段），否則剛拿到的會把下一次要用的擠掉、一直重抓。
+ */
+const MAX_URLS = 4000;
 /** 預覽用的已載入圖片上限 */
 const MAX_IMAGES = 48;
 
@@ -23,6 +26,10 @@ export class ThumbStore {
   private urls = new Map<string, string>();
   /** 正在取得網址的縮圖 */
   private pending = new Set<string>();
+  /** 取不到的縮圖（段標記做好但檔案不見）：不要每次重畫都再問；那支素材再做完一段時清掉 */
+  private missing = new Set<string>();
+  /** 已經排了通知（同一輪的變動合併成一次，避免每拿到一張就整條時間軸重畫） */
+  private notifyQueued = false;
   /** 預覽用的圖片元素（載入好的才拿來畫） */
   private images = new Map<string, HTMLImageElement>();
   private listeners = new Set<() => void>();
@@ -39,7 +46,12 @@ export class ThumbStore {
 
   private changed() {
     this.version++;
-    for (const fn of this.listeners) fn();
+    if (this.notifyQueued) return;
+    this.notifyQueued = true;
+    queueMicrotask(() => {
+      this.notifyQueued = false;
+      for (const fn of this.listeners) fn();
+    });
   }
 
   /** 跟專案的素材清單同步：新的影片讀快取狀態、素材資訊更新（代理檔做好）、移除的釋放網址 */
@@ -96,11 +108,15 @@ export class ThumbStore {
       return hit;
     }
     const e = this.entries.get(mediaId);
-    if (!e || this.pending.has(key)) return null;
+    if (!e || this.pending.has(key) || this.missing.has(key)) return null;
     this.pending.add(key);
     void this.engine.thumbUrl(e.media, ref.tier, ref.index).then((url) => {
       this.pending.delete(key);
-      if (!url || !this.entries.has(mediaId)) return;
+      if (!this.entries.has(mediaId)) return;
+      if (!url) {
+        this.missing.add(key);
+        return;
+      }
       this.urls.set(key, url);
       while (this.urls.size > MAX_URLS) {
         const [oldKey, oldUrl] = this.urls.entries().next().value!;
@@ -160,6 +176,7 @@ export class ThumbStore {
     try {
       await this.engine.makeThumbs(e.media, job.tier, job.chunk);
       if (!e.done[job.tier].includes(job.chunk)) e.done[job.tier].push(job.chunk);
+      for (const key of [...this.missing]) if (key.startsWith(`${job.mediaId}:`)) this.missing.delete(key);
     } catch {
       e.failed = true;
     }
