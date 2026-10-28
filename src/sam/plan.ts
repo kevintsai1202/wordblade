@@ -2,6 +2,14 @@
 
 /** 一次請求最長幾秒：閘道上傳上限 33 MB，1280 寬每秒 10 格時約 100～280 秒，留餘裕 */
 export const MAX_CHUNK_SECONDS = 90;
+/**
+ * 小檔的位元率（bps）：每秒 10 格時每格約 19 KB（原專案 ffmpeg crf 20 實測 12～33 KB／格），
+ * 90 秒一段約 17 MB，穩穩低於閘道 33 MB 的上傳上限（不設的話動態大的畫面可能超過、整次 413）
+ */
+export const CLIP_BITRATE = 1_500_000;
+/** 閘道的上傳上限（位元組） */
+export const GATEWAY_UPLOAD_LIMIT = 33 * 1024 * 1024;
+
 /** 每千格的價格（US$；2026-10-28 實測計費格數＝送出的格數，但每次至少 50 格） */
 const USD_PER_FRAME = 0.2 / 1000;
 const MIN_BILLED = 50;

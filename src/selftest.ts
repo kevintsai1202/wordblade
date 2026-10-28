@@ -17,6 +17,8 @@ import { placeMedia } from "./core/timeline";
 import { mixAudio } from "./export/audioMix";
 import { runExport } from "./export/exporter";
 import { exportPlan } from "./export/exportPlan";
+import { makeSamClip } from "./sam/clip";
+import { encodeWav } from "./asr/wav";
 
 /** 等事件或逾時；回傳事件有沒有發生 */
 function waitFor(target: EventTarget, event: string, ms: number): Promise<boolean> {
@@ -324,6 +326,41 @@ async function checkThumbs(paths: string[]): Promise<Record<string, unknown>[]> 
   return results;
 }
 
+/**
+ * SAM 小檔（§5.3）：在 WebView2 用 mediabunny 把每支影片的前 3 秒轉成每秒 10 格、寬 ≤ 1280 的無聲 MP4，
+ * 檢查格數、每格時間與換鏡頭差異都有算出來（不呼叫 SAM）
+ */
+async function checkSamClip(paths: string[]): Promise<Record<string, unknown>[]> {
+  const engine = createEngine();
+  const results: Record<string, unknown>[] = [];
+  for (const [i, path] of paths.filter((p) => /\.(mp4|mov)$/i.test(p) && !/alpha/i.test(p)).entries()) {
+    const out: Record<string, unknown> = { path };
+    try {
+      const media = await engine.probe({ kind: "path", path, name: path.split(/[\\/]/).pop()! }, `sc${i}`);
+      const t0 = performance.now();
+      const clip = await makeSamClip(await engine.exportSource(media), 0, Math.min(3, media.duration), { fps: 10, maxWidth: 1280, videoW: media.width ?? 1280, videoH: media.height ?? 720 });
+      Object.assign(out, { ms: Math.round(performance.now() - t0), bytes: clip.bytes.length, frames: clip.times.length, width: clip.width, height: clip.height, firstTimes: clip.times.slice(0, 3), maxDiff: Math.round(Math.max(...clip.diffs)) });
+    } catch (e) {
+      out.error = String(e);
+    }
+    results.push(out);
+  }
+  return results;
+}
+
+/** AI 音效／配樂產生的 WAV（§5.15）：寫進 app 資料夾的 generated/、再讀規格，確認匯入流程走得通 */
+async function checkGenerated(): Promise<Record<string, unknown>> {
+  const engine = createEngine();
+  try {
+    const samples = new Float32Array(16000).map((_, i) => Math.sin((i / 16000) * 2 * Math.PI * 440) * 0.3);
+    const source = await engine.importGenerated("selftest-tone.wav", encodeWav(samples, 16000));
+    const media = await engine.probe(source, "gen-selftest");
+    return { source: source.kind === "path" ? source.path : source.name, kind: media.kind, duration: Number(media.duration.toFixed(2)), audio: media.audio };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
 /** 跑自我檢查：從回報伺服器拿要檢查的檔案清單，逐一檢查後把結果送回去 */
 export async function runSelftest(server: string) {
   const report: Record<string, unknown> = { origin: location.origin, userAgent: navigator.userAgent, startedAt: new Date().toISOString() };
@@ -341,6 +378,8 @@ export async function runSelftest(server: string) {
     report.export = await checkExport(paths);
     report.asrAudio = await checkAsrAudio(paths);
     report.thumbs = await checkThumbs(paths);
+    report.samClip = await checkSamClip(paths);
+    report.generated = await checkGenerated();
   } catch (e) {
     report.error = String(e);
   }

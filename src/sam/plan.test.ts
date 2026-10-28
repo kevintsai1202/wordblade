@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_CHUNK_SECONDS, clipSize, estimateUsd, planChunks } from "./plan";
+import { CLIP_BITRATE, GATEWAY_UPLOAD_LIMIT, MAX_CHUNK_SECONDS, clipSize, estimateUsd, planChunks } from "./plan";
 
 // SAM 請求的規劃（docs/plan-10-28-sam.md）：小檔尺寸（寬 ≤ 上限、偶數、不放大）、長範圍切成多段（相鄰重疊一格好接續）、估價。
 describe("clipSize", () => {
@@ -19,6 +19,12 @@ describe("planChunks", () => {
     expect(chunks[1].start).toBeCloseTo(MAX_CHUNK_SECONDS - 0.1, 6);
     expect(chunks[chunks.length - 1].end).toBe(200);
     for (const c of chunks) expect(c.end - c.start).toBeLessThanOrEqual(MAX_CHUNK_SECONDS + 1e-9);
+  });
+});
+
+describe("上傳大小", () => {
+  it("最長一段（90 秒）以固定位元率轉出來，連 MP4 容器的開銷（抓 20%）也低於閘道上限", () => {
+    expect(((MAX_CHUNK_SECONDS * CLIP_BITRATE) / 8) * 1.2).toBeLessThan(GATEWAY_UPLOAD_LIMIT);
   });
 });
 

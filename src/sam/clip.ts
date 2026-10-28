@@ -1,6 +1,6 @@
 // SAM 用的小檔（spec §5.3）：素材 [start, end) 轉成寬 ≤ 1280、每秒 fps 格、無聲的 H.264 MP4（mediabunny＋WebCodecs，桌面與網頁共用，
 // 和匯出讀素材同一條路：Engine.exportSource）。轉好後再把小檔解成 64 寬的小畫面算逐格差異（換鏡頭判斷），並記下每格的素材時間。
-import { clipSize } from "./plan";
+import { CLIP_BITRATE, clipSize } from "./plan";
 
 /** 換鏡頭掃描用的小畫面寬度（原專案 CUT_WIDTH） */
 const CUT_WIDTH = 64;
@@ -29,7 +29,7 @@ export async function makeSamClip(source: Blob | string, start: number, end: num
   try {
     const conversion = await mb.Conversion.init({
       input, output, tracks: "primary", trim: { start, end },
-      video: { width: size.width, height: size.height, fit: "fill", frameRate: opts.fps, codec: "avc", forceTranscode: true, hardwareAcceleration: "no-preference" },
+      video: { width: size.width, height: size.height, fit: "fill", frameRate: opts.fps, codec: "avc", bitrate: CLIP_BITRATE, forceTranscode: true, hardwareAcceleration: "no-preference" },
       audio: { discard: true },
       showWarnings: false,
     });
