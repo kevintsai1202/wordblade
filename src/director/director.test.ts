@@ -5,7 +5,7 @@ import type { Project, Suggestion, Word } from "../core/model";
 import { clipEnd } from "../core/timeline";
 import { planSegments } from "./segments";
 import { activeSample } from "../sam/tracks";
-import { adoptEdits, clampSuggestions, maskFromBox, maskNeedsSam, suggestionSpan } from "./suggestions";
+import { adoptEdits, clampSuggestions, maskFromBox, suggestionSpan } from "./suggestions";
 
 // AI 導演的純函式（docs/plan-10-28-director.md R1）：依停頓切段、建議的時間軸範圍、各種建議採用時的編輯、前端的建議檢查。
 
@@ -99,13 +99,8 @@ describe("adoptEdits：剪、改字、放大是一筆編輯，狀態一起改", 
   });
 });
 
-describe("遮罩建議：SAM 分不出螢幕上的文字，用 Spark 回報的框遮", () => {
+describe("遮罩建議的退路：Spark 定位與 SAM 都找不到時，用導演給的框", () => {
   const key = { ...sug("mask", 30.8, 42.9, { target: "API key", x: 0.28, y: 0.07, w: 0.25, h: 0.03 }), mediaId: "m" };
-  it("金鑰有框 → 不跑 SAM；臉或沒有框 → 跑 SAM", () => {
-    expect(maskNeedsSam(key)).toBe(false);
-    expect(maskNeedsSam({ ...key, payload: { target: "human face", x: 0.1, y: 0.1, w: 0.2, h: 0.2 } })).toBe(true);
-    expect(maskNeedsSam({ ...key, payload: { target: "email address" } })).toBe(true);
-  });
   it("框 → 長方形遮罩，整段都有效", () => {
     const m = maskFromBox(key, "k1")!;
     expect(m).toMatchObject({ mediaId: "m", shape: "rect", label: "API key", enabled: true });

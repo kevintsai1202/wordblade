@@ -11,15 +11,24 @@ import type { Engine } from "../engine/Engine";
 import { SamApi } from "../sam/api";
 import { estimateUsd, planChunks } from "../sam/plan";
 import type { SamProgress } from "../sam/run";
-import { runMaskJob } from "../sam/runMask";
+import { runMaskJob, runTextMaskJob } from "../sam/runMask";
+import { targetRoute } from "../sam/locate";
 import { formatTimecode, type Action } from "./state";
 
-/** 常用目標（SAM 的英文名詞片語；照原專案 FACE_TARGETS） */
+/**
+ * 常用目標（英文名詞片語）：實體物件交給 SAM 分割（照原專案 FACE_TARGETS）；螢幕上的文字類個資（帳號、密碼、金鑰、Email…）
+ * SAM 分割不出來（2026-10-28 實測 0 個），交給 Muse Spark 找框（targetRoute 決定）
+ */
 const TARGETS: { phrase: string; label: string }[] = [
   { phrase: "human face", label: "Faces" },
   { phrase: "license plate", label: "License plates" },
   { phrase: "name tag", label: "Name tags" },
-  { phrase: "text", label: "Text" },
+  { phrase: "password", label: "Passwords" },
+  { phrase: "account name", label: "Account names" },
+  { phrase: "API key", label: "API keys / tokens" },
+  { phrase: "email address", label: "Emails" },
+  { phrase: "phone number", label: "Phone numbers" },
+  { phrase: "ID number", label: "ID numbers" },
   { phrase: "phone screen", label: "Phone screens" },
   { phrase: "computer monitor", label: "Monitors" },
   { phrase: "QR code", label: "QR codes" },
@@ -68,6 +77,10 @@ export function MaskTab({ project, engine, range, playhead, dispatch }: {
   const source = timelineRange ? maskSourceRange(project, timelineRange) : null;
   const media = source ? project.media.find((m) => m.id === source.mediaId) : undefined;
   const frames = source ? planChunks(source.start, source.end, fps).map((c) => Math.ceil((c.end - c.start) * fps)) : [];
+  /** 選的常用目標走 Spark（文字類個資）：每秒 1 格、估 tokens；自己打的目標翻譯後才知道 */
+  const viaSpark = preset !== null && targetRoute(preset) === "spark";
+  /** Spark 會看幾張（每秒 1 格） */
+  const sparkFrames = source ? Math.floor(source.end - source.start) + 1 : 0;
   const busy = progress !== null;
 
   /** 按下「Find」：先問同意 */
@@ -97,7 +110,10 @@ export function MaskTab({ project, engine, range, playhead, dispatch }: {
         phrase = await api.phrase(phrase);
         if (!phrase) throw new GatewayError("That doesn't look like something visible in the video. Try a short noun, e.g. \"license plate\".", 400);
       }
-      const result = await runMaskJob({ engine, media, phrase, start: source.start, end: source.end, fps, signal: abort.signal, onProgress: setProgress });
+      // 文字類個資：Spark 在每秒 1 格的畫面上找框；其他：SAM 分割
+      const result = targetRoute(phrase) === "spark"
+        ? { ...(await runTextMaskJob({ engine, media, phrase, start: source.start, end: source.end, signal: abort.signal, onProgress: (p) => setProgress({ chunk: 1, chunks: 1, stage: "tracking", frames: p.done }) })), capped: false }
+        : await runMaskJob({ engine, media, phrase, start: source.start, end: source.end, fps, signal: abort.signal, onProgress: setProgress });
       if (result.objects.length) dispatch({ type: "commit", edits: [{ kind: "addMasks", masks: result.objects }] });
       setMessage(result.objects.length
         ? { kind: result.capped ? "warning" : "info", text: `Found ${result.objects.length} × "${phrase}".${result.capped ? " SAM tracks at most 16 objects at a time — some may be missing; try a shorter range." : ""}` }
@@ -138,7 +154,7 @@ export function MaskTab({ project, engine, range, playhead, dispatch }: {
 
   return (
     <div className="mask-tab" data-testid="mask-tab">
-      <h3 className="section-title">Hide something in the video (SAM 3.1)</h3>
+      <h3 className="section-title">Hide something in the video</h3>
       <div className="mask-targets">
         {TARGETS.map((t) => (
           <button key={t.phrase} type="button" className={`example-chip${preset === t.phrase ? " active" : ""}`} data-testid="mask-target" data-phrase={t.phrase} disabled={busy} onClick={() => setPreset(t.phrase)}>{t.label}</button>
@@ -150,20 +166,20 @@ export function MaskTab({ project, engine, range, playhead, dispatch }: {
       )}
       <p className="muted" data-testid="mask-range">
         {source && timelineRange
-          ? `${range ? "Selected range" : "Clip at the playhead"}: ${formatTimecode(timelineRange.start).slice(3)}–${formatTimecode(Math.min(timelineRange.end, timelineRange.start + (source.end - source.start))).slice(3)} · ${frames.reduce((a, b) => a + b, 0)} frames · about US$${estimateUsd(frames).toFixed(2)}`
+          ? `${range ? "Selected range" : "Clip at the playhead"}: ${formatTimecode(timelineRange.start).slice(3)}–${formatTimecode(Math.min(timelineRange.end, timelineRange.start + (source.end - source.start))).slice(3)} · ${viaSpark ? `${sparkFrames} frames to Muse Spark · about ${Math.round(sparkFrames * 1.2)}k tokens` : `${frames.reduce((a, b) => a + b, 0)} frames · about US$${estimateUsd(frames).toFixed(2)}`}`
           : "Put the playhead on a clip in V1, or Shift+drag on the timeline to choose a range."}
       </p>
       <div className="vibe-actions">
-        <label className="muted">Frames per second <select value={fps} disabled={busy} onChange={(e) => setFps(Number(e.target.value))}>{RATES.map((r) => <option key={r} value={r}>{r}</option>)}</select></label>
+        {!viaSpark && <label className="muted">Frames per second <select value={fps} disabled={busy} onChange={(e) => setFps(Number(e.target.value))}>{RATES.map((r) => <option key={r} value={r}>{r}</option>)}</select></label>}
         <span className="spacer" />
         {busy
           ? <button type="button" data-testid="mask-cancel" onClick={() => abortRef.current?.abort()}>Cancel</button>
           : <button type="button" data-testid="mask-find" disabled={!source || (preset === null && !custom.trim())} onClick={onFind}>Find and mask</button>}
       </div>
-      {progress && <p className="muted" data-testid="mask-progress">{progress.stage === "preparing" ? "Preparing the clip…" : `Tracking… ${progress.frames} frames`}{progress.chunks > 1 ? ` (part ${progress.chunk}/${progress.chunks})` : ""}</p>}
+      {progress && <p className="muted" data-testid="mask-progress">{progress.stage === "preparing" ? "Preparing the clip…" : `Finding… ${progress.frames} frames`}{progress.chunks > 1 ? ` (part ${progress.chunk}/${progress.chunks})` : ""}</p>}
       {asking && (
         <div className="consent" data-testid="mask-consent">
-          <p>The chosen part of the video ({frames.reduce((a, b) => a + b, 0)} frames, no sound, up to 1280 px wide) will be uploaded to Meta and analysed by SAM 3.1. The upload is deleted when the job ends and expires within 1 hour. Estimated cost: about US${estimateUsd(frames).toFixed(2)}.</p>
+          <p>The chosen part of the video ({frames.reduce((a, b) => a + b, 0)} frames, no sound, up to 1280 px wide) will be uploaded to Meta and analysed by SAM 3.1. The upload is deleted when the job ends and expires within 1 hour. Estimated cost: about US${estimateUsd(frames).toFixed(2)}. Text such as passwords, account names, keys and emails is found by Muse Spark instead (Contributor version — content may be used to train Meta's models): one 1280-px frame per second of the range is sent.</p>
           <button type="button" onClick={accept}>Agree and continue</button> <button type="button" onClick={() => setAsking(false)}>Cancel</button>
         </div>
       )}
@@ -175,7 +191,7 @@ export function MaskTab({ project, engine, range, playhead, dispatch }: {
           {project.masks.map((m) => {
             const at = timelineOf(m);
             return (
-              <li key={m.id} data-testid="mask-row" data-mask-id={m.id}>
+              <li key={m.id} data-testid="mask-row" data-mask-id={m.id} data-shape={m.shape ?? "ellipse"} data-boxes={m.shape === "rect" ? JSON.stringify(m.samples.map((s) => s.box.map((v) => Math.round(v * 1000) / 1000))) : undefined}>
                 <label className="mask-name"><input type="checkbox" data-testid="mask-enabled" checked={m.enabled} onChange={(e) => update(m, { enabled: e.target.checked })} /> {m.label}</label>
                 <button type="button" className="link" disabled={at === null} onClick={() => at !== null && dispatch({ type: "seek", time: at })}>{at === null ? "—" : formatTimecode(at).slice(3)}</button>
                 <select data-testid="mask-effect" value={m.effect.kind} onChange={(e) => update(m, { effect: { ...m.effect, kind: e.target.value as MaskObject["effect"]["kind"] } })}>

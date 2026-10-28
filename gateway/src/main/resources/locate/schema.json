@@ -1,0 +1,10 @@
+{
+  "type": "object", "additionalProperties": false, "required": ["frames"],
+  "properties": {
+    "frames": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["index", "items"], "properties": {
+      "index": { "type": "integer" },
+      "items": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["text", "x", "y", "w", "h"], "properties": {
+        "text": { "type": "string" }, "x": { "type": "number" }, "y": { "type": "number" }, "w": { "type": "number" }, "h": { "type": "number" } } } }
+    } } }
+  }
+}

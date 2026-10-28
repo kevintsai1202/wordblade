@@ -229,5 +229,7 @@ export function activeSample(obj: MaskObject, t: number): MaskSample | null {
     if (s[mid].t < t) lo = mid + 1;
     else hi = mid;
   }
-  return lo > 0 && t - s[lo - 1].t <= s[lo].t - t ? s[lo - 1] : s[lo];
+  const best = lo > 0 && t - s[lo - 1].t <= s[lo].t - t ? s[lo - 1] : s[lo];
+  // 有 hold 的物件（螢幕文字）：離取樣太遠表示那段時間文字不在畫面上
+  return obj.hold !== undefined && Math.abs(t - best.t) > obj.hold + EPS ? null : best;
 }

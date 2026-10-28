@@ -58,14 +58,6 @@ export function adoptEdits(project: Project, s: Suggestion): Edit[] | null {
   }
 }
 
-/** SAM 分割得出來的目標（人、臉、車牌、名牌…）；其他（螢幕上的金鑰、Email、密碼等文字）SAM 找不到（2026-10-28 實測），用框遮 */
-const SAM_TARGETS = /\b(face|person|people|man|woman|child|plate|badge|tag|card|logo|phone|monitor)s?\b/i;
-
-/** 遮罩建議要不要跑 SAM：SAM 分得出來的目標，或沒有框可用 */
-export function maskNeedsSam(s: Suggestion): boolean {
-  return SAM_TARGETS.test(String(s.payload.target ?? "")) || maskBox(s) === null;
-}
-
 /** 遮罩建議的框（Spark 回報、Wonder 照抄；0～1） */
 function maskBox(s: Suggestion): [number, number, number, number] | null {
   const n = ["x", "y", "w", "h"].map((k) => s.payload[k]);

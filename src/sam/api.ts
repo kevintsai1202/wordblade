@@ -1,6 +1,7 @@
 // SAM 的閘道呼叫（spec §5.3；閘道 /v1/sam、/v1/ai/mask-phrase）：開始工作（multipart 上傳小檔）、輪詢逐格輸出、取消、目標翻譯。
 // 放在獨立檔案，和 ai/gateway.ts 共用設定（網址、權杖）與錯誤型別。
 import { GatewayError, type GatewaySettings } from "../ai/gateway";
+import type { LocateFrame } from "./locate";
 
 /** 閘道回的工作狀態 */
 export interface SamJobView {
@@ -49,6 +50,24 @@ export class SamApi {
   /** 取消 */
   async cancel(jobId: string): Promise<void> {
     await call<void>(this.settings, `/v1/sam/${encodeURIComponent(jobId)}`, { method: "DELETE" });
+  }
+
+  /**
+   * 螢幕文字定位（Muse Spark）：目標＋幾張畫面（JPEG，同一批最多 8 張）→ 每格的項目與框。輪詢到完成，閘道失敗丟錯。
+   */
+  async locate(target: string, frames: { t: number; jpeg: Uint8Array }[], signal?: AbortSignal): Promise<LocateFrame[]> {
+    const form = new FormData();
+    form.append("target", target);
+    form.append("times", JSON.stringify(frames.map((f) => f.t)));
+    for (const f of frames) form.append("frame", new Blob([f.jpeg as Uint8Array<ArrayBuffer>], { type: "image/jpeg" }), `${f.t}.jpg`);
+    const { jobId } = await call<{ jobId: string }>(this.settings, "/v1/ai/locate", { method: "POST", body: form });
+    for (;;) {
+      if (signal?.aborted) throw new DOMException("Cancelled", "AbortError");
+      const view = await call<{ status: string; frames: LocateFrame[]; error: string | null }>(this.settings, `/v1/ai/locate/${encodeURIComponent(jobId)}`);
+      if (view.status === "done") return view.frames;
+      if (view.status === "failed") throw new GatewayError("The AI couldn't read the text positions. Try again.", 502);
+      await new Promise((r) => setTimeout(r, 1500));
+    }
   }
 
   /** 任何語言的目標 → 英文名詞片語（不是畫面上看得到的東西回空字串） */

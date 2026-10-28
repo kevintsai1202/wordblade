@@ -111,3 +111,53 @@ test("遮罩：找人 → 清單 → 純色橘色 → 預覽與匯出都遮住 �
   await page.keyboard.press("Control+z");
   await expect.poll(() => orangeInBox(page), { timeout: 15_000 }).toBeGreaterThan(0.3);
 });
+
+// 螢幕文字類個資（開發者 2026-10-28）：SAM 分割不出文字，「API keys」這類目標交給 Muse Spark 每秒 1 格找框（閘道攔截）→ 長方形遮罩
+test("文字類目標（API keys）走 Spark 定位：每秒 1 格送出 → 長方形遮罩 → 預覽那一塊遮住", async ({ page }) => {
+  test.setTimeout(120_000);
+  /** 送出的各格時間 */
+  let times: number[] = [];
+  let sam = 0;
+  await page.route(`${GATEWAY}/**`, async (route) => {
+    const req = route.request();
+    if (req.url().includes("/v1/sam")) sam++;
+    if (req.method() === "POST" && req.url().endsWith("/v1/ai/locate")) {
+      const body = req.postDataBuffer()!.toString("latin1");
+      times = JSON.parse(/name="times"\r\n\r\n(\[[^\]]*\])/.exec(body)![1]);
+      return reply(route, 202, { jobId: "l1" });
+    }
+    if (req.method() === "GET" && req.url().includes("/v1/ai/locate/l1")) {
+      return reply(route, 200, { status: "done", error: null, frames: times.map((t) => ({ t, items: [{ text: "sk-test", x: 0.79, y: 0.82, w: 0.05, h: 0.1 }] })) });
+    }
+    return reply(route, 204);
+  });
+  await page.addInitScript((url) => {
+    localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: "test-token" }));
+    localStorage.setItem("wordblade.consent.sam", "yes");
+  }, GATEWAY);
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/");
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByTestId("import-media").click();
+  await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
+  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
+  await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
+
+  await openTab(page, "mask");
+  await page.locator('[data-phrase="API key"]').click();
+  await expect(page.getByTestId("mask-range")).toContainText("frames to Muse Spark");
+  await page.getByTestId("mask-find").click();
+  await expect(page.getByTestId("mask-row")).toHaveCount(1, { timeout: 60_000 });
+  expect(sam).toBe(0);
+  expect(times).toEqual([0, 1, 2, 3, 4]);
+  await expect(page.getByTestId("mask-row")).toHaveAttribute("data-shape", "rect");
+  await page.getByTestId("mask-effect").selectOption("solid");
+  await page.getByTestId("mask-color").evaluate((el: HTMLInputElement) => {
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    set.call(el, "#ff8000");
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.locator(".ruler").click({ position: { x: 41, y: 5 } });
+  await expect.poll(() => orangeInBox(page), { timeout: 15_000 }).toBeGreaterThan(0.3);
+});
+

@@ -134,8 +134,10 @@ export interface MaskObject {
   effect: { kind: "mosaic" | "blur" | "solid"; strength: number; color?: string };
   /** 遮罩外擴（框寬的百分比，0～50） */
   expand: number;
-  /** 沒有點陣時的形狀：SAM 的物件用框的橢圓（預設）；AI 導演用框遮螢幕上的文字時是長方形 */
+  /** 沒有點陣時的形狀：SAM 的物件用框的橢圓（預設）；螢幕上的文字（Spark 定位或 AI 導演的框）是長方形 */
   shape?: "ellipse" | "rect";
+  /** 離最近的取樣超過幾秒就不遮（文字消失）；沒設（SAM）時取樣之間一律沿用最近的一張 */
+  hold?: Seconds;
   enabled: boolean;
 }
 

@@ -15,10 +15,11 @@ import type { Media, Project, Suggestion } from "../core/model";
 import { clipEnd } from "../core/timeline";
 import { DirectorApi } from "../director/api";
 import { estimateTokens, runDirector, type DirectorProgress } from "../director/run";
-import { adoptEdits, maskFromBox, maskNeedsSam, suggestionSpan } from "../director/suggestions";
+import { adoptEdits, maskFromBox, suggestionSpan } from "../director/suggestions";
 import type { Engine } from "../engine/Engine";
 import { makeSamClip } from "../sam/clip";
-import { runMaskJob } from "../sam/runMask";
+import { runMaskJob, runTextMaskJob } from "../sam/runMask";
+import { targetRoute } from "../sam/locate";
 import { TEMPLATES_3D, builtinPlugins3D, template3DEffect } from "../three/builtins";
 import { captureFrame } from "./capture";
 import { FPS, formatTimecode, type Action } from "./state";
@@ -181,13 +182,14 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, dis
         await new Promise((r) => setTimeout(r, 500));
       }
       if (s.kind === "mask") {
-        // 螢幕上的文字（金鑰、Email…）SAM 找不到：直接用 Spark 回報的框遮；人、臉、車牌等跑 SAM，找不到再退回框
+        // 螢幕上的文字類個資（金鑰、密碼、Email…）SAM 分割不出來：交給 Spark 每秒 1 格找框；人、臉、車牌等跑 SAM。
+        // 都找不到時退回導演給的框（整段固定的長方形）
+        const target = String(s.payload.target);
+        const result = targetRoute(target) === "spark"
+          ? await runTextMaskJob({ engine, media, phrase: target, start: s.start, end: s.end })
+          : await runMaskJob({ engine, media, phrase: target, start: s.start, end: s.end, fps: 10 });
         const boxMask = maskFromBox(s, `mask-${crypto.randomUUID().slice(0, 8)}`);
-        let masks = boxMask && !maskNeedsSam(s) ? [boxMask] : [];
-        if (!masks.length) {
-          const result = await runMaskJob({ engine, media, phrase: String(s.payload.target), start: s.start, end: s.end, fps: 10 });
-          masks = result.objects.length ? result.objects : boxMask ? [boxMask] : [];
-        }
+        const masks = result.objects.length ? result.objects : boxMask ? [boxMask] : [];
         if (!masks.length) throw new Error(`No "${String(s.payload.target)}" found in this part — nothing to mask.`);
         dispatch({ type: "commit", edits: [{ kind: "addMasks", masks }, status] });
       } else if (s.kind === "effect") {
@@ -269,7 +271,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, dis
       {progress && <p className="muted" data-testid="director-progress">{progressText}</p>}
       {asking && (
         <div className="consent" data-testid="director-consent">
-          <p>The video (split into parts, no sound, 480p, 2 frames per second) and its transcript will be sent to the WordBlade AI service and Meta. Muse Spark (Contributor version — content may be used to train Meta's models) watches each part; Muse Wonder writes the suggestions. If there is no transcript yet, the audio is transcribed first with Muse Voice Transcribe. Applying a mask, effect or camera suggestion later sends that part again to SAM 3.1, Vibe or the camera AI.</p>
+          <p>The video (split into parts, no sound, 480p, 2 frames per second) and its transcript will be sent to the WordBlade AI service and Meta. Muse Spark (Contributor version — content may be used to train Meta's models) watches each part; Muse Wonder writes the suggestions. If there is no transcript yet, the audio is transcribed first with Muse Voice Transcribe. Applying a mask, effect or camera suggestion later sends that part again to SAM 3.1 (or Muse Spark for on-screen text such as keys and passwords), Vibe or the camera AI.</p>
           <button type="button" onClick={accept}>Agree and continue</button> <button type="button" onClick={() => setAsking(false)}>Cancel</button>
         </div>
       )}

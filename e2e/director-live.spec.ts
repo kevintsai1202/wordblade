@@ -62,6 +62,19 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
   // 採用遮罩（真的跑 SAM）與剪
   await mask!.getByTestId("director-adopt").click();
   await expect(mask!).toHaveAttribute("data-status", "applied", { timeout: 180_000 });
+  // 金鑰遮罩由 Spark 每秒 1 格找框：至少有一格和正確答案的框 IoU ≥ 0.5
+  await openTab(page, "mask");
+  const boxes = JSON.parse((await page.locator('[data-testid="mask-row"][data-shape="rect"]').first().getAttribute("data-boxes"))!) as number[][];
+  const t = truth.apiKey.box;
+  const iou = (b: number[]) => {
+    const ix = Math.max(0, Math.min(b[2], t.x + t.w) - Math.max(b[0], t.x));
+    const iy = Math.max(0, Math.min(b[3], t.y + t.h) - Math.max(b[1], t.y));
+    return (ix * iy) / ((b[2] - b[0]) * (b[3] - b[1]) + t.w * t.h - ix * iy);
+  };
+  const best = Math.max(...boxes.map(iou));
+  console.log(`金鑰遮罩：${boxes.length} 個取樣，最好的 IoU ${best.toFixed(2)}`);
+  expect(best).toBeGreaterThanOrEqual(0.5);
+  await openTab(page, "director");
   await cut!.getByTestId("director-adopt").click();
   await expect(cut!).toHaveAttribute("data-status", "applied");
   await mask!.click();

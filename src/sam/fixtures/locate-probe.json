@@ -1,0 +1,62 @@
+{
+  "seconds": 8.5,
+  "usage": {
+    "completion_tokens": 1013,
+    "prompt_tokens": 3691,
+    "total_tokens": 4704,
+    "completion_tokens_details": {
+      "reasoning_tokens": 781
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "truthBox": {
+    "x": 0.2796630859375,
+    "y": 0.07777777777777778,
+    "w": 0.2519938151041667,
+    "h": 0.021296296296296296,
+    "full": 44
+  },
+  "frames": [
+    {
+      "t": 32,
+      "items": [
+        {
+          "h": 0.022,
+          "text": "sk-proj-4",
+          "w": 0.035,
+          "x": 0.298,
+          "y": 0.076,
+          "iou": 0.13
+        }
+      ]
+    },
+    {
+      "t": 36,
+      "items": [
+        {
+          "h": 0.022,
+          "text": "sk-proj-4fX9qL2mV7pZc8WbN3yHaI1KdT6sJ0eUoSrGi",
+          "w": 0.234,
+          "x": 0.298,
+          "y": 0.076,
+          "iou": 0.82
+        }
+      ]
+    },
+    {
+      "t": 40,
+      "items": [
+        {
+          "h": 0.022,
+          "text": "sk-proj-4fX9qL2mV7pZc8WbN3yHaI1KdT6sJ0eUoSrGi",
+          "w": 0.234,
+          "x": 0.298,
+          "y": 0.076,
+          "iou": 0.82
+        }
+      ]
+    }
+  ]
+}
