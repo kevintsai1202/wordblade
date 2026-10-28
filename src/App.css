@@ -141,8 +141,8 @@ button:disabled { opacity: 0.4; cursor: default; }
 .example-chip.active { border-color: var(--accent); color: var(--text); }
 .mask-custom { width: 100%; }
 .mask-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.mask-list li { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-.mask-list .mask-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mask-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.mask-list .mask-name { flex: 1 1 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mask-list input[type="range"] { width: 64px; }
 .clip .filmstrip { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .clip .filmstrip img { position: absolute; top: 0; height: 100%; object-fit: cover; opacity: 0.55; }
