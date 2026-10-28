@@ -2,7 +2,7 @@
 // 建議用素材時間記：剪、遮罩、放大直接吃素材時間；特效、運鏡要時間軸範圍（suggestionSpan）。
 // 剪、改字、放大是同步的一筆編輯（adoptEdits）；遮罩、特效、運鏡要跑 AI，由介面在 AI 完成後一次送出。
 import type { Edit } from "../core/history";
-import type { Project, Seconds, Suggestion } from "../core/model";
+import type { MaskObject, Project, Seconds, Suggestion } from "../core/model";
 import { clipEnd, sourceToTimeline } from "../core/timeline";
 
 /** 建議最短幾秒 */
@@ -56,6 +56,35 @@ export function adoptEdits(project: Project, s: Suggestion): Edit[] | null {
     default:
       return null;
   }
+}
+
+/** SAM 分割得出來的目標（人、臉、車牌、名牌…）；其他（螢幕上的金鑰、Email、密碼等文字）SAM 找不到（2026-10-28 實測），用框遮 */
+const SAM_TARGETS = /\b(face|person|people|man|woman|child|plate|badge|tag|card|logo|phone|monitor)s?\b/i;
+
+/** 遮罩建議要不要跑 SAM：SAM 分得出來的目標，或沒有框可用 */
+export function maskNeedsSam(s: Suggestion): boolean {
+  return SAM_TARGETS.test(String(s.payload.target ?? "")) || maskBox(s) === null;
+}
+
+/** 遮罩建議的框（Spark 回報、Wonder 照抄；0～1） */
+function maskBox(s: Suggestion): [number, number, number, number] | null {
+  const n = ["x", "y", "w", "h"].map((k) => s.payload[k]);
+  if (!n.every((v) => typeof v === "number" && v >= 0 && v <= 1)) return null;
+  const [x, y, w, h] = n as number[];
+  return w > 0 && h > 0 ? [x, y, Math.min(1, x + w), Math.min(1, y + h)] : null;
+}
+
+/** 用建議的框做一個長方形遮罩（素材時間，每 0.5 秒一個取樣、位置不動）；沒有框回 null */
+export function maskFromBox(s: Suggestion, id: string): MaskObject | null {
+  const box = maskBox(s);
+  if (!box) return null;
+  const samples: MaskObject["samples"] = [];
+  for (let t = s.start; t < s.end - 1e-6; t += 0.5) samples.push({ t: Math.round(t * 1000) / 1000, box, mask: null });
+  samples.push({ t: s.end, box, mask: null });
+  return {
+    id, mediaId: s.mediaId, prompt: String(s.payload.target ?? "text"), label: String(s.payload.target ?? "text"),
+    samples, interval: 0.5, effect: { kind: "mosaic", strength: 16 }, expand: 20, enabled: true, shape: "rect",
+  };
 }
 
 /** 一條建議的欄位對不對（各種類必填的欄位） */

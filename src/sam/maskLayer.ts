@@ -77,6 +77,12 @@ export class MaskLayer {
       if (raster && s.mask) {
         ctx.imageSmoothingEnabled = true;
         ctx.drawImage(raster, s.mask.x * mw, s.mask.y * mh, s.mask.w * mw, s.mask.h * mh);
+      } else if (obj.shape === "rect") {
+        ctx.fillStyle = "#fff";
+        // 長方形（螢幕上的文字）：寬高各自外擴自己的百分比，再多 4 像素（框常常不太準）
+        const gx = (obj.expand / 100) * (x2 - x1) * mw + 4;
+        const gy = (obj.expand / 100) * (y2 - y1) * mh + 4;
+        ctx.fillRect(x1 * mw - gx, y1 * mh - gy, (x2 - x1) * mw + gx * 2, (y2 - y1) * mh + gy * 2);
       } else {
         ctx.fillStyle = "#fff";
         ctx.beginPath();

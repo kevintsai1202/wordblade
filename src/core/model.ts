@@ -134,6 +134,8 @@ export interface MaskObject {
   effect: { kind: "mosaic" | "blur" | "solid"; strength: number; color?: string };
   /** 遮罩外擴（框寬的百分比，0～50） */
   expand: number;
+  /** 沒有點陣時的形狀：SAM 的物件用框的橢圓（預設）；AI 導演用框遮螢幕上的文字時是長方形 */
+  shape?: "ellipse" | "rect";
   enabled: boolean;
 }
 

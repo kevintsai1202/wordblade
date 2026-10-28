@@ -15,7 +15,7 @@ import type { Media, Project, Suggestion } from "../core/model";
 import { clipEnd } from "../core/timeline";
 import { DirectorApi } from "../director/api";
 import { estimateTokens, runDirector, type DirectorProgress } from "../director/run";
-import { adoptEdits, suggestionSpan } from "../director/suggestions";
+import { adoptEdits, maskFromBox, maskNeedsSam, suggestionSpan } from "../director/suggestions";
 import type { Engine } from "../engine/Engine";
 import { makeSamClip } from "../sam/clip";
 import { runMaskJob } from "../sam/runMask";
@@ -77,6 +77,8 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, dis
   const suggestions = media ? project.suggestions.filter((s) => s.mediaId === media.id).sort((a, b) => a.start - b.start) : [];
   const hasWords = media ? project.words.some((w) => w.mediaId === media.id) : false;
   const busy = progress !== null;
+  /** 可以開始：有逐字稿，或音量包絡已經好了（自動轉錄要用） */
+  const ready = !!media && (hasWords || envelopes.has(media.id));
 
   /** 按下 Ask：先問同意 */
   const onAsk = () => {
@@ -174,9 +176,15 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, dis
     try {
       const settings = loadSettings();
       if (s.kind === "mask") {
-        const result = await runMaskJob({ engine, media, phrase: String(s.payload.target), start: s.start, end: s.end, fps: 10 });
-        if (!result.objects.length) throw new Error(`No "${String(s.payload.target)}" found in this part — nothing to mask.`);
-        dispatch({ type: "commit", edits: [{ kind: "addMasks", masks: result.objects }, status] });
+        // 螢幕上的文字（金鑰、Email…）SAM 找不到：直接用 Spark 回報的框遮；人、臉、車牌等跑 SAM，找不到再退回框
+        const boxMask = maskFromBox(s, `mask-${crypto.randomUUID().slice(0, 8)}`);
+        let masks = boxMask && !maskNeedsSam(s) ? [boxMask] : [];
+        if (!masks.length) {
+          const result = await runMaskJob({ engine, media, phrase: String(s.payload.target), start: s.start, end: s.end, fps: 10 });
+          masks = result.objects.length ? result.objects : boxMask ? [boxMask] : [];
+        }
+        if (!masks.length) throw new Error(`No "${String(s.payload.target)}" found in this part — nothing to mask.`);
+        dispatch({ type: "commit", edits: [{ kind: "addMasks", masks }, status] });
       } else if (s.kind === "effect") {
         const outcome = await runVibe(new GatewayClient(settings), plugins.host, await plugins.builtins(), {
           description: String(s.payload.description), screenshot: captureFrame(), start: span!.start, duration: span!.end - span!.start,
@@ -248,7 +256,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, dis
             <span className="spacer" />
             {busy
               ? <button type="button" data-testid="director-cancel" onClick={() => abortRef.current?.abort()}>Cancel</button>
-              : <button type="button" data-testid="director-ask" onClick={onAsk}>{suggestions.length ? "Ask again" : "Ask the director"}</button>}
+              : <button type="button" data-testid="director-ask" disabled={!ready} title={ready ? undefined : "Still preparing this video (audio levels for transcription)"} onClick={onAsk}>{suggestions.length ? "Ask again" : "Ask the director"}</button>}
           </div>
           {media && <p className="muted" data-testid="director-estimate">{formatTimecode(media.duration).slice(3)} · about {Math.round(estimateTokens(media.duration) / 1000)}k tokens{hasWords ? "" : " · will transcribe first"}</p>}
         </>

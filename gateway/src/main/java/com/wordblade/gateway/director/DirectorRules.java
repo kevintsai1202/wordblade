@@ -63,6 +63,15 @@ public final class DirectorRules {
                 case "mask" -> {
                     String target = s.path("target").asString("").strip();
                     payload.put("target", target);
+                    // 框（選填）：螢幕上的文字（金鑰、Email）SAM 分割不出來，前端改用這個框遮
+                    double[] box = new double[4];
+                    boolean hasBox = true;
+                    String[] keys = {"x", "y", "w", "h"};
+                    for (int k = 0; k < 4; k++) {
+                        box[k] = s.path(keys[k]).asDouble(Double.NaN);
+                        if (Double.isNaN(box[k]) || box[k] < 0 || box[k] > 1) hasBox = false;
+                    }
+                    if (hasBox && box[2] > 0 && box[3] > 0) for (int k = 0; k < 4; k++) payload.put(keys[k], box[k]);
                     yield SamPhrase.valid(target) ? null : "target must be a short English noun phrase for SAM (e.g. \"API key\", \"human face\").";
                 }
                 case "effect" -> text(s, "description", payload);

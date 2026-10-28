@@ -25,14 +25,14 @@ class DirectorRulesTest {
                 {"suggestions":[
                  {"kind":"effect","start":50,"end":55,"reason":"Key moment","description":"A pop of confetti"},
                  {"kind":"cut","start":10,"end":14,"reason":"Retake"},
-                 {"kind":"mask","start":30,"end":40,"reason":"API key","target":"API key"},
+                 {"kind":"mask","start":30,"end":40,"reason":"API key","target":"API key","x":0.28,"y":0.07,"w":0.25,"h":0.03},
                  {"kind":"camera","start":60,"end":70,"reason":"Intro","scene":"desk-reveal","description":"Pull back slowly"},
                  {"kind":"fix","start":1,"end":2,"reason":"Misheard","wordIds":["m:w1","m:w2"],"text":"Java"},
                  {"kind":"zoom","start":80,"end":85,"reason":"Small text","cx":0.3,"cy":0.2,"w":0.4}
                 ]}""");
         assertThat(r.errors()).isEmpty();
         assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::kind).containsExactly("fix", "cut", "mask", "effect", "camera", "zoom");
-        assertThat(r.suggestions().get(2).payload()).isEqualTo(Map.of("target", "API key"));
+        assertThat(r.suggestions().get(2).payload()).isEqualTo(Map.of("target", "API key", "x", 0.28, "y", 0.07, "w", 0.25, "h", 0.03));
         assertThat(r.suggestions().get(5).payload()).isEqualTo(Map.of("cx", 0.3, "cy", 0.2, "w", 0.4));
     }
 
