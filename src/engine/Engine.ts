@@ -52,6 +52,14 @@ export interface ExportTarget {
   writeSibling(ext: string, text: string): Promise<string>;
 }
 
+/** 開著的專案資料夾（D41）：桌面版是資料夾路徑；網頁版是存在 IndexedDB 的資料夾權限的鍵 */
+export interface ProjectLocation {
+  /** 專案名稱（資料夾名去掉 .wordblade） */
+  name: string;
+  /** 桌面：<父資料夾>\<名稱>.wordblade 的絕對路徑；網頁：資料夾權限的鍵 */
+  dir: string;
+}
+
 /** 平台相關功能；各方法的細節在對應的開發日補上 */
 export interface Engine {
   /** 執行環境：Windows 桌面版或網頁版 */
@@ -91,6 +99,20 @@ export interface Engine {
   thumbStatus(media: Media): Promise<DoneMap>;
   /** 一張縮圖的網址（桌面版是 asset 協定的檔案網址，網頁版是 blob: 網址）；沒有回 null */
   thumbUrl(media: Media, tier: number, index: number): Promise<string | null>;
+  /** 專案資料夾是否可用（網頁版要 File System Access；不能用時退回瀏覽器裡的自動存檔） */
+  readonly projectFolders: boolean;
+  /** 新專案：選放在哪裡，建 <名稱>.wordblade\（含隱藏的 .data\）；取消回 null */
+  createProject(name: string): Promise<ProjectLocation | null>;
+  /** 開舊專案：選 .wordblade 資料夾（或裡面的 project.json）；取消回 null */
+  openProject(): Promise<{ location: ProjectLocation; text: string } | null>;
+  /** 重新開最近的專案（不用對話框）；找不到或沒有權限回 null */
+  reopenProject(location: ProjectLocation): Promise<{ location: ProjectLocation; text: string } | null>;
+  /** 寫 project.json（暫存檔＋改名，不會寫壞） */
+  writeProject(location: ProjectLocation, text: string): Promise<void>;
+  /** 素材的內容指紋（大小＋頭尾各 1 MB）；拿不到回 undefined */
+  mediaFingerprint(media: Media): Promise<string | undefined>;
+  /** 找回素材：依序試候選路徑，第一個存在且指紋相同的回傳更新過路徑的素材；都不是回 null（介面請使用者重新連結） */
+  locateMedia(media: Media, candidates: string[], fingerprint?: string): Promise<Media | null>;
   /** 人聲／背景音樂分離，回傳兩個衍生素材的 id（§5.14） */
   separateVocals(mediaId: string): Promise<{ vocalsId: string; backgroundId: string }>;
   /**

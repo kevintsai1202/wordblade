@@ -391,6 +391,28 @@ async function checkGrabJpegs(paths: string[]): Promise<Record<string, unknown>>
   }
 }
 
+/**
+ * 專案資料夾（D41）：在 repo 的 output\ 建 selftest.wordblade、寫 project.json 再讀回、算素材指紋、
+ * 用相對路徑找回素材（模擬搬家：相對路徑對、絕對路徑錯）
+ */
+async function checkProjectFolder(paths: string[]): Promise<Record<string, unknown>> {
+  const talk = paths.find((p) => /talk\.mp4$/i.test(p));
+  if (!talk) return {};
+  try {
+    const root = talk.replace(/[\\/]e2e[\\/]fixtures[\\/]talk\.mp4$/i, "");
+    const parent = `${root}\\output`;
+    const dir = await invoke<string>("project_create", { parent, name: `selftest-${Date.now()}` });
+    await invoke("project_write", { dir, text: JSON.stringify({ hello: 1 }) });
+    const [readDir, text] = await invoke<[string, string]>("project_read", { dir });
+    const fingerprint = await invoke<string>("media_fingerprint", { path: talk });
+    const located = await invoke<string | null>("media_locate", { candidates: ["Z:\\nope\\talk.mp4", talk], fingerprint });
+    const wrong = await invoke<string | null>("media_locate", { candidates: [talk], fingerprint: "1:0000000000000000" });
+    return { dir: readDir, roundTrip: text === JSON.stringify({ hello: 1 }), fingerprint, located, wrongFingerprint: wrong };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
 /** AI 音效／配樂產生的 WAV（§5.15）：寫進 app 資料夾的 generated/、再讀規格，確認匯入流程走得通 */
 async function checkGenerated(): Promise<Record<string, unknown>> {
   const engine = createEngine();
@@ -425,6 +447,7 @@ export async function runSelftest(server: string) {
     report.generated = await checkGenerated();
     report.directorClip = await checkDirectorClip(paths);
     report.grabJpegs = await checkGrabJpegs(paths);
+    report.projectFolder = await checkProjectFolder(paths);
   } catch (e) {
     report.error = String(e);
   }

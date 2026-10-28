@@ -7,7 +7,13 @@ import { pcm16ToWav } from "../asr/wav";
 import { IMAGE_DURATION } from "../core/media";
 import type { Media } from "../core/model";
 import { CHUNK, TIERS, chunkCount, indicesInChunk, type DoneMap } from "../media/thumbs";
-import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared } from "./Engine";
+import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation } from "./Engine";
+
+/** 資料夾路徑 → 專案名稱（最後一段去掉 .wordblade） */
+function projectName(dir: string): string {
+  const last = dir.replace(/[\\/]+$/, "").split(/[\\/]/).pop() ?? dir;
+  return last.replace(/\.wordblade$/i, "");
+}
 
 /** Rust probe_media 回傳的規格 */
 interface ProbeInfo {
@@ -138,6 +144,49 @@ export class DesktopEngine implements Engine {
   async thumbUrl(media: Media, tier: number, index: number): Promise<string | null> {
     const base = media.path ? this.thumbBase.get(media.path) : undefined;
     return base ? convertFileSrc(`${base}\\t${tier}\\${index}.jpg`) : null;
+  }
+
+  /** 專案資料夾（D41）：桌面版一律可用 */
+  readonly projectFolders = true;
+
+  /** 新專案：選父資料夾，Rust 建 <名稱>.wordblade\ */
+  async createProject(name: string): Promise<ProjectLocation | null> {
+    const parent = await open({ directory: true, multiple: false, title: "Where to put the project folder" });
+    if (typeof parent !== "string") return null;
+    const dir = await invoke<string>("project_create", { parent, name });
+    return { name: projectName(dir), dir };
+  }
+
+  /** 開舊專案：選 .wordblade 資料夾 */
+  async openProject(): Promise<{ location: ProjectLocation; text: string } | null> {
+    const picked = await open({ directory: true, multiple: false, title: "Open a .wordblade project folder" });
+    return typeof picked === "string" ? this.reopenProject({ name: projectName(picked), dir: picked }) : null;
+  }
+
+  /** 依路徑重新開（最近開啟） */
+  async reopenProject(location: ProjectLocation): Promise<{ location: ProjectLocation; text: string } | null> {
+    try {
+      const [dir, text] = await invoke<[string, string]>("project_read", { dir: location.dir });
+      return { location: { name: projectName(dir), dir }, text };
+    } catch {
+      return null;
+    }
+  }
+
+  /** 寫 project.json */
+  async writeProject(location: ProjectLocation, text: string): Promise<void> {
+    await invoke("project_write", { dir: location.dir, text });
+  }
+
+  /** 素材指紋（Rust 讀頭尾） */
+  async mediaFingerprint(media: Media): Promise<string | undefined> {
+    return media.path ? invoke<string>("media_fingerprint", { path: media.path }).catch(() => undefined) : undefined;
+  }
+
+  /** 依序找素材（Rust 檢查存在與指紋並放行 asset 協定） */
+  async locateMedia(media: Media, candidates: string[], fingerprint?: string): Promise<Media | null> {
+    const found = await invoke<string | null>("media_locate", { candidates, fingerprint: fingerprint ?? null });
+    return found ? { ...media, path: found } : null;
   }
 
   /** 桌面版沒有要釋放的資源（檔案在磁碟上） */

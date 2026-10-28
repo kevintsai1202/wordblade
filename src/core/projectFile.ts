@@ -92,3 +92,25 @@ export function relinkCandidates(ref: MediaRef | undefined, projectDir: string):
     return true;
   });
 }
+
+/**
+ * 開專案時找回素材：每支素材依 relinkCandidates 的順序交給 locate（平台：檢查存在與指紋）；
+ * 找到的換成新路徑，找不到的留在專案裡、列為遺失（介面請使用者重新連結）。
+ */
+export async function relinkProject(
+  project: Project,
+  refs: Record<string, MediaRef>,
+  projectDir: string,
+  locate: (media: Project["media"][number], candidates: string[], fingerprint?: string) => Promise<Project["media"][number] | null>,
+): Promise<{ project: Project; missing: string[] }> {
+  const missing: string[] = [];
+  const media = await Promise.all(project.media.map(async (m) => {
+    const ref = refs[m.id];
+    const found = await locate(m, relinkCandidates(ref ?? { path: m.path }, projectDir), ref?.fingerprint);
+    if (found) return found;
+    missing.push(m.id);
+    return m;
+  }));
+  return { project: { ...project, media }, missing: project.media.map((m) => m.id).filter((id) => missing.includes(id)) };
+}
+

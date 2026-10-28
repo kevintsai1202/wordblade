@@ -31,7 +31,7 @@
 | # | 狀態 | 結果 |
 | --- | --- | --- |
 | P1 | 完成（10/28） | `core/projectFile.ts`：relativePath／joinPath（Windows 與 POSIX、不同磁碟機）、toProjectFile／fromProjectFile（格式名、版本、素材參照）、relinkCandidates；Vitest 5 |
-| P2 | 未做 | |
+| P2 | 完成（10/28） | Rust `project.rs`（project_create：建資料夾＋`.data` 設隱藏、project_write：暫存檔＋改名＋重試、project_read、media_fingerprint：大小＋頭尾 1 MB FNV-1a、media_locate：依序找＋比指紋＋放行 asset 協定；cargo test 3）；Engine 介面（projectFolders、create／open／reopen／write、mediaFingerprint、locateMedia）桌面實作、網頁先回退；`relinkProject`（Vitest）；WebView2 自我檢查：建立、讀寫、隱藏、指紋、找回素材、錯指紋拒絕 |
 | P3 | 未做 | |
 | P4 | 未做 | |
 | P5 | 未做 | |

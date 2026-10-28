@@ -3,7 +3,7 @@ import { EnvelopeBuilder } from "../audio/envelope";
 import type { Media } from "../core/model";
 import { TIERS, chunkCount, indicesInChunk, type DoneMap } from "../media/thumbs";
 import { IMAGE_DURATION } from "../core/media";
-import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared } from "./Engine";
+import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation } from "./Engine";
 import { classifyFile, webSupport } from "./webFormats";
 import { downsample, encodeWav } from "../asr/wav";
 
@@ -289,6 +289,27 @@ export class WebEngine implements Engine {
   }
 
   /** 網頁版不做聲音分離（D28），介面應先依 capabilities 擋掉；直接呼叫時明確拒絕 */
+  /** 專案資料夾：網頁版之後用 File System Access 做（P3）；目前退回瀏覽器裡的自動存檔 */
+  readonly projectFolders = false;
+  async createProject(): Promise<ProjectLocation | null> {
+    return null;
+  }
+  async openProject(): Promise<{ location: ProjectLocation; text: string } | null> {
+    return null;
+  }
+  async reopenProject(): Promise<{ location: ProjectLocation; text: string } | null> {
+    return null;
+  }
+  async writeProject(): Promise<void> {
+    throw new NotImplementedError("writeProject");
+  }
+  async mediaFingerprint(): Promise<string | undefined> {
+    return undefined;
+  }
+  async locateMedia(media: Media): Promise<Media | null> {
+    return media.handleKey && this.files.has(media.handleKey) ? media : null;
+  }
+
   /** 縮圖快取的鍵：匯入的檔案用「檔名＋大小＋修改時間」，示範素材用路徑；都沒有回 null */
   private thumbKey(media: Media): string | null {
     const entry = media.handleKey ? this.files.get(media.handleKey) : undefined;

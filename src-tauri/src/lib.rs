@@ -3,6 +3,7 @@
 mod export;
 mod generated;
 mod media;
+mod project;
 
 use tauri::webview::{PageLoadEvent, PermissionKind, PermissionResponse};
 
@@ -23,6 +24,11 @@ pub fn run() {
             media::find_samples_dir,
             media::asr_pcm,
             media::thumbs_status,
+            project::project_create,
+            project::project_write,
+            project::project_read,
+            project::media_fingerprint,
+            project::media_locate,
             media::thumbs_make,
             export::export_open,
             export::export_write,
