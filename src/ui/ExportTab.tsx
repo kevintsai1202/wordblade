@@ -28,7 +28,9 @@ const PRESETS: { id: ExportPreset; label: string }[] = [
 ];
 
 /** 匯出頁籤 */
-export function ExportTab({ project, captions, engine, plugins, envelopes }: {
+export function ExportTab({ project, captions, engine, plugins, envelopes, suggestedName = "wordblade-export.mp4" }: {
+  /** 存檔對話框預設的檔名或路徑（開著專案資料夾時是資料夾旁邊的 <專案名>.mp4） */
+  suggestedName?: string;
   project: Project;
   captions: Caption[];
   engine: Engine;
@@ -45,7 +47,7 @@ export function ExportTab({ project, captions, engine, plugins, envelopes }: {
 
   /** 開始匯出 */
   const start = async () => {
-    const target = await engine.openExportTarget("wordblade-export.mp4");
+    const target = await engine.openExportTarget(suggestedName);
     if (!target) return;
     const abort = new AbortController();
     abortRef.current = abort;

@@ -135,6 +135,9 @@ button:disabled { opacity: 0.4; cursor: default; }
 .media-status { font-size: 11px; color: #e0b050; }
 .media-status.failed { color: #ff7a7a; white-space: normal; }
 .media-ghost { position: fixed; z-index: 100; pointer-events: none; padding: 3px 8px; background: #2d6cdf; color: #fff; border-radius: 3px; font-size: 12px; white-space: nowrap; }
+/* 專案資料夾：另存的名稱輸入 */
+.save-as { display: inline-flex; gap: 4px; align-items: center; }
+.save-as input { width: 12em; }
 /* 上次的工作（自動存檔還原） */
 .restore-bar { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 8px; border: 1px solid var(--accent); border-radius: 4px; }
 /* AI 導演頁籤（§5.11） */

@@ -28,6 +28,8 @@ import type { ZoomEdit } from "./ui/ZoomBands";
 import { zoomFromRange } from "./core/zoom";
 import { clipEnd, timelineToSource } from "./core/timeline";
 import { useLayout } from "./ui/layout";
+import { useProjectFolder } from "./ui/useProjectFolder";
+import { exportPathFor } from "./project/session";
 import { SESSION_KEY, restoreSession, serializeSession, shouldSave } from "./core/session";
 import { isBusy } from "./core/busy";
 import { ThumbScheduler, ThumbStore } from "./media/thumbStore";
@@ -123,9 +125,13 @@ function App() {
       return null;
     }
   });
-  // 自動存檔：使用者編輯後 2 秒存進這台電腦；太大存不下就暫停並提示
+  /** 專案資料夾（D41；桌面版，網頁版之後接 File System Access） */
+  const folder = useProjectFolder({ engine, project, edits: state.history.past.length, isDemo, dispatch, reset, enqueuePrepare });
+  /** 另存時輸入的專案名稱（null 表示沒在輸入） */
+  const [saveName, setSaveName] = useState<string | null>(null);
+  // 瀏覽器裡的自動存檔：沒開專案資料夾時才用（開了就存進 project.json）；使用者編輯後 2 秒存；太大存不下就暫停並提示
   useEffect(() => {
-    if (!shouldSave(project, state.history.past.length, isDemo)) return;
+    if (folder.location || !shouldSave(project, state.history.past.length, isDemo)) return;
     const timer = setTimeout(() => {
       try {
         localStorage.setItem(SESSION_KEY, serializeSession(project, Date.now()));
@@ -134,7 +140,7 @@ function App() {
       }
     }, 2000);
     return () => clearTimeout(timer);
-  }, [project, state.history.past.length, isDemo]);
+  }, [project, state.history.past.length, isDemo, folder.location]);
   /** 還原上次的工作：載入專案、素材照常在背景準備（桌面版路徑還在；網頁版要重新匯入檔案） */
   const restoreLast = () => {
     if (!lastSession) return;
@@ -188,7 +194,34 @@ function App() {
     <div className="app" style={{ "--panel-w": `${layout.panelWidth}px`, "--timeline-h": `${layout.timelineHeight}px` } as CSSProperties}>
       <header className="title-bar">
         <span className="brand">WordBlade</span>
-        <span className="project-path">{project.media.length ? "untitled project" : "new project"}</span>
+        <span className="project-path" data-testid="project-name" title={folder.location?.dir}>{folder.location ? folder.location.name : project.media.length ? "untitled project" : "new project"}</span>
+        {folder.status && <span className="muted" data-testid="save-status">{folder.status.kind === "saving" ? "Saving…" : folder.status.kind === "error" ? `Not saved: ${folder.status.message}` : `Saved ${new Date(folder.status.at ?? 0).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}</span>}
+        {engine.projectFolders && (
+          <>
+            {saveName === null
+              ? <button data-testid="project-save-as" title="Save this project as a .wordblade folder" onClick={() => setSaveName(folder.location?.name ?? project.media[0]?.name?.replace(/\.[^.]+$/, "") ?? "Untitled")}>{folder.location ? "Save as…" : "Save…"}</button>
+              : (
+                <form className="save-as" onSubmit={(e) => { e.preventDefault(); const n = saveName.trim(); setSaveName(null); if (n) void folder.saveAs(n); }}>
+                  <input autoFocus data-testid="project-name-input" value={saveName} maxLength={80} onChange={(e) => setSaveName(e.target.value)} />
+                  <button type="submit">Choose folder…</button>
+                  <button type="button" onClick={() => setSaveName(null)}>✕</button>
+                </form>
+              )}
+            <button data-testid="project-open" title="Open a .wordblade project folder" onClick={() => void folder.open().then((err) => err && setNotice(err))}>Open…</button>
+            {folder.recent.length > 0 && (
+              <select data-testid="project-recent" value="" title="Recent projects" onChange={(e) => { const r = folder.recent.find((x) => x.dir === e.target.value); if (r) void folder.reopen(r).then((err) => err && setNotice(err)); }}>
+                <option value="">Recent…</option>
+                {folder.recent.map((r) => <option key={r.dir} value={r.dir}>{r.name}</option>)}
+              </select>
+            )}
+          </>
+        )}
+        {folder.missing.length > 0 && (
+          <span className="warning" data-testid="missing-media" title={folder.missing.join(", ")}>
+            {folder.missing.length} media file{folder.missing.length > 1 ? "s" : ""} not found: {folder.missing.slice(0, 2).join(", ")}{folder.missing.length > 2 ? "…" : ""}
+            <button onClick={folder.dismissMissing}>✕</button>
+          </span>
+        )}
         <button title="Open the sample project (local samples/ folder)" data-testid="load-demo" onClick={() => void onLoadDemo()}>Load demo</button>
         {lastSession && !project.media.length && (
           <span className="restore-bar" data-testid="restore-bar">
@@ -236,7 +269,7 @@ function App() {
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
-            export: <ExportTab project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
+            export: <ExportTab suggestedName={exportPathFor(folder.location, "mp4")} project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
             inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
           }}
         />
