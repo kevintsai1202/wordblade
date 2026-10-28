@@ -36,7 +36,8 @@ export class SandboxFrame {
 
   /** 建 iframe、握手、lockdown */
   async start(): Promise<void> {
-    const runtime = (await import("./iframeRuntime.js?raw")).default;
+    // HTML 解析 srcdoc 時會把 CRLF 正規化成 LF；檔案被 git autocrlf 轉成 CRLF 時雜湊會對不上，先統一成 LF
+    const runtime = (await import("./iframeRuntime.js?raw")).default.replace(/\r\n?/g, "\n");
     const hash = await cspHash(runtime);
     // spec §5.7 的 iframe CSP（再加 frame-src／base-uri／form-action，10/27 實測同樣可行）
     const csp = `default-src 'none'; script-src blob: ${hash}; worker-src blob:; connect-src 'none'; img-src blob: data:; frame-src 'none'; base-uri 'none'; form-action 'none'`;
