@@ -1,0 +1,11 @@
+{
+  "type": "object", "additionalProperties": false, "required": ["titles", "description", "highlights", "chapters", "tags"],
+  "properties": {
+    "titles": { "type": "array", "items": { "type": "string" } },
+    "description": { "type": "string" },
+    "highlights": { "type": "array", "items": { "type": "string" } },
+    "chapters": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["t", "title"], "properties": {
+      "t": { "type": "number" }, "title": { "type": "string" } } } },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  }
+}

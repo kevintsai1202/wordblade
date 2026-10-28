@@ -32,6 +32,8 @@ wordblade:
     wonder: ${WORDBLADE_MODEL_WONDER:muse-wonder-1.0}
     asr: ${WORDBLADE_MODEL_ASR:muse-voice-transcribe-1.0}
     sam: ${WORDBLADE_MODEL_SAM:sam-3.1}
+    # 發佈包縮圖底圖（spec §5.12、§5.17）
+    image: ${WORDBLADE_MODEL_IMAGE:muse-image-1.0}
   # 轉送路由（ASR 等，Spring AI 沒有對應的模型介面）直接呼叫 Meta API
   meta:
     base-url: ${WORDBLADE_META_BASE_URL:https://api.meta.ai}
