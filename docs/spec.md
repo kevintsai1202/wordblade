@@ -533,15 +533,25 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 音效 spec：聲部清單，每個聲部是來源（振盪器波形與頻率曲線，或白／粉紅雜訊）→ 濾波器（種類、截止頻率曲線、Q）→ 振幅包絡（ADSR）→ 選用效果（延遲、殘響、失真），加總長度與音量。
 - 配樂 spec：速度、拍號、小節數、和弦進行、各聲部（貝斯、和弦墊音、琶音、鼓組）的音色（同上的聲部定義）與音符表；長度剛好是整數小節，首尾可以無縫循環。
 
+**實作（10/28，`docs/plan-10-28-audio.md`）**
+
+- schema 只有一份：`src/audio/synth/synth.schema.json`（入口 `#/$defs/sound`、`#/$defs/music`）。前端 `schemaLite.ts` 與閘道 `SchemaLite.java` 是同一套 JSON Schema 子集（type、properties、required、items、範圍、enum、pattern、anyOf、`$ref`），多餘欄位丟掉、錯誤文字相同；schema 表達不了的（曲線 t 遞增、音符落在 loopBars 內、長度與音數上限）另外檢查。`validationCases.json` 前端與閘道都跑。閘道的 schema 複本與提示詞由 `node scripts/synth/build-prompt.mjs` 產生。
+- 音效 spec：`{length 0.05～10 秒, gain?, seed?, voices: 1～8 個}`；聲部＝音色＋`start?`、`dur?`（按住多久，之後 release）、`repeat? {count, every}`。音色＝`source`（`{type:"osc", wave, freq, detune?}` 或 `{type:"noise", color: white|pink}`）、`filter? {type: lowpass|highpass|bandpass|notch, cutoff, q?}`、`env {attack, decay, sustain, release}`、`gain?`、`effects? {delay {time, feedback, mix}, reverb {decay, mix}, distortion {amount}}`。曲線是一個數字或 `[{t, v}]`（t 從這個音開頭算，點之間指數過渡）。
+- 配樂 spec：`{bpm 60～180, beatsPerBar? 2|3|4, bars 1～32, chords: 每小節一個（Am、Fmaj7、G7…，不夠就循環）, gain?, seed?, parts: 1～6 個}`；聲部 `{role: bass|pad|arp|lead|drums, voice?（drums 以外必填）, gain?, loopBars?, notes}`；音符 `{at, len（拍）, pitch?（MIDI）| chord?（和弦第幾個音）+ octave? | drum?（kick、snare、hat、openhat、clap）, vel?}`。長度＝bars × beatsPerBar × 60 ÷ bpm，上限 120 秒、展開後最多 3000 個音。
+- 解讀器（`render.ts`）：每群音（同音色）共用一條效果鏈；雜訊與殘響脈衝響應用固定種子，同一份 spec 每次算出的 WAV 位元組相同。配樂多算一段尾巴再疊回開頭，長度剛好整數小節、首尾無縫；峰值超過 0.89 整體縮小；輸出 48 kHz 單聲道 16-bit WAV。
+- 閘道：`POST /v1/ai/sound`（description、length、previous?）、`POST /v1/ai/music`（description、bars、previous?）→ 202 `{jobId}`，`GET …/{jobId}` 輪詢（同 plane3d 的 AiJobs）。模型 Muse Spark（`wordblade.models.spark`，推理 low），只回 JSON；音效 length、配樂 bars 要等於請求的值；不合格自動帶錯誤重問一次（最多 2 輪），拒答只有 `off-topic`。用量記在 `/v1/ai/sound`、`/v1/ai/music`。前端拿到 spec 再驗證一次。
+- 產生的 WAV 經 `Engine.importGenerated` 變成一般素材：Windows 版 Rust `write_generated` 寫進 app 資料夾的 `generated/`（檔名淨化、不覆寫、放行 asset 協定），網頁版包成 File；再走 `importSources`。目前沒有另存 `Synth`（spec 不進專案）。
+- 介面：特效 → 音效（Sound）子頁籤。上半音效：10 個範本（whoosh、pop、ding、typing、rise、fall、click、sweep、impact、sparkle）點了直接算、不送任何資料；或描述＋長度按 Generate。下半配樂：描述＋小節數（4／8／16）、Generate、Regenerate（同描述再來一次）、Modify（修改指示＋前一版 spec）。都有 Play（共用 AudioContext 預覽）、Save to media、Add to timeline（音效 → 音效軌 A3、配樂 → 配樂軌 A2；有選範圍放在範圍起點，否則放在播放頭；一次復原）。第一次用 AI 顯示同意說明（送到 Muse Spark，Contributor 版的內容可能被 Meta 用於訓練，D32）。
+
 **AI 音效（P1-8）**
 
-- 一句描述（例如「whoosh」「keyboard typing」「pop」）＋長度 → 閘道 `/v1/ai/sound` 請 Muse Spark 回音效 spec → 解讀器算成 WAV → 存成 `Synth` 並進素材庫，可以直接拖到 A3 音效軌；2D 插件也可以引用它（§5.7）。
-- 內建 8～10 個範本 spec（whoosh、pop、ding、打字、上升音、下降音、點擊、轉場掃頻…）當模型的底稿。
+- 一句描述（例如「whoosh」「keyboard typing」「pop」）＋長度 → 閘道 `/v1/ai/sound` 請 Muse Spark 回音效 spec → 解讀器算成 WAV → 進素材庫，可以直接放到 A3 音效軌；2D 插件引用音效（§5.7）要等 `Synth` 紀錄補上。
+- 內建 10 個範本 spec（whoosh、pop、ding、打字、上升音、下降音、點擊、轉場掃頻、撞擊、閃亮），不用 AI 也能用，同時是模型的例子。
 
 **AI 音樂（P1-11，WebAudio 版）**
 
-- 一句描述（風格、速度、情緒）＋長度 → 閘道 `/v1/ai/music` 請 Muse Spark 回配樂 spec → 解讀器算成 WAV → 素材庫、A2 配樂軌。
-- 音色偏合成器，適合當科技類影片的背景配樂；可以「再生成一次」或「改一下」（帶著前一版 spec 修改）。
+- 一句描述（風格、速度、情緒）＋小節數 → 閘道 `/v1/ai/music` 請 Muse Spark 回配樂 spec → 解讀器算成 WAV → 素材庫、A2 配樂軌。
+- 音色偏合成器，適合當科技類影片的背景配樂；可以「再生成一次」或「改一下」（帶著前一版 spec 修改）。目前放一段（一圈）；選了較長的範圍時接著重複放滿，之後再做。
 
 **AI 音樂（P2，Meta MusicGen）**
 
