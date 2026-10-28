@@ -31,6 +31,8 @@ export interface SamPass {
   start: number;
   /** 取樣率（每秒幾格） */
   fps: number;
+  /** 各格的素材時間（有就用它，比 start + k ÷ fps 準：來源格率不是取樣率的整數倍時會漂） */
+  times?: number[];
   /** 小檔寬高（記錄沒帶 w／h 時才用；SAM 的記錄都帶自己看到的畫面寬高） */
   clipW: number;
   clipH: number;
@@ -151,7 +153,7 @@ export function linkPasses(passes: SamPass[]): LinkedObject[] {
   };
   /** 某段在素材時間 t 的框（座標正規化，跨請求才比得了） */
   const boxAt = (it: (typeof items)[number], t: number) => {
-    const b = it.part.boxes.find((x) => Math.abs(it.pass.start + x.sample / it.pass.fps - t) < EPS);
+    const b = it.part.boxes.find((x) => Math.abs(sampleTime(it.pass, x.sample) - t) < 1 / (2 * it.pass.fps));
     return b && { x1: b.x1 / b.w, y1: b.y1 / b.h, x2: b.x2 / b.w, y2: b.y2 / b.h };
   };
   for (let k = 1; k < passes.length; k++) {
@@ -180,6 +182,11 @@ export function linkPasses(passes: SamPass[]): LinkedObject[] {
   return [...groups.values()];
 }
 
+/** 第 k 格的素材時間 */
+export function sampleTime(pass: SamPass, k: number): number {
+  return pass.times?.[k] ?? pass.start + k / pass.fps;
+}
+
 /** 時間取到微秒，避免 0.1 + 0.2 這類誤差 */
 const round6 = (t: number) => Math.round(t * 1e6) / 1e6;
 
@@ -192,7 +199,7 @@ export function toMaskObjects(objects: LinkedObject[], opts: { mediaId: string; 
     const byTime = new Map<number, MaskSample>();
     for (const { pass, part } of obj.parts) {
       for (const b of part.boxes) {
-        const t = round6(pass.start + b.sample / pass.fps);
+        const t = round6(sampleTime(pass, b.sample));
         const m = b.mask;
         byTime.set(t, {
           t,
