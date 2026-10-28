@@ -48,8 +48,8 @@ export interface ExportTarget {
   close(): Promise<void>;
   /** 取消：關掉並刪除寫了一半的檔案 */
   abort(): Promise<void>;
-  /** 同名、換副檔名的文字檔（SRT）；回傳存到哪裡（網頁版是下載） */
-  writeSibling(ext: string, text: string): Promise<string>;
+  /** 同名、換副檔名的檔案（SRT、發佈包的 publish.md 與縮圖 PNG）；回傳存到哪裡（網頁版是下載） */
+  writeSibling(ext: string, data: string | Uint8Array): Promise<string>;
 }
 
 /** 開著的專案資料夾（D41）：桌面版是資料夾路徑；網頁版是存在 IndexedDB 的資料夾權限的鍵 */

@@ -10,3 +10,12 @@ export function captureFrame(): string | null {
   out.getContext("2d")!.drawImage(canvas, 0, 0, out.width, out.height);
   return out.toDataURL("image/jpeg", 0.8);
 }
+
+/** 截目前預覽這一格成 PNG（縮圖底圖用，寬 1280）；找不到畫布回 null */
+export async function captureFramePng(): Promise<Blob | null> {
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-testid="preview-canvas"]');
+  if (!canvas) return null;
+  const out = new OffscreenCanvas(1280, Math.round((1280 * canvas.height) / canvas.width));
+  out.getContext("2d")!.drawImage(canvas, 0, 0, out.width, out.height);
+  return out.convertToBlob({ type: "image/png" });
+}

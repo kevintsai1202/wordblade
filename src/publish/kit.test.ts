@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TimelineWord } from "../core/captions";
-import { detectLanguage, formatChapterTime, normalizeChapters, publishMarkdown, transcriptLines, trimLines, youtubeDescription, type PublishKit } from "./kit";
+import { chaptersToText, detectLanguage, formatChapterTime, normalizeChapters, parseChapters, publishMarkdown, transcriptLines, trimLines, youtubeDescription, type PublishKit } from "./kit";
 
 // 發佈包（spec §5.17）的純函式：成片逐字稿分行、語言判斷、章節整理（對齊行首＋YouTube 規則）、說明文字與 publish.md。
 const w = (text: string, start: number, end = start + 0.3): TimelineWord => ({ id: `${text}@${start}`, text, start, end });
@@ -78,5 +78,14 @@ describe("說明文字與 publish.md", () => {
     expect(md).toContain("- Edit by words");
     expect(md).toContain("video editing, AI");
     expect(md).toContain("0:31 Setup");
+  });
+});
+
+describe("章節文字的編輯", () => {
+  it("一行一個「m:ss 標題」或「h:mm:ss 標題」；看不懂的行略過；轉回文字一樣", () => {
+    const text = ["0:00 Intro", "0:31  Setup the tool", "not a chapter", "1:02:05 Late part", ""].join("\n");
+    const chapters = parseChapters(text);
+    expect(chapters).toEqual([{ t: 0, title: "Intro" }, { t: 31, title: "Setup the tool" }, { t: 3725, title: "Late part" }]);
+    expect(chaptersToText(chapters)).toBe(["0:00 Intro", "0:31 Setup the tool", "1:02:05 Late part"].join("\n"));
   });
 });

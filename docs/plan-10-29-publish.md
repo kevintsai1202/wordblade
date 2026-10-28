@@ -43,8 +43,8 @@
 
 | # | 狀態 | 結果 |
 | --- | --- | --- |
-| K1 | 未做 | |
-| K2 | 未做 | |
-| K3 | 未做 | |
-| K4 | 未做 | |
-| K5 | 未做 | |
+| K1 | 完成（10/29） | `publish/kit.ts`：分行、截中間、語言、章節對齊行首＋YouTube 規則、章節文字解析、說明、publish.md；`publish/run.ts`；Vitest 12 |
+| K2 | 完成（10/29） | 閘道 `publish/`（PublishJobs、Controller、Config、RestPublishModels、prompt.txt、schema.json）；Spring 測試 5（全套 110 過）；本機實打 `logs/publish-live-local.log`：文字 16 秒、7 章節離句首 ≤ 0.97 秒；縮圖底圖 21 秒（模型把畫面上的程式碼也抹掉了，當標題底圖可用） |
+| K3 | 完成（10/29） | `publish/thumbnail.ts`：標題最多 2 行、縮字、中文逐字斷行、省略號；cover；合成 1280×720 PNG；Vitest 5 |
+| K4 | 完成（10/29） | Export › Publish Kit 頁籤（同意、語言、寫／重寫、選與改標題、說明、重點、章節文字、標籤、複製；縮圖「Use this frame」與「Restyle with AI」）；`Project.publish`（setPublish 不進復原）；`writeSibling` 可寫二進位；匯出時寫 `<名>.publish.md`、`<名>.thumbnail.png`。e2e `publish.spec.ts` 2 個過；export.spec 3 個過 |
+| K5 | 未做（等開發者同意部署閘道） | |

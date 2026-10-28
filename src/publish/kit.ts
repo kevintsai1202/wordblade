@@ -122,16 +122,27 @@ export function normalizeChapters(raw: Chapter[], lineStarts: number[], duration
   return out.length >= MIN_CHAPTERS ? out : [];
 }
 
-/** 章節清單文字（一行一個「0:00 標題」） */
-function chapterText(chapters: Chapter[]): string {
+/** 章節清單文字（一行一個「0:00 標題」；介面編輯用，也是 YouTube 說明欄的格式） */
+export function chaptersToText(chapters: Chapter[]): string {
   return chapters.map((c) => `${formatChapterTime(c.t)} ${c.title}`).join("\n");
+}
+
+/** 使用者改過的章節文字 → 章節（看不懂的行略過） */
+export function parseChapters(text: string): Chapter[] {
+  const out: Chapter[] = [];
+  for (const line of text.split(/\r?\n/)) {
+    const m = /^\s*(?:(\d+):)?(\d{1,2}):(\d{2})\s+(.+?)\s*$/.exec(line);
+    if (!m) continue;
+    out.push({ t: Number(m[1] ?? 0) * 3600 + Number(m[2]) * 60 + Number(m[3]), title: m[4] });
+  }
+  return out;
 }
 
 /** 貼到 YouTube 說明欄的文字：說明、重點條列、章節 */
 export function youtubeDescription(kit: PublishKit): string {
   const parts = [kit.description.trim()];
   if (kit.highlights.length) parts.push(kit.highlights.map((h) => `• ${h}`).join("\n"));
-  if (kit.chapters.length) parts.push(chapterText(kit.chapters));
+  if (kit.chapters.length) parts.push(chaptersToText(kit.chapters));
   return parts.filter(Boolean).join("\n\n");
 }
 

@@ -13,6 +13,7 @@ import { mixAudio } from "../export/audioMix";
 import { ExportCancelled, runExport } from "../export/exporter";
 import { exportPlan, type ExportPreset } from "../export/exportPlan";
 import { toSrt } from "../export/srt";
+import { publishMarkdown } from "../publish/kit";
 
 /** 匯出狀態 */
 type Status =
@@ -29,7 +30,7 @@ const PRESETS: { id: ExportPreset; label: string }[] = [
 ];
 
 /** 匯出頁籤 */
-export function ExportTab({ project, captions, engine, plugins, envelopes, suggestedName = "wordblade-export.mp4" }: {
+export function ExportTab({ project, captions, engine, plugins, envelopes, suggestedName = "wordblade-export.mp4", thumbnail = null }: {
   /** 存檔對話框預設的檔名或路徑（開著專案資料夾時是資料夾旁邊的 <專案名>.mp4） */
   suggestedName?: string;
   project: Project;
@@ -38,6 +39,8 @@ export function ExportTab({ project, captions, engine, plugins, envelopes, sugge
   plugins: PluginService;
   /** 素材的音量包絡：算配樂壓低曲線（和預覽同一條） */
   envelopes: Map<string, Envelope>;
+  /** 發佈包的縮圖（Publish Kit 做的；有就同名寫成 .thumbnail.png） */
+  thumbnail?: Blob | null;
 }) {
   const [preset, setPreset] = useState<ExportPreset>("source");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -71,9 +74,12 @@ export function ExportTab({ project, captions, engine, plugins, envelopes, sugge
         signal: abort.signal,
       });
       const srt = captions.length ? await target.writeSibling("srt", toSrt(captions)) : null;
+      // 發佈包（§5.17）：有就同名寫在影片旁邊
+      const kitFile = project.publish ? await target.writeSibling("publish.md", publishMarkdown(project.publish)) : null;
+      const thumbFile = thumbnail ? await target.writeSibling("thumbnail.png", new Uint8Array(await thumbnail.arrayBuffer())) : null;
       const seconds = ((performance.now() - startedAt) / 1000).toFixed(1);
       const skipped = result.effectErrors.size ? ` · ${result.effectErrors.size} effect(s) skipped: ${[...result.effectErrors.values()][0]}` : "";
-      setStatus({ kind: "done", message: `Saved ${target.name} in ${seconds} s${srt ? ` · subtitles: ${srt}` : ""}${skipped}` });
+      setStatus({ kind: "done", message: `Saved ${target.name} in ${seconds} s${srt ? ` · subtitles: ${srt}` : ""}${kitFile ? ` · publish kit: ${kitFile}` : ""}${thumbFile ? ` · thumbnail: ${thumbFile}` : ""}${skipped}` });
     } catch (e) {
       setStatus(e instanceof ExportCancelled ? { kind: "idle" } : { kind: "error", message: e instanceof Error ? e.message : String(e) });
     } finally {

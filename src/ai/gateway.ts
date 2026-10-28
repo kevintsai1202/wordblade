@@ -3,6 +3,16 @@
 import type { VibeResult } from "./vibe";
 import type { Vibe3dResult } from "./vibe3d";
 import type { AsrResponse } from "../asr/transcribe";
+import type { Chapter, TranscriptLine } from "../publish/kit";
+
+/** 閘道寫好的發佈包（章節還沒對齊行首） */
+export interface GatewayKit {
+  titles: string[];
+  description: string;
+  highlights: string[];
+  chapters: Chapter[];
+  tags: string[];
+}
 
 /** 預設閘道（Zeabur，D23） */
 export const DEFAULT_GATEWAY = "https://wordblade-api.zeabur.app";
@@ -179,5 +189,45 @@ export class GatewayClient {
   /** 「用說的」的提議檢查不過：送錯誤續跑 */
   async feedbackPlane3d(jobId: string, errors: VibeError[]): Promise<void> {
     await this.call<void>(`/v1/ai/plane3d/${encodeURIComponent(jobId)}/feedback`, { method: "POST", body: JSON.stringify({ errors }) });
+  }
+
+  /** 輪詢 GET path 直到不是 running（每秒一次，最多 maxSeconds 秒）；回原始的狀態物件 */
+  private async pollView<V extends { status: string }>(path: string, maxSeconds: number): Promise<V> {
+    for (let i = 0; i < maxSeconds; i++) {
+      const view = await this.call<V>(path);
+      if (view.status !== "running") return view;
+      await sleep(1000);
+    }
+    throw new GatewayError("The AI took too long. Try again.", 0);
+  }
+
+  /** 發佈包（§5.17）：成片逐字稿 → Spark 寫標題、說明、重點、章節、標籤；失敗丟 GatewayError */
+  async publishKit(body: { language: string; duration: number; lines: TranscriptLine[] }): Promise<GatewayKit> {
+    const { jobId } = await this.call<{ jobId: string }>("/v1/ai/publish", { method: "POST", body: JSON.stringify(body) });
+    const view = await this.pollView<{ status: string; kit: GatewayKit | null; error: string | null }>(`/v1/ai/publish/${encodeURIComponent(jobId)}`, 180);
+    if (view.status !== "done" || !view.kit) throw new GatewayError("The AI couldn't write the publish kit. Try again.", 0);
+    return view.kit;
+  }
+
+  /** 縮圖底圖（§5.12）：一格畫面（PNG／JPEG）＋風格描述 → Muse Image 改過的圖（不含字）；約 30 秒 */
+  async thumbnailBase(image: Blob, style: string): Promise<Blob> {
+    const form = new FormData();
+    form.append("purpose", "thumbnail");
+    form.append("prompt", style);
+    form.append("image", image, image.type === "image/jpeg" ? "frame.jpg" : "frame.png");
+    let res: Response;
+    try {
+      // multipart 的 content-type（含 boundary）由瀏覽器填
+      res = await fetch(this.settings.url.replace(/\/$/, "") + "/v1/ai/image", { method: "POST", headers: { authorization: `Bearer ${this.settings.token}` }, body: form });
+    } catch {
+      throw new GatewayError("Can't reach the AI service. Check the address in AI settings and your connection.", 0);
+    }
+    if (res.status === 401) throw new GatewayError("The invite token isn't valid. Check it in AI settings.", 401);
+    if (!res.ok) throw new GatewayError(`The AI service returned an error (${res.status}).`, res.status);
+    const { jobId } = (await res.json()) as { jobId: string };
+    const view = await this.pollView<{ status: string; image: string | null; mime: string | null }>(`/v1/ai/image/${encodeURIComponent(jobId)}`, 240);
+    if (view.status !== "done" || !view.image) throw new GatewayError("The AI couldn't make the thumbnail. Try again, or use the frame as it is.", 0);
+    const bytes = Uint8Array.from(atob(view.image), (c) => c.charCodeAt(0));
+    return new Blob([bytes], { type: view.mime ?? "image/webp" });
   }
 }

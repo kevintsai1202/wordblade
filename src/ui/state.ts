@@ -3,6 +3,7 @@
 import { amend, commit, createHistory, redo, undo, type Edit, type History } from "../core/history";
 import { addMedia, patchMedia } from "../core/media";
 import type { Media, Project, Seconds } from "../core/model";
+import type { PublishKit } from "../publish/kit";
 import { clipEnd } from "../core/timeline";
 import { roundTime } from "../core/time";
 
@@ -52,6 +53,7 @@ export type Action =
   | { type: "tick"; time: Seconds }
   | { type: "importMedia"; media: Media[] }
   | { type: "patchMedia"; id: string; patch: Partial<Omit<Media, "id">> }
+  | { type: "setPublish"; kit: PublishKit | undefined }
   | { type: "load"; project: Project };
 
 /** 從一份專案建立初始狀態 */
@@ -108,6 +110,9 @@ export function reducer(state: AppState, action: Action): AppState {
     case "patchMedia":
       // 代理檔等衍生資訊：同樣不進復原歷史
       return { ...state, history: amend(state.history, (p) => patchMedia(p, action.id, action.patch)) };
+    case "setPublish":
+      // 發佈包（AI 產生、使用者逐字修改）：不進復原歷史，免得每打一個字就多一步
+      return { ...state, history: amend(state.history, (p) => ({ ...p, publish: action.kit })) };
     case "load":
       return { ...initialState(action.project), pxPerSecond: state.pxPerSecond };
     case "setRange": {

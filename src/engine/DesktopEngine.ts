@@ -217,9 +217,16 @@ export class DesktopEngine implements Engine {
       write: (position, data) => invoke("export_write", data, { headers: { "x-export-id": String(id), "x-export-pos": String(position) } }),
       close: () => invoke("export_close", { id }),
       abort: () => invoke("export_abort", { id }),
-      writeSibling: async (ext, text) => {
+      writeSibling: async (ext, data) => {
         const sibling = path.replace(/\.[^.\/]+$/, "") + `.${ext}`;
-        await invoke("write_text_file", { path: sibling, text });
+        if (typeof data === "string") {
+          await invoke("write_text_file", { path: sibling, text: data });
+        } else {
+          // 二進位（縮圖 PNG）：沿用匯出的分塊寫入
+          const sid = await invoke<number>("export_open", { path: sibling });
+          await invoke("export_write", data, { headers: { "x-export-id": String(sid), "x-export-pos": "0" } });
+          await invoke("export_close", { id: sid });
+        }
         return sibling;
       },
     };

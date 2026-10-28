@@ -1,5 +1,6 @@
 // TS 核心的資料模型（spec §4）。只有資料，沒有 IO：素材長度、fps 等由 Engine 讀好後當普通資料傳進來。
 import type { CaptionStyle } from "../captions/captionLayout";
+import type { PublishKit } from "../publish/kit";
 
 // 時間一律用秒（number）；「素材時間」是素材自己的時間，「時間軸時間」是成片上的時間。
 
@@ -234,4 +235,6 @@ export interface Project {
   zooms?: ZoomRegion[];
   /** 燒進畫面的字幕樣式（§5.4、§5.18；沒設就用預設：白字黑描邊） */
   captionStyle?: CaptionStyle;
+  /** 發佈包（§5.17）：標題、說明、章節、標籤；縮圖不存在專案裡 */
+  publish?: PublishKit;
 }

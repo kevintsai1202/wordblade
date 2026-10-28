@@ -73,7 +73,7 @@ describe("renderMusic", () => {
       expect(peak(x), t.id).toBeGreaterThan(0.05);
       expect(peak(x), t.id).toBeLessThanOrEqual(0.9);
     }
-  });
+  }, 30_000); // 算全部範例配樂：全套測試一起跑時常超過預設 5 秒
 
   it("首尾無縫：跨過結尾的音折回開頭，接縫的跳動不比中間大", async () => {
     const x = await renderMusic(SEAM, factory);

@@ -216,14 +216,14 @@ export class WebEngine implements Engine {
     } catch { /* 沒有 localStorage 就照預設 */ }
     let handle: FileSystemFileHandle;
     let remove: () => Promise<void>;
-    let sibling: (name: string, text: string) => Promise<string>;
+    let sibling: (name: string, data: string | Uint8Array) => Promise<string>;
     if (toOpfs) {
       const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("exports", { create: true });
       handle = await dir.getFileHandle(suggestedName, { create: true });
       remove = () => dir.removeEntry(suggestedName).catch(() => undefined);
-      sibling = async (name, text) => {
+      sibling = async (name, data) => {
         const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
-        await w.write(text);
+        await w.write(data as string | Uint8Array<ArrayBuffer>);
         await w.close();
         return `OPFS exports/${name}`;
       };
@@ -239,9 +239,9 @@ export class WebEngine implements Engine {
         const w = await handle.createWritable();
         await w.close();
       };
-      sibling = async (name, text) => {
+      sibling = async (name, data) => {
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+        a.href = URL.createObjectURL(new Blob([data as string | Uint8Array<ArrayBuffer>], { type: typeof data === "string" ? "text/plain" : "application/octet-stream" }));
         a.download = name;
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
@@ -258,7 +258,7 @@ export class WebEngine implements Engine {
         await writable.abort().catch(() => undefined);
         await remove();
       },
-      writeSibling: (ext, text) => sibling(`${base}.${ext}`, text),
+      writeSibling: (ext, data) => sibling(`${base}.${ext}`, data),
     };
   }
 

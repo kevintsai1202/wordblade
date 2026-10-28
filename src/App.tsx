@@ -23,6 +23,7 @@ import { ZoomTab } from "./ui/ZoomTab";
 import { MaskTab } from "./ui/MaskTab";
 import { DirectorTab } from "./ui/DirectorTab";
 import { IntroTab } from "./ui/IntroTab";
+import { PublishTab, type Thumbnail } from "./ui/PublishTab";
 import { SoundTab } from "./ui/SoundTab";
 import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
 import type { ZoomEdit } from "./ui/ZoomBands";
@@ -75,6 +76,8 @@ function App() {
   const openTab = (tab: string) => setTabRequest((r) => ({ tab, seq: (r?.seq ?? 0) + 1 }));
   /** 局部放大：正在調的那一段與選取的路徑點（照字導字演：點放大條或「Adjust」進入，Done／Esc 離開） */
   const [zoomEdit, setZoomEdit] = useState<ZoomEdit | null>(null);
+  /** 發佈包的縮圖（只在記憶體；匯出時寫在影片旁邊） */
+  const [thumbnail, setThumbnail] = useState<Thumbnail | null>(null);
   const editingZoom = zoomEdit ? project.zooms?.find((z) => z.id === zoomEdit.zoomId) ?? null : null;
   const v1Track = project.tracks.filter((t) => t.kind === "video").sort((a, b) => a.index - b.index)[0]?.id;
   /** 播放頭所在、用到這段放大的素材的 V1 片段 */
@@ -273,7 +276,8 @@ function App() {
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
             intro: <IntroTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
-            export: <ExportTab suggestedName={exportPathFor(folder.location, "mp4")} project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
+            export: <ExportTab suggestedName={exportPathFor(folder.location, "mp4")} project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} thumbnail={thumbnail?.blob ?? null} />,
+            publish: <PublishTab project={project} duration={projectDuration(project)} dispatch={dispatch} thumbnail={thumbnail} onThumbnail={setThumbnail} />,
             inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
           }}
         />
