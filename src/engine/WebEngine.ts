@@ -366,4 +366,10 @@ export class WebEngine implements Engine {
   async separateVocals(_mediaId: string): Promise<{ vocalsId: string; backgroundId: string }> {
     throw new Error("Vocal separation is available in the Windows app");
   }
+
+  /** 產生的 WAV 包成 File，接著走一般匯入（和使用者選的檔案一樣存在記憶體，重新整理後就沒有） */
+  async importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource> {
+    const file = new File([bytes as Uint8Array<ArrayBuffer>], name, { type: "audio/wav" });
+    return { kind: "file", file, name };
+  }
 }

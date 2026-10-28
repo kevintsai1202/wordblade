@@ -1,0 +1,1509 @@
+[
+ {
+  "name": "音效：合格",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": null
+ },
+ {
+  "name": "音效：缺 length",
+  "kind": "sound",
+  "spec": {
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": "缺少 length"
+ },
+ {
+  "name": "音效：length 超出範圍",
+  "kind": "sound",
+  "spec": {
+   "length": 20,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": "length 要在 0.05～10 之間"
+ },
+ {
+  "name": "音效：波形不在列舉",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "pulse",
+      "freq": 440
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": "voices[0].source.wave 只能是"
+ },
+ {
+  "name": "音效：雜訊顏色不在列舉",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "noise",
+      "color": "brown"
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": "voices[0].source.color 只能是"
+ },
+ {
+  "name": "音效：曲線的點超出範圍（回陣列分支的錯）",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": [
+       {
+        "t": 11,
+        "v": 440
+       }
+      ]
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": "voices[0].source.freq[0].t 要在 0～10 之間"
+ },
+ {
+  "name": "音效：曲線 t 沒有遞增",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": [
+       {
+        "t": 0,
+        "v": 200
+       },
+       {
+        "t": 0,
+        "v": 400
+       }
+      ]
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": "voices[0].source.freq 的 t 要嚴格遞增"
+ },
+ {
+  "name": "音效：振盪器沒有頻率",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine"
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": "voices[0].source.freq：音效的振盪器要有頻率"
+ },
+ {
+  "name": "音效：聲部開始太晚",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     },
+     "start": 0.5
+    }
+   ]
+  },
+  "error": "voices[0].start"
+ },
+ {
+  "name": "音效：repeat.count 不是整數",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     },
+     "repeat": {
+      "count": 1.5,
+      "every": 0.1
+     }
+    }
+   ]
+  },
+  "error": "voices[0].repeat.count 要是整數"
+ },
+ {
+  "name": "音效：聲部太多",
+  "kind": "sound",
+  "spec": {
+   "length": 0.5,
+   "voices": [
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    },
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    },
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    },
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    },
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    },
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    },
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    },
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    },
+    {
+     "source": {
+      "type": "osc",
+      "wave": "sine",
+      "freq": 880
+     },
+     "env": {
+      "attack": 0.01,
+      "decay": 0.1,
+      "sustain": 0.5,
+      "release": 0.1
+     }
+    }
+   ]
+  },
+  "error": "voices 最多 8 個"
+ },
+ {
+  "name": "音效：根不是物件",
+  "kind": "sound",
+  "spec": [
+   1,
+   2
+  ],
+  "error": "要是物件"
+ },
+ {
+  "name": "配樂：合格",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "notes": [
+      {
+       "at": 0,
+       "len": 4,
+       "chord": 0
+      }
+     ]
+    }
+   ]
+  },
+  "error": null
+ },
+ {
+  "name": "配樂：和弦格式不對",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "Hmaj"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "notes": [
+      {
+       "at": 0,
+       "len": 4,
+       "chord": 0
+      }
+     ]
+    }
+   ]
+  },
+  "error": "chords[1] 格式不對"
+ },
+ {
+  "name": "配樂：bars 不是整數",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2.5,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "notes": [
+      {
+       "at": 0,
+       "len": 4,
+       "chord": 0
+      }
+     ]
+    }
+   ]
+  },
+  "error": "bars 要是整數"
+ },
+ {
+  "name": "配樂：拍號不在列舉",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "notes": [
+      {
+       "at": 0,
+       "len": 4,
+       "chord": 0
+      }
+     ]
+    }
+   ],
+   "beatsPerBar": 5
+  },
+  "error": "beatsPerBar 只能是 2、3、4"
+ },
+ {
+  "name": "配樂：非鼓聲部沒有 voice",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "bass",
+     "notes": [
+      {
+       "at": 0,
+       "len": 1,
+       "pitch": 40
+      }
+     ]
+    }
+   ]
+  },
+  "error": "parts[0].voice：drums 以外的聲部要有 voice"
+ },
+ {
+  "name": "配樂：音符沒有音高",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "notes": [
+      {
+       "at": 0,
+       "len": 1
+      }
+     ]
+    }
+   ]
+  },
+  "error": "parts[0].notes[0]：要有 pitch 或 chord"
+ },
+ {
+  "name": "配樂：鼓的音符沒有 drum",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "drums",
+     "notes": [
+      {
+       "at": 0,
+       "len": 1,
+       "pitch": 40
+      }
+     ]
+    }
+   ]
+  },
+  "error": "parts[0].notes[0]：鼓聲部的音符要有 drum"
+ },
+ {
+  "name": "配樂：音符超出 loopBars",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "loopBars": 1,
+     "notes": [
+      {
+       "at": 4,
+       "len": 1,
+       "chord": 0
+      }
+     ]
+    }
+   ]
+  },
+  "error": "parts[0].notes[0].at（4）要小於 4 拍"
+ },
+ {
+  "name": "配樂：loopBars 超過 bars",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "loopBars": 4,
+     "notes": [
+      {
+       "at": 0,
+       "len": 1,
+       "chord": 0
+      }
+     ]
+    }
+   ]
+  },
+  "error": "parts[0].loopBars（4）不能超過 bars（2）"
+ },
+ {
+  "name": "配樂：太長",
+  "kind": "music",
+  "spec": {
+   "bpm": 60,
+   "bars": 32,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "notes": [
+      {
+       "at": 0,
+       "len": 4,
+       "chord": 0
+      }
+     ]
+    }
+   ]
+  },
+  "error": "超過 120 秒"
+ },
+ {
+  "name": "配樂：展開後音太多",
+  "kind": "music",
+  "spec": {
+   "bpm": 180,
+   "bars": 32,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "loopBars": 1,
+     "notes": [
+      {
+       "at": 0,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.875,
+       "len": 0.1,
+       "chord": 0
+      }
+     ]
+    },
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "loopBars": 1,
+     "notes": [
+      {
+       "at": 0,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.875,
+       "len": 0.1,
+       "chord": 0
+      }
+     ]
+    },
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "loopBars": 1,
+     "notes": [
+      {
+       "at": 0,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.875,
+       "len": 0.1,
+       "chord": 0
+      }
+     ]
+    },
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      }
+     },
+     "loopBars": 1,
+     "notes": [
+      {
+       "at": 0,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 0.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 1.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 2.875,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.125,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.25,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.375,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.5,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.625,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.75,
+       "len": 0.1,
+       "chord": 0
+      },
+      {
+       "at": 3.875,
+       "len": 0.1,
+       "chord": 0
+      }
+     ]
+    }
+   ]
+  },
+  "error": "超過 3000 個"
+ },
+ {
+  "name": "配樂：pad 的 voice 曲線沒遞增",
+  "kind": "music",
+  "spec": {
+   "bpm": 120,
+   "bars": 2,
+   "chords": [
+    "Am",
+    "F"
+   ],
+   "parts": [
+    {
+     "role": "pad",
+     "voice": {
+      "source": {
+       "type": "osc",
+       "wave": "triangle"
+      },
+      "env": {
+       "attack": 0.1,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.3
+      },
+      "filter": {
+       "type": "lowpass",
+       "cutoff": [
+        {
+         "t": 1,
+         "v": 500
+        },
+        {
+         "t": 0.5,
+         "v": 900
+        }
+       ]
+      }
+     },
+     "notes": [
+      {
+       "at": 0,
+       "len": 4,
+       "chord": 0
+      }
+     ]
+    }
+   ]
+  },
+  "error": "parts[0].voice.filter.cutoff 的 t 要嚴格遞增"
+ }
+]

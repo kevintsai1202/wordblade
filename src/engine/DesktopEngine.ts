@@ -186,4 +186,10 @@ export class DesktopEngine implements Engine {
   async separateVocals(_mediaId: string): Promise<{ vocalsId: string; backgroundId: string }> {
     throw new NotImplementedError("separateVocals");
   }
+
+  /** 產生的 WAV 寫進 app 資料夾的 generated/（Rust write_generated；raw body 傳位元組，不經 JSON），回傳路徑給一般匯入流程 */
+  async importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource> {
+    const path = await invoke<string>("write_generated", bytes, { headers: { "x-generated-name": name } });
+    return { kind: "path", path, name: baseName(path) };
+  }
 }

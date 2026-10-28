@@ -32,6 +32,7 @@
     "@types/react-dom": "^19.1.6",
     "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^6.0.2",
+    "node-web-audio-api": "2.2.0",
     "typescript": "~6.0.3",
     "vite": "^8.0.16",
     "vitest": "^5.0.5"

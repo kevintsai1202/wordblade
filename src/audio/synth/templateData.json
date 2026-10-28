@@ -1,0 +1,1100 @@
+{
+ "sound": [
+  {
+   "id": "whoosh",
+   "title": "Whoosh",
+   "description": "A soft airy whoosh passing by",
+   "spec": {
+    "length": 0.7,
+    "gain": 0.8,
+    "voices": [
+     {
+      "source": {
+       "type": "noise",
+       "color": "pink"
+      },
+      "filter": {
+       "type": "bandpass",
+       "cutoff": [
+        {
+         "t": 0,
+         "v": 300
+        },
+        {
+         "t": 0.35,
+         "v": 3000
+        },
+        {
+         "t": 0.7,
+         "v": 600
+        }
+       ],
+       "q": 1.5
+      },
+      "env": {
+       "attack": 0.25,
+       "decay": 0.2,
+       "sustain": 0.3,
+       "release": 0.2
+      },
+      "dur": 0.45,
+      "effects": {
+       "reverb": {
+        "decay": 0.8,
+        "mix": 0.2
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "pop",
+   "title": "Pop",
+   "description": "A short bubbly pop",
+   "spec": {
+    "length": 0.15,
+    "gain": 0.8,
+    "voices": [
+     {
+      "source": {
+       "type": "osc",
+       "wave": "sine",
+       "freq": [
+        {
+         "t": 0,
+         "v": 900
+        },
+        {
+         "t": 0.06,
+         "v": 250
+        }
+       ]
+      },
+      "env": {
+       "attack": 0.002,
+       "decay": 0.06,
+       "sustain": 0,
+       "release": 0.02
+      },
+      "dur": 0.07
+     }
+    ]
+   }
+  },
+  {
+   "id": "ding",
+   "title": "Ding",
+   "description": "A bright bell ding",
+   "spec": {
+    "length": 1.5,
+    "gain": 0.7,
+    "voices": [
+     {
+      "source": {
+       "type": "osc",
+       "wave": "sine",
+       "freq": 1318.5
+      },
+      "env": {
+       "attack": 0.003,
+       "decay": 1.2,
+       "sustain": 0,
+       "release": 0.2
+      },
+      "dur": 1.2,
+      "effects": {
+       "reverb": {
+        "decay": 1.2,
+        "mix": 0.25
+       }
+      }
+     },
+     {
+      "source": {
+       "type": "osc",
+       "wave": "sine",
+       "freq": 2637
+      },
+      "env": {
+       "attack": 0.003,
+       "decay": 0.6,
+       "sustain": 0,
+       "release": 0.2
+      },
+      "dur": 0.6,
+      "gain": 0.3
+     }
+    ]
+   }
+  },
+  {
+   "id": "typing",
+   "title": "Typing",
+   "description": "Keyboard typing, a few quick keystrokes",
+   "spec": {
+    "length": 1.2,
+    "gain": 0.8,
+    "voices": [
+     {
+      "source": {
+       "type": "noise",
+       "color": "white"
+      },
+      "filter": {
+       "type": "highpass",
+       "cutoff": 2000,
+       "q": 0.7
+      },
+      "env": {
+       "attack": 0.001,
+       "decay": 0.03,
+       "sustain": 0,
+       "release": 0.01
+      },
+      "dur": 0.03,
+      "repeat": {
+       "count": 8,
+       "every": 0.13
+      }
+     },
+     {
+      "source": {
+       "type": "osc",
+       "wave": "sine",
+       "freq": [
+        {
+         "t": 0,
+         "v": 220
+        },
+        {
+         "t": 0.03,
+         "v": 140
+        }
+       ]
+      },
+      "env": {
+       "attack": 0.001,
+       "decay": 0.03,
+       "sustain": 0,
+       "release": 0.01
+      },
+      "dur": 0.03,
+      "gain": 0.5,
+      "start": 0.06,
+      "repeat": {
+       "count": 5,
+       "every": 0.21
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "rise",
+   "title": "Rise",
+   "description": "A rising synth riser that builds tension",
+   "spec": {
+    "length": 1.2,
+    "gain": 0.6,
+    "voices": [
+     {
+      "source": {
+       "type": "osc",
+       "wave": "sawtooth",
+       "freq": [
+        {
+         "t": 0,
+         "v": 200
+        },
+        {
+         "t": 1.1,
+         "v": 1600
+        }
+       ]
+      },
+      "filter": {
+       "type": "lowpass",
+       "cutoff": [
+        {
+         "t": 0,
+         "v": 800
+        },
+        {
+         "t": 1.1,
+         "v": 6000
+        }
+       ]
+      },
+      "env": {
+       "attack": 0.3,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.1
+      },
+      "dur": 1.1,
+      "effects": {
+       "delay": {
+        "time": 0.12,
+        "feedback": 0.3,
+        "mix": 0.2
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "fall",
+   "title": "Fall",
+   "description": "A falling pitch drop",
+   "spec": {
+    "length": 1,
+    "gain": 0.7,
+    "voices": [
+     {
+      "source": {
+       "type": "osc",
+       "wave": "triangle",
+       "freq": [
+        {
+         "t": 0,
+         "v": 1400
+        },
+        {
+         "t": 0.9,
+         "v": 120
+        }
+       ]
+      },
+      "filter": {
+       "type": "lowpass",
+       "cutoff": [
+        {
+         "t": 0,
+         "v": 4000
+        },
+        {
+         "t": 0.9,
+         "v": 600
+        }
+       ]
+      },
+      "env": {
+       "attack": 0.01,
+       "decay": 0,
+       "sustain": 1,
+       "release": 0.1
+      },
+      "dur": 0.9
+     }
+    ]
+   }
+  },
+  {
+   "id": "click",
+   "title": "Click",
+   "description": "A crisp UI click",
+   "spec": {
+    "length": 0.08,
+    "gain": 0.8,
+    "voices": [
+     {
+      "source": {
+       "type": "osc",
+       "wave": "square",
+       "freq": 2000
+      },
+      "env": {
+       "attack": 0.001,
+       "decay": 0.015,
+       "sustain": 0,
+       "release": 0.005
+      },
+      "dur": 0.02,
+      "gain": 0.4
+     },
+     {
+      "source": {
+       "type": "noise",
+       "color": "white"
+      },
+      "filter": {
+       "type": "highpass",
+       "cutoff": 3000
+      },
+      "env": {
+       "attack": 0.001,
+       "decay": 0.01,
+       "sustain": 0,
+       "release": 0.005
+      },
+      "dur": 0.015
+     }
+    ]
+   }
+  },
+  {
+   "id": "sweep",
+   "title": "Sweep",
+   "description": "A noise sweep for scene transitions",
+   "spec": {
+    "length": 1.5,
+    "gain": 0.7,
+    "voices": [
+     {
+      "source": {
+       "type": "noise",
+       "color": "white"
+      },
+      "filter": {
+       "type": "lowpass",
+       "cutoff": [
+        {
+         "t": 0,
+         "v": 300
+        },
+        {
+         "t": 1,
+         "v": 9000
+        }
+       ],
+       "q": 4
+      },
+      "env": {
+       "attack": 0.6,
+       "decay": 0.3,
+       "sustain": 0.6,
+       "release": 0.4
+      },
+      "dur": 1,
+      "effects": {
+       "reverb": {
+        "decay": 1.5,
+        "mix": 0.3
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "impact",
+   "title": "Impact",
+   "description": "A deep cinematic hit",
+   "spec": {
+    "length": 1.2,
+    "gain": 0.9,
+    "voices": [
+     {
+      "source": {
+       "type": "osc",
+       "wave": "sine",
+       "freq": [
+        {
+         "t": 0,
+         "v": 120
+        },
+        {
+         "t": 0.4,
+         "v": 35
+        }
+       ]
+      },
+      "env": {
+       "attack": 0.002,
+       "decay": 0.5,
+       "sustain": 0,
+       "release": 0.3
+      },
+      "dur": 0.5,
+      "effects": {
+       "distortion": {
+        "amount": 0.3
+       },
+       "reverb": {
+        "decay": 1.5,
+        "mix": 0.25
+       }
+      }
+     },
+     {
+      "source": {
+       "type": "noise",
+       "color": "pink"
+      },
+      "filter": {
+       "type": "lowpass",
+       "cutoff": [
+        {
+         "t": 0,
+         "v": 3000
+        },
+        {
+         "t": 0.2,
+         "v": 400
+        }
+       ]
+      },
+      "env": {
+       "attack": 0.001,
+       "decay": 0.15,
+       "sustain": 0,
+       "release": 0.1
+      },
+      "dur": 0.15,
+      "gain": 0.6
+     }
+    ]
+   }
+  },
+  {
+   "id": "sparkle",
+   "title": "Sparkle",
+   "description": "A twinkling magic sparkle",
+   "spec": {
+    "length": 1.2,
+    "gain": 0.6,
+    "voices": [
+     {
+      "source": {
+       "type": "osc",
+       "wave": "triangle",
+       "freq": 1568
+      },
+      "env": {
+       "attack": 0.002,
+       "decay": 0.15,
+       "sustain": 0,
+       "release": 0.1
+      },
+      "dur": 0.15,
+      "start": 0,
+      "gain": 0.6,
+      "effects": {
+       "delay": {
+        "time": 0.15,
+        "feedback": 0.4,
+        "mix": 0.35
+       }
+      }
+     },
+     {
+      "source": {
+       "type": "osc",
+       "wave": "triangle",
+       "freq": 2093
+      },
+      "env": {
+       "attack": 0.002,
+       "decay": 0.15,
+       "sustain": 0,
+       "release": 0.1
+      },
+      "dur": 0.15,
+      "start": 0.08,
+      "gain": 0.6,
+      "effects": {
+       "delay": {
+        "time": 0.15,
+        "feedback": 0.4,
+        "mix": 0.35
+       }
+      }
+     },
+     {
+      "source": {
+       "type": "osc",
+       "wave": "triangle",
+       "freq": 2637
+      },
+      "env": {
+       "attack": 0.002,
+       "decay": 0.15,
+       "sustain": 0,
+       "release": 0.1
+      },
+      "dur": 0.15,
+      "start": 0.16,
+      "gain": 0.6,
+      "effects": {
+       "delay": {
+        "time": 0.15,
+        "feedback": 0.4,
+        "mix": 0.35
+       }
+      }
+     },
+     {
+      "source": {
+       "type": "osc",
+       "wave": "triangle",
+       "freq": 3136
+      },
+      "env": {
+       "attack": 0.002,
+       "decay": 0.15,
+       "sustain": 0,
+       "release": 0.1
+      },
+      "dur": 0.15,
+      "start": 0.24,
+      "gain": 0.6,
+      "effects": {
+       "delay": {
+        "time": 0.15,
+        "feedback": 0.4,
+        "mix": 0.35
+       }
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "music": [
+  {
+   "id": "lofi",
+   "title": "Lo-fi chill",
+   "description": "Relaxed lo-fi loop, 80 BPM, soft pad, round bass and a laid-back beat",
+   "spec": {
+    "bpm": 80,
+    "beatsPerBar": 4,
+    "bars": 4,
+    "chords": [
+     "Am7",
+     "Fmaj7",
+     "Cmaj7",
+     "G"
+    ],
+    "gain": 0.8,
+    "seed": 7,
+    "parts": [
+     {
+      "role": "pad",
+      "gain": 0.35,
+      "loopBars": 1,
+      "voice": {
+       "source": {
+        "type": "osc",
+        "wave": "triangle"
+       },
+       "filter": {
+        "type": "lowpass",
+        "cutoff": 1200
+       },
+       "env": {
+        "attack": 0.3,
+        "decay": 0.5,
+        "sustain": 0.8,
+        "release": 0.8
+       },
+       "effects": {
+        "reverb": {
+         "decay": 2,
+         "mix": 0.3
+        }
+       }
+      },
+      "notes": [
+       {
+        "at": 0,
+        "len": 4,
+        "chord": 0,
+        "octave": 4,
+        "vel": 0.6
+       },
+       {
+        "at": 0,
+        "len": 4,
+        "chord": 1,
+        "octave": 4,
+        "vel": 0.6
+       },
+       {
+        "at": 0,
+        "len": 4,
+        "chord": 2,
+        "octave": 4,
+        "vel": 0.6
+       }
+      ]
+     },
+     {
+      "role": "bass",
+      "gain": 0.7,
+      "loopBars": 1,
+      "voice": {
+       "source": {
+        "type": "osc",
+        "wave": "triangle"
+       },
+       "filter": {
+        "type": "lowpass",
+        "cutoff": 600
+       },
+       "env": {
+        "attack": 0.01,
+        "decay": 0.3,
+        "sustain": 0.6,
+        "release": 0.15
+       }
+      },
+      "notes": [
+       {
+        "at": 0,
+        "len": 1.5,
+        "chord": 0,
+        "octave": 2
+       },
+       {
+        "at": 2,
+        "len": 1,
+        "chord": 2,
+        "octave": 2
+       },
+       {
+        "at": 3,
+        "len": 1,
+        "chord": 0,
+        "octave": 2
+       }
+      ]
+     },
+     {
+      "role": "drums",
+      "gain": 0.8,
+      "loopBars": 1,
+      "notes": [
+       {
+        "at": 0,
+        "len": 0.5,
+        "drum": "kick"
+       },
+       {
+        "at": 2.5,
+        "len": 0.5,
+        "drum": "kick"
+       },
+       {
+        "at": 1,
+        "len": 0.5,
+        "drum": "snare",
+        "vel": 0.7
+       },
+       {
+        "at": 3,
+        "len": 0.5,
+        "drum": "snare",
+        "vel": 0.7
+       },
+       {
+        "at": 0,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.35
+       },
+       {
+        "at": 0.5,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.35
+       },
+       {
+        "at": 1,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.35
+       },
+       {
+        "at": 1.5,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.35
+       },
+       {
+        "at": 2,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.35
+       },
+       {
+        "at": 2.5,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.35
+       },
+       {
+        "at": 3,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.35
+       },
+       {
+        "at": 3.5,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.35
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "tech",
+   "title": "Upbeat tech",
+   "description": "Upbeat tech background, 120 BPM, arpeggio, pulsing bass, four-on-the-floor",
+   "spec": {
+    "bpm": 120,
+    "beatsPerBar": 4,
+    "bars": 8,
+    "chords": [
+     "Am",
+     "F",
+     "C",
+     "G"
+    ],
+    "gain": 0.8,
+    "seed": 3,
+    "parts": [
+     {
+      "role": "arp",
+      "gain": 0.3,
+      "loopBars": 1,
+      "voice": {
+       "source": {
+        "type": "osc",
+        "wave": "sawtooth"
+       },
+       "filter": {
+        "type": "lowpass",
+        "cutoff": 2500,
+        "q": 2
+       },
+       "env": {
+        "attack": 0.005,
+        "decay": 0.15,
+        "sustain": 0.2,
+        "release": 0.05
+       },
+       "effects": {
+        "delay": {
+         "time": 0.375,
+         "feedback": 0.3,
+         "mix": 0.25
+        }
+       }
+      },
+      "notes": [
+       {
+        "at": 0,
+        "len": 0.2,
+        "chord": 0,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 0.25,
+        "len": 0.2,
+        "chord": 1,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 0.5,
+        "len": 0.2,
+        "chord": 2,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 0.75,
+        "len": 0.2,
+        "chord": 3,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 1,
+        "len": 0.2,
+        "chord": 0,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 1.25,
+        "len": 0.2,
+        "chord": 1,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 1.5,
+        "len": 0.2,
+        "chord": 2,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 1.75,
+        "len": 0.2,
+        "chord": 3,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 2,
+        "len": 0.2,
+        "chord": 0,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 2.25,
+        "len": 0.2,
+        "chord": 1,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 2.5,
+        "len": 0.2,
+        "chord": 2,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 2.75,
+        "len": 0.2,
+        "chord": 3,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 3,
+        "len": 0.2,
+        "chord": 0,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 3.25,
+        "len": 0.2,
+        "chord": 1,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 3.5,
+        "len": 0.2,
+        "chord": 2,
+        "octave": 4,
+        "vel": 0.7
+       },
+       {
+        "at": 3.75,
+        "len": 0.2,
+        "chord": 3,
+        "octave": 4,
+        "vel": 0.7
+       }
+      ]
+     },
+     {
+      "role": "bass",
+      "gain": 0.6,
+      "loopBars": 1,
+      "voice": {
+       "source": {
+        "type": "osc",
+        "wave": "square"
+       },
+       "filter": {
+        "type": "lowpass",
+        "cutoff": 500
+       },
+       "env": {
+        "attack": 0.005,
+        "decay": 0.1,
+        "sustain": 0.7,
+        "release": 0.05
+       }
+      },
+      "notes": [
+       {
+        "at": 0,
+        "len": 0.4,
+        "chord": 0,
+        "octave": 2,
+        "vel": 0.9
+       },
+       {
+        "at": 0.5,
+        "len": 0.4,
+        "chord": 0,
+        "octave": 2,
+        "vel": 0.6
+       },
+       {
+        "at": 1,
+        "len": 0.4,
+        "chord": 0,
+        "octave": 2,
+        "vel": 0.9
+       },
+       {
+        "at": 1.5,
+        "len": 0.4,
+        "chord": 0,
+        "octave": 2,
+        "vel": 0.6
+       },
+       {
+        "at": 2,
+        "len": 0.4,
+        "chord": 0,
+        "octave": 2,
+        "vel": 0.9
+       },
+       {
+        "at": 2.5,
+        "len": 0.4,
+        "chord": 0,
+        "octave": 2,
+        "vel": 0.6
+       },
+       {
+        "at": 3,
+        "len": 0.4,
+        "chord": 0,
+        "octave": 2,
+        "vel": 0.9
+       },
+       {
+        "at": 3.5,
+        "len": 0.4,
+        "chord": 0,
+        "octave": 2,
+        "vel": 0.6
+       }
+      ]
+     },
+     {
+      "role": "pad",
+      "gain": 0.25,
+      "loopBars": 1,
+      "voice": {
+       "source": {
+        "type": "osc",
+        "wave": "sawtooth"
+       },
+       "filter": {
+        "type": "lowpass",
+        "cutoff": 900
+       },
+       "env": {
+        "attack": 0.5,
+        "decay": 0.5,
+        "sustain": 0.7,
+        "release": 0.6
+       },
+       "effects": {
+        "reverb": {
+         "decay": 2.5,
+         "mix": 0.35
+        }
+       }
+      },
+      "notes": [
+       {
+        "at": 0,
+        "len": 4,
+        "chord": 0,
+        "octave": 4,
+        "vel": 0.5
+       },
+       {
+        "at": 0,
+        "len": 4,
+        "chord": 1,
+        "octave": 4,
+        "vel": 0.5
+       },
+       {
+        "at": 0,
+        "len": 4,
+        "chord": 2,
+        "octave": 4,
+        "vel": 0.5
+       }
+      ]
+     },
+     {
+      "role": "drums",
+      "gain": 0.8,
+      "loopBars": 1,
+      "notes": [
+       {
+        "at": 0,
+        "len": 0.5,
+        "drum": "kick"
+       },
+       {
+        "at": 1,
+        "len": 0.5,
+        "drum": "kick"
+       },
+       {
+        "at": 2,
+        "len": 0.5,
+        "drum": "kick"
+       },
+       {
+        "at": 3,
+        "len": 0.5,
+        "drum": "kick"
+       },
+       {
+        "at": 0.5,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.4
+       },
+       {
+        "at": 1.5,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.4
+       },
+       {
+        "at": 2.5,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.4
+       },
+       {
+        "at": 3.5,
+        "len": 0.25,
+        "drum": "hat",
+        "vel": 0.4
+       },
+       {
+        "at": 1,
+        "len": 0.5,
+        "drum": "clap",
+        "vel": 0.6
+       },
+       {
+        "at": 3,
+        "len": 0.5,
+        "drum": "clap",
+        "vel": 0.6
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}
