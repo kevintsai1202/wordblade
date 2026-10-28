@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openTab } from "./helpers/tabs";
 
 // 2D 特效（spec §5.7）：沙盒（沒有 same-origin 的 iframe → Worker → 原專案的直譯器）畫出範本，疊在預覽上。
 // 空專案也能用：特效本身撐開成片長度。驗：框線範本在目標框附近畫出紅色、文字範本畫出白字，跨來源隔離還在。
@@ -28,7 +29,7 @@ test("內建範本在沙盒裡畫出來並疊在預覽上", async ({ page }) => 
   page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") console.log(`[console.${m.type()}] ${m.text()}`); });
   page.on("pageerror", (e) => console.log(`[pageerror] ${e.message}`));
   await page.goto("/");
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe");
 
   // 紅框範本：目標框在畫面中央（寬 0.3、高 0.2），播放頭移到 1.5 秒（框線已畫完）
   await page.locator('[data-template="box-ding"]').click();
@@ -63,7 +64,7 @@ test("內建範本在沙盒裡畫出來並疊在預覽上", async ({ page }) => 
 test("特效的拖曳、Inspector 改參數、預覽上拖目標框", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto("/");
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe");
   await page.locator('[data-template="box-ding"]').click();
   const chip = page.locator(".effect-chip");
   await expect(chip).toHaveCount(1, { timeout: 15_000 });
@@ -81,7 +82,7 @@ test("特效的拖曳、Inspector 改參數、預覽上拖目標框", async ({ p
 
   // Inspector：選取後改「進場」為 fly（一筆可復原的編輯），目標框的中心 X 顯示 0.5
   await chip.click();
-  await page.locator('[data-tab="inspector"]').click();
+  await openTab(page, "inspector");
   await expect(page.getByTestId("inspector")).toBeVisible();
   await expect(page.locator('[data-param="box.cx"] input')).toHaveValue("0.5");
   const motion = page.locator('[data-param="motion"] select');

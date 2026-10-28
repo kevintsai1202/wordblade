@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // 片段變速（spec §5.20，P1-6）：選 V1 片段 → Inspector 設倍數 → 時間軸變短／變長、連動的 A1 一起變 → 匯出的長度跟著變、
 // 聲音保持音高（talk.mp4 的 440 Hz 正弦波：上升過零次數＝440 × 秒數；不保持音高的話 2 倍會變 880 Hz）→ Ctrl+Z 回來。
@@ -18,7 +19,7 @@ async function editedSeconds(page: Page): Promise<number> {
 
 /** 匯出（OPFS）並存成檔案 */
 async function exportTo(page: Page, name: string): Promise<string> {
-  await page.locator('[data-tab="export"]').click();
+  await openTab(page, "export");
   await page.getByTestId("export-start").click();
   await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 90_000 });
   const b64 = await page.evaluate(async () => {
@@ -59,7 +60,7 @@ async function setup(page: Page) {
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
   await page.locator('.track-row[data-track-id="V1"] .clip').first().click();
-  await page.locator('[data-tab="inspector"]').click();
+  await openTab(page, "inspector");
   await expect(page.getByTestId("clip-inspector")).toBeVisible();
 }
 

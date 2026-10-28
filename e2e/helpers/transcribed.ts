@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import path from "node:path";
+import { openTab } from "./tabs";
 
 // e2e 共用：用假閘道（page.route 攔 /v1/asr）轉錄 talk.mp4，得到有字幕的專案。不連真的閘道、不花錢。
 const FIXTURES = path.join(import.meta.dirname, "..", "fixtures");
@@ -32,7 +33,7 @@ export async function transcribed(page: Page, turns: FakeTurn[] = DEFAULT_TURNS)
   await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
-  await page.locator('[data-tab="transcript"]').click();
+  await openTab(page, "transcript");
   await expect(page.getByTestId("transcribe-start")).toBeEnabled({ timeout: 20_000 });
   await page.getByTestId("transcribe-start").click();
   await expect(page.getByTestId("transcribe-status")).toContainText("words", { timeout: 20_000 });

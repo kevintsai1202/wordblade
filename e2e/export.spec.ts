@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // MP4 匯出（spec §5.4）：網頁版把 V1＋A1 的影片加一個 2D 特效匯出成 MP4（e2e 寫進 OPFS，不開存檔對話框），
 // 再把檔案拿出來用 ffprobe／ffmpeg 檢查：長度、解析度、有聲音、特效有畫進去、特效以外的畫面和原片一樣。
@@ -66,11 +67,11 @@ test("網頁版匯出：影片＋聲音＋2D 特效 → MP4，長度、解析度
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
   // 0 秒加一個「紅框＋叮」範本（2.5 秒）
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe");
   await page.locator('[data-template="box-ding"]').click();
   await expect(page.locator(".effect-chip")).toHaveCount(1);
 
-  await page.locator('[data-tab="export"]').click();
+  await openTab(page, "export");
   await expect(page.getByTestId("export-summary")).toContainText("320×180");
   await page.getByTestId("export-start").click();
   await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 90_000 });
@@ -108,7 +109,7 @@ test("匯出可以取消：進度條出現後按取消，回到可再匯出的�
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   // 放六次、輸出 1080p，片子夠長（24 秒）來得及按取消
   for (let i = 0; i < 6; i++) await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
-  await page.locator('[data-tab="export"]').click();
+  await openTab(page, "export");
   await page.getByTestId("export-preset").selectOption("1080p");
   await page.getByTestId("export-start").click();
   await expect(page.getByTestId("export-progress")).toBeVisible();
@@ -137,10 +138,10 @@ test("3D 場景也匯出：桌上螢幕範本的中段看得到木紋桌", async
   await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe3d");
   await page.locator('[data-template="desk-reveal"]').click();
   await expect(page.locator(".effect-chip")).toHaveCount(1);
-  await page.locator('[data-tab="export"]').click();
+  await openTab(page, "export");
   await page.getByTestId("export-start").click();
   await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 120_000 });
   await expect(page.getByTestId("export-status")).not.toContainText("skipped");

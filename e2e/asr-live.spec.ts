@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // Muse ASR 實機測試（spec §5.2）：連真的閘道與 Muse Voice Transcribe（會花錢，約 US$0.18／小時音訊），只在設了環境變數時跑：
 //   pwsh scripts/asr/live-local.ps1        （起本機閘道與臨時資料庫、建一次性權杖、跑這支、收掉）
@@ -45,7 +46,7 @@ test("Muse ASR 實機：英文 TTS 講課片轉錄，字幕句子起點對 SRT �
   await (await chooser).setFiles(SAMPLE);
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 120_000 });
   await page.locator(".media-item", { hasText: BASE }).dblclick();
-  await page.locator('[data-tab="transcript"]').click();
+  await openTab(page, "transcript");
   await expect(page.getByTestId("transcribe-start")).toBeEnabled({ timeout: 120_000 });
   const t0 = Date.now();
   await page.getByTestId("transcribe-start").click();

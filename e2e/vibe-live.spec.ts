@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openTab } from "./helpers/tabs";
 
 // Vibe特效實機測試：連真的閘道與 Muse Wonder（會花 token），只在設了環境變數時跑：
 //   $env:WORDBLADE_LIVE_GATEWAY = 'http://localhost:8080'; $env:WORDBLADE_LIVE_TOKEN = '<邀請權杖>'
@@ -17,7 +18,7 @@ test("Vibe 實機：一句話 → Wonder 寫插件 → 沙盒試跑 → 加到�
     localStorage.setItem("wordblade.consent.vibe", "yes");
   }, [gateway!, token!]);
   await page.goto("/");
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe");
   await page.getByTestId("vibe-description").fill("Bright orange confetti bursting upward from the bottom of the box");
   const t0 = Date.now();
   await page.getByTestId("vibe-generate").click();
@@ -49,9 +50,8 @@ test("Vibe 3D 實機：一句話 → Wonder 寫 three.js 插件 → 3D 沙盒試
     localStorage.setItem("wordblade.consent.vibe", "yes");
   }, [gateway!, token!]);
   await page.goto("/");
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe3d");
   await page.getByTestId("vibe-description").fill("A shiny golden 3D star that spins and bounces above the box, with a few small sparkles around it");
-  await page.getByTestId("vibe-3d").check();
   const t0 = Date.now();
   await page.getByTestId("vibe-generate").click();
   await expect(page.locator('.effect-chip, [data-testid="vibe-error"]')).toHaveCount(1, { timeout: 230_000 });

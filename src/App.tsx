@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState, type CSSProperties } from "react";
 import { ensureAudioGraph } from "./audio/audioGraph";
 import { buildCaptions } from "./core/captions";
 import { emptyProject } from "./core/media";
@@ -24,6 +24,8 @@ import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
 import type { ZoomEdit } from "./ui/ZoomBands";
 import { zoomFromRange } from "./core/zoom";
 import { clipEnd, timelineToSource } from "./core/timeline";
+import { useLayout } from "./ui/layout";
+import { Splitter } from "./ui/Splitter";
 import "./App.css";
 
 /** 網址帶 ?demo=1 就直接開示範專案（e2e 用）；否則開空專案 */
@@ -38,6 +40,8 @@ function App() {
   const engine = useMemo(() => createEngine(), []);
   /** 插件沙盒（2D 特效的畫格、試跑），整個 app 共用一個 */
   const plugins = useMemo(() => new PluginService(), []);
+  /** 區塊大小（三條分隔線，記在這台電腦） */
+  const { layout, set: setLayout, reset: resetLayout } = useLayout();
   const [state, dispatch] = useReducer(reducer, START_WITH_DEMO ? demoProject() : emptyProject(), initialState);
   const project = state.history.present;
   /** 字幕由逐字稿算出（D26），專案一變就重算 */
@@ -127,7 +131,7 @@ function App() {
   const onImport = async () => importSources(await engine.pickFiles());
 
   return (
-    <div className="app">
+    <div className="app" style={{ "--panel-w": `${layout.panelWidth}px`, "--timeline-h": `${layout.timelineHeight}px` } as CSSProperties}>
       <header className="title-bar">
         <span className="brand">WordBlade</span>
         <span className="project-path">{project.media.length ? "untitled project" : "new project"}</span>
@@ -138,7 +142,7 @@ function App() {
         <button disabled title="Export — coming soon">Export</button>
       </header>
       <main className="workspace">
-        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId}
+        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} playSeq={state.playSeq} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId}
           overlay={editingZoom && zoomEdit ? (
             <ZoomEditOverlay
               zoom={editingZoom} clip={zoomClip} playhead={state.playhead} edit={zoomEdit}
@@ -156,12 +160,14 @@ function App() {
             />
           ) : null}
           dispatch={dispatch} />
+        <Splitter axis="x" sign={-1} value={layout.panelWidth} onChange={(v) => setLayout("panelWidth", v)} onReset={() => resetLayout("panelWidth")} testId="split-panel" title="Drag to resize the edit panel" />
         <EditPanel
           request={tabRequest}
           initialTab={START_WITH_DEMO ? "transcript" : "media"}
           tabs={{
             media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
-            vibe: <VibeTab plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
+            vibe: <VibeTab dimension="2d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
+            vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
@@ -171,7 +177,10 @@ function App() {
           }}
         />
       </main>
-      <Timeline state={state} dispatch={dispatch} captions={captions} library={library} zoomEdit={zoomEdit} onZoomEdit={setZoomEdit} onRangeAction={(kind) => (kind === "effect" ? openTab("vibe") : createZoom())} />
+      <Splitter axis="y" sign={-1} value={layout.timelineHeight} onChange={(v) => setLayout("timelineHeight", v)} onReset={() => resetLayout("timelineHeight")} testId="split-timeline" title="Drag to resize the timeline" />
+      <Timeline headerWidth={layout.headerWidth}
+        headerSplitter={<Splitter axis="x" sign={1} value={layout.headerWidth} onChange={(v) => setLayout("headerWidth", v)} onReset={() => resetLayout("headerWidth")} testId="split-header" title="Drag to resize the track headers" />}
+        state={state} dispatch={dispatch} captions={captions} library={library} zoomEdit={zoomEdit} onZoomEdit={setZoomEdit} onRangeAction={(kind) => (kind === "effect" ? openTab("vibe") : createZoom())} />
       <footer className="status-bar">
         Space play · J / K / L reverse / stop / forward · Click to select · Delete ripple delete · Ctrl+B split at playhead · Ctrl+Z / Ctrl+Shift+Z undo / redo · ← → frame · ↑ ↓ edit points · Ctrl+wheel zoom
       </footer>

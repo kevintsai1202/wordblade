@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import path from "node:path";
 import { transcribed } from "./helpers/transcribed";
+import { openTab } from "./helpers/tabs";
 
 // 一鍵去贅詞（spec §5.16）＋清除無聲片段（§5.16b）：共用確認清單——找出來、取消勾選一條、Remove selected 一次剪掉、Ctrl+Z 復原。
 const FIXTURES = path.join(import.meta.dirname, "fixtures");
@@ -22,7 +23,7 @@ test("清除無聲片段：gaps.mp4 中間兩段 1.5 秒無聲 → 找到 2 段�
   await (await chooser).setFiles(path.join(FIXTURES, "gaps.mp4"));
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "gaps.mp4" }).dblclick();
-  await page.locator('[data-tab="transcript"]').click();
+  await openTab(page, "transcript");
   // 音量包絡算好才找得到（沒有逐字稿也能用）
   await expect.poll(async () => {
     await page.getByTestId("find-pauses").click();

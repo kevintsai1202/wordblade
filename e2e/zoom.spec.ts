@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // 局部放大（spec §5.19、D38，照字導字演）：Shift＋拖曳時間軸選範圍 → 🔍 Zoom 建立一段放大 → 預覽上的放大框
 // 拖角落縮成 4 倍、拖到左邊紅色色條 → 中段放大、範圍外原畫面；＋Keyframe 在 3 秒加路徑點並只移動那一點 → 放大範圍沿路徑移動；
@@ -86,7 +87,7 @@ test("局部放大：選範圍建立、調框、路徑點、匯出、刪除與�
   const atStart = await redRatio(page);
 
   // 匯出的 MP4：1.6 秒那一格也放大（加路徑點之前，這時框還停在紅色色條上）
-  await page.locator('[data-tab="export"]').click();
+  await openTab(page, "export");
   await page.getByTestId("export-start").click();
   await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 60_000 });
   const b64 = await page.evaluate(async () => {
@@ -105,7 +106,7 @@ test("局部放大：選範圍建立、調框、路徑點、匯出、刪除與�
   expect(red / (raw.length / 3)).toBeGreaterThan(0.45);
 
   // 調整：3 秒加路徑點、只把那一點往右移 → 2.6 秒時放大範圍已經往右走，紅色變少
-  await page.locator('[data-tab="zoom"]').click();
+  await openTab(page, "zoom");
   await page.getByTestId("zoom-adjust").click();
   await seek(page, 3);
   await page.getByTestId("zoom-add-point").click();

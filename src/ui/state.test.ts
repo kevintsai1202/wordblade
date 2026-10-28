@@ -225,3 +225,33 @@ describe("時間軸範圍選取（Shift＋拖曳、I／O）", () => {
     expect(s.range).toBeNull();
   });
 });
+
+describe("播放中介入（開發者 2026-10-28：任何移動播放頭的操作都停止播放或倒退）", () => {
+  it("seek 停止播放（含倒退）並清掉試聽的 stopAt", () => {
+    let s = initialState(makeProject());
+    s = reducer(s, { type: "play", rate: -2, stopAt: 9 });
+    s = reducer(s, { type: "seek", time: 5 });
+    expect(s.playing).toBe(false);
+    expect(s.stopAt).toBeNull();
+    expect(s.playhead).toBe(5);
+  });
+
+  it("停止後排在途中的 tick 不會蓋掉 seek 的位置", () => {
+    let s = initialState(makeProject());
+    s = reducer(s, { type: "play", rate: 1 });
+    s = reducer(s, { type: "seek", time: 5 });
+    s = reducer(s, { type: "tick", time: 1.2 });
+    expect(s.playhead).toBe(5);
+  });
+
+  it("每次 play 都遞增 playSeq：先 seek 再 play（試聽）時預覽的播放迴圈會從新位置重起", () => {
+    let s = initialState(makeProject());
+    s = reducer(s, { type: "play", rate: 1 });
+    const seq = s.playSeq;
+    s = reducer(s, { type: "seek", time: 7 });
+    s = reducer(s, { type: "play", rate: 1, stopAt: 8 });
+    expect(s.playing).toBe(true);
+    expect(s.playhead).toBe(7);
+    expect(s.playSeq).toBe(seq + 1);
+  });
+});

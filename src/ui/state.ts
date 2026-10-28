@@ -25,6 +25,8 @@ export interface AppState {
   rate: number;
   /** 試聽：播到這個時間自動停（null：不限） */
   stopAt?: Seconds | null;
+  /** 每次開始播放遞增：預覽的播放迴圈依它重起（先 seek 再 play 時 playing、rate 都沒變，也要從新位置播） */
+  playSeq: number;
   /** 時間軸上選的範圍（Shift＋拖曳或 I／O；時間軸秒）：放大、特效、刪除都從它建立（照字導字演） */
   range?: { start: Seconds; end: Seconds } | null;
   /** 按了 I 但還沒有範圍時記住的入點（再按 O 才成為範圍） */
@@ -54,7 +56,7 @@ export type Action =
 
 /** 從一份專案建立初始狀態 */
 export function initialState(project: Project): AppState {
-  return { history: createHistory(project), playhead: 0, selectedClipId: null, selectedEffectId: null, pxPerSecond: 20, playing: false, rate: 1, range: null, markIn: null };
+  return { history: createHistory(project), playhead: 0, selectedClipId: null, selectedEffectId: null, pxPerSecond: 20, playing: false, rate: 1, playSeq: 0, range: null, markIn: null };
 }
 
 /** 成片長度：所有片段與特效最晚的終點（只有特效、還沒放影片時也要能預覽） */
@@ -82,8 +84,9 @@ export function reducer(state: AppState, action: Action): AppState {
     case "redo":
       return withValidSelection({ ...state, history: redo(state.history) });
     case "seek": {
+      // 播放中被介入（拖播放頭、點軌道或逐字稿、方向鍵）就停在新位置（開發者 2026-10-28）
       const max = projectDuration(state.history.present);
-      return { ...state, playhead: roundTime(Math.min(max, Math.max(0, action.time))) };
+      return { ...state, playhead: roundTime(Math.min(max, Math.max(0, action.time))), playing: false, stopAt: null };
     }
     case "select":
       return { ...state, selectedClipId: action.clipId, selectedEffectId: null };
@@ -96,7 +99,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case "zoom":
       return { ...state, pxPerSecond: Math.min(400, Math.max(2, action.pxPerSecond)) };
     case "play":
-      return { ...state, playing: true, rate: action.rate, stopAt: action.stopAt ?? null };
+      return { ...state, playing: true, rate: action.rate, stopAt: action.stopAt ?? null, playSeq: state.playSeq + 1 };
     case "pause":
       return { ...state, playing: false };
     case "importMedia":
@@ -124,6 +127,8 @@ export function reducer(state: AppState, action: Action): AppState {
       return withValidSelection({ ...state, history: commit(state.history, [{ kind: "rippleDelete", a: start, b: end }]), range: null, playhead: start });
     }
     case "tick": {
+      // 已經停了（例如剛被 seek 介入）：排在途中的那一格不能把播放頭拉回去
+      if (!state.playing) return state;
       // 播放中推進播放頭；走到片尾（前進）或片頭（倒退）就停在那裡
       const max = projectDuration(state.history.present);
       const time = roundTime(Math.min(max, Math.max(0, action.time)));

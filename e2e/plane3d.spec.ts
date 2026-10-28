@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // 「用說的」（spec §5.8）：一句話 → AI 提議板子的運鏡（閘道回應由 Playwright 攔截）→ 預覽（不寫進專案）→ Discard／Apply，Apply 可以 Ctrl+Z 復原。
 const FIXTURES = path.join(import.meta.dirname, "fixtures");
@@ -50,13 +51,13 @@ test("用說的：提議 → 預覽 → Discard／Apply，Apply 可以復原", a
   await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe3d");
   await page.locator('[data-template="board-float"]').click();
   const chip = page.locator(".effect-chip");
   await expect(chip).toHaveCount(1);
   await page.locator(".ruler").click({ position: { x: 50, y: 5 } });  // 2.5 秒：板子縮著
   await chip.click();
-  await page.locator('[data-tab="inspector"]').click();
+  await openTab(page, "inspector");
 
   // 攝影棚背景（藍 ≥ 紅、偏灰）
   await expect.poll(async () => { const [r, , b] = await corner(page); return b >= r && r > 20; }, { timeout: 60_000 }).toBe(true);

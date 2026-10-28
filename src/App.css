@@ -32,7 +32,9 @@ button:disabled { opacity: 0.4; cursor: default; }
 .timecode { font-family: "Cascadia Mono", Consolas, monospace; }
 .timecode.big { font-size: 18px; font-weight: 600; }
 
-.app { display: grid; grid-template-rows: 40px minmax(0, 1fr) 300px 24px; grid-template-columns: minmax(0, 1fr); height: 100vh; overflow: hidden; }
+.app {
+  --panel-w: 380px; --timeline-h: 300px;
+  display: grid; grid-template-rows: 40px minmax(0, 1fr) 5px clamp(160px, var(--timeline-h), 70vh) 24px; grid-template-columns: minmax(0, 1fr); height: 100vh; overflow: hidden; }
 
 /* 上方標題列 */
 .title-bar { display: flex; align-items: center; gap: 12px; padding: 0 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
@@ -40,7 +42,12 @@ button:disabled { opacity: 0.4; cursor: default; }
 .project-path { color: var(--muted); }
 
 /* 中段：左側預覽＋右側編輯面板 */
-.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 380px; min-height: 0; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 5px clamp(280px, var(--panel-w), 60vw); min-height: 0; }
+/* 區塊之間的分隔線（可拖曳調整大小、雙擊回預設；開發者 2026-10-28） */
+.splitter { background: var(--line); flex: none; touch-action: none; }
+.splitter.x { cursor: col-resize; width: 5px; }
+.splitter.y { cursor: row-resize; height: 5px; }
+.splitter:hover, .splitter:active { background: var(--accent); }
 .preview { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: #0f1012; }
 .viewer { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 12px; }
 .frame {
@@ -51,12 +58,13 @@ button:disabled { opacity: 0.4; cursor: default; }
 .transport { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px; border-top: 1px solid var(--line); background: var(--panel); }
 
 .edit-panel { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-left: 1px solid var(--line); }
-.panel-title { padding: 8px 12px; font-weight: 600; border-bottom: 1px solid var(--line); }
-.tabs { display: flex; flex-wrap: wrap; padding: 6px 8px; gap: 4px; border-bottom: 1px solid var(--line); }
-.tab-group { display: flex; gap: 2px; padding-right: 6px; margin-right: 4px; border-right: 1px solid var(--line); }
-.tab-group:last-child { border-right: none; }
-.tabs button { border: none; background: none; color: var(--muted); padding: 4px 5px; white-space: nowrap; }
+/* 右側面板：上排大類別、下排子頁籤（開發者 2026-10-28） */
+.tabs { display: flex; padding: 6px 6px 0; gap: 0; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.tabs button { flex: 1 1 auto; border: none; background: none; color: var(--muted); padding: 6px 4px; white-space: nowrap; font-weight: 600; font-size: 12px; }
 .tabs button.active { color: var(--text); box-shadow: inset 0 -2px var(--accent); }
+.subtabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+.subtabs button { border: 1px solid transparent; background: none; color: var(--muted); padding: 2px 10px; border-radius: 12px; white-space: nowrap; font-size: 12px; }
+.subtabs button.active { color: var(--text); border-color: var(--accent); background: rgba(74, 141, 255, 0.15); }
 .tab-pane { flex: 1; overflow: auto; }
 .placeholder { padding: 16px; }
 .transcript { list-style: none; margin: 0; padding: 0; }
@@ -107,6 +115,9 @@ button:disabled { opacity: 0.4; cursor: default; }
   border-radius: 2px; font-size: 10px; padding: 1px 3px; overflow: hidden; white-space: nowrap;
 }
 .playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--playhead); pointer-events: none; z-index: 3; }
+/* 播放頭把手（尺規上的倒三角，跟著播放頭）；拖曳時右邊浮出時間碼 */
+.playhead-handle { position: absolute; top: 0; margin-left: -6px; width: 14px; height: 14px; background: var(--playhead); clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%); cursor: ew-resize; z-index: 4; }
+.scrub-time { position: absolute; top: 1px; margin-left: 10px; z-index: 4; padding: 0 4px; font-size: 10px; background: var(--playhead); color: #000; border-radius: 2px; white-space: nowrap; pointer-events: none; }
 
 .status-bar { display: flex; align-items: center; padding: 0 12px; font-size: 11px; color: var(--muted); background: var(--panel); border-top: 1px solid var(--line); }
 

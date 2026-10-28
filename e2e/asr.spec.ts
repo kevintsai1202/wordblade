@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // Muse ASR（spec §5.2）：用假的閘道（page.route 攔 /v1/asr）走完整流程——同意 → 抽 16 kHz 單聲道 WAV → 送出 →
 // 依音量包絡重建詞級時間 → 寫進專案（字幕出現）→ Ctrl+Z 復原。不連真的閘道、不花錢。
@@ -45,7 +46,7 @@ test("轉錄：送出的是 16 kHz 單聲道 WAV，回來的 turns 變成字幕�
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
 
-  await page.locator('[data-tab="transcript"]').click();
+  await openTab(page, "transcript");
   await expect(page.getByTestId("transcribe-start")).toBeEnabled({ timeout: 20_000 });
   await page.getByTestId("transcribe-start").click();
   // 第一次要同意上傳
@@ -92,7 +93,7 @@ test("閘道忙（503）會自動重試；其他錯誤顯示訊息", async ({ pa
   await page.getByTestId("import-media").click();
   await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
-  await page.locator('[data-tab="transcript"]').click();
+  await openTab(page, "transcript");
   // 素材準備好（音量包絡算完）按鈕才能按
   await expect(page.getByTestId("transcribe-start")).toBeEnabled({ timeout: 20_000 });
   await page.getByTestId("transcribe-start").click();

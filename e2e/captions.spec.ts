@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { transcribed } from "./helpers/transcribed";
+import { openTab } from "./helpers/tabs";
 
 // 字幕燒錄與逐字高亮（spec §5.4、§5.18，D37：Canvas 2D 畫進合成器）：用假閘道轉錄 talk.mp4 得到字幕，
 // 檢查預覽畫面的下方有字幕、換樣式畫面會變、Karaoke 會依時間上色、匯出的 MP4 也有字幕。
@@ -39,7 +40,7 @@ test("字幕畫進預覽：關掉（Off）與描邊、底色塊的畫面不同�
   await transcribed(page);
   await seek(page, 1);
   await expect(page.getByTestId("preview-canvas")).toHaveAttribute("data-caption", "Hello world.");
-  await page.locator('[data-tab="style"]').click();
+  await openTab(page, "style");
   await page.getByTestId("caption-preset").selectOption("none");
   await page.waitForTimeout(300);
   const off = await band(page);
@@ -54,7 +55,7 @@ test("字幕畫進預覽：關掉（Off）與描邊、底色塊的畫面不同�
 test("逐字高亮：開了 Karaoke（填色）同一個時間點的字幕顏色不同；講到後面的字時上色的範圍變大", async ({ page }) => {
   test.setTimeout(90_000);
   await transcribed(page);
-  await page.locator('[data-tab="style"]').click();
+  await openTab(page, "style");
   await seek(page, 0.3);
   const offEarly = await band(page);
   await page.getByTestId("caption-karaoke").selectOption("fill");
@@ -75,7 +76,7 @@ test("匯出的 MP4 也有字幕：同一格開字幕和關字幕的下方畫面
   mkdirSync(OUT, { recursive: true });
   /** 匯出一次並取 1 秒處下方 30% 的畫面（rgb24） */
   const exportBand = async (name: string): Promise<Buffer> => {
-    await page.locator('[data-tab="export"]').click();
+    await openTab(page, "export");
     await page.getByTestId("export-start").click();
     await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 60_000 });
     const b64 = await page.evaluate(async () => {
@@ -90,7 +91,7 @@ test("匯出的 MP4 也有字幕：同一格開字幕和關字幕的下方畫面
     return spawnSync("ffmpeg", ["-v", "error", "-ss", "1", "-i", file, "-frames:v", "1", "-vf", "crop=iw:ih*0.3:0:ih*0.7", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]).stdout as Buffer;
   };
   const withCaptions = await exportBand("with-captions");
-  await page.locator('[data-tab="style"]').click();
+  await openTab(page, "style");
   await page.getByTestId("caption-preset").selectOption("none");
   const without = await exportBand("without-captions");
   let n = 0;

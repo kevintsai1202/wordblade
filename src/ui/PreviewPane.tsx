@@ -21,6 +21,8 @@ export function PreviewPane(props: {
   playhead: number;
   playing: boolean;
   rate: number;
+  /** 每次開始播放遞增（先 seek 再 play 時用它重起播放迴圈） */
+  playSeq: number;
   duration: number;
   captions: Caption[];
   engine: Engine;
@@ -32,7 +34,7 @@ export function PreviewPane(props: {
   overlay?: ReactNode;
   dispatch: Dispatch<Action>;
 }) {
-  const { project, playhead, playing, rate, duration, captions, engine, library, plugins, selectedEffectId, overlay, dispatch } = props;
+  const { project, playhead, playing, rate, playSeq, duration, captions, engine, library, plugins, selectedEffectId, overlay, dispatch } = props;
   const frameRef = useRef<HTMLDivElement>(null);
   // 有目標框的特效（2D 與疊加的 3D）才在預覽上顯示框
   const selectedEffect = project.effects.find((e) => e.id === selectedEffectId && (e.kind === "anim2d" || e.kind === "anim3d") && !!e.params.box);
@@ -100,7 +102,7 @@ export function PreviewPane(props: {
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [playing, rate, dispatch]);
+  }, [playing, rate, playSeq, dispatch]);
 
   /** 播放頭所在的字幕（畫面上的字幕由合成器畫；這裡只放進 data-caption 給測試與輔助工具讀） */
   const caption = captions.find((c) => playhead >= c.start && playhead < c.end);

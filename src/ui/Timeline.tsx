@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent as ReactMouseEvent, type WheelEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent as ReactMouseEvent, type ReactNode, type WheelEvent } from "react";
 import type { Envelope } from "../audio/envelope";
 import type { Caption } from "../core/captions";
 import type { Clip, Effect, Project, Track } from "../core/model";
@@ -89,7 +89,8 @@ function Waveform({ envelope, clip, width }: { envelope: Envelope; clip: Clip; w
 }
 
 /** 軌道標頭的寬度（像素） */
-const HEADER_WIDTH = 88;
+/** 軌道標頭的預設寬度（可拖分隔線調整，見 layout.ts） */
+export const HEADER_WIDTH = 88;
 
 /** 時間軸的軌道列：由上到下 V（高的在上）、S1 字幕、A */
 interface Row {
@@ -116,8 +117,12 @@ function rulerStep(pxPerSecond: number): number {
 }
 
 /** 下方多軌時間軸（D33）：工具列、尺規、各軌片段、特效標籤、字幕軌、播放頭 */
-export function Timeline({ state, dispatch, captions, library, onRangeAction, zoomEdit = null, onZoomEdit }: {
+export function Timeline({ state, dispatch, captions, library, onRangeAction, zoomEdit = null, onZoomEdit, headerWidth = HEADER_WIDTH, headerSplitter }: {
   state: AppState;
+  /** 軌道標頭寬度（像素） */
+  headerWidth?: number;
+  /** 軌道標頭右邊的分隔線（由 App 給，拖曳調整寬度） */
+  headerSplitter?: ReactNode;
   dispatch: Dispatch<Action>;
   captions: Caption[];
   library: Library;
@@ -162,17 +167,30 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
     dispatch({ type: "seek", time: x / pxPerSecond });
   };
 
-  /** 在尺規上按住拖曳播放頭（scrub）：按下的元素，用來換算滑鼠位置；null 表示沒在拖 */
+  /** 在尺規或播放頭上按住拖曳（scrub）：按下的元素，用來換算滑鼠位置；null 表示沒在拖 */
   const [scrubEl, setScrubEl] = useState<HTMLElement | null>(null);
+  /** 時間軸畫布（播放頭把手按下時用它換算位置；和尺規同一個左緣） */
+  const canvasRef = useRef<HTMLDivElement>(null);
 
-  // 拖曳播放頭：滑鼠移到哪，播放頭就到哪（預覽畫面跟著更新）；放開結束
+  // 拖曳播放頭：滑鼠移到哪，播放頭就到哪（預覽畫面跟著更新）；放開結束。
+  // 滑鼠移動很密時合併到下一個畫格才送一次 seek，避免整個畫面每次移動都重算
   useEffect(() => {
     if (!scrubEl) return;
-    const onMove = (e: MouseEvent) => seekAt(e.clientX, scrubEl);
-    const onUp = () => setScrubEl(null);
+    let pending: number | null = null;
+    let frame = 0;
+    const onMove = (e: MouseEvent) => {
+      pending = e.clientX;
+      if (!frame) frame = requestAnimationFrame(() => { frame = 0; if (pending !== null) seekAt(pending, scrubEl); });
+    };
+    const onUp = (e: MouseEvent) => {
+      cancelAnimationFrame(frame);
+      seekAt(e.clientX, scrubEl);
+      setScrubEl(null);
+    };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => {
+      cancelAnimationFrame(frame);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
@@ -180,13 +198,16 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrubEl, pxPerSecond, dispatch]);
 
-  /** 按下尺規：播放中就先停，移到按下的位置並開始拖曳 */
-  const onRulerDown = (e: ReactMouseEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
+  /**
+   * 按下尺規（含播放頭把手）或軌道空白處：移到按下的位置並開始拖曳；seek 本身會停止播放或倒退。
+   * 片段、特效上不算（它們自己的按下是選取與拖曳）。
+   */
+  const onScrubDown = (e: ReactMouseEvent<HTMLElement>) => {
+    if (e.button !== 0 || e.shiftKey || !canvasRef.current) return;
     e.preventDefault();
-    if (state.playing) dispatch({ type: "pause" });
-    seekAt(e.clientX, e.currentTarget);
-    setScrubEl(e.currentTarget);
+    e.stopPropagation();
+    seekAt(e.clientX, canvasRef.current);
+    setScrubEl(canvasRef.current);
   };
 
   /** 拖曳中的片段（沒有拖曳時是 null） */
@@ -310,7 +331,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
         <button title="Zoom in" onClick={() => dispatch({ type: "zoom", pxPerSecond: pxPerSecond * 1.25 })}>+</button>
       </div>
       <div className="timeline-body" onWheel={onWheel}>
-        <div className="track-headers" style={{ width: HEADER_WIDTH }}>
+        <div className="track-headers" style={{ width: headerWidth }}>
           <div className="ruler-spacer" />
           {trackRows.map((r) => (
             <div key={r.id} className={`track-header ${r.kind}`}>
@@ -319,15 +340,19 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
             </div>
           ))}
         </div>
+        {headerSplitter}
         <div className="track-scroll">
-          <div className="track-canvas" style={{ width }} onMouseDownCapture={onCanvasDownCapture}>
-            <div className={`ruler${scrubEl ? " scrubbing" : ""}`} onMouseDown={onRulerDown} title="Drag to scrub">
+          <div className="track-canvas" ref={canvasRef} style={{ width }} onMouseDownCapture={onCanvasDownCapture}>
+            <div className={`ruler${scrubEl ? " scrubbing" : ""}`} onMouseDown={onScrubDown} title="Drag to scrub">
               {ticks.map((t) => (
                 <span key={t} className="tick" style={{ left: t * pxPerSecond }}>{formatTimecode(t).slice(3, 8)}</span>
               ))}
+              {/* 播放頭把手與拖曳時的時間碼放在尺規裡：按把手就是按尺規（拖曳） */}
+              <div className="playhead-handle" data-testid="playhead-handle" style={{ left: playhead * pxPerSecond }} />
+              {scrubEl && <div className="scrub-time" data-testid="scrub-time" style={{ left: playhead * pxPerSecond }}>{formatTimecode(playhead).slice(3)}</div>}
             </div>
             {trackRows.map((r) => (
-              <div key={r.id} className={`track-row ${r.kind}`} data-track-id={r.track?.id} onMouseDown={(e) => { if (e.target === e.currentTarget) { seekAt(e.clientX, e.currentTarget); dispatch({ type: "select", clipId: null }); } }}>
+              <div key={r.id} className={`track-row ${r.kind}`} data-track-id={r.track?.id} onMouseDown={(e) => { if (e.target === e.currentTarget) { dispatch({ type: "select", clipId: null }); onScrubDown(e); } }}>
                 {r.kind === "subtitle"
                   ? captions.map((c) => (
                       <div key={c.id} className="caption-block" style={{ left: c.start * pxPerSecond, width: (c.end - c.start) * pxPerSecond }} title={c.lines.join(" ")}>

@@ -125,7 +125,7 @@ export function TranscribePanel({ project, engine, envelopes, dispatch }: { proj
           );
         })}
       </ul>
-      {!token && <p className="muted">Set your invite token in Vibe FX → AI settings to transcribe.</p>}
+      {!token && <p className="muted">Set your invite token in Effects → 2D → AI settings to transcribe.</p>}
       {asking && (
         <div className="consent" data-testid="transcribe-consent">
           <p>The audio of “{asking.name ?? asking.id}” will be sent to the WordBlade AI service and Meta Muse (Voice Transcribe) to make the transcript.</p>

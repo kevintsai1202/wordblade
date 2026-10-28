@@ -30,3 +30,64 @@ test("主畫面版面與刪除／復原", async ({ page }) => {
   await page.keyboard.press("Control+z");
   await expect(v1Clips).toHaveCount(2);
 });
+
+// 區塊大小（開發者 2026-10-28）：拖分隔線改右側面板寬度、時間軸高度、軌道標頭寬度；重新整理後保留；雙擊回預設
+test("拖分隔線調整區塊大小、重新整理後保留、雙擊回預設", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/?demo=1");
+  const width = async (sel: string) => (await page.locator(sel).boundingBox())!.width;
+  const height = async (sel: string) => (await page.locator(sel).boundingBox())!.height;
+  expect(await width(".edit-panel")).toBeCloseTo(380, -1);
+  expect(await height(".timeline")).toBeCloseTo(300, -1);
+  expect(await width(".track-headers")).toBeCloseTo(88, -1);
+
+  /** 從分隔線中心拖一段距離 */
+  const drag = async (testId: string, dx: number, dy: number) => {
+    const b = (await page.getByTestId(testId).boundingBox())!;
+    await page.mouse.move(b.x + b.width / 2, b.y + Math.min(b.height / 2, 20));
+    await page.mouse.down();
+    await page.mouse.move(b.x + b.width / 2 + dx, b.y + Math.min(b.height / 2, 20) + dy, { steps: 5 });
+    await page.mouse.up();
+  };
+  await drag("split-panel", -120, 0);
+  await drag("split-timeline", 0, -100);
+  await drag("split-header", 40, 0);
+  expect(await width(".edit-panel")).toBeCloseTo(500, -1);
+  expect(await height(".timeline")).toBeCloseTo(400, -1);
+  expect(await width(".track-headers")).toBeCloseTo(128, -1);
+
+  await page.reload();
+  await expect(page.locator(".edit-panel")).toBeVisible();
+  expect(await width(".edit-panel")).toBeCloseTo(500, -1);
+  expect(await height(".timeline")).toBeCloseTo(400, -1);
+  expect(await width(".track-headers")).toBeCloseTo(128, -1);
+  await page.screenshot({ path: "output/ui-shots/layout-resized.png" });
+
+  await page.getByTestId("split-panel").dblclick();
+  await page.getByTestId("split-timeline").dblclick();
+  await page.getByTestId("split-header").dblclick();
+  expect(await width(".edit-panel")).toBeCloseTo(380, -1);
+  expect(await height(".timeline")).toBeCloseTo(300, -1);
+  expect(await width(".track-headers")).toBeCloseTo(88, -1);
+});
+
+// 右側面板大類別＋子頁籤（開發者 2026-10-28）：特效分 2D／3D／Zoom／Mask／Sound，回到大類別時打開上次的子頁籤
+test("右側面板：大類別與子頁籤、記住上次的子頁籤", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/?demo=1");
+  await expect(page.locator(".tabs [data-group]")).toHaveText(["Media", "Transcript", "Effects", "Inspector", "AI Director", "Export"]);
+  await page.locator('[data-group="effects"]').click();
+  await expect(page.locator(".subtabs [data-tab]")).toHaveText(["2D", "3D", "Zoom", "Mask", "Sound"]);
+  // 2D 只有 2D 範本，3D 只有 3D 場景
+  await expect(page.locator('[data-template="box-ding"]')).toBeVisible();
+  await expect(page.locator('[data-template="desk-reveal"]')).toHaveCount(0);
+  await page.locator('[data-tab="vibe3d"]').click();
+  await expect(page.locator('[data-template="desk-reveal"]')).toBeVisible();
+  await expect(page.locator('[data-template="box-ding"]')).toHaveCount(0);
+  await page.screenshot({ path: "output/ui-shots/tabs-effects-3d.png" });
+  // 換到別的大類別再回來：還是 3D
+  await page.locator('[data-group="inspector"]').click();
+  await expect(page.locator(".subtabs")).toHaveCount(0);
+  await page.locator('[data-group="effects"]').click();
+  await expect(page.locator('[data-tab="vibe3d"]')).toHaveClass(/active/);
+});

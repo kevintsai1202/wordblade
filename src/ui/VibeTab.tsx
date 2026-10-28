@@ -1,4 +1,5 @@
-// Vibe FX 頁籤（spec §5.7）：上半是 Vibe特效（一句話請 AI 寫特效），下半是內建 2D 範本（點一下加在播放頭）。
+// 特效 2D／3D 子頁籤（spec §5.7；開發者 2026-10-28 分成兩個子頁籤）：上半是 Vibe特效（一句話請 AI 寫特效），
+// 下半是這個維度的內建範本（2D 範本／3D 場景，點一下加在播放頭或選的範圍）。
 // AI 設定（閘道網址、邀請權杖）存在這台電腦；第一次用 AI 時顯示同意說明（送什麼、送到哪，spec §3）。
 import { useState, type Dispatch } from "react";
 import { DEFAULT_EFFECT_SECONDS, TEMPLATES, templateEffect, type Template } from "../anim/library";
@@ -34,8 +35,10 @@ function hasConsent(): boolean {
   }
 }
 
-/** Vibe FX 頁籤 */
-export function VibeTab({ plugins, playhead, range, dispatch }: {
+/** 特效的 2D 或 3D 子頁籤 */
+export function VibeTab({ dimension, plugins, playhead, range, dispatch }: {
+  /** 2D（原專案直譯器的插件）或 3D（three.js 插件，疊在影片上或蓋住 V1） */
+  dimension: "2d" | "3d";
   plugins: PluginService;
   playhead: number;
   /** 時間軸選的範圍：有就用它的起訖（照字導字演：先框選再加特效），沒有就放在播放頭、用預設長度 */
@@ -50,8 +53,6 @@ export function VibeTab({ plugins, playhead, range, dispatch }: {
   const [showSettings, setShowSettings] = useState(() => !loadSettings().token);
   const [description, setDescription] = useState("");
   const [attachFrame, setAttachFrame] = useState(true);
-  /** 2D（原專案直譯器的插件）或 3D（three.js 插件，疊在影片上） */
-  const [dimension, setDimension] = useState<"2d" | "3d">("2d");
   const [progress, setProgress] = useState<VibeProgress | null>(null);
   const [consentAsked, setConsentAsked] = useState(false);
 
@@ -129,21 +130,20 @@ export function VibeTab({ plugins, playhead, range, dispatch }: {
   const busy = progress !== null;
   return (
     <div className="vibe-tab">
-      <h3 className="section-title">Vibe FX — describe an effect</h3>
+      <h3 className="section-title">{dimension === "3d" ? "Describe a 3D effect" : "Describe a 2D effect"}</h3>
       <textarea
         className="vibe-input" data-testid="vibe-description" rows={3} maxLength={500} value={description} disabled={busy}
-        placeholder="e.g. A yellow arrow flies in from the left and points at the box, then sparkles"
+        placeholder={dimension === "3d" ? "e.g. A shiny golden 3D star spins and bounces above the box" : "e.g. A yellow arrow flies in from the left and points at the box, then sparkles"}
         onChange={(e) => setDescription(e.target.value)}
       />
-      <div className="vibe-examples">
+      {/* 範例描述是 2D 的（10/27 實測一輪就做得出來）；3D 頁籤不顯示 */}
+      {dimension === "2d" && <div className="vibe-examples">
         <span className="muted">Try:</span>
         {VIBE_EXAMPLES.map((ex) => (
           <button key={ex} className="example-chip" data-testid="vibe-example" disabled={busy} onClick={() => setDescription(ex)} title={ex}>{ex}</button>
         ))}
-      </div>
+      </div>}
       <div className="vibe-actions">
-        <label><input type="radio" name="vibe-dim" data-testid="vibe-2d" checked={dimension === "2d"} disabled={busy} onChange={() => setDimension("2d")} /> 2D</label>
-        <label><input type="radio" name="vibe-dim" data-testid="vibe-3d" checked={dimension === "3d"} disabled={busy} onChange={() => setDimension("3d")} /> 3D</label>
         <label><input type="checkbox" checked={attachFrame} onChange={(e) => setAttachFrame(e.target.checked)} /> Attach current frame</label>
         <span className="spacer" />
         <button data-testid="vibe-generate" disabled={busy || !description.trim() || !settings.token} onClick={() => void generate()}>
@@ -166,6 +166,8 @@ export function VibeTab({ plugins, playhead, range, dispatch }: {
         </form>
       )}
 
+      <p className="muted" data-testid="vibe-placement">{range ? `Adds over the selected range (${(range.end - range.start).toFixed(1)} s).` : "Click to add at the playhead (Shift+drag on the timeline to choose a range first)."} Drag the chip on the timeline to move or trim it.</p>
+      {dimension === "3d" && <>
       <h3 className="section-title">3D scenes</h3>
       <ul className="template-grid">
         {TEMPLATES_3D.map((t) => (
@@ -177,9 +179,10 @@ export function VibeTab({ plugins, playhead, range, dispatch }: {
           </li>
         ))}
       </ul>
+      </>}
 
+      {dimension === "2d" && <>
       <h3 className="section-title">Templates</h3>
-      <p className="muted" data-testid="vibe-placement">{range ? `Adds over the selected range (${(range.end - range.start).toFixed(1)} s).` : "Click to add at the playhead (Shift+drag on the timeline to choose a range first)."} Drag the chip on the timeline to move or trim it.</p>
       <ul className="template-grid">
         {TEMPLATES.map((t) => (
           <li key={t.id}>
@@ -190,6 +193,7 @@ export function VibeTab({ plugins, playhead, range, dispatch }: {
           </li>
         ))}
       </ul>
+      </>}
     </div>
   );
 }

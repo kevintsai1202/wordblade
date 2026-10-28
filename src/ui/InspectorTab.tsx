@@ -190,7 +190,7 @@ function DescribeMove({ effect, current, preview, onPreview, dispatch }: { effec
             <span className="spacer" />
             <button data-testid="move-propose" disabled={busy || !text.trim() || !settings.token} onClick={() => void propose()}>{busy ? "Thinking" : "Propose"}</button>
           </div>
-          {!settings.token && <p className="muted">Set the invite token in Vibe FX, AI settings first.</p>}
+          {!settings.token && <p className="muted">Set the invite token in Effects → 2D → AI settings first.</p>}
         </>
       )}
       {consent && (

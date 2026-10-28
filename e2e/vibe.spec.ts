@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { openTab } from "./helpers/tabs";
 
 // Vibe特效（spec §5.7）的介面流程，閘道回應由 Playwright 攔截（不連真的 AI）：
 // 同意說明 → 送出 → 沙盒試跑模型寫的插件 → 不過就回饋（帶錯誤階段）→ 第二輪通過 → 特效加到時間軸並畫在預覽上；拒答顯示固定文字。
@@ -18,14 +19,14 @@ async function reply(route: Route, status: number, body?: unknown) {
   return route.fulfill({ status, headers: { ...headers, "content-type": "application/json" }, body: body === undefined ? "" : JSON.stringify(body) });
 }
 
-/** 設定 AI（網址、權杖）並寫好描述 */
-async function setup(page: Page, description: string) {
+/** 設定 AI（網址、權杖），打開特效的 2D 或 3D 子頁籤並寫好描述 */
+async function setup(page: Page, description: string, tab: "vibe" | "vibe3d" = "vibe") {
   page.on("console", (m) => { if (m.type() === "error") console.log(`[console.error] ${m.text()}`); });
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto("/");
   await page.evaluate((url) => localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: "test-token" })), GATEWAY);
   await page.reload();
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, tab);
   await page.getByTestId("vibe-description").fill(description);
 }
 
@@ -149,8 +150,7 @@ test("Vibe 3D：插件語法錯 → 回饋帶行號 → 第二輪的 three.js �
     return reply(route, 200, { status: "done", round, result: { refusal: null, mode: "new", title: "Green cube", builtin: null, params: null, component }, error: null });
   });
   await page.addInitScript(() => localStorage.setItem("wordblade.consent.vibe", "yes"));
-  await setup(page, "A green cube spinning in the box");
-  await page.getByTestId("vibe-3d").check();
+  await setup(page, "A green cube spinning in the box", "vibe3d");
   await page.getByTestId("vibe-generate").click();
   await expect(page.locator(".effect-chip")).toHaveCount(1, { timeout: 60_000 });
   await expect(page.getByTestId("vibe-error")).toHaveCount(0);
@@ -169,8 +169,7 @@ test("Vibe 3D：模型只填吉祥物的參數，直接用內建插件", async (
     return reply(route, 200, { status: "done", round: 1, result: { refusal: null, mode: "params", title: "Mascot waves", builtin: "mascot", params: { action: "wave", color: "#00ff00" }, component: null }, error: null });
   });
   await page.addInitScript(() => localStorage.setItem("wordblade.consent.vibe", "yes"));
-  await setup(page, "A mascot waving");
-  await page.getByTestId("vibe-3d").check();
+  await setup(page, "A mascot waving", "vibe3d");
   await page.getByTestId("vibe-generate").click();
   await expect(page.locator(".effect-chip")).toContainText("Mascot waves", { timeout: 30_000 });
 });

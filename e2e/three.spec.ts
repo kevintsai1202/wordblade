@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // 3D 場景（spec §5.8）：3D 插件在獨立的沙盒 iframe（three.js 在 Worker 的 OffscreenCanvas 上畫），V1 當格畫面貼在螢幕上。
 // 「桌上螢幕」範本：區段中間看得到木紋桌（棕色），頭尾接回滿版（畫面＝原片）。e2e 是軟體算繪（SwiftShader），等久一點。
@@ -36,7 +37,7 @@ test("桌上螢幕：3D 沙盒畫出木紋桌與播影片的螢幕，頭尾接�
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
 
   // 3D 範本加在 0 秒（長 6 秒，比影片長）
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe3d");
   await page.locator('[data-template="desk-reveal"]').click();
   await expect(page.locator(".effect-chip")).toHaveCount(1);
 
@@ -74,7 +75,7 @@ test("漂浮的板子：中段板子縮小、背景是攝影棚；Inspector 換�
   await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe3d");
   await page.locator('[data-template="board-float"]').click();
   await expect(page.locator(".effect-chip")).toHaveCount(1);
 
@@ -96,7 +97,7 @@ test("漂浮的板子：中段板子縮小、背景是攝影棚；Inspector 換�
   await expect.poll(async () => { const [r, , b] = await corner(); return b >= r && b > 20 && b < 140; }, { timeout: 60_000 }).toBe(true);
   // Inspector：背景換純色
   await page.locator(".effect-chip").click();
-  await page.locator('[data-tab="inspector"]').click();
+  await openTab(page, "inspector");
   await page.locator('[data-param="background"] select').selectOption("color");
   await expect.poll(async () => { const [r, g, b] = await corner(); return Math.abs(r - 32) < 8 && Math.abs(g - 32) < 8 && Math.abs(b - 32) < 8; }, { timeout: 30_000 }).toBe(true);
   await page.screenshot({ path: "output/ui-shots/three-board.png" });
@@ -106,7 +107,7 @@ test("吉祥物：走到目標框旁邊；拖目標框，吉祥物跟著換位�
   test.setTimeout(90_000);
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto("/");
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe3d");
   await page.locator('[data-template="mascot-point"]').click();
   const chip = page.locator(".effect-chip");
   await expect(chip).toHaveCount(1);
@@ -152,7 +153,7 @@ async function sceneWithVideo(page: Page, template: string) {
   await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
-  await page.locator('[data-tab="vibe"]').click();
+  await openTab(page, "vibe3d");
   await page.locator(`[data-template="${template}"]`).click();
   await expect(page.locator(".effect-chip")).toHaveCount(1);
 }
@@ -184,7 +185,7 @@ test("教室黑板與攝影棚：同一個 3D 場景元件換場景，Inspector 
   await page.screenshot({ path: "output/ui-shots/three-classroom.png" });
   // Inspector 換成攝影棚：米白牆不見，換成暗色背景
   await page.locator(".effect-chip").click();
-  await page.locator('[data-tab="inspector"]').click();
+  await openTab(page, "inspector");
   await page.locator('[data-param="scene"] select').selectOption("studio");
   await expect.poll(() => wallRatio(page), { timeout: 30_000 }).toBeLessThan(0.01);
   await expect.poll(() => woodRatio(page), { timeout: 30_000 }).toBeLessThan(0.02);
@@ -198,7 +199,7 @@ test("鏡頭關鍵幀：在播放頭加一個關鍵幀、把鏡頭推到螢幕�
   await expect.poll(() => woodRatio(page), { timeout: 60_000 }).toBeGreaterThan(0.1);
 
   await page.locator(".effect-chip").click();
-  await page.locator('[data-tab="inspector"]').click();
+  await openTab(page, "inspector");
   const editor = page.getByTestId("camera-keys");
   await editor.getByTestId("camera-key-add").click();
   const key = editor.locator('[data-key-index="0"]');
