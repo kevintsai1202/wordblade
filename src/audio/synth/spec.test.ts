@@ -4,6 +4,7 @@ import {
   type MusicSpec, type SoundSpec,
 } from "./spec";
 import { MUSIC_EXAMPLES, SOUND_TEMPLATES } from "./templates";
+import cases from "./validationCases.json";
 
 /** 一個最小的合法音效 */
 const BEEP: SoundSpec = { length: 0.5, voices: [{ source: { type: "osc", wave: "sine", freq: 880 }, env: { attack: 0.01, decay: 0.1, sustain: 0.5, release: 0.1 } }] };
@@ -140,4 +141,14 @@ describe("展開成要發聲的音", () => {
     const groups = musicGroups(spec);
     expect(groups.map((g) => [g.label, g.hits.length])).toEqual([["drums:kick", 2], ["drums:snare", 1]]);
   });
+});
+
+describe("共用的驗證案例（validationCases.json；閘道的 SynthParserTest 跑同一份，兩邊的規則要一致）", () => {
+  for (const c of cases as { name: string; kind: "sound" | "music"; spec: unknown; error: string | null }[]) {
+    it(c.name, () => {
+      const err = c.kind === "sound" ? soundErr(c.spec) : musicErr(c.spec);
+      if (c.error === null) expect(err).toBe("");
+      else expect(err).toContain(c.error);
+    });
+  }
 });
