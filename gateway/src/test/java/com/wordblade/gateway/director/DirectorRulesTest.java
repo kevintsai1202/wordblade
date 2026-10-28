@@ -74,10 +74,25 @@ class DirectorRulesTest {
     }
 
     @Test
+    void 改字以詞為準_相鄰時間重疊也不互吃_同樣的詞才合併() {
+        var r = check("""
+                {"suggestions":[
+                 {"kind":"fix","start":1,"end":1.5,"reason":"a","wordIds":["m:w1"],"text":"Java"},
+                 {"kind":"fix","start":1.2,"end":1.7,"reason":"b","wordIds":["m:w2"],"text":"Maven"},
+                 {"kind":"fix","start":1.0,"end":1.5,"reason":"c","wordIds":["m:w1"],"text":"Java"}
+                ]}""");
+        assertThat(r.suggestions()).hasSize(2);
+    }
+
+    @Test
     void 每種上限與總數上限() {
         StringBuilder sb = new StringBuilder("{\"suggestions\":[");
-        for (int i = 0; i < 40; i++) sb.append(i > 0 ? "," : "").append("{\"kind\":\"fix\",\"start\":").append(i * 2).append(",\"end\":").append(i * 2 + 1).append(",\"reason\":\"r\",\"wordIds\":[\"m:w1\"],\"text\":\"t\"}");
-        var r = check(sb.append("]}").toString());
+        java.util.Set<String> many = new java.util.HashSet<>();
+        for (int i = 0; i < 40; i++) {
+            many.add("m:w" + i);
+            sb.append(i > 0 ? "," : "").append("{\"kind\":\"fix\",\"start\":").append(i * 2).append(",\"end\":").append(i * 2 + 1).append(",\"reason\":\"r\",\"wordIds\":[\"m:w").append(i).append("\"],\"text\":\"t\"}");
+        }
+        var r = DirectorRules.check(json.readTree(sb.append("]}").toString()), 100, scenes, many);
         assertThat(r.suggestions()).hasSize(DirectorRules.CAPS.get("fix"));
         assertThat(List.copyOf(r.suggestions())).allMatch(s -> s.kind().equals("fix"));
     }

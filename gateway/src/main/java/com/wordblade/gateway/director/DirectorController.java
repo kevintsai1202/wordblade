@@ -79,6 +79,11 @@ public class DirectorController {
         return ResponseEntity.badRequest().body(Map.of("error", "bad-request"));
     }
 
+    @ExceptionHandler(java.util.concurrent.RejectedExecutionException.class)
+    ResponseEntity<Map<String, String>> busy() {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).header("Retry-After", "10").body(Map.of("error", "director-busy"));
+    }
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<Map<String, String>> tooLarge() {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body(Map.of("error", "segment-too-large"));

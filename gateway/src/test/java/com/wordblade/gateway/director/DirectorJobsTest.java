@@ -25,7 +25,7 @@ class DirectorJobsTest {
             if (failSecond && transcript.contains("w9")) throw new RuntimeException("boom");
             return new AiModel.Reply("""
                     {"summary":"s","retakes":[{"start":2,"end":4,"reason":"stumble"}],"privacy":[{"start":5,"end":8,"target":"API key","x":0.1,"y":0.1,"w":0.3,"h":0.05}],
-                     "highlights":[],"misheard":[]}""", 1000, 100, "fake-spark");
+                     "highlights":[],"misheard":[{"wordIds":["m:w1"],"heard":"Jav","correct":"Java"}]}""", 1000, 100, "fake-spark");
         }
     }
 
@@ -68,6 +68,8 @@ class DirectorJobsTest {
         assertThat(v.suggestions()).extracting(DirectorRules.Suggestion::kind).containsExactly("fix", "mask");
         // Wonder 收到的是素材時間：第二段的重講在 102～104 秒
         assertThat(wonder.received.get(0)).contains("\"start\":102").contains("board-float");
+        // 聽錯的詞補上時間：m:w1 在 1 秒 → 1.0～1.5
+        assertThat(wonder.received.get(0)).contains("\"heard\":\"Jav\",\"correct\":\"Java\",\"start\":1.0,\"end\":1.5");
         assertThat(spark.transcripts.get(1)).contains("m:w9").contains("[1.0]");
         assertThat(usage).containsExactly("7:fake-spark", "7:fake-spark", "7:fake-wonder");
     }

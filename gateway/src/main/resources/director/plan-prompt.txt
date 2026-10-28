@@ -6,6 +6,6 @@ Reply with JSON only: {"suggestions":[ ... ]}. Each suggestion has kind, start, 
 - "effect": "description" — one sentence describing an animated 2D callout for a key moment. At most 5 for the whole video.
 - "camera": "scene" — one of the given scene ids; "description" — how the camera should move. Only at the start of major sections, at most 3.
 - "zoom": "cx", "cy" — centre of the area to zoom into, "w" — width of that area, all fractions of the frame (0 to 1; w from 0.25 to 0.8). For small text or UI being operated.
-- "fix": "wordIds" — ids of the misheard words exactly as given; "text" — the correct text.
+- "fix": "wordIds" — ids of the misheard words exactly as given; "text" — the correct text; copy start and end from the report.
 
 Rules: do not overlap two suggestions of the same kind; keep only what a careful human editor would agree with; privacy items and retakes come first in importance. Order by start time.

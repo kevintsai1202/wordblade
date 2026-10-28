@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -132,7 +133,7 @@ public class DirectorJobs {
     private void analyze(Job job, int index, SegmentMeta meta, byte[] mp4) {
         if (job.cancelled) return;
         String transcript = meta.words().stream()
-                .map(w -> String.format("[%.1f] %s %s", w.t() - meta.start(), w.id(), w.text()))
+                .map(w -> String.format(Locale.ROOT, "[%.1f] %s %s", w.t() - meta.start(), w.id(), w.text()))
                 .collect(Collectors.joining("\n"));
         JsonNode report = null;
         for (int attempt = 0; attempt < 2 && report == null && !job.cancelled; attempt++) {
@@ -208,7 +209,7 @@ public class DirectorJobs {
             seg.put("start", round1(meta.start()));
             seg.put("end", round1(meta.end()));
             seg.put("summary", report.path("summary").asString(""));
-            for (String key : List.of("retakes", "privacy", "highlights", "misheard")) {
+            for (String key : List.of("retakes", "privacy", "highlights")) {
                 ArrayNode list = seg.putArray(key);
                 report.path(key).forEach(item -> {
                     ObjectNode copy = ((ObjectNode) item).deepCopy();
@@ -217,6 +218,19 @@ public class DirectorJobs {
                     list.add(copy);
                 });
             }
+            // 聽錯的詞沒有時間：依詞 id 查那段的詞補上（第一個詞的時間～最後一個詞＋0.5 秒），Wonder 照抄
+            Map<String, Double> times = new LinkedHashMap<>();
+            meta.words().forEach(w -> times.put(w.id(), w.t()));
+            ArrayNode misheard = seg.putArray("misheard");
+            report.path("misheard").forEach(item -> {
+                List<Double> ts = new ArrayList<>();
+                item.path("wordIds").forEach(n -> { Double t = times.get(n.asString("")); if (t != null) ts.add(t); });
+                if (ts.isEmpty()) return;
+                ObjectNode copy = ((ObjectNode) item).deepCopy();
+                copy.put("start", round1(ts.stream().min(Double::compare).get()));
+                copy.put("end", round1(ts.stream().max(Double::compare).get() + 0.5));
+                misheard.add(copy);
+            });
         }
         return json.writeValueAsString(root);
     }

@@ -113,7 +113,9 @@ public final class DirectorRules {
         List<Suggestion> out = new ArrayList<>();
         Map<String, Integer> count = new LinkedHashMap<>();
         for (Suggestion s : sorted) {
-            Suggestion prev = out.stream().filter(o -> o.kind().equals(s.kind()) && s.start() < o.end()).findFirst().orElse(null);
+            // 改字以詞為準（相鄰的兩個聽錯的詞時間會重疊，不能互相吃掉）；其他種類看時間重疊
+            Suggestion prev = out.stream().filter(o -> o.kind().equals(s.kind())
+                    && (s.kind().equals("fix") ? o.payload().get("wordIds").equals(s.payload().get("wordIds")) : s.start() < o.end())).findFirst().orElse(null);
             if (prev != null) {
                 // 剪取聯集；其他種類留先出現的那條
                 if (s.kind().equals("cut")) out.set(out.indexOf(prev), new Suggestion("cut", prev.start(), Math.max(prev.end(), s.end()), prev.reason(), prev.payload()));

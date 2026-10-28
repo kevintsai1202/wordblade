@@ -30,7 +30,7 @@ import tools.jackson.databind.json.JsonMapper;
 @Configuration
 public class DirectorConfig {
 
-    /** 同時最多幾個模型呼叫 */
+    /** 同時最多幾個模型呼叫（排隊最多 20 段，再多回 429：一段可達 20 MB，不讓失控的用戶端吃光記憶體） */
     static final int THREADS = 4;
 
     @Bean
@@ -47,7 +47,7 @@ public class DirectorConfig {
         String planPrompt = new ClassPathResource("director/plan-prompt.txt").getContentAsString(StandardCharsets.UTF_8);
         var memory = MessageWindowChatMemory.builder().chatMemoryRepository(new InMemoryChatMemoryRepository()).maxMessages(10).build();
         AiModel wonder = new SpringAiModel(chat.build(), memory, planPrompt, props.models().wonder(), "medium");
-        ExecutorService pool = new ThreadPoolExecutor(THREADS, THREADS, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(500), r -> {
+        ExecutorService pool = new ThreadPoolExecutor(THREADS, THREADS, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(20), r -> {
             Thread t = new Thread(r, "director");
             t.setDaemon(true);
             return t;
