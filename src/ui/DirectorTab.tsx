@@ -25,7 +25,7 @@ import { FPS, formatTimecode, type Action } from "./state";
 
 /** 同意說明的鍵（同意過就不再問）；同意時一併同意導演會用到的遮罩、Vibe、用說的 */
 const CONSENT_KEY = "wordblade.consent.director";
-const RELATED_CONSENTS = ["wordblade.consent.sam", "wordblade.consent.vibe", "wordblade.consent.plane3d"];
+const RELATED_CONSENTS = ["wordblade.consent.asr", "wordblade.consent.sam", "wordblade.consent.vibe", "wordblade.consent.plane3d"];
 
 /** 各種建議的標籤 */
 const KIND_LABEL: Record<Suggestion["kind"], string> = { cut: "✂ Cut", mask: "🛡 Mask", effect: "✨ Effect", camera: "🎥 Camera", fix: "✎ Fix", zoom: "🔍 Zoom" };
@@ -175,6 +175,11 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, dis
     const endBusy = beginBusy();
     try {
       const settings = loadSettings();
+      // 特效與運鏡要附參考畫面：先跳到那段再截圖（使用者可能沒先點那一條）
+      if ((s.kind === "effect" || s.kind === "camera") && span) {
+        dispatch({ type: "seek", time: span.start + Math.min(0.5, (span.end - span.start) / 2) });
+        await new Promise((r) => setTimeout(r, 500));
+      }
       if (s.kind === "mask") {
         // 螢幕上的文字（金鑰、Email…）SAM 找不到：直接用 Spark 回報的框遮；人、臉、車牌等跑 SAM，找不到再退回框
         const boxMask = maskFromBox(s, `mask-${crypto.randomUUID().slice(0, 8)}`);
@@ -264,7 +269,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, dis
       {progress && <p className="muted" data-testid="director-progress">{progressText}</p>}
       {asking && (
         <div className="consent" data-testid="director-consent">
-          <p>The video (split into parts, no sound, 480p, 2 frames per second) and its transcript will be sent to the WordBlade AI service and Meta. Muse Spark (Contributor version — content may be used to train Meta's models) watches each part; Muse Wonder writes the suggestions. Applying a mask, effect or camera suggestion later sends that part again to SAM 3.1, Vibe or the camera AI.</p>
+          <p>The video (split into parts, no sound, 480p, 2 frames per second) and its transcript will be sent to the WordBlade AI service and Meta. Muse Spark (Contributor version — content may be used to train Meta's models) watches each part; Muse Wonder writes the suggestions. If there is no transcript yet, the audio is transcribed first with Muse Voice Transcribe. Applying a mask, effect or camera suggestion later sends that part again to SAM 3.1, Vibe or the camera AI.</p>
           <button type="button" onClick={accept}>Agree and continue</button> <button type="button" onClick={() => setAsking(false)}>Cancel</button>
         </div>
       )}
