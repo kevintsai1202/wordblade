@@ -204,7 +204,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
    */
   const onScrubDown = (e: ReactMouseEvent<HTMLElement>) => {
     if (e.button !== 0 || e.shiftKey || !canvasRef.current) return;
-    e.preventDefault();
+    // 不 preventDefault：要讓焦點離開輸入框（例如 Inspector 的倍數），之後的 Space 等熱鍵才會作用；拖曳選到字由 CSS user-select 擋
     e.stopPropagation();
     seekAt(e.clientX, canvasRef.current);
     setScrubEl(canvasRef.current);

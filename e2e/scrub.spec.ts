@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // 在時間軸尺規上按住左鍵拖曳播放頭（scrub）：播放頭跟著滑鼠走、播放中按下會先停、預覽畫面跟著更新
 const FIXTURES = path.join(import.meta.dirname, "fixtures");
@@ -116,4 +117,16 @@ test("播放中點軌道空白處或按方向鍵：停在新位置，不會被�
   const at = await seconds(page);
   await page.waitForTimeout(400);
   expect(await seconds(page)).toBe(at);
+});
+
+test("在輸入框打字後點空白軌道：焦點離開輸入框，Space 可以播放", async ({ page }) => {
+  await setup(page);
+  await page.locator('.track-row[data-track-id="V1"] .clip').first().click();
+  await openTab(page, "inspector");
+  await page.getByTestId("speed-input").click();
+  const ruler = (await page.locator(".ruler").boundingBox())!;
+  const a2 = (await page.locator('.track-row[data-track-id="A2"]').boundingBox())!;
+  await page.mouse.click(ruler.x + 20, a2.y + a2.height / 2);
+  await page.keyboard.press(" ");
+  await expect(page.getByTestId("play")).toHaveText("❚❚");
 });
