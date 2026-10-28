@@ -26,6 +26,8 @@ interface Rendered<S> {
   name: string;
   /** 顯示用的名字（範本名或描述） */
   label: string;
+  /** 配樂的原始描述（改版後仍是第一次的描述；Regenerate 用它） */
+  prompt?: string;
   /** 已經進素材庫的話，素材 id（加到時間軸不再重複匯入） */
   mediaId?: string;
 }
@@ -171,8 +173,10 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
       }
       setBusy({ part: "music", label: "Rendering…" });
       const samples = await renderMusic(outcome.spec);
+      // 改版沿用原本的描述（Regenerate 用它重來，不會把修改指示疊進去）
+      const prompt = previous ? music?.prompt ?? description : description;
       const label = previous ? `${music?.label ?? "music"} (${description})` : description;
-      setMusic({ spec: outcome.spec, samples, label, name: fileName("music", previous ? music?.label ?? description : description) });
+      setMusic({ spec: outcome.spec, samples, label, prompt, name: fileName("music", prompt) });
       if (previous) setTweak("");
     } catch (e) {
       setMusicError(message(e));
@@ -274,7 +278,7 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
             <button data-testid="music-add" title={`Add to the music track ${where}`} onClick={() => void addToTimeline(music, "music", setMusic, setMusicError)}>Add to timeline</button>
           </div>
           <div className="vibe-actions">
-            <button data-testid="music-regenerate" disabled={busy !== null || noToken} title="Generate another take from the same description" onClick={() => withConsent(() => void generateMusic(music.label, null))}>Regenerate</button>
+            <button data-testid="music-regenerate" disabled={busy !== null || noToken} title="Generate another take from the same description" onClick={() => withConsent(() => void generateMusic(music.prompt ?? music.label, null))}>Regenerate</button>
             <input type="text" data-testid="music-tweak" maxLength={300} value={tweak} placeholder="Change it, e.g. slower, no drums" style={{ flex: 1, minWidth: 0 }} onChange={(e) => setTweak(e.target.value)} />
             <button data-testid="music-modify" disabled={busy !== null || !tweak.trim() || noToken} onClick={() => withConsent(() => void generateMusic(tweak.trim(), music.spec))}>Modify</button>
           </div>

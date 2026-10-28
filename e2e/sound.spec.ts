@@ -97,6 +97,11 @@ test("AI 音樂：同意說明 → 生成 → 放到 A2；「改一下」帶著�
   // 新版本是新的素材：再加一次就多一個片段
   await page.getByTestId("music-add").click();
   await expect(page.locator('[data-track-id="A2"] .clip')).toHaveCount(2, { timeout: 15_000 });
+
+  // 再生成一次：用原本的描述重來（不帶前一版、不疊修改指示）
+  await page.getByTestId("music-regenerate").click();
+  await expect.poll(() => bodies.length, { timeout: 20_000 }).toBe(3);
+  expect(bodies[2]).toEqual({ description: "calm lo-fi", bars: 4, previous: null });
 });
 
 test("AI 音效：拒答顯示固定文字，不顯示模型的文字", async ({ page }) => {
