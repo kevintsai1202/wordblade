@@ -32,7 +32,7 @@
 | # | 狀態 | 結果 |
 | --- | --- | --- |
 | R0 | 完成（10/28） | 實測（`scripts/director/probe-segment.mjs`，demo-2min 整支 108 秒）：Spark 一次看完 480p、每秒 2 格的 base64 影片（250 kbps 264 KB／150 kbps 236 KB，畫面靜態所以很小），prompt 28,136 tokens（約 130／格）、回應 10.5 秒；**假金鑰在 31 秒被找到**（正確答案 31.4 秒），連螢幕上的程式碼都讀得出來；60 秒那段 15,656 tokens、13.7 秒。WebView2 轉檔（selftest `directorClip`，lecture-a 前 120 秒 → 852×480、2 fps、250 kbps，約 3 MB）：**原檔 39 秒（0.33 倍即時）、540p 代理檔 8.8 秒（0.07 倍）** → 桌面有代理檔就從代理檔轉，網頁從原檔（30 分鐘約 10 分鐘），轉下一段和 AI 看上一段同時進行 |
-| R1 | 未做 | |
+| R1 | 完成（10/28） | `director/segments.ts`（依停頓切段 90～150 秒）、`director/suggestions.ts`（suggestionSpan、adoptEdits：剪／改字／放大＋狀態同一筆、clampSuggestions）、`core/suggestions.ts`＋編輯 setSuggestions／setSuggestionStatus；Vitest 11 |
 | R2 | 未做 | |
 | R3 | 未做 | |
 | R4 | 未做 | |

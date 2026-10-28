@@ -2,7 +2,8 @@
 // 例如「去贅詞 Remove all」、AI 導演採用一條建議，都只要一次 Ctrl+Z（§5.11、§5.16）。
 // 歷史存的是整份專案的快照；timeline 的函式用 Immer 做結構共享，快照之間沒改到的部分是同一個物件。
 import { addEffect, deleteEffect, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
-import type { CameraKey, Effect, MaskObject, Plugin, Project, Seconds, Word, ZoomRegion } from "./model";
+import type { CameraKey, Effect, MaskObject, Plugin, Project, Seconds, Suggestion, Word, ZoomRegion } from "./model";
+import { setSuggestionStatus, setSuggestions } from "./suggestions";
 import { addMasks, deleteMasks, setMask } from "./masks";
 import { setCaptionStyle, setMediaWords } from "./media";
 import { editWords } from "./transcriptEdit";
@@ -36,7 +37,9 @@ export type Edit =
   | { kind: "setSpeed"; clipId: string; speed: number }
   | { kind: "addMasks"; masks: MaskObject[] }
   | { kind: "setMask"; mask: MaskObject }
-  | { kind: "deleteMasks"; ids: string[] };
+  | { kind: "deleteMasks"; ids: string[] }
+  | { kind: "setSuggestions"; mediaId: string; suggestions: Suggestion[] }
+  | { kind: "setSuggestionStatus"; id: string; status: Suggestion["status"] };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -64,6 +67,8 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "addMasks": return addMasks(project, edit.masks);
     case "setMask": return setMask(project, edit.mask);
     case "deleteMasks": return deleteMasks(project, edit.ids);
+    case "setSuggestions": return setSuggestions(project, edit.mediaId, edit.suggestions);
+    case "setSuggestionStatus": return setSuggestionStatus(project, edit.id, edit.status);
     case "setSpeed": return setClipSpeed(project, edit.clipId, edit.speed);
   }
 }
