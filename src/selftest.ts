@@ -430,7 +430,11 @@ async function checkGenerated(): Promise<Record<string, unknown>> {
     const samples = new Float32Array(16000).map((_, i) => Math.sin((i / 16000) * 2 * Math.PI * 440) * 0.3);
     const source = await engine.importGenerated("selftest-tone.wav", encodeWav(samples, 16000));
     const media = await engine.probe(source, "gen-selftest");
-    return { source: source.kind === "path" ? source.path : source.name, kind: media.kind, duration: Number(media.duration.toFixed(2)), audio: media.audio };
+    // 一鍵片頭的 V1 佔位黑圖（PNG）也走同一條路
+    const canvas = new OffscreenCanvas(320, 180);
+    canvas.getContext("2d")!.fillRect(0, 0, 320, 180);
+    const png = await engine.probe(await engine.importGenerated("selftest-black.png", new Uint8Array(await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer())), "gen-png");
+    return { source: source.kind === "path" ? source.path : source.name, kind: media.kind, duration: Number(media.duration.toFixed(2)), audio: media.audio, png: { kind: png.kind, width: png.width, height: png.height } };
   } catch (e) {
     return { error: String(e) };
   }

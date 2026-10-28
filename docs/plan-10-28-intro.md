@@ -44,8 +44,8 @@ IntroRequest ──flipIntro()──► IntroPlan { duration, cues[], effect par
 | # | 狀態 | 結果 |
 | --- | --- | --- |
 | I1 | 完成（10/29） | `intro/flip.ts`：cue 表（揭曉錨點、遞減間隔、最短 2 格、強度）、圖片洗牌循環（相鄰不重複、不足 8 張提示）；Vitest 5。實算：短版第 10 頁停 0.0669 秒，2 格下限從第 11 頁起（調查寫「第 10 頁起」是約數） |
-| I2 | 未做 | |
+| I2 | 完成（10/29） | 音效 spec 加 `am {rate, depth}`（schema、型別、合成；閘道 schema 與提示詞已重產，**閘道未重新部署**，模型暫時不會用到 am）；`intro/sounds.ts`：翻頁慢／快（揮動、沙沙＋am、落下）、上升音、重擊、內建配樂（120 BPM 4 小節，第 3 小節鼓與貝斯進＝揭曉 4 秒）；擺位每頁一聲（快段快版 ×0.6）。Intro 頁籤預設內建配樂（揭曉 4 秒、片頭 8 秒）。Vitest：am 起伏、四種音效與配樂實際算圖有聲音、揭曉後比第 1 小節大聲 |
 | I3 | 完成（10/29） | 3D harness 加 `images` 協定（換圖重建場景）、`env.images`；ThreeHost 每個 Worker 記住送過的圖片組、複製後轉移；`anim/effectImages.ts` 依素材 id 解碼（寬 ≤ 1280、快取），預覽與匯出共用；插件 `three/builtins/flipIntro.js`（上緣為軸翻頁、舞台推近微轉、雙色調 shader、閃光、標題方塊字內透封面→白字＋彈跳＋斜光、副標逐字、icon 彈入、結尾淡出） |
 | I4 | 完成（10/29） | `intro/insert.ts`：`flipEffect`（圖片去重、索引）、`insertIntro`（V1 漣漪插入佔位、特效、插件登記一次、A3 音效／A2 配樂片段，鎖住的軌略過）；history `insertIntro`；Vitest 4 |
-| I5 | 完成（10/29，先無聲） | Effects › Intro 子頁籤（勾圖、標題、副標、icon、Shuffle、Generate）；佔位黑圖 `intro-black.png` 走 importGenerated。e2e `intro.spec.ts`：翻頁段雙色調、揭曉後藍方塊白字、Ctrl+Z 一次復原（截圖 output/ui-shots/intro-*.png）。**桌面版還沒實測**（PNG 走 importGenerated＋ffprobe） |
-| I6 | 未做 | |
+| I5 | 完成（10/29，先無聲） | Effects › Intro 子頁籤（勾圖、標題、副標、icon、Shuffle、Generate）；佔位黑圖 `intro-black.png` 走 importGenerated。e2e `intro.spec.ts`：翻頁段雙色調、揭曉後藍方塊白字、Ctrl+Z 一次復原（截圖 output/ui-shots/intro-*.png）。桌面自我檢查：產生的 PNG 匯入成 image 320×180 |
+| I6 | 未做（建議砍） | |

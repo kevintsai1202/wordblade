@@ -152,3 +152,14 @@ describe("共用的驗證案例（validationCases.json；閘道的 SynthParserTe
     });
   }
 });
+
+describe("am 欄位（隨機振幅調變）", () => {
+  it("rate 1～200、depth 0～1 才收", () => {
+    const base = { length: 0.3, voices: [{ source: { type: "noise", color: "white" }, env: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.05 } }] };
+    const withAm = (am: unknown) => ({ ...base, voices: [{ ...base.voices[0], am }] });
+    const ok = validateSound(withAm({ rate: 60, depth: 0.7 }));
+    expect(ok.ok && (ok.spec.voices[0] as { am?: unknown }).am).toEqual({ rate: 60, depth: 0.7 });
+    expect(validateSound(withAm({ rate: 60, depth: 1.5 })).ok).toBe(false);
+    expect(validateSound(withAm({ rate: 0, depth: 0.5 })).ok).toBe(false);
+  });
+});

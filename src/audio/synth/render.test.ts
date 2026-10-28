@@ -104,3 +104,25 @@ describe("synthToWav", () => {
     expect(wav.length).toBe(44 + 960);
   });
 });
+
+describe("隨機振幅調變 am（翻頁的紙張顆粒感，§5.23）", () => {
+  /** 0.5 秒的正弦長音；am 有給就加上 */
+  const tone = (am?: { rate: number; depth: number }): SoundSpec => ({
+    length: 0.5, voices: [{ source: { type: "osc", wave: "sine", freq: 440 }, env: { attack: 0.005, decay: 0, sustain: 1, release: 0.01 }, ...(am ? { am } : {}) }],
+  });
+  /** 中段每 10 ms 一格的 RMS，最大÷最小 */
+  const spread = (x: Float32Array) => {
+    const step = SYNTH_RATE / 100;
+    const values: number[] = [];
+    for (let i = step * 5; i + step < x.length - step * 5; i += step) values.push(rms(x, i, i + step));
+    return Math.max(...values) / Math.max(1e-6, Math.min(...values));
+  };
+
+  it("沒有 am 的長音包絡平穩；加了 am 起伏明顯，同一份 spec 結果相同", async () => {
+    expect(spread(await renderSound(tone(), factory))).toBeLessThan(1.2);
+    const a = await renderSound(tone({ rate: 60, depth: 0.85 }), factory);
+    expect(spread(a)).toBeGreaterThan(2);
+    const b = await renderSound(tone({ rate: 60, depth: 0.85 }), factory);
+    expect(Buffer.from(synthToWav(a)).equals(Buffer.from(synthToWav(b)))).toBe(true);
+  });
+});

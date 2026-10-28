@@ -52,13 +52,20 @@ export interface Effects {
   distortion?: { amount: number };
 }
 
-/** 音色：來源 → 濾波器 → 包絡 → 效果 */
+/** 隨機振幅調變：每 1/rate 秒換一個隨機音量（1−depth～1） */
+export interface AmpMod {
+  rate: number;
+  depth: number;
+}
+
+/** 音色：來源 → 濾波器 → 包絡 →（隨機振幅調變）→ 效果 */
 export interface Voice {
   source: OscSource | NoiseSource;
   filter?: Filter;
   env: Env;
   gain?: number;
   effects?: Effects;
+  am?: AmpMod;
 }
 
 /** 音效的一個聲部：音色＋開始時間、按住多久、重複 */
@@ -267,8 +274,8 @@ export function soundGroups(spec: SoundSpec): Group[] {
       const t = start + k * every;
       if (t < spec.length) hits.push({ t, gate, vel: 1 });
     }
-    const { source, filter, env, effects } = v;
-    return { label: `voices[${i}]`, voice: { source, filter, env, effects }, gain: v.gain ?? 1, hits };
+    const { source, filter, env, effects, am } = v;
+    return { label: `voices[${i}]`, voice: { source, filter, env, effects, am }, gain: v.gain ?? 1, hits };
   });
 }
 

@@ -333,6 +333,28 @@
         },
         "effects": {
           "$ref": "#/$defs/effects"
+        },
+        "am": {
+          "description": "隨機振幅調變：每 1/rate 秒換一個隨機音量（1−depth～1，平滑過渡），做紙張翻動、沙沙聲的顆粒感",
+          "type": "object",
+          "required": [
+            "rate",
+            "depth"
+          ],
+          "properties": {
+            "rate": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 200,
+              "description": "每秒換幾次"
+            },
+            "depth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "起伏深度"
+            }
+          }
         }
       }
     },
@@ -360,6 +382,28 @@
         },
         "effects": {
           "$ref": "#/$defs/effects"
+        },
+        "am": {
+          "description": "隨機振幅調變：每 1/rate 秒換一個隨機音量（1−depth～1，平滑過渡），做紙張翻動、沙沙聲的顆粒感",
+          "type": "object",
+          "required": [
+            "rate",
+            "depth"
+          ],
+          "properties": {
+            "rate": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 200,
+              "description": "每秒換幾次"
+            },
+            "depth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "起伏深度"
+            }
+          }
         },
         "start": {
           "type": "number",

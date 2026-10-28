@@ -3,7 +3,8 @@ import path from "node:path";
 import { openTab } from "./helpers/tabs";
 
 // 一鍵片頭「翻頁式」（spec §5.23）：匯入幾張封面＋影片，Intro 頁籤填標題按 Generate →
-// 時間軸開頭插入片頭（原本的影片往後移）；翻頁段看得到雙色調（偏藍紫）的封面，揭曉後畫面中央是標題方塊（藍）與白字；Ctrl+Z 一次復原。
+// 時間軸開頭插入片頭（原本的影片往後移）；翻頁段看得到雙色調（偏藍紫）的封面，揭曉後畫面中央是標題方塊（藍）與白字；
+// 預設有內建配樂（揭曉 4 秒、片頭 8 秒）：A3 每頁一聲翻頁＋上升音＋重擊、A2 一段配樂。Ctrl+Z 一次復原。
 // e2e 是軟體算繪（SwiftShader），第一格建場景、上傳貼圖較慢，等久一點。
 const FIXTURES = path.join(import.meta.dirname, "fixtures");
 
@@ -75,15 +76,19 @@ test("翻頁式片頭：插在開頭、翻頁段是雙色調封面、揭曉後�
   await page.getByTestId("intro-subtitle").fill("edit by words");
   await page.getByTestId("intro-generate").click();
   await expect(page.getByTestId("intro-notice")).toContainText("intro at the start");
+  await expect(page.getByTestId("intro-notice")).toContainText("8.0 s");
   await expect(page.locator(".effect-chip")).toHaveCount(1);
+  // 音效軌：16 頁各一聲＋上升音＋重擊；配樂軌一段
+  await expect(page.locator('[data-track-id="A3"] .clip')).toHaveCount(18);
+  await expect(page.locator('[data-track-id="A2"] .clip')).toHaveCount(1);
 
-  // 翻頁段（1.8 秒）：畫面大半是雙色調封面（偏藍紫）
-  await seek(page, 1.8);
+  // 翻頁段（3 秒）：畫面大半是雙色調封面（偏藍紫）
+  await seek(page, 3);
   await expect.poll(async () => (await stats(page, 0, 0, 160, 90)).blue, { timeout: 60_000 }).toBeGreaterThan(0.25);
   await page.screenshot({ path: "output/ui-shots/intro-flip.png" });
 
-  // 揭曉後（4.5 秒）：中央有藍色方塊與白字
-  await seek(page, 4.5);
+  // 揭曉後（5 秒）：中央有藍色方塊與白字
+  await seek(page, 5);
   await expect.poll(async () => {
     const s = await stats(page, 40, 33, 80, 24);
     return s.blue > 0.2 && s.white > 0.03;
@@ -98,4 +103,5 @@ test("翻頁式片頭：插在開頭、翻頁段是雙色調封面、揭曉後�
   await page.locator("body").click({ position: { x: 5, y: 5 } });
   await page.keyboard.press("Control+z");
   await expect(page.locator(".effect-chip")).toHaveCount(0);
+  await expect(page.locator('[data-track-id="A3"] .clip')).toHaveCount(0);
 });

@@ -132,7 +132,7 @@ function groupBus(ctx: BaseAudioContext, group: Group, master: AudioNode, random
 /** 把一群音排進 context：每個音是 來源 →（濾波器）→ 包絡增益 → 匯流排 */
 function scheduleGroup(ctx: BaseAudioContext, group: Group, master: AudioNode, random: () => number, noise: Map<string, AudioBuffer>) {
   const bus = groupBus(ctx, group, master, random);
-  const { source, filter, env } = group.voice;
+  const { source, filter, env, am } = group.voice;
   for (const hit of group.hits) {
     const end = hit.t + hit.gate + Math.max(0.001, env.release) + 0.01;
     let src: AudioScheduledSourceNode;
@@ -171,7 +171,17 @@ function scheduleGroup(ctx: BaseAudioContext, group: Group, master: AudioNode, r
     amp.gain.setValueAtTime(0, hit.t);
     for (const [t, v] of points.slice(1)) amp.gain.linearRampToValueAtTime(v, hit.t + t);
     node.connect(amp);
-    amp.connect(bus);
+    if (am && am.depth > 0) {
+      // 隨機振幅調變：每 1/rate 秒朝一個新的隨機音量平滑過去（時間常數為間隔的 0.3），做出顆粒感
+      const grain = ctx.createGain();
+      const step = 1 / am.rate;
+      grain.gain.setValueAtTime(1 - am.depth * random(), hit.t);
+      for (let t = hit.t + step; t < end; t += step) grain.gain.setTargetAtTime(1 - am.depth * random(), t, step * 0.3);
+      amp.connect(grain);
+      grain.connect(bus);
+    } else {
+      amp.connect(bus);
+    }
     src.stop(end);
   }
 }
