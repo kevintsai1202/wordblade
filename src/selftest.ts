@@ -18,6 +18,7 @@ import { mixAudio } from "./export/audioMix";
 import { runExport } from "./export/exporter";
 import { exportPlan } from "./export/exportPlan";
 import { makeSamClip } from "./sam/clip";
+import { grabJpegs } from "./sam/frames";
 import { encodeWav } from "./asr/wav";
 
 /** 等事件或逾時；回傳事件有沒有發生 */
@@ -375,6 +376,21 @@ async function checkDirectorClip(paths: string[]): Promise<Record<string, unknow
   return results;
 }
 
+/** 螢幕文字定位的取畫面（D40）：lecture-a 的 0 秒、1 秒與片尾，前兩張要有 JPEG，片尾那張記下長度（片尾常取不到） */
+async function checkGrabJpegs(paths: string[]): Promise<Record<string, unknown>> {
+  const engine = createEngine();
+  const path = paths.find((p) => /lecture-a/i.test(p));
+  if (!path) return {};
+  try {
+    const media = await engine.probe({ kind: "path", path, name: "lecture-a" }, "grab0");
+    const t0 = performance.now();
+    const jpegs = await grabJpegs(await engine.exportSource(media), [0, 1, media.duration]);
+    return { ms: Math.round(performance.now() - t0), sizes: jpegs.map((j) => j.length) };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
 /** AI 音效／配樂產生的 WAV（§5.15）：寫進 app 資料夾的 generated/、再讀規格，確認匯入流程走得通 */
 async function checkGenerated(): Promise<Record<string, unknown>> {
   const engine = createEngine();
@@ -408,6 +424,7 @@ export async function runSelftest(server: string) {
     report.samClip = await checkSamClip(paths);
     report.generated = await checkGenerated();
     report.directorClip = await checkDirectorClip(paths);
+    report.grabJpegs = await checkGrabJpegs(paths);
   } catch (e) {
     report.error = String(e);
   }

@@ -78,3 +78,25 @@ describe("runLocate：取樣（每秒 1 格）→ 每次最多 8 張送出 → �
     expect(activeSample(obj, 36)!.box[2] - activeSample(obj, 36)!.box[0]).toBeGreaterThan(0.2);
   });
 });
+
+describe("邊界", () => {
+  it("片尾取不到畫面（空的 JPEG）就不送那一格；整批都空就不呼叫", async () => {
+    const sent: number[][] = [];
+    const result = await runLocate({
+      mediaId: "m", target: "password", label: "password", start: 0, end: 2,
+      grab: async (times) => times.map((t) => (t === 2 ? new Uint8Array() : new Uint8Array(4))),
+      api: { locate: async (_target, frames) => { sent.push(frames.map((f) => f.t)); return frames.map((f) => ({ t: f.t, items: [] })); } },
+    });
+    expect(sent).toEqual([[0, 1]]);
+    expect(result.frames).toBe(2);
+    const none = await runLocate({ mediaId: "m", target: "password", label: "password", start: 5, end: 5, grab: async (times) => times.map(() => new Uint8Array()), api: { locate: async () => { throw new Error("should not be called"); } } });
+    expect(none.objects).toEqual([]);
+  });
+
+  it("文字遮罩提前 1 秒開始（第一個取樣前那一秒可能已經打了幾個字）", () => {
+    const [mask] = toRectMasks(linkBoxes([f(32, [[0.298, 0.076, 0.035, 0.022]]), f(33, [[0.298, 0.076, 0.234, 0.022]])]), { mediaId: "m", label: "k", idPrefix: "k" });
+    expect(activeSample(mask, 31.4)).not.toBeNull();
+    expect(activeSample(mask, 30.9)).toBeNull();
+  });
+});
+

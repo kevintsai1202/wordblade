@@ -139,9 +139,11 @@ export async function runLocate(opts: LocateRunOptions): Promise<{ objects: Mask
     if (opts.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
     const batch = times.slice(i, i + BATCH);
     const jpegs = await opts.grab(batch);
-    results.push(...(await opts.api.locate(locatePrompt(opts.target), batch.map((t, k) => ({ t, jpeg: jpegs[k] })))));
+    // 取不到畫面的格（片尾常見）不送：閘道會擋空的畫面
+    const frames = batch.map((t, k) => ({ t, jpeg: jpegs[k] })).filter((x) => x.jpeg && x.jpeg.length > 0);
+    if (frames.length) results.push(...(await opts.api.locate(locatePrompt(opts.target), frames)));
     opts.onProgress?.({ done: Math.min(times.length, i + BATCH), total: times.length });
   }
   const objects = toRectMasks(linkBoxes(results), { mediaId: opts.mediaId, label: opts.label, idPrefix: `text-${crypto.randomUUID().slice(0, 8)}` });
-  return { objects, frames: times.length };
+  return { objects, frames: results.length };
 }

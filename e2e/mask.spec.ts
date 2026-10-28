@@ -124,6 +124,9 @@ test("文字類目標（API keys）走 Spark 定位：每秒 1 格送出 → 長
     if (req.method() === "POST" && req.url().endsWith("/v1/ai/locate")) {
       const body = req.postDataBuffer()!.toString("latin1");
       times = JSON.parse(/name="times"\r\n\r\n(\[[^\]]*\])/.exec(body)![1]);
+      // 和真的閘道一樣：空的畫面回 400（片尾取不到畫面時前端要先濾掉）
+      const sizes = [...body.matchAll(/Content-Type: image\/jpeg\r\n\r\n([\s\S]*?)\r\n--/g)].map((m) => m[1].length);
+      if (sizes.length !== times.length || sizes.some((n) => n === 0)) return reply(route, 400, { error: "bad-request" });
       return reply(route, 202, { jobId: "l1" });
     }
     if (req.method() === "GET" && req.url().includes("/v1/ai/locate/l1")) {
@@ -149,7 +152,9 @@ test("文字類目標（API keys）走 Spark 定位：每秒 1 格送出 → 長
   await page.getByTestId("mask-find").click();
   await expect(page.getByTestId("mask-row")).toHaveCount(1, { timeout: 60_000 });
   expect(sam).toBe(0);
-  expect(times).toEqual([0, 1, 2, 3, 4]);
+  // talk.mp4 只有 4 秒：4 秒那格取不到畫面，不送
+  expect(times.length).toBeGreaterThanOrEqual(4);
+  expect(times.slice(0, 4)).toEqual([0, 1, 2, 3]);
   await expect(page.getByTestId("mask-row")).toHaveAttribute("data-shape", "rect");
   await page.getByTestId("mask-effect").selectOption("solid");
   await page.getByTestId("mask-color").evaluate((el: HTMLInputElement) => {

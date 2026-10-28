@@ -221,7 +221,9 @@ export function toMaskObjects(objects: LinkedObject[], opts: { mediaId: string; 
 /** 素材時間 t 用哪個取樣：最近的一張（取樣之間形狀不動）；第一張之前半格、最後一張之後一格以外沒有 */
 export function activeSample(obj: MaskObject, t: number): MaskSample | null {
   const s = obj.samples;
-  if (!s.length || t < s[0].t - obj.interval / 2 - EPS || t > s[s.length - 1].t + obj.interval + EPS) return null;
+  // 有 hold 的物件（螢幕文字）提前 hold 秒開始：第一個取樣前那一秒可能已經出現（打了幾個字），寧可多遮
+  const lead = obj.hold ?? obj.interval / 2;
+  if (!s.length || t < s[0].t - lead - EPS || t > s[s.length - 1].t + obj.interval + EPS) return null;
   let lo = 0;
   let hi = s.length - 1;
   while (lo < hi) {
