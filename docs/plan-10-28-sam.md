@@ -30,6 +30,6 @@
 | S1 | 完成（10/28） | FOSDEM 講者 person、40 格、1280 寬：小檔 98 KB；上傳 4.1 秒（Files 回應欄位 id、bytes、created_at、expires_at、filename、object、purpose、status）；SAM 第一個位元組 1.4 秒、completed 3.6 秒、25 毫秒後關連線；事件：created、in_progress、output_item.added、content_part.added、40 個 output_text.delta、output_text.done、content_part.done、output_item.done、completed，最後有 `data: [DONE]`；usage 只有 `video_frames_processed: 50`（送 40 格卻記 50，計費可能依此，約 US$0.01）；刪檔 200、3.7 秒。原始串流 `src/sam/fixtures/fosdem-person.sse` |
 | S2 | 完成（10/28） | `decoder.ts`（原專案測試向量雜湊相同；字元集要排除反斜線——寫檔時被吃掉一次）、`stream.ts`（任意位置切開相同；實測串流 40 格全部解得開、遮罩尺寸＝框＋1）、`tracks.ts`（換鏡頭、拆段、跨段 IoU 接續、最近取樣）；Vitest 14 |
 | S3 | 完成（10/28） | `gateway/.../sam/`：`SamJobs`（上傳 → 讀串流切行 → 完成記用量＝計費格數 → finally 刪檔；取消、上傳失敗 sam-upload、上游錯誤 sam-upstream；同時最多 3 個，再多 429）、`RestMetaSamClient`（java.net.http 讀串流，取消或 180 秒閒置時關串流）、`SamSse`、`SamLines`、`SamPhrase`、`SamController`（POST／GET?after／DELETE /v1/sam、POST /v1/ai/mask-phrase）、Spark 翻譯；設定 `wordblade.models.sam`；閘道測試 10（全部 48 通過） |；本機閘道實測（`scripts/sam/live-local.ps1`→`gateway-check.mjs`）：開機正常；100 格 640 寬小檔 9 秒完成、逐格 100 行、**計費 100 格**（S1 的 40 格記 50 → 推測每次至少算 50 格，估價用 max(50, 格數)）；取消後 0.5 秒變 cancelled；翻譯：車牌→license plate、我的臉→face、「請幫我寫詩」→空字串。取消的工作沒記用量（Meta 可能已處理部分格數）
-| S4 | 未做 | |
-| S5 | 未做 | |
-| S6 | 未做 | |
+| S4 | 完成（10/28，改做法） | 不另寫 Rust ffmpeg：`src/sam/clip.ts` 用 mediabunny Conversion（trim、寬 ≤ 1280 偶數、frameRate、avc、去聲音）在 WebView／瀏覽器轉小檔，和匯出讀素材同一條路（`engine.exportSource`），桌面與網頁共用、不碰 Engine 介面；轉好再解成 64 寬算換鏡頭差異、記每格實際時間（取代 k÷fps，避免 29.97 fps 漂移）；`plan.ts`（尺寸、每段 ≤ 90 秒重疊一格、估價 max(50, 格數)×0.2／千）；`api.ts`、`run.ts`；Vitest 6 |
+| S5 | 完成（10/28） | `core/masks.ts`（addMasks、setMask、deleteMasks、maskSourceRange）；合成器 `drawMasked`（遮罩貼圖用來源座標、同一個 uvRect，馬賽克 4 點平均／7×7 模糊／純色，遮罩外 discard）；`sam/maskLayer.ts`（解碼 LRU、外擴用模糊＋門檻、解不開用框的橢圓）預覽與匯出共用、狀態併進 below（3D 場景讀下層畫面看得到遮罩）；Mask 子頁籤（常用目標＋自訂翻譯、範圍、取樣率、同意說明含估價、進度與取消、物件列）；範圍動作列 🛡 Mask |
+| S6 | 進行中 | e2e `mask.spec.ts`（假閘道重播實測串流、talk.mp4 真的轉小檔：預覽與匯出 MP4 那一塊是純色、關掉沒有、復原）通過；實機待跑 |

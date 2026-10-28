@@ -154,7 +154,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
   captions: Caption[];
   library: Library;
   /** 範圍動作列的「放大」「特效」（照字導字演：先框選時間，再從範圍建立） */
-  onRangeAction?: (kind: "zoom" | "effect") => void;
+  onRangeAction?: (kind: "zoom" | "effect" | "mask") => void;
   /** 局部放大：正在調的那一段（放大條標亮）與切換 */
   zoomEdit?: ZoomEdit | null;
   onZoomEdit?: (edit: ZoomEdit | null) => void;
@@ -426,6 +426,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
                 <div className="range-actions" data-testid="range-actions" style={{ left: state.range.start * pxPerSecond }} onMouseDown={(e) => e.stopPropagation()}>
                   <button type="button" data-testid="range-zoom" title="Zoom into part of the frame for this range" onClick={() => onRangeAction?.("zoom")}>🔍 Zoom</button>
                   <button type="button" data-testid="range-effect" title="Add an effect for this range" onClick={() => onRangeAction?.("effect")}>✨ Effect</button>
+                  <button type="button" data-testid="range-mask" title="Hide faces, plates or text in this range" onClick={() => onRangeAction?.("mask")}>🛡 Mask</button>
                   <button type="button" data-testid="range-delete" title="Cut this range (Delete)" onClick={() => dispatch({ type: "deleteRange" })}>✂ Delete</button>
                   <button type="button" data-testid="range-cancel" title="Clear the range (Esc)" onClick={() => dispatch({ type: "clearRange" })}>✕</button>
                   <span className="muted">{formatTimecode(state.range.end - state.range.start).slice(3)}</span>

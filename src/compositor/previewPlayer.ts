@@ -1,6 +1,7 @@
 // 預覽播放器（§5.13）：依 framePlan／audioPlan 讓每個片段的 <video>／<img>／<audio> 對準時間，再交給合成器畫。
 // 影像元素一律靜音，聲音由 A 軌片段各自的 <audio> 發出：Web Audio 混音圖建立後（第一次按播放）走 AudioGraph，
 // 片段增益＋配樂匯流排壓低；還沒建立或瀏覽器不支援時退回直接設 el.volume。
+import { MaskLayer } from "../sam/maskLayer";
 import type { ThumbStore } from "../media/thumbStore";
 import type { EffectRenderer } from "../anim/effectRenderer";
 import { currentAudioGraph } from "../audio/audioGraph";
@@ -42,6 +43,8 @@ export class PreviewPlayer {
   private thumbs: ThumbStore | null = null;
   /** 每個影片元素最後一次畫好的畫面在素材的哪個時間（跳轉中 currentTime 已經是目標，要另外記） */
   private readonly shown = new WeakMap<HTMLVideoElement, number>();
+  /** SAM 遮罩（和匯出共用畫法） */
+  private readonly masks = new MaskLayer();
   /** 用縮圖代替影片畫面的次數（e2e 讀 canvas 的 data-thumb-frames） */
   private thumbFrames = 0;
 
@@ -195,11 +198,18 @@ export class PreviewPlayer {
       const thumb = !playing && !ready && this.thumbs ? this.thumbs.image(layer.mediaId, layer.srcTime, this.onFrameReady) : null;
       const shownAt = el.readyState >= 2 ? this.shown.get(el) ?? Infinity : Infinity;
       const useThumb = !!thumb && Math.abs(thumb.time - layer.srcTime) < Math.abs(shownAt - layer.srcTime);
+      /** 這一格實際畫上去的影像（遮罩要用同一個） */
+      let drawn: TexImageSource | null = null;
       if (useThumb) {
-        this.compositor.draw(thumb.img, layer.rect, layer.opacity, layer.crop);
+        drawn = thumb.img;
         this.canvas.dataset.thumbFrames = String(++this.thumbFrames);
       } else if (el.readyState >= 2) {
-        this.compositor.draw(el, layer.rect, layer.opacity, layer.crop);
+        drawn = el;
+      }
+      if (drawn) {
+        this.compositor.draw(drawn, layer.rect, layer.opacity, layer.crop);
+        // SAM 遮罩疊在這個影像圖層上（素材時間）；狀態併進 below，讀下層畫面的 3D 場景才會跟著重畫
+        below += this.masks.draw(this.compositor, project, layer, drawn, width, height);
       }
       // 下層狀態含放大範圍：改了放大，讀下層畫面的特效（3D 場景）才會重畫
       below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : useThumb ? `t${thumb.time}` : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;

@@ -20,6 +20,7 @@ import { CaptionStyleTab } from "./ui/CaptionStyleTab";
 import { TranscriptTab } from "./ui/TranscriptTab";
 import { CleanupPanel } from "./ui/CleanupPanel";
 import { ZoomTab } from "./ui/ZoomTab";
+import { MaskTab } from "./ui/MaskTab";
 import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
 import type { ZoomEdit } from "./ui/ZoomBands";
 import { zoomFromRange } from "./core/zoom";
@@ -184,6 +185,7 @@ function App() {
             vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
+            mask: <MaskTab project={project} engine={engine} range={state.range} playhead={state.playhead} dispatch={dispatch} />,
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
@@ -194,7 +196,7 @@ function App() {
       <Splitter axis="y" sign={-1} value={layout.timelineHeight} onChange={(v) => setLayout("timelineHeight", v)} onReset={() => resetLayout("timelineHeight")} testId="split-timeline" title="Drag to resize the timeline" />
       <Timeline headerWidth={layout.headerWidth} thumbs={thumbs}
         headerSplitter={<Splitter axis="x" sign={1} value={layout.headerWidth} onChange={(v) => setLayout("headerWidth", v)} onReset={() => resetLayout("headerWidth")} testId="split-header" title="Drag to resize the track headers" />}
-        state={state} dispatch={dispatch} captions={captions} library={library} zoomEdit={zoomEdit} onZoomEdit={setZoomEdit} onRangeAction={(kind) => (kind === "effect" ? openTab("vibe") : createZoom())} />
+        state={state} dispatch={dispatch} captions={captions} library={library} zoomEdit={zoomEdit} onZoomEdit={setZoomEdit} onRangeAction={(kind) => (kind === "effect" ? openTab("vibe") : kind === "mask" ? openTab("mask") : createZoom())} />
       <footer className="status-bar">
         Space play · J / K / L reverse / stop / forward · Click to select · Delete ripple delete · Ctrl+B split at playhead · Ctrl+Z / Ctrl+Shift+Z undo / redo · ← → frame · ↑ ↓ edit points · Ctrl+wheel zoom
       </footer>

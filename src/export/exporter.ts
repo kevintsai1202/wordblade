@@ -1,6 +1,7 @@
 // MP4 匯出（spec §5.4，D24）：和預覽共用 layerPlan 與 GlCompositor，畫面來源改成 WebCodecs 逐格解碼原檔。
 // 解一格、畫一格、編一格（不在記憶體累積）；2D／3D 特效向沙盒逐格 await；聲音由 audioMix 分段混好後送編碼器（和影像並行）。
 // mediabunny 串流寫進 Engine 給的 ExportTarget（Windows 版 Rust 分塊寫檔、網頁版可寫串流）。
+import { MaskLayer } from "../sam/maskLayer";
 import type { AudioSampleSource, Input, VideoSample } from "mediabunny";
 import type { EffectRenderer } from "../anim/effectRenderer";
 import { layerPlan } from "../compositor/layerPlan";
@@ -83,6 +84,8 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
   const effectErrors = new Map<string, string>();
   const canvas = new OffscreenCanvas(plan.width, plan.height);
   const compositor = new GlCompositor(canvas);
+  /** SAM 遮罩圖層 */
+  const masks = new MaskLayer();
   // 字幕：開始前把要用到的字型（中文分塊）全部載好，第一格就用對的字型
   const captionLayer = job.captions?.captions.length ? new CaptionLayer(plan.width, plan.height) : null;
   if (captionLayer) await loadCaptionFonts(job.captions!.captions.map((c) => c.lines.join(" ")));
@@ -176,6 +179,8 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
           if (!sample) continue;
           const frame = sample.toVideoFrame();
           compositor.draw(frame, layer.rect, layer.opacity, layer.crop);
+          // SAM 遮罩（和預覽同一個畫法）
+          masks.draw(compositor, project, layer, frame, plan.width, plan.height);
           frame.close();
           continue;
         }
