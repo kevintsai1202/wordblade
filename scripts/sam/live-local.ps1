@@ -2,9 +2,10 @@
 # 預設跑 scripts/sam/gateway-check.mjs（100 格計費、取消要多久、目標翻譯）；-E2E 時改跑 e2e/sam-live.spec.ts（網頁版完整流程）→ 收掉閘道與資料庫。
 # 金鑰從 repo 的 .env 讀進這個行程的環境變數，不印出、不寫檔；權杖明文也只放環境變數。會實際呼叫 SAM（約 US$0.1 以內）。
 # 用法（repo 根目錄，PowerShell 7）：pwsh scripts/sam/live-local.ps1 [-E2E] [-Spec e2e/xxx.spec.ts] [-Check scripts/xxx.mjs] [-WebPort 4173]
+#   -Sample 導演實機換素材（只跑完、印建議）
 #   -Check 換別的閘道檢查腳本（例如 scripts/director/gateway-check.mjs）；-Spec 換 -E2E 時跑的 spec
 # 紀錄：logs/sam-live.log（閘道的輸出另存 logs/sam-live-gateway.log）；結果：output/sam-gateway-check.json
-param([switch]$E2E, [string]$Spec = 'e2e/sam-live.spec.ts', [string]$Check = 'scripts/sam/gateway-check.mjs', [int]$WebPort = 4173)
+param([switch]$E2E, [string]$Spec = 'e2e/sam-live.spec.ts', [string]$Check = 'scripts/sam/gateway-check.mjs', [string]$Sample, [int]$WebPort = 4173)
 $ErrorActionPreference = 'Stop'
 
 $Root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
@@ -62,6 +63,7 @@ try {
 
   $env:WORDBLADE_LIVE_GATEWAY = "http://localhost:$Port"
   $env:WORDBLADE_LIVE_TOKEN = $token
+  if ($Sample) { $env:WORDBLADE_DIRECTOR_SAMPLE = (Resolve-Path $Sample).Path }
   Push-Location $Root
   if ($E2E) { pnpm playwright test $Spec 2>&1 | ForEach-Object { Write-Log $_ } }
   else { node $Check 2>&1 | ForEach-Object { Write-Log $_ } }
@@ -69,7 +71,7 @@ try {
   $usage = docker exec $Db psql -U wordblade -d wordblade -t -c "SELECT route, COUNT(*), SUM(units) FROM usage_log GROUP BY route" | Out-String
   Write-Log "用量：$($usage.Trim())"
 } finally {
-  Remove-Item Env:WORDBLADE_LIVE_TOKEN, Env:WORDBLADE_LIVE_GATEWAY, Env:WORDBLADE_E2E_PORT, Env:META_API_KEY -ErrorAction SilentlyContinue
+  Remove-Item Env:WORDBLADE_DIRECTOR_SAMPLE, Env:WORDBLADE_LIVE_TOKEN, Env:WORDBLADE_LIVE_GATEWAY, Env:WORDBLADE_E2E_PORT, Env:META_API_KEY -ErrorAction SilentlyContinue
   if ($gateway) { Stop-Process -Id $gateway.Id -ErrorAction SilentlyContinue }
   docker stop $Db *> $null
   Write-Log '已收掉閘道與臨時資料庫'

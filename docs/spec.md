@@ -420,6 +420,14 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 耗時：多數呼叫 3.5～6 秒；工具呼叫每輪約 1.5 秒。
 - 還沒量：影片大小與長度上限、Files API。
 
+**實作（2026-10-28，`docs/plan-10-28-director.md`）與規格的差異**：
+- **Wonder 用結構化 JSON**（`{"suggestions":[…]}`）一次回全部建議，取代 `@Tool` 工具呼叫（開發者選定；沿用「不合格帶錯誤重問一次」，好測、好設上限）。
+- **小檔在 WebView／瀏覽器用 mediabunny 轉**（和匯出、SAM 同一條路），不用 Rust ffmpeg；桌面有 540p 代理檔就從代理檔轉（120 秒 8.8 秒，原檔 39 秒）。每段 90～150 秒切在最長的停頓。
+- **運鏡由 Wonder 從 3D 範本清單挑場景**（開發者選定），採用時加那個範本，漂浮板子再跑「用說的」。
+- **遮罩建議帶 Spark 回報的框**：SAM 3.1 分割不出螢幕上的文字（金鑰、Email），文字類直接用框做長方形遮罩；人、臉、車牌等跑 SAM，找不到才退回框。
+- 閘道 `/v1/ai/director`：建工作 → 逐段 multipart 上傳 → Spark（`video_url`＋json_schema strict，同時 4 段）→ Wonder（推理 medium）→ `DirectorRules` 檢查 → 輪詢；聽錯的詞由閘道依詞 id 補時間。
+- 實測：demo-2min（含自動轉錄）120.7 秒、9 條建議，假金鑰與重講都找到；lecture-a 282 秒 254 秒、4 條。Spark 約 130 tokens／格（108 秒一段 28k tokens、10.5 秒）。
+
 ### 5.12 Muse Image：材質圖、3D 背景、縮圖（P1-14，縮圖屬 P1-7）
 
 - **材質圖**（D36）：一句描述（例如「dark green chalkboard with chalk dust」「worn oak planks」）→ 閘道 `/v1/ai/image`（`purpose: "texture"`）→ 本機後處理 → 存進專案的**材質庫** → 套到需要的地方。

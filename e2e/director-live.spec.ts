@@ -8,7 +8,9 @@ import { openTab } from "./helpers/tabs";
 // → 採用那條 mask（真的跑 SAM）與 cut → 截圖。環境變數 WORDBLADE_LIVE_GATEWAY、WORDBLADE_LIVE_TOKEN；沒設就跳過。
 const gateway = process.env.WORDBLADE_LIVE_GATEWAY;
 const token = process.env.WORDBLADE_LIVE_TOKEN;
-const SAMPLE = path.join(import.meta.dirname, "..", "samples", "demo-2min.mp4");
+/** 換素材（例如 samples/lecture-a.en.mp4）時只看能不能跑完、印出建議，不比對正確答案、不採用 */
+const OTHER = process.env.WORDBLADE_DIRECTOR_SAMPLE;
+const SAMPLE = OTHER ? path.resolve(OTHER) : path.join(import.meta.dirname, "..", "samples", "demo-2min.mp4");
 const truth = JSON.parse(readFileSync(path.join(import.meta.dirname, "..", "samples", "demo-2min.truth.json"), "utf8"));
 
 test.skip(!gateway || !token, "needs WORDBLADE_LIVE_GATEWAY and WORDBLADE_LIVE_TOKEN");
@@ -37,7 +39,7 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
   await page.getByTestId("import-media").click();
   await (await chooser).setFiles(SAMPLE);
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 60_000 });
-  await page.locator(".media-item", { hasText: "demo-2min" }).dblclick();
+  await page.locator(".media-item", { hasText: path.basename(SAMPLE) }).dblclick();
 
   await openTab(page, "director");
   await expect(page.getByTestId("director-ask")).toBeEnabled({ timeout: 120_000 });
@@ -47,6 +49,11 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
   console.log(`導演實機：${((Date.now() - t0) / 1000).toFixed(1)} 秒；${await page.getByTestId("director-message").innerText()}`);
   const rows = page.getByTestId("director-list");
   for (const row of await page.getByTestId("director-row").all()) console.log(`  ${await row.getAttribute("data-kind")} ${await row.getAttribute("data-start")}–${await row.getAttribute("data-end")} ${(await row.innerText()).replace(/\s+/g, " ")}`);
+  if (OTHER) {
+    await expect(page.getByTestId("director-row").first()).toBeVisible();
+    await page.screenshot({ path: "output/ui-shots/director-live-other.png" });
+    return;
+  }
   const mask = await overlapping(rows, "mask", truth.apiKey.start, truth.apiKey.end);
   const cut = await overlapping(rows, "cut", truth.retake.start, truth.retake.end);
   expect(mask, "a mask suggestion over the fake API key").not.toBeNull();
