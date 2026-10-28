@@ -79,9 +79,10 @@ export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>, thum
     [engine, dispatch, patch, thumbs],
   );
 
-  /** 匯入一批檔案：逐一讀規格，讀得到的加進專案並排入背景準備 */
+  /** 匯入一批檔案：逐一讀規格，讀得到的加進專案並排入背景準備；回傳成功匯入的素材（AI 音效要拿 id 放上時間軸） */
   const importSources = useCallback(
-    async (sources: ImportSource[]) => {
+    async (sources: ImportSource[]): Promise<Media[]> => {
+      const imported: Media[] = [];
       for (const source of sources) {
         const id = newMediaId();
         patch(id, { name: source.name, status: "probing", progress: 0 });
@@ -94,7 +95,9 @@ export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>, thum
         }
         dispatch({ type: "importMedia", media: [media] });
         enqueuePrepare(media);
+        imported.push(media);
       }
+      return imported;
     },
     [engine, dispatch, patch, enqueuePrepare],
   );

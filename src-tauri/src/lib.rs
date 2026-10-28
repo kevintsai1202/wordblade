@@ -1,6 +1,7 @@
 // WordBlade 桌面版的 Rust 指令層（spec §3）：ffmpeg／ffprobe（代理檔、縮圖、音量包絡）、之後放檔案讀寫、背景工作、聲音分離。
 
 mod export;
+mod generated;
 mod media;
 
 use tauri::webview::{PageLoadEvent, PermissionKind, PermissionResponse};
@@ -27,7 +28,8 @@ pub fn run() {
             export::export_write,
             export::export_close,
             export::export_abort,
-            export::write_text_file
+            export::write_text_file,
+            generated::write_generated
         ])
         // 麥克風（重配錄音，§5.18）：WebView2 預設會跳權限詢問且卡住 getUserMedia，這裡直接允許；
         // 其他權限（相機、定位…）照平台預設。Windows「隱私權 > 麥克風 > 允許桌面應用程式存取」關掉時仍會被拒。
@@ -45,6 +47,11 @@ pub fn run() {
                 use tauri::Manager;
                 let _ = app.asset_protocol_scope().allow_directory(&root, true);
                 std::thread::spawn(move || media::cleanup_thumbs(&root));
+            }
+            // AI 音效與配樂產生的 WAV（§5.15）：重開專案時預覽也讀得到
+            if let Ok(dir) = generated::generated_dir(app.handle()) {
+                use tauri::Manager;
+                let _ = app.asset_protocol_scope().allow_directory(&dir, true);
             }
             Ok(())
         })

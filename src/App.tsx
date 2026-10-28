@@ -20,6 +20,7 @@ import { CaptionStyleTab } from "./ui/CaptionStyleTab";
 import { TranscriptTab } from "./ui/TranscriptTab";
 import { CleanupPanel } from "./ui/CleanupPanel";
 import { ZoomTab } from "./ui/ZoomTab";
+import { SoundTab } from "./ui/SoundTab";
 import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
 import type { ZoomEdit } from "./ui/ZoomBands";
 import { zoomFromRange } from "./core/zoom";
@@ -185,6 +186,7 @@ function App() {
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
+            audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} />,
             inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,

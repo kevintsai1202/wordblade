@@ -93,6 +93,11 @@ export interface Engine {
   thumbUrl(media: Media, tier: number, index: number): Promise<string | null>;
   /** 人聲／背景音樂分離，回傳兩個衍生素材的 id（§5.14） */
   separateVocals(mediaId: string): Promise<{ vocalsId: string; backgroundId: string }>;
+  /**
+   * 程式產生的檔案（AI 音效與配樂的 WAV，§5.15）變成可匯入的來源，接著走一般的匯入流程（useMediaLibrary.importSources）。
+   * Windows 版寫進 app 資料夾的 generated/（回傳路徑），網頁版包成 File。name 是建議的檔名（例如 sfx-whoosh.wav）。
+   */
+  importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource>;
 }
 
 /** 還沒實作的 Engine 功能；訊息帶方法名稱，方便看出是哪一個 */

@@ -32,6 +32,14 @@ export interface VibeView {
   error: string | null;
 }
 
+/** 非同步 AI 工作的狀態（閘道 AiJobs.View）；result 的型別依工作而定 */
+export interface JobView<R> {
+  status: "running" | "done" | "failed";
+  round: number;
+  result: R | null;
+  error: string | null;
+}
+
 /** 閘道錯誤（HTTP 狀態碼與代碼；訊息給使用者看） */
 export class GatewayError extends Error {
   constructor(message: string, readonly status: number) {
@@ -150,6 +158,22 @@ export class GatewayClient {
     if (res.status === 503) throw new GatewayError("The transcription service is busy. Try again in a moment.", 503);
     if (!res.ok) throw new GatewayError(`Transcription failed (${res.status}).`, res.status);
     return (await res.json()) as AsrResponse;
+  }
+
+  /** 開始一個非同步 AI 工作（POST path，例如 /v1/ai/sound），回傳工作 id */
+  async startJob(path: string, body: unknown): Promise<string> {
+    const { jobId } = await this.call<{ jobId: string }>(path, { method: "POST", body: JSON.stringify(body) });
+    return jobId;
+  }
+
+  /** 等工作離開 running（每秒問一次 GET path/jobId，最多 maxSeconds 秒） */
+  async waitJob<R>(path: string, jobId: string, maxSeconds = 180): Promise<JobView<R>> {
+    for (let i = 0; i < maxSeconds; i++) {
+      const view = await this.call<JobView<R>>(`${path}/${encodeURIComponent(jobId)}`);
+      if (view.status !== "running") return view;
+      await sleep(1000);
+    }
+    throw new GatewayError("The AI took too long. Try again.", 0);
   }
 
   /** 「用說的」的提議檢查不過：送錯誤續跑 */
