@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, type CSSProperties } from "react";
 import { ensureAudioGraph } from "./audio/audioGraph";
 import { buildCaptions } from "./core/captions";
 import { emptyProject } from "./core/media";
@@ -25,6 +25,8 @@ import type { ZoomEdit } from "./ui/ZoomBands";
 import { zoomFromRange } from "./core/zoom";
 import { clipEnd, timelineToSource } from "./core/timeline";
 import { useLayout } from "./ui/layout";
+import { isBusy } from "./core/busy";
+import { ThumbScheduler, ThumbStore } from "./media/thumbStore";
 import { Splitter } from "./ui/Splitter";
 import "./App.css";
 
@@ -44,9 +46,21 @@ function App() {
   const { layout, set: setLayout, reset: resetLayout } = useLayout();
   const [state, dispatch] = useReducer(reducer, START_WITH_DEMO ? demoProject() : emptyProject(), initialState);
   const project = state.history.present;
+  /** 縮圖序列（D39）：匯入時做第一層，之後空檔（沒播放、沒有重工作）再做細層 */
+  const thumbs = useMemo(() => new ThumbStore(engine), [engine]);
+  /** 排程器讀的最新播放狀態 */
+  const playingRef = useRef(state.playing);
+  playingRef.current = state.playing;
+  useEffect(() => {
+    const scheduler = new ThumbScheduler(thumbs, () => !playingRef.current && !isBusy());
+    scheduler.start();
+    return () => scheduler.stop();
+  }, [thumbs]);
+  // 素材清單變了（匯入、代理檔做好、換專案）就同步給縮圖序列
+  useEffect(() => { void thumbs.sync(project.media); }, [thumbs, project.media]);
   /** 字幕由逐字稿算出（D26），專案一變就重算 */
   const captions = useMemo(() => buildCaptions(project), [project]);
-  const { library, importSources, enqueuePrepare, reset } = useMediaLibrary(engine, dispatch);
+  const { library, importSources, enqueuePrepare, reset } = useMediaLibrary(engine, dispatch, thumbs);
   /** AI 預覽中的特效設定（「用說的」的提議，還沒寫進專案；預覽畫面用它） */
   const [aiPreview, setAiPreview] = useState<{ effectId: string; params: Record<string, unknown> } | null>(null);
   /** 要求右側面板切到某個頁籤（範圍動作列的「特效」「放大」） */
@@ -142,7 +156,7 @@ function App() {
         <button disabled title="Export — coming soon">Export</button>
       </header>
       <main className="workspace">
-        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} playSeq={state.playSeq} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} selectedEffectId={state.selectedEffectId}
+        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} playSeq={state.playSeq} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} thumbs={thumbs} selectedEffectId={state.selectedEffectId}
           overlay={editingZoom && zoomEdit ? (
             <ZoomEditOverlay
               zoom={editingZoom} clip={zoomClip} playhead={state.playhead} edit={zoomEdit}
@@ -178,7 +192,7 @@ function App() {
         />
       </main>
       <Splitter axis="y" sign={-1} value={layout.timelineHeight} onChange={(v) => setLayout("timelineHeight", v)} onReset={() => resetLayout("timelineHeight")} testId="split-timeline" title="Drag to resize the timeline" />
-      <Timeline headerWidth={layout.headerWidth}
+      <Timeline headerWidth={layout.headerWidth} thumbs={thumbs}
         headerSplitter={<Splitter axis="x" sign={1} value={layout.headerWidth} onChange={(v) => setLayout("headerWidth", v)} onReset={() => resetLayout("headerWidth")} testId="split-header" title="Drag to resize the track headers" />}
         state={state} dispatch={dispatch} captions={captions} library={library} zoomEdit={zoomEdit} onZoomEdit={setZoomEdit} onRangeAction={(kind) => (kind === "effect" ? openTab("vibe") : createZoom())} />
       <footer className="status-bar">

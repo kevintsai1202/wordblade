@@ -163,12 +163,81 @@ fn fnv1a(bytes: &[u8]) -> u64 {
     h
 }
 
-/// 代理檔的檔名：原檔「路徑＋大小＋修改時間」的雜湊，同一支檔案重複匯入就重用；原檔改過就產生新的
-fn proxy_name(path: &str, alpha: bool) -> Result<String, String> {
+/// 原檔的快取鍵：「路徑＋大小＋修改時間」的雜湊（16 位十六進位），同一支檔案重複匯入就重用；原檔改過就換新的
+fn source_key(path: &str) -> Result<String, String> {
     let meta = std::fs::metadata(path).map_err(|e| e.to_string())?;
     let mtime = meta.modified().ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_nanos()).unwrap_or(0);
     let key = format!("{}|{}|{}", path.to_lowercase(), meta.len(), mtime);
-    Ok(format!("{:016x}.{}", fnv1a(key.as_bytes()), if alpha { "webm" } else { "mp4" }))
+    Ok(format!("{:016x}", fnv1a(key.as_bytes())))
+}
+
+/// 代理檔的檔名：原檔的快取鍵＋副檔名
+fn proxy_name(path: &str, alpha: bool) -> Result<String, String> {
+    Ok(format!("{}.{}", source_key(path)?, if alpha { "webm" } else { "mp4" }))
+}
+
+/// 縮圖序列的根資料夾：%LOCALAPPDATA%\com.wordblade.app	humbs（每支原檔一個子資料夾，D39）
+pub fn thumbs_root(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app.path().app_cache_dir().map_err(|e| e.to_string())?.join("thumbs");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir)
+}
+
+/// 啟動時清理縮圖快取：刪掉超過 30 天沒用到的原檔資料夾（用到時會更新資料夾的完成標記時間）
+pub fn cleanup_thumbs(root: &Path) {
+    let Ok(entries) = std::fs::read_dir(root) else { return };
+    let now = std::time::SystemTime::now();
+    for entry in entries.flatten() {
+        let marker = entry.path().join("used");
+        let age = std::fs::metadata(&marker).ok().and_then(|m| m.modified().ok()).and_then(|t| now.duration_since(t).ok()).map(|d| d.as_secs()).unwrap_or(u64::MAX);
+        if age > PROXY_KEEP_DAYS * 24 * 3600 {
+            let _ = std::fs::remove_dir_all(entry.path());
+        }
+    }
+}
+
+/// 縮圖序列的狀態：原檔資料夾（前端組縮圖網址用）與各層做好的段（看 t<層>/c<段>.done）
+#[derive(Serialize)]
+pub struct ThumbStatus {
+    base: String,
+    done: Vec<Vec<u32>>,
+}
+
+/// 讀某支原檔的縮圖狀態；順便記下「最近用過」，啟動清理時不會刪掉
+#[tauri::command]
+pub async fn thumbs_status(app: AppHandle, path: String, tiers: u32, chunks: u32) -> Result<ThumbStatus, String> {
+    let base = thumbs_root(&app)?.join(source_key(&path)?);
+    std::fs::create_dir_all(&base).map_err(|e| e.to_string())?;
+    std::fs::write(base.join("used"), b"").map_err(|e| e.to_string())?;
+    let done = (0..tiers).map(|t| (0..chunks).filter(|c| base.join(format!("t{t}")).join(format!("c{c}.done")).exists()).collect()).collect();
+    Ok(ThumbStatus { base: base.to_string_lossy().to_string(), done })
+}
+
+/// 產生某支原檔第 tier 層的第 chunk 段縮圖：從 source（原檔或代理檔）的 start 秒起 duration 秒，每 interval 秒一張、寬 width，
+/// 存成 t<層>/<索引>.jpg（索引從 first_index 起），做完寫完成標記。key_only：只解關鍵幀（匯入時從原檔做第 0 層，快很多，位置差在一個 GOP 內）。
+/// 和代理檔共用重工作鎖，不會同時跑。
+#[tauri::command]
+#[allow(clippy::too_many_arguments)]
+pub async fn thumbs_make(app: AppHandle, path: String, source: String, tier: u32, chunk: u32, start: f64, duration: f64, interval: f64, width: u32, first_index: u32, key_only: bool) -> Result<(), String> {
+    let dir = thumbs_root(&app)?.join(source_key(&path)?).join(format!("t{tier}"));
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let ffmpeg = tool(&app, "ffmpeg");
+    tauri::async_runtime::spawn_blocking(move || -> Result<(), String> {
+        let _guard = HEAVY.lock().map_err(|e| e.to_string())?;
+        let mut cmd = command(&ffmpeg);
+        cmd.args(["-hide_banner", "-loglevel", "error", "-nostats", "-y"]);
+        if key_only {
+            cmd.args(["-skip_frame", "nokey"]);
+        }
+        cmd.args(["-ss", &format!("{start:.3}"), "-t", &format!("{duration:.3}"), "-i", &source])
+            .args(["-an", "-vf", &format!("fps={},scale={width}:-2", 1.0 / interval), "-q:v", "5"])
+            .args(["-start_number", &first_index.to_string(), "-f", "image2"])
+            .arg(dir.join("%d.jpg"));
+        run(cmd)?;
+        std::fs::write(dir.join(format!("c{chunk}.done")), b"").map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// 更新檔案的修改時間，表示「最近用過」，啟動清理時不會刪掉

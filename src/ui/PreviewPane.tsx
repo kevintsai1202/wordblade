@@ -8,6 +8,7 @@ import type { PluginService } from "../anim/pluginService";
 import { PreviewPlayer } from "../compositor/previewPlayer";
 import type { Engine } from "../engine/Engine";
 import type { Library } from "./useMediaLibrary";
+import type { ThumbStore } from "../media/thumbStore";
 import { BoxOverlay } from "./BoxOverlay";
 import { FPS, formatTimecode, type Action } from "./state";
 
@@ -28,13 +29,15 @@ export function PreviewPane(props: {
   engine: Engine;
   library: Library;
   plugins: PluginService;
+  /** 縮圖序列（拖曳播放頭時，影片還在跳轉就先畫最近的縮圖） */
+  thumbs?: ThumbStore;
   /** 選取中的特效（預覽上顯示它的目標框） */
   selectedEffectId: string | null;
   /** 疊在預覽上的調框層（局部放大的放大框；有它時不顯示特效的目標框） */
   overlay?: ReactNode;
   dispatch: Dispatch<Action>;
 }) {
-  const { project, playhead, playing, rate, playSeq, duration, captions, engine, library, plugins, selectedEffectId, overlay, dispatch } = props;
+  const { project, playhead, playing, rate, playSeq, duration, captions, engine, library, plugins, thumbs, selectedEffectId, overlay, dispatch } = props;
   const frameRef = useRef<HTMLDivElement>(null);
   // 有目標框的特效（2D 與疊加的 3D）才在預覽上顯示框
   const selectedEffect = project.effects.find((e) => e.id === selectedEffectId && (e.kind === "anim2d" || e.kind === "anim3d") && !!e.params.box);
@@ -56,10 +59,11 @@ export function PreviewPane(props: {
     const player = new PreviewPlayer(canvasRef.current!, (m) => engine.mediaUrl(m), redraw);
     const effects = new EffectRenderer(plugins.host, plugins.three, redraw);
     player.setEffectRenderer(effects, FPS);
+    if (thumbs) player.setThumbs(thumbs);
     playerRef.current = player;
     effectsRef.current = effects;
     return () => { player.dispose(); effects.dispose(); playerRef.current = null; effectsRef.current = null; };
-  }, [engine, plugins]);
+  }, [engine, plugins, thumbs]);
 
   // 專案變了（編輯後）就交給播放器；新插件送進沙盒後再重畫
   useEffect(() => {

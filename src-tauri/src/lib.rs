@@ -21,6 +21,8 @@ pub fn run() {
             media::evict_proxy,
             media::find_samples_dir,
             media::asr_pcm,
+            media::thumbs_status,
+            media::thumbs_make,
             export::export_open,
             export::export_write,
             export::export_close,
@@ -37,6 +39,12 @@ pub fn run() {
             // 啟動時在背景清理代理檔快取（30 天沒用到的、中斷留下的暫存檔）
             if let Ok(dir) = media::proxy_dir(app.handle()) {
                 std::thread::spawn(move || media::cleanup_proxies(&dir));
+            }
+            // 縮圖序列（D39）：快取資料夾放行給 asset 協定（預覽與時間軸直接讀 JPEG），並在背景清理 30 天沒用到的
+            if let Ok(root) = media::thumbs_root(app.handle()) {
+                use tauri::Manager;
+                let _ = app.asset_protocol_scope().allow_directory(&root, true);
+                std::thread::spawn(move || media::cleanup_thumbs(&root));
             }
             Ok(())
         })

@@ -26,5 +26,5 @@
 | A2 | 完成（10/28） | 尺規把手、空白軌道拖曳、浮動時間碼、rAF 合併；e2e 2 項（播放中抓把手／空白軌道拖、點軌道與方向鍵介入） |
 | A3 | 完成（10/28） | `layout.ts`＋`Splitter`；Vitest 3＋e2e（拖曳、重新整理保留、雙擊回預設） |
 | A4 | 完成（10/28） | 6 大類＋子頁籤、記住上次子頁籤；VibeTab `dimension`；e2e 改用 `helpers/tabs.ts` 的 `openTab` |
-| B1 | 未做 | |
-| B2 | 未做 | |
+| B1 | 完成（10/28） | `media/thumbs.ts`（分層、分段、挑圖、排程順序）、`ThumbStore`／`ThumbScheduler`、`core/busy.ts`；Engine `makeThumbs`／`thumbStatus`／`thumbUrl`（桌面 Rust `thumbs_make`／`thumbs_status`，網頁 OPFS）；實測 11 分鐘 1080p 第一層 12 秒；Vitest 14 |
+| B2 | 完成（10/28） | 預覽跳轉中先畫縮圖、時間軸影格條、`thumbnailAt`（AI 導演用）；e2e（三層做好、OPFS 檔案、影格條、拖曳時畫縮圖） |

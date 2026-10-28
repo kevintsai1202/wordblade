@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type Dispatch, type MouseEvent as ReactMouseEvent, type ReactNode, type WheelEvent } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type Dispatch, type MouseEvent as ReactMouseEvent, type ReactNode, type WheelEvent } from "react";
 import type { Envelope } from "../audio/envelope";
 import type { Caption } from "../core/captions";
 import type { Clip, Effect, Project, Track } from "../core/model";
-import { clipDuration, clipEnd } from "../core/timeline";
+import { clipDuration, clipEnd, timelineToSource } from "../core/timeline";
+import type { ThumbStore } from "../media/thumbStore";
 import { formatTimecode, projectDuration, snapTime, type Action, type AppState } from "./state";
 import type { Library } from "./useMediaLibrary";
 import { ZoomBands, type ZoomEdit } from "./ZoomBands";
@@ -88,7 +89,31 @@ function Waveform({ envelope, clip, width }: { envelope: Envelope; clip: Clip; w
   return <canvas ref={ref} className="waveform" width={px} height={32} />;
 }
 
-/** 軌道標頭的寬度（像素） */
+/** 影格條最多幾格（再長的片段就把每格拉寬，避免一小時的片段塞上千張圖） */
+const FILM_MAX_TILES = 300;
+/** 影格條每格的寬度（片段高度 × 16:9） */
+const FILM_TILE_PX = 60;
+
+/**
+ * 影片片段的影格條（D39）：依片段寬度切格，每格取格子中間那個時間最近的縮圖（做好的最細一層）；
+ * 縮圖還沒做好的格子留空，做好了（ThumbStore 通知）就補上。
+ */
+function Filmstrip({ thumbs, clip, width, pxPerSecond }: { thumbs: ThumbStore; clip: Clip; width: number; pxPerSecond: number }) {
+  useSyncExternalStore((fn) => thumbs.subscribe(fn), () => thumbs.version);
+  const tiles = Math.max(1, Math.min(FILM_MAX_TILES, Math.ceil(width / FILM_TILE_PX)));
+  const tileW = width / tiles;
+  /** 用到最細的一層（data-thumb-tier 給測試看） */
+  let finest = -1;
+  const cells = Array.from({ length: tiles }, (_, i) => {
+    const src = timelineToSource(clip, clip.start + ((i + 0.5) * tileW) / pxPerSecond) ?? clip.srcIn;
+    const ref = thumbs.pick(clip.mediaId, src);
+    const url = ref ? thumbs.url(clip.mediaId, ref) : null;
+    if (ref && url) finest = Math.max(finest, ref.tier);
+    return url ? <img key={i} src={url} alt="" draggable={false} style={{ left: i * tileW, width: tileW }} /> : null;
+  });
+  return <div className="filmstrip" data-thumb-tier={finest}>{cells}</div>;
+}
+
 /** 軌道標頭的預設寬度（可拖分隔線調整，見 layout.ts） */
 export const HEADER_WIDTH = 88;
 
@@ -117,8 +142,10 @@ function rulerStep(pxPerSecond: number): number {
 }
 
 /** 下方多軌時間軸（D33）：工具列、尺規、各軌片段、特效標籤、字幕軌、播放頭 */
-export function Timeline({ state, dispatch, captions, library, onRangeAction, zoomEdit = null, onZoomEdit, headerWidth = HEADER_WIDTH, headerSplitter }: {
+export function Timeline({ state, dispatch, captions, library, onRangeAction, zoomEdit = null, onZoomEdit, headerWidth = HEADER_WIDTH, headerSplitter, thumbs }: {
   state: AppState;
+  /** 縮圖序列（影片片段的影格條） */
+  thumbs?: ThumbStore;
   /** 軌道標頭寬度（像素） */
   headerWidth?: number;
   /** 軌道標頭右邊的分隔線（由 App 給，拖曳調整寬度） */
@@ -368,6 +395,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
                         title={`${mediaName(c.mediaId)}  ${formatTimecode(c.start)} – ${formatTimecode(clipEnd(c))}`}
                       >
                         {r.kind === "audio" && library.envelopes.has(c.mediaId) && <Waveform envelope={library.envelopes.get(c.mediaId)!} clip={c} width={clipBox(c).width} />}
+                        {r.kind === "video" && thumbs && <Filmstrip thumbs={thumbs} clip={c} width={clipBox(c).width} pxPerSecond={pxPerSecond} />}
                         <span className="edge in" />
                         <span className="clip-label">{mediaName(c.mediaId)}</span>
                         <span className="edge out" />

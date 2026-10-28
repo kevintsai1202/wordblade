@@ -4,6 +4,7 @@
 
 import type { Envelope } from "../audio/envelope";
 import type { Media } from "../core/model";
+import type { DoneMap } from "../media/thumbs";
 
 /** 要匯入的檔案：Windows 版是路徑，網頁版是 File */
 export type ImportSource = { kind: "path"; path: string; name: string } | { kind: "file"; file: File; name: string };
@@ -81,6 +82,15 @@ export interface Engine {
   makeMezzanine(mediaId: string): Promise<string>;
   /** 抽出素材 [start, end) 的 16 kHz 單聲道 16-bit WAV 給 Muse ASR（§5.2；長片由呼叫端在無聲處切段） */
   extractAsrAudio(media: Media, start: number, end: number): Promise<Uint8Array>;
+  /**
+   * 縮圖序列（D39）：產生影片素材第 tier 層的第 chunk 段（每段 60 秒，見 media/thumbs.ts），存進本機快取並留下完成標記。
+   * 第 0 層在匯入時從原檔做（只解關鍵幀）；細層有代理檔就從代理檔做。
+   */
+  makeThumbs(media: Media, tier: number, chunk: number): Promise<void>;
+  /** 快取裡各層做好的段（重開專案不重做） */
+  thumbStatus(media: Media): Promise<DoneMap>;
+  /** 一張縮圖的網址（桌面版是 asset 協定的檔案網址，網頁版是 blob: 網址）；沒有回 null */
+  thumbUrl(media: Media, tier: number, index: number): Promise<string | null>;
   /** 人聲／背景音樂分離，回傳兩個衍生素材的 id（§5.14） */
   separateVocals(mediaId: string): Promise<{ vocalsId: string; backgroundId: string }>;
 }

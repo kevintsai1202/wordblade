@@ -1,6 +1,7 @@
 import type { InputFormat } from "mediabunny";
 import { EnvelopeBuilder } from "../audio/envelope";
 import type { Media } from "../core/model";
+import { TIERS, chunkCount, indicesInChunk, type DoneMap } from "../media/thumbs";
 import { IMAGE_DURATION } from "../core/media";
 import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared } from "./Engine";
 import { classifyFile, webSupport } from "./webFormats";
@@ -27,6 +28,26 @@ function containerName(mb: typeof import("mediabunny"), format: InputFormat): st
 async function canvasToUrl(canvas: HTMLCanvasElement | OffscreenCanvas): Promise<string> {
   const blob = canvas instanceof OffscreenCanvas ? await canvas.convertToBlob({ type: "image/jpeg", quality: 0.8 }) : await new Promise<Blob>((ok, fail) => canvas.toBlob((b) => (b ? ok(b) : fail(new Error("toBlob failed"))), "image/jpeg", 0.8));
   return URL.createObjectURL(blob);
+}
+
+/** FNV-1a 32 位元雜湊（縮圖快取的資料夾名稱） */
+function fnv1a(text: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
+/** OPFS 裡的檔案是否存在 */
+async function exists(dir: FileSystemDirectoryHandle, name: string): Promise<boolean> {
+  try {
+    await dir.getFileHandle(name);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** 網頁版：Chrome／Edge 的 WebCodecs、File System Access、OPFS（§5.21） */
@@ -268,6 +289,80 @@ export class WebEngine implements Engine {
   }
 
   /** 網頁版不做聲音分離（D28），介面應先依 capabilities 擋掉；直接呼叫時明確拒絕 */
+  /** 縮圖快取的鍵：匯入的檔案用「檔名＋大小＋修改時間」，示範素材用路徑；都沒有回 null */
+  private thumbKey(media: Media): string | null {
+    const entry = media.handleKey ? this.files.get(media.handleKey) : undefined;
+    if (entry) return fnv1a(`${entry.file.name}|${entry.file.size}|${entry.file.lastModified}`);
+    return media.path ? fnv1a(media.path) : null;
+  }
+
+  /** 縮圖快取的資料夾：OPFS thumbs/<鍵>/t<層>/ */
+  private async thumbDir(media: Media, tier: number, create: boolean): Promise<FileSystemDirectoryHandle | null> {
+    const key = this.thumbKey(media);
+    if (!key) return null;
+    try {
+      const root = await (await navigator.storage.getDirectory()).getDirectoryHandle("thumbs", { create });
+      return await (await root.getDirectoryHandle(key, { create })).getDirectoryHandle(`t${tier}`, { create });
+    } catch {
+      return null;
+    }
+  }
+
+  /** 縮圖序列的一段：mediabunny 依時間點解出畫面、縮成這一層的寬度、存 JPEG 到 OPFS，最後寫完成標記 */
+  async makeThumbs(media: Media, tier: number, chunk: number): Promise<void> {
+    const entry = media.handleKey ? this.files.get(media.handleKey) : undefined;
+    const dir = await this.thumbDir(media, tier, true);
+    if (!dir) throw new Error("No cache folder for thumbnails");
+    const mb = await loadMediabunny();
+    const source = entry ? new mb.BlobSource(entry.file) : new mb.UrlSource(this.mediaUrl(media));
+    const input = new mb.Input({ source, formats: mb.ALL_FORMATS });
+    try {
+      const video = await input.getPrimaryVideoTrack();
+      if (!video) throw new Error("No video track");
+      const { interval, width } = TIERS[tier];
+      const indices = indicesInChunk(tier, chunk, media.duration);
+      const sink = new mb.CanvasSink(video, { width, poolSize: 2 });
+      let n = 0;
+      for await (const frame of sink.canvasesAtTimestamps(indices.map((i) => i * interval))) {
+        const index = indices[n++];
+        if (!frame) continue;
+        const canvas = frame.canvas;
+        const blob = canvas instanceof OffscreenCanvas
+          ? await canvas.convertToBlob({ type: "image/jpeg", quality: 0.75 })
+          : await new Promise<Blob>((ok, fail) => canvas.toBlob((b) => (b ? ok(b) : fail(new Error("toBlob failed"))), "image/jpeg", 0.75));
+        const writable = await (await dir.getFileHandle(`${index}.jpg`, { create: true })).createWritable();
+        await writable.write(blob);
+        await writable.close();
+      }
+      const marker = await (await dir.getFileHandle(`c${chunk}.done`, { create: true })).createWritable();
+      await marker.close();
+    } finally {
+      input.dispose();
+    }
+  }
+
+  /** 各層做好的段：看 OPFS 裡的完成標記 */
+  async thumbStatus(media: Media): Promise<DoneMap> {
+    return Promise.all(TIERS.map(async (_, tier) => {
+      const dir = await this.thumbDir(media, tier, false);
+      if (!dir) return [];
+      const done: number[] = [];
+      for (let c = 0; c < chunkCount(media.duration); c++) if (await exists(dir, `c${c}.done`)) done.push(c);
+      return done;
+    }));
+  }
+
+  /** 一張縮圖的 blob: 網址（呼叫端的快取負責釋放） */
+  async thumbUrl(media: Media, tier: number, index: number): Promise<string | null> {
+    const dir = await this.thumbDir(media, tier, false);
+    if (!dir) return null;
+    try {
+      return URL.createObjectURL(await (await dir.getFileHandle(`${index}.jpg`)).getFile());
+    } catch {
+      return null;
+    }
+  }
+
   async separateVocals(_mediaId: string): Promise<{ vocalsId: string; backgroundId: string }> {
     throw new Error("Vocal separation is available in the Windows app");
   }

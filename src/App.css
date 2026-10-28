@@ -135,6 +135,9 @@ button:disabled { opacity: 0.4; cursor: default; }
 .media-status { font-size: 11px; color: #e0b050; }
 .media-status.failed { color: #ff7a7a; white-space: normal; }
 .media-ghost { position: fixed; z-index: 100; pointer-events: none; padding: 3px 8px; background: #2d6cdf; color: #fff; border-radius: 3px; font-size: 12px; white-space: nowrap; }
+.clip .filmstrip { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.clip .filmstrip img { position: absolute; top: 0; height: 100%; object-fit: cover; opacity: 0.55; }
+.clip .clip-label { position: relative; text-shadow: 0 0 3px #000; }
 .clip .waveform { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .ruler { cursor: ew-resize; }
 .ruler.scrubbing { cursor: grabbing; }

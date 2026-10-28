@@ -1,6 +1,7 @@
 // 預覽播放器（§5.13）：依 framePlan／audioPlan 讓每個片段的 <video>／<img>／<audio> 對準時間，再交給合成器畫。
 // 影像元素一律靜音，聲音由 A 軌片段各自的 <audio> 發出：Web Audio 混音圖建立後（第一次按播放）走 AudioGraph，
 // 片段增益＋配樂匯流排壓低；還沒建立或瀏覽器不支援時退回直接設 el.volume。
+import type { ThumbStore } from "../media/thumbStore";
 import type { EffectRenderer } from "../anim/effectRenderer";
 import { currentAudioGraph } from "../audio/audioGraph";
 import { gainAt, type DuckCurve } from "../audio/ducking";
@@ -37,6 +38,12 @@ export class PreviewPlayer {
   private captions: Caption[] = [];
   private captionWords: TimelineWord[] = [];
   private readonly captionLayer: CaptionLayer;
+  /** 縮圖序列（D39）：暫停中影片還在跳轉時，先畫最近的縮圖 */
+  private thumbs: ThumbStore | null = null;
+  /** 每個影片元素最後一次畫好的畫面在素材的哪個時間（跳轉中 currentTime 已經是目標，要另外記） */
+  private readonly shown = new WeakMap<HTMLVideoElement, number>();
+  /** 用縮圖代替影片畫面的次數（e2e 讀 canvas 的 data-thumb-frames） */
+  private thumbFrames = 0;
 
   /**
    * @param canvas 預覽畫布
@@ -68,6 +75,11 @@ export class PreviewPlayer {
         if (map === this.audios) currentAudioGraph()?.drop(id);
       }
     }
+  }
+
+  /** 接上縮圖序列 */
+  setThumbs(store: ThumbStore | null) {
+    this.thumbs = store;
   }
 
   /** 接上 2D 特效（沙盒畫格）與格率 */
@@ -177,9 +189,20 @@ export class PreviewPlayer {
       if (!el) continue;
       this.sync(el, layer.srcTime, playing, rate * clip.speed);
       const ready = el.readyState >= 2 && !el.seeking;
-      if (el.readyState >= 2) this.compositor.draw(el, layer.rect, layer.opacity, layer.crop);
+      if (ready) this.shown.set(el, el.currentTime);
+      // 暫停中拖播放頭（D39）：影片還在跳轉或還沒載好時，縮圖比畫面上那一格更接近要的時間就先畫縮圖；
+      // 只差一兩格（方向鍵逐格）時縮圖反而離得遠，照舊畫原本那一格，不會閃
+      const thumb = !playing && !ready && this.thumbs ? this.thumbs.image(layer.mediaId, layer.srcTime, this.onFrameReady) : null;
+      const shownAt = el.readyState >= 2 ? this.shown.get(el) ?? Infinity : Infinity;
+      const useThumb = !!thumb && Math.abs(thumb.time - layer.srcTime) < Math.abs(shownAt - layer.srcTime);
+      if (useThumb) {
+        this.compositor.draw(thumb.img, layer.rect, layer.opacity, layer.crop);
+        this.canvas.dataset.thumbFrames = String(++this.thumbFrames);
+      } else if (el.readyState >= 2) {
+        this.compositor.draw(el, layer.rect, layer.opacity, layer.crop);
+      }
       // 下層狀態含放大範圍：改了放大，讀下層畫面的特效（3D 場景）才會重畫
-      below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
+      below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : useThumb ? `t${thumb.time}` : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
     }
 
     // 字幕畫在最上層（預覽與匯出同一個 CaptionLayer）

@@ -6,6 +6,7 @@ import { ENVELOPE_RATE } from "../audio/envelope";
 import { pcm16ToWav } from "../asr/wav";
 import { IMAGE_DURATION } from "../core/media";
 import type { Media } from "../core/model";
+import { CHUNK, TIERS, chunkCount, indicesInChunk, type DoneMap } from "../media/thumbs";
 import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared } from "./Engine";
 
 /** Rust probe_media 回傳的規格 */
@@ -104,6 +105,39 @@ export class DesktopEngine implements Engine {
     }
     onProgress(1);
     return result;
+  }
+
+  /** 各原檔的縮圖資料夾（thumbs_status 回傳；組縮圖網址用） */
+  private readonly thumbBase = new Map<string, string>();
+
+  /**
+   * 縮圖序列的一段（D39）：第 0 層從原檔只解關鍵幀（匯入時代理檔還沒做，這樣最快）；
+   * 細層有代理檔就從代理檔解（540p，關鍵幀每秒一個）。
+   */
+  async makeThumbs(media: Media, tier: number, chunk: number): Promise<void> {
+    if (!media.path) throw new Error("No file path");
+    const { interval, width } = TIERS[tier];
+    const start = chunk * CHUNK;
+    const indices = indicesInChunk(tier, chunk, media.duration);
+    await invoke("thumbs_make", {
+      path: media.path, source: tier > 0 && media.proxyPath ? media.proxyPath : media.path, tier, chunk,
+      start, duration: Math.max(interval, Math.min(CHUNK, media.duration - start)), interval, width,
+      firstIndex: indices[0] ?? 0, keyOnly: tier === 0,
+    });
+  }
+
+  /** 各層做好的段（Rust 看完成標記），並記下資料夾 */
+  async thumbStatus(media: Media): Promise<DoneMap> {
+    if (!media.path) return TIERS.map(() => []);
+    const status = await invoke<{ base: string; done: number[][] }>("thumbs_status", { path: media.path, tiers: TIERS.length, chunks: chunkCount(media.duration) });
+    this.thumbBase.set(media.path, status.base);
+    return status.done;
+  }
+
+  /** 縮圖檔的 asset 協定網址（資料夾在啟動時已放行） */
+  async thumbUrl(media: Media, tier: number, index: number): Promise<string | null> {
+    const base = media.path ? this.thumbBase.get(media.path) : undefined;
+    return base ? convertFileSrc(`${base}\\t${tier}\\${index}.jpg`) : null;
   }
 
   /** 桌面版沒有要釋放的資源（檔案在磁碟上） */

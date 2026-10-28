@@ -5,6 +5,8 @@ import type { Envelope } from "../audio/envelope";
 import type { Media } from "../core/model";
 import { UnsupportedMediaError, type Engine, type ImportSource } from "../engine/Engine";
 import type { Action } from "./state";
+import { beginBusy } from "../core/busy";
+import type { ThumbStore } from "../media/thumbStore";
 
 /** 素材庫一筆的狀態 */
 export interface LibraryItem {
@@ -29,7 +31,7 @@ function newMediaId(): string {
 }
 
 /** 素材庫與匯入；回傳目前的素材庫與匯入函式 */
-export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>) {
+export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>, thumbs?: ThumbStore) {
   const [library, setLibrary] = useState<Library>({ items: new Map(), envelopes: new Map() });
   /** 背景準備的佇列：每支接在前一支後面 */
   const queue = useRef<Promise<void>>(Promise.resolve());
@@ -49,7 +51,14 @@ export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>) {
     (media: Media) => {
       patch(media.id, { name: media.name ?? media.id, status: "preparing" });
       queue.current = queue.current.then(async () => {
+        // 素材準備是重工作：期間背景縮圖排程停下來
+        const endBusy = beginBusy();
         try {
+          // 影片先做第一層縮圖（每 10 秒、寬 160，只解關鍵幀；D39），再做縮圖、包絡與代理檔
+          if (thumbs && media.kind === "video") {
+            await thumbs.track(media);
+            await thumbs.runTier(media.id, 0);
+          }
           const result = await engine.prepare(media, (progress) => patch(media.id, { progress }));
           if (result.proxyPath) dispatch({ type: "patchMedia", id: media.id, patch: { proxyPath: result.proxyPath } });
           setLibrary((lib) => {
@@ -62,10 +71,12 @@ export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>) {
         } catch (e) {
           // 準備失敗不影響使用：預覽繼續用原檔，只是沒有縮圖、波形或代理檔
           patch(media.id, { status: "failed", error: `Preparing failed: ${String(e)}` });
+        } finally {
+          endBusy();
         }
       });
     },
-    [engine, dispatch, patch],
+    [engine, dispatch, patch, thumbs],
   );
 
   /** 匯入一批檔案：逐一讀規格，讀得到的加進專案並排入背景準備 */
