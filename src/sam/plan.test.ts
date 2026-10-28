@@ -8,6 +8,8 @@ describe("clipSize", () => {
     expect(clipSize(1366, 768, 1280)).toEqual({ width: 1280, height: 720 });
     expect(clipSize(320, 180, 1280)).toEqual({ width: 320, height: 180 });
     expect(clipSize(1001, 563, 1280)).toEqual({ width: 1000, height: 562 });
+    // AI 導演：高 480
+    expect(clipSize(1920, 1080, Infinity, 480)).toEqual({ width: 852, height: 480 });
   });
 });
 

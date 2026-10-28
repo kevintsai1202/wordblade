@@ -14,9 +14,15 @@ export const GATEWAY_UPLOAD_LIMIT = 33 * 1024 * 1024;
 const USD_PER_FRAME = 0.2 / 1000;
 const MIN_BILLED = 50;
 
-/** 小檔尺寸：寬不超過 maxWidth、不放大、寬高都取偶數（H.264 要求） */
-export function clipSize(width: number, height: number, maxWidth: number): { width: number; height: number } {
-  const w = Math.min(width, maxWidth) & ~1;
+/** 小檔尺寸：寬不超過 maxWidth、高不超過 maxHeight（有給的話）、不放大、寬高都取偶數（H.264 要求） */
+export function clipSize(width: number, height: number, maxWidth: number, maxHeight = Infinity): { width: number; height: number } {
+  const scale = Math.min(1, maxWidth / width, maxHeight / height);
+  // 被高度限制時先定高度（480 就是 480），寬依比例；否則先定寬度
+  if (scale < 1 && scale === maxHeight / height) {
+    const h = Math.round(height * scale) & ~1;
+    return { width: Math.round((width * h) / height) & ~1, height: h };
+  }
+  const w = Math.round(width * scale) & ~1;
   return { width: w, height: Math.round((height * w) / width) & ~1 };
 }
 

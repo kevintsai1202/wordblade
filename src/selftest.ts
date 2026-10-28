@@ -348,6 +348,33 @@ async function checkSamClip(paths: string[]): Promise<Record<string, unknown>[]>
   return results;
 }
 
+/**
+ * AI 導演的小檔速度（docs/plan-10-28-director.md R0）：lecture-a 前 120 秒轉成高 480、每秒 2 格、250 kbps，
+ * 原檔與代理檔各量一次（代理檔是 540p，解碼便宜）
+ */
+async function checkDirectorClip(paths: string[]): Promise<Record<string, unknown>[]> {
+  const engine = createEngine();
+  const results: Record<string, unknown>[] = [];
+  const path = paths.find((p) => /lecture-a/i.test(p));
+  if (!path) return results;
+  let media = await engine.probe({ kind: "path", path, name: "lecture-a" }, "dir0");
+  const prepared = await engine.prepare(media, () => undefined);
+  media = { ...media, proxyPath: prepared.proxyPath };
+  for (const [label, source] of [["original", await engine.exportSource(media)], ["proxy", media.proxyPath ? convertFileSrc(media.proxyPath) : null]] as const) {
+    if (!source) continue;
+    const out: Record<string, unknown> = { label };
+    try {
+      const t0 = performance.now();
+      const clip = await makeSamClip(source, 0, 120, { fps: 2, maxWidth: Infinity, maxHeight: 480, bitrate: 250_000, scan: false, videoW: media.width ?? 1920, videoH: media.height ?? 1080 });
+      Object.assign(out, { seconds: +((performance.now() - t0) / 1000).toFixed(1), bytes: clip.bytes.length, width: clip.width, height: clip.height });
+    } catch (e) {
+      out.error = String(e);
+    }
+    results.push(out);
+  }
+  return results;
+}
+
 /** AI 音效／配樂產生的 WAV（§5.15）：寫進 app 資料夾的 generated/、再讀規格，確認匯入流程走得通 */
 async function checkGenerated(): Promise<Record<string, unknown>> {
   const engine = createEngine();
@@ -380,6 +407,7 @@ export async function runSelftest(server: string) {
     report.thumbs = await checkThumbs(paths);
     report.samClip = await checkSamClip(paths);
     report.generated = await checkGenerated();
+    report.directorClip = await checkDirectorClip(paths);
   } catch (e) {
     report.error = String(e);
   }

@@ -20,16 +20,24 @@ export interface SamClip {
  * 素材的一段 → SAM 小檔。source：Engine.exportSource 的結果（網頁版 File、桌面版 asset 網址）；videoW／videoH：素材原尺寸。
  * signal 取消時丟 AbortError。
  */
-export async function makeSamClip(source: Blob | string, start: number, end: number, opts: { fps: number; maxWidth: number; videoW: number; videoH: number; signal?: AbortSignal }): Promise<SamClip> {
+export async function makeSamClip(source: Blob | string, start: number, end: number, opts: {
+  fps: number; maxWidth: number; videoW: number; videoH: number; signal?: AbortSignal;
+  /** 高度上限（AI 導演用 480） */
+  maxHeight?: number;
+  /** 位元率（bps；預設 SAM 的 1.5 Mbps） */
+  bitrate?: number;
+  /** 要不要解成小畫面算換鏡頭與每格時間（AI 導演不需要，省時間） */
+  scan?: boolean;
+}): Promise<SamClip> {
   const mb = await import("mediabunny");
   const input = new mb.Input({ source: typeof source === "string" ? new mb.UrlSource(source) : new mb.BlobSource(source), formats: mb.ALL_FORMATS });
   const target = new mb.BufferTarget();
   const output = new mb.Output({ format: new mb.Mp4OutputFormat({ fastStart: "in-memory" }), target });
-  const size = clipSize(opts.videoW, opts.videoH, opts.maxWidth);
+  const size = clipSize(opts.videoW, opts.videoH, opts.maxWidth, opts.maxHeight);
   try {
     const conversion = await mb.Conversion.init({
       input, output, tracks: "primary", trim: { start, end },
-      video: { width: size.width, height: size.height, fit: "fill", frameRate: opts.fps, codec: "avc", bitrate: CLIP_BITRATE, forceTranscode: true, hardwareAcceleration: "no-preference" },
+      video: { width: size.width, height: size.height, fit: "fill", frameRate: opts.fps, codec: "avc", bitrate: opts.bitrate ?? CLIP_BITRATE, forceTranscode: true, hardwareAcceleration: "no-preference" },
       audio: { discard: true },
       showWarnings: false,
     });
@@ -46,6 +54,7 @@ export async function makeSamClip(source: Blob | string, start: number, end: num
     input.dispose();
   }
   const bytes = new Uint8Array(target.buffer!);
+  if (opts.scan === false) return { bytes, width: size.width, height: size.height, times: [], diffs: [] };
   const { times, diffs } = await scanClip(mb, bytes, start);
   return { bytes, width: size.width, height: size.height, times, diffs };
 }
