@@ -29,7 +29,7 @@
 | --- | --- | --- |
 | S1 | 完成（10/28） | FOSDEM 講者 person、40 格、1280 寬：小檔 98 KB；上傳 4.1 秒（Files 回應欄位 id、bytes、created_at、expires_at、filename、object、purpose、status）；SAM 第一個位元組 1.4 秒、completed 3.6 秒、25 毫秒後關連線；事件：created、in_progress、output_item.added、content_part.added、40 個 output_text.delta、output_text.done、content_part.done、output_item.done、completed，最後有 `data: [DONE]`；usage 只有 `video_frames_processed: 50`（送 40 格卻記 50，計費可能依此，約 US$0.01）；刪檔 200、3.7 秒。原始串流 `src/sam/fixtures/fosdem-person.sse` |
 | S2 | 完成（10/28） | `decoder.ts`（原專案測試向量雜湊相同；字元集要排除反斜線——寫檔時被吃掉一次）、`stream.ts`（任意位置切開相同；實測串流 40 格全部解得開、遮罩尺寸＝框＋1）、`tracks.ts`（換鏡頭、拆段、跨段 IoU 接續、最近取樣）；Vitest 14 |
-| S3 | 未做 | |
+| S3 | 完成（10/28） | `gateway/.../sam/`：`SamJobs`（上傳 → 讀串流切行 → 完成記用量＝計費格數 → finally 刪檔；取消、上傳失敗 sam-upload、上游錯誤 sam-upstream；同時最多 3 個，再多 429）、`RestMetaSamClient`（java.net.http 讀串流，取消或 180 秒閒置時關串流）、`SamSse`、`SamLines`、`SamPhrase`、`SamController`（POST／GET?after／DELETE /v1/sam、POST /v1/ai/mask-phrase）、Spark 翻譯；設定 `wordblade.models.sam`；閘道測試 10（全部 48 通過） |
 | S4 | 未做 | |
 | S5 | 未做 | |
 | S6 | 未做 | |
