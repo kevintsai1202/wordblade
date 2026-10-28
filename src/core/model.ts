@@ -109,14 +109,31 @@ export interface CaptionBreak {
   kind: "breakAfter" | "joinAfter" | "lineBreakAfter";
 }
 
-/** 遮罩物件（素材時間）；逐格資料在旁檔 masks/<id>.bin */
+/** 遮罩的一個取樣（SAM 3.1，§5.3）：素材時間、框與遮罩，位置都以畫面寬高正規化（0～1） */
+export interface MaskSample {
+  t: Seconds;
+  /** 框 [x1, y1, x2, y2] */
+  box: [number, number, number, number];
+  /** 遮罩點陣放在畫面上的位置與大小、點陣的欄列數、SAM 的編碼內容（用到時才解碼）；解不開或沒有就 null（改用框的橢圓） */
+  mask: { x: number; y: number; w: number; h: number; cols: number; rows: number; payload: string } | null;
+}
+
+/** 遮罩物件（素材時間，跟著素材走：片段移到哪裡都套得上）；同一個 SAM 物件在換鏡頭、消失超過 1 秒、跳太遠時拆成不同物件 */
 export interface MaskObject {
   id: string;
   mediaId: string;
+  /** 送給 SAM 的英文名詞片語 */
   prompt: string;
+  /** 清單上顯示的名稱（例如 person 1） */
   label: string;
-  framesRef: string;
-  effect: { kind: "mosaic" | "blur" | "solid"; strength: number };
+  /** 取樣（依時間排序） */
+  samples: MaskSample[];
+  /** 取樣間隔（秒；每秒 10 格就是 0.1）：最後一個取樣之後再撐這麼久 */
+  interval: Seconds;
+  /** 效果與強度（馬賽克方塊大小／模糊程度，以 1080p 為準的像素） */
+  effect: { kind: "mosaic" | "blur" | "solid"; strength: number; color?: string };
+  /** 遮罩外擴（框寬的百分比，0～50） */
+  expand: number;
   enabled: boolean;
 }
 
