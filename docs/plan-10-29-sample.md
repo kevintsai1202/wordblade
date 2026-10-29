@@ -46,4 +46,4 @@ Windows 版：tauri resources 帶 public/sample/ → Engine.sampleRoot() 取資�
 | S1 | 完成（10/29） | `scripts/sample/covers.mjs`：8 張 Muse Image 封面（9～22 秒／張，都沒有字），存 samples/sample-covers/ |
 | S2 | 完成（10/29） | `e2e/sample-build.spec.ts` live：ASR 310 詞、導演 8 條（採用遮金鑰＋剪重講）、去贅詞 3、Vibe 2D ×2、桌上螢幕＋吉祥物、AI 配樂 16 小節、翻頁片頭、發佈包、AI 縮圖；5.4 分鐘；結果見 public/sample/BUILD.md。坑：8 張圖逐張匯入時「處理中」會在兩張之間歸零，要等素材庫有 8 張再產生片頭 |
 | S3 | 最小版完成（10/29） | `project/sample.ts`（路徑改寫，Vitest 2）、Engine `openSample()`（網頁 fetch /sample；桌面 Rust `find_sample_dir` 找資源或 repo 的 public\sample 並放行）、標題列「Try the sample project」（取代 Load demo；`?sample=1` 直接開）、開發用鉤子；`e2e/sample-build.spec.ts` 最小版（truth.json 逐字稿、逐字高亮、2D 標題卡＋箭頭、桌上螢幕＋吉祥物）→ public/sample/；e2e `sample.spec.ts`：擋掉所有對外連線仍能開、匯出 2 分鐘（4.4 分鐘，軟體算繪） |
-| S4 | 未做 | |
+| S4 | 完成（10/29） | tauri resources 帶 `../public/sample/`；正式版安裝檔 73.9 MB；`verify-installer.ps1`：安裝後自我檢查找到安裝資料夾的 sample、16 個素材都讀得到、5 個特效 |

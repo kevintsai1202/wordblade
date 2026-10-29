@@ -683,6 +683,13 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - README 與提交表都放網頁版網址與「Try the sample project」的說明。評審用的邀請權杖**只放在提交表**，README 寫「Judge token: see the submission form」（repo 公開後 README 誰都看得到）。
 - 時程（D30）：10/31 錄素材，同一支片先拿來做 ASR 英文實測與贅詞實測；之後各功能做好就順手在這支片上跑一次；11/3 只做打包（預先算好的結果存進專案檔、上傳；影片放哪見 §5.21）。
 
+**實作（10/29，計畫 `docs/plan-10-29-sample.md`）**
+
+- 和上面的出入（開發者 2026-10-29 決定）：素材改用腳本合成的 `samples/demo-2min.mp4`（螢幕畫面＋TTS 旁白，含假金鑰；作者不自己錄，D30 取消）；Windows 版**打包進安裝檔**（不另外下載）；片頭封面用 Muse Image 生成；背景配樂用 AI 配樂。
+- 內容由 `e2e/sample-build.spec.ts` 實際跑 AI 產生（可重跑，約 5 分鐘）：Muse ASR 逐字稿、AI 導演 8 條建議（採用遮假金鑰、剪重講）、去贅詞、逐字高亮、Vibe 2D ×2、桌上螢幕＋吉祥物、AI 配樂、翻頁式片頭、發佈包與縮圖；每一步的結果寫在 `public/sample/BUILD.md`。
+- 放在 `public/sample/`（project.json＋media/＋thumbnail.png，約 12 MB，進版控）：網頁版從靜態網站讀，標題列「Try the sample project」或網址 `?sample=1`；Windows 版讀安裝資料夾的 `sample\`（開發時是 repo 的 `public\sample\`）。示範狀態：沒編輯前不自動存。
+- 驗證：e2e `sample.spec.ts` 擋掉所有對外連線仍能開啟並匯出；安裝檔驗證時自我檢查讀到全部 16 個素材。
+
 
 ### 5.23 一鍵片頭（P1-12，D34）
 
