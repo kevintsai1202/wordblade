@@ -35,8 +35,10 @@ function even(n: number): number {
 /** 依解析度選項算出匯出設定 */
 export function exportPlan(project: Project, preset: ExportPreset): ExportPlan {
   const v1 = [...project.tracks].filter((t) => t.kind === "video").sort((a, b) => a.index - b.index)[0];
-  const first = project.clips.filter((c) => c.trackId === v1?.id).sort((a, b) => a.start - b.start)[0];
-  const media = project.media.find((m) => m.id === first?.mediaId);
+  const v1Media = project.clips.filter((c) => c.trackId === v1?.id).sort((a, b) => a.start - b.start)
+    .map((c) => project.media.find((m) => m.id === c.mediaId)).filter((m) => m !== undefined);
+  // 依 V1 上第一支影片（開頭可能是片頭的佔位圖）；全是圖片才用第一個片段
+  const media = v1Media.find((m) => m.kind === "video") ?? v1Media[0];
   const srcW = media?.width ?? 1920;
   const srcH = media?.height ?? 1080;
   const fps = Math.min(60, Math.max(1, Math.round(media?.fps ?? 30)));

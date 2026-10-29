@@ -10,6 +10,14 @@ describe("exportPlan", () => {
     expect(plan).toMatchObject({ width: 1920, height: 1080, fps: 30, duration: 30, frames: 900 });
   });
 
+  it("V1 開頭是圖片（片頭的佔位黑圖）時，依第一支影片的大小與格率", () => {
+    const p = makeProject();
+    p.media[0] = { ...p.media[0], width: 1920, height: 1080, fps: 30 };
+    p.media.push({ id: "black", kind: "image", duration: 5, width: 320, height: 180 });
+    p.clips.push({ id: "intro", mediaId: "black", trackId: "V1", srcIn: 0, srcOut: 8, start: -8, speed: 1, opacity: 1, fadeIn: 0, fadeOut: 0, volume: 1 });
+    expect(exportPlan(p, "source")).toMatchObject({ width: 1920, height: 1080, fps: 30 });
+  });
+
   it("1080p／720p：高度固定、寬度照素材比例並取偶數", () => {
     const p = makeProject();
     p.media[0] = { ...p.media[0], width: 1366, height: 768, fps: 30 };
