@@ -1,5 +1,6 @@
 package com.wordblade.gateway.director;
 
+import com.wordblade.gateway.ai.AiModel;
 import com.wordblade.gateway.auth.TokenAuthInterceptor;
 import com.wordblade.gateway.auth.TokenService.TokenInfo;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,6 +54,23 @@ public class DirectorController {
         if (video.isEmpty() || video.getSize() > MAX_SEGMENT_BYTES) throw new IllegalArgumentException("bad video");
         DirectorJobs.SegmentMeta m = json.readValue(meta, DirectorJobs.SegmentMeta.class);
         jobs.addSegment(token(req).id(), jobId, index, m, video.getBytes());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
+
+    /** 縮圖總表最大幾位元組 */
+    static final long MAX_SHEET_BYTES = 6L * 1024 * 1024;
+
+    /** 審查：送縮圖總表（JPEG／PNG，選填；每項一格、標上項目 id）→ 審查者逐項判定，有退回就讓規劃者改一輪 */
+    @PostMapping(path = "/v1/ai/director/{jobId}/review", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> review(@PathVariable String jobId, @RequestPart(name = "sheet", required = false) MultipartFile sheet,
+                                       HttpServletRequest req) throws IOException {
+        AiModel.Image image = null;
+        if (sheet != null && !sheet.isEmpty()) {
+            String type = sheet.getContentType();
+            if (sheet.getSize() > MAX_SHEET_BYTES || !("image/jpeg".equals(type) || "image/png".equals(type))) throw new IllegalArgumentException("bad sheet");
+            image = new AiModel.Image(type, sheet.getBytes());
+        }
+        jobs.review(token(req).id(), jobId, image);
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 

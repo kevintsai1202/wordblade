@@ -46,12 +46,16 @@ public class DirectorConfig {
         var spark = new RestSparkVideoClient(rest, props.models().spark(), segmentPrompt, schema, json);
         String planPrompt = new ClassPathResource("director/plan-prompt.txt").getContentAsString(StandardCharsets.UTF_8);
         var memory = MessageWindowChatMemory.builder().chatMemoryRepository(new InMemoryChatMemoryRepository()).maxMessages(10).build();
-        AiModel wonder = new SpringAiModel(chat.build(), memory, planPrompt, props.models().wonder(), "medium");
+        AiModel planner = new SpringAiModel(chat.build(), memory, planPrompt, props.models().wonder(), "medium");
+        // 審查者：同一個模型、另一份系統提示詞與獨立的對話記憶（不看規劃者的對話）
+        String reviewPrompt = new ClassPathResource("director/review-prompt.txt").getContentAsString(StandardCharsets.UTF_8);
+        var reviewMemory = MessageWindowChatMemory.builder().chatMemoryRepository(new InMemoryChatMemoryRepository()).maxMessages(4).build();
+        AiModel reviewer = new SpringAiModel(chat.build(), reviewMemory, reviewPrompt, props.models().wonder(), "medium");
         ExecutorService pool = new ThreadPoolExecutor(THREADS, THREADS, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(20), r -> {
             Thread t = new Thread(r, "director");
             t.setDaemon(true);
             return t;
         });
-        return new DirectorJobs(spark, wonder, pool, (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/director", m, in, out, 0));
+        return new DirectorJobs(spark, planner, reviewer, pool, (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/director", m, in, out, 0));
     }
 }
