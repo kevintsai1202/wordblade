@@ -118,3 +118,12 @@
 3. 吉祥物**交給導演規劃**（照第 3 節的規則：指向具體目標、寫出理由、整支最多 1 次）。
 4. 「套用勾選的項目」**預設勾選審查通過的全部**。
 5. **不砍 P1**：時間足夠，導演改版做完照順序做 P1-9、P1-10、P1-14。
+
+## 進度
+
+| # | 狀態 | 結果 |
+| --- | --- | --- |
+| D3＋D4 閘道 | 完成（10/29） | `DirectorRules`（章節、目的、引用旁白、新種類、轉場只在章節交界 3 秒內、特效每 20 秒 1 個、畫面類不重疊）、`DirectorJobs`（planned → 審查者獨立 Wonder 對話看縮圖總表 → 退回就改一輪 → done；刪掉的移到 removed）、`POST /v1/ai/director/{id}/review`、提示詞（plan、review、segment 加章節與活動區）；閘道測試 113 全過。**實測**（`scripts/director/gateway-check.mjs`，demo-2min）：154 秒、6 章；轉場在 30.2「Next, I'll open the .env file」與 74.4「One more thing.」；放大在寫程式與終端機輸出；特效對準「we get one clear line」；剪重講、遮金鑰；字幕、配樂、片頭都有；審查全部 keep（可能偏寬鬆） |
+| D1 | 完成（10/29） | `director/activity.ts`：前後格亮度差 → 32×18 格、取最大相連區、整片在變不算；和上一次變化相近才接成同一個活動；放大框寬看每次變化的中位數大小、路徑跟著中心走。demo-2min 實測 8 個活動區（終端機、.env 那行、寫程式 42～65 秒） |
+| D5 | 完成（10/29） | `director/run.ts`（每段帶活動區、planned 拼總表送審、審查刪掉的是略過、放大帶路徑）、`director/apply.ts`（四階段一次套用、失敗跳過）、`director/browser.ts`（縮圖總表、各步驟：遮罩、Vibe 參考圖取原檔、3D 範本與吉祥物目標框、AI 配樂、片頭封面取章節開頭畫面）、`intro/build.ts`（片頭組裝共用）、DirectorTab（依章節、勾選、Apply N checked）；Vitest 599、e2e director 2 個 |
+| D6 | 進行中 | 範例打包完整版改成「問導演 → 套用審查通過的全部」 |

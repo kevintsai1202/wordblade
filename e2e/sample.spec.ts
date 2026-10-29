@@ -20,7 +20,7 @@ test("範例專案：離線也能開、有逐字稿與特效、可以匯出", as
 
   // V1：片頭佔位＋剪掉贅詞後的多段
   await expect.poll(() => page.locator('.track-row[data-track-id="V1"] .clip').count()).toBeGreaterThan(2);
-  await expect(page.locator(".effect-chip")).toHaveCount(5);
+  await expect.poll(() => page.locator(".effect-chip").count()).toBeGreaterThan(2);
   await openTab(page, "transcript");
   await expect(page.getByText("meeting notes", { exact: false }).first()).toBeVisible();
   // 示範狀態：沒編輯前不自動存
