@@ -1,36 +1,43 @@
-import { expect, test, type Page } from "@playwright/test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { expect, test, type Locator, type Page } from "@playwright/test";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { readFileSync } from "node:fs";
 import { toProjectFile } from "../src/core/projectFile";
 import type { Media, Project, Word } from "../src/core/model";
 import { openTab } from "./helpers/tabs";
 
 // 範例專案打包（spec §5.22、docs/plan-10-29-sample.md）：照使用者的操作在網頁版把 samples/demo-2min.mp4 剪成範例專案，
-// 再把專案與素材寫成 public/sample/（project.json＋media/）。不是一般的測試：只在設了 WORDBLADE_SAMPLE_BUILD 時執行。
-//   最小版（不呼叫 AI）：pwsh -c '$env:WORDBLADE_SAMPLE_BUILD="offline"; npx playwright test e2e/sample-build.spec.ts'
-//   完整版（實際跑 AI，S2）：之後由 scripts/sam/live-local.ps1 -E2E -Spec e2e/sample-build.spec.ts 起本機閘道執行
-// 最小版的逐字稿用 samples/demo-2min.truth.json 的句子（詞平均攤開），特效用內建範本。
+// 再把專案與素材寫成 public/sample/（project.json＋media/＋thumbnail.png＋BUILD.md）。不是一般的測試：只在設了 WORDBLADE_SAMPLE_BUILD 時執行。
+//   最小版（不呼叫 AI）：$env:WORDBLADE_SAMPLE_BUILD="offline"; npx playwright test e2e/sample-build.spec.ts
+//   完整版（實際跑 AI）：$env:WORDBLADE_SAMPLE_BUILD="live"; pwsh scripts/sam/live-local.ps1 -E2E -Spec e2e/sample-build.spec.ts
+//     （先 node scripts/sample/covers.mjs 產生片頭封面）
+// 完整版每個 AI 步驟失敗時退回不呼叫 AI 的做法（逐字稿用 truth.json、特效用內建範本）或略過，結果寫進 BUILD.md。
 const MODE = process.env.WORDBLADE_SAMPLE_BUILD;
+const LIVE = MODE === "live";
+const gateway = process.env.WORDBLADE_LIVE_GATEWAY;
+const token = process.env.WORDBLADE_LIVE_TOKEN;
 const ROOT = path.join(import.meta.dirname, "..");
 const SAMPLE = path.join(ROOT, "samples", "demo-2min.mp4");
+const COVERS = path.join(ROOT, "samples", "sample-covers");
 const OUT = path.join(ROOT, "public", "sample");
-const truth = JSON.parse(readFileSync(path.join(ROOT, "samples", "demo-2min.truth.json"), "utf8")) as { sentences: { start: number; end: number; text: string }[] };
+const truth = JSON.parse(readFileSync(path.join(ROOT, "samples", "demo-2min.truth.json"), "utf8")) as {
+  sentences: { start: number; end: number; text: string }[];
+  apiKey: { start: number; end: number };
+  retake: { start: number; end: number };
+};
 
 /** 開發用鉤子（App 在 localStorage wordblade.dev＝1 時提供） */
-type Hook = { project: () => Project; dispatch: (a: unknown) => void; fileBytes: (k: string) => Promise<Uint8Array | null> };
+type Hook = { project: () => Project; dispatch: (a: unknown) => void; fileBytes: (k: string) => Promise<Uint8Array | null>; thumbnail: () => Promise<number[] | null> };
+const hook = (page: Page) => page.evaluateHandle(() => (window as unknown as { __wordblade: Hook }).__wordblade);
 
-/** 跳到 t 秒 */
-async function seek(page: Page, t: number) {
-  await page.evaluate((time) => (window as unknown as { __wordblade: Hook }).__wordblade.dispatch({ type: "seek", time }), t);
+/** 送一個動作給 reducer */
+async function dispatch(page: Page, action: unknown) {
+  await page.evaluate((a) => (window as unknown as { __wordblade: Hook }).__wordblade.dispatch(a), action);
 }
 
-/** 選一段範圍（特效範本會放在範圍裡） */
-async function range(page: Page, start: number, end: number) {
-  await page.evaluate(([s, e]) => (window as unknown as { __wordblade: Hook }).__wordblade.dispatch({ type: "setRange", start: s, end: e }), [start, end]);
-}
+/** 選一段範圍（特效範本、AI 特效、配樂都放在範圍起點） */
+const range = (page: Page, start: number, end: number) => dispatch(page, { type: "setRange", start, end });
 
-/** truth.json 的句子 → 詞（句子時間內平均攤開；最小版的逐字稿） */
+/** truth.json 的句子 → 詞（句子時間內平均攤開；AI 轉錄失敗時的退路） */
 function truthWords(mediaId: string): Word[] {
   const out: Word[] = [];
   truth.sentences.forEach((s, si) => {
@@ -41,55 +48,196 @@ function truthWords(mediaId: string): Word[] {
   return out;
 }
 
-test.skip(!MODE, "只在打包範例專案時執行（WORDBLADE_SAMPLE_BUILD=offline）");
+/** 找一條和 [a, b] 重疊的某種導演建議 */
+async function overlapping(page: Page, kind: string, a: number, b: number): Promise<Locator | null> {
+  const list = page.getByTestId("director-list").locator(`[data-kind="${kind}"]`);
+  for (let i = 0; i < (await list.count()); i++) {
+    const row = list.nth(i);
+    if (Number(await row.getAttribute("data-start")) < b && Number(await row.getAttribute("data-end")) > a) return row;
+  }
+  return null;
+}
+
+test.skip(!MODE, "只在打包範例專案時執行（WORDBLADE_SAMPLE_BUILD=offline 或 live）");
 
 test("打包範例專案", async ({ page }) => {
-  test.setTimeout(600_000);
-  /** 做了哪些、略過哪些（寫進 BUILD.md） */
+  test.setTimeout(1_800_000);
+  if (LIVE) expect(gateway && token, "完整版要由 scripts/sam/live-local.ps1 起閘道與權杖").toBeTruthy();
+  /** 做了哪些、退回或略過哪些（寫進 BUILD.md） */
   const log: string[] = [];
+  /** 跑一個 AI 步驟：失敗就記下來並執行退路 */
+  const step = async (name: string, run: () => Promise<string>, fallback?: () => Promise<string>) => {
+    const t0 = Date.now();
+    try {
+      log.push(`${name}: ${await run()} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
+    } catch (e) {
+      const why = String(e instanceof Error ? e.message : e).split("\n")[0].slice(0, 160);
+      log.push(`${name}: AI step failed (${why}); ${fallback ? await fallback() : "skipped"}`);
+    }
+    console.log(log[log.length - 1]);
+  };
   page.on("console", (m) => { if (m.type() === "error") console.log(`[console.error] ${m.text()}`); });
-  await page.addInitScript(() => localStorage.setItem("wordblade.dev", "1"));
+  await page.addInitScript(([url, tok]) => {
+    localStorage.setItem("wordblade.dev", "1");
+    if (url && tok) localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: tok }));
+    for (const k of ["asr", "director", "sam", "vibe", "plane3d", "audio", "publish"]) localStorage.setItem(`wordblade.consent.${k}`, "yes");
+  }, [gateway ?? "", token ?? ""]);
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto("/");
 
   // 匯入、放上 V1
-  const chooser = page.waitForEvent("filechooser");
+  let chooser = page.waitForEvent("filechooser");
   await page.getByTestId("import-media").click();
   await (await chooser).setFiles(SAMPLE);
-  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 60_000 });
+  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 120_000 });
   await page.locator(".media-item", { hasText: "demo-2min.mp4" }).dblclick();
   await expect(page.locator('.track-row[data-track-id="V1"] .clip')).toHaveCount(1);
   const mediaId = await page.evaluate(() => (window as unknown as { __wordblade: Hook }).__wordblade.project().media[0].id);
+  const useTruth = async () => {
+    await dispatch(page, { type: "commit", edits: [{ kind: "setWords", mediaId, words: truthWords(mediaId) }] });
+    return "used the sentences from demo-2min.truth.json instead";
+  };
 
-  // 逐字稿
-  await page.evaluate(([id, words]) => (window as unknown as { __wordblade: Hook }).__wordblade.dispatch({ type: "commit", edits: [{ kind: "setWords", mediaId: id, words }] }), [mediaId, truthWords(mediaId)] as const);
-  log.push("Transcript: sentences from demo-2min.truth.json, words spread evenly (no AI).");
+  // 逐字稿（Muse ASR）
+  if (LIVE) {
+    await step("Transcript (Muse ASR)", async () => {
+      await openTab(page, "transcript");
+      await expect(page.getByTestId("transcribe-start")).toBeEnabled({ timeout: 120_000 });
+      await page.getByTestId("transcribe-start").click();
+      await expect(page.getByTestId("transcribe-status")).toContainText("words", { timeout: 300_000 });
+      return (await page.getByTestId("transcribe-status").innerText()).replace(/\s+/g, " ");
+    }, useTruth);
+  } else {
+    log.push(`Transcript: ${await useTruth()} (no AI).`);
+  }
+
+  // AI 導演：建議清單留在專案裡；採用遮住假金鑰（Spark 找框）與剪掉重講
+  if (LIVE) {
+    await step("AI director (Muse Spark + Muse Wonder)", async () => {
+      await openTab(page, "director");
+      await expect(page.getByTestId("director-ask")).toBeEnabled({ timeout: 120_000 });
+      await page.getByTestId("director-ask").click();
+      await expect(page.getByTestId("director-message")).toBeVisible({ timeout: 400_000 });
+      const count = await page.getByTestId("director-row").count();
+      const adopted: string[] = [];
+      const mask = await overlapping(page, "mask", truth.apiKey.start, truth.apiKey.end);
+      if (mask) {
+        await mask.getByTestId("director-adopt").click();
+        await expect(mask).toHaveAttribute("data-status", "applied", { timeout: 240_000 });
+        adopted.push("masked the fake API key");
+      }
+      const cut = await overlapping(page, "cut", truth.retake.start, truth.retake.end);
+      if (cut) {
+        await cut.getByTestId("director-adopt").click();
+        await expect(cut).toHaveAttribute("data-status", "applied");
+        adopted.push("cut the retake");
+      }
+      return `${count} suggestions; adopted: ${adopted.join(", ") || "none"}`;
+    });
+  }
+
+  // 一鍵去贅詞
+  await step("Filler words", async () => {
+    await openTab(page, "transcript");
+    await page.getByTestId("find-fillers").click();
+    const n = await page.getByTestId("cleanup-item").count();
+    if (n) await page.getByTestId("cleanup-remove").click();
+    return `removed ${n}`;
+  });
 
   // 字幕：逐字高亮
   await openTab(page, "style");
   await page.getByTestId("caption-karaoke").selectOption("fill");
   log.push("Captions: karaoke fill.");
 
-  // 2D 特效（內建範本）：開頭標題卡、講到終端機時的箭頭
-  await openTab(page, "vibe");
-  await range(page, 1, 5);
-  await page.locator('[data-template="title-pop"]').click();
-  await range(page, 62, 66);
-  await page.locator('[data-template="arrow-whoosh"]').click();
-  log.push("2D effects: built-in Title card (1–5 s), Arrow (62–66 s).");
+  // 2D 特效：AI 現寫兩個（失敗退回內建範本）
+  const builtin2D = async (template: string, at: number) => {
+    await openTab(page, "vibe");
+    await range(page, at, at + 4);
+    await page.locator(`[data-template="${template}"]`).click();
+    return `used the built-in ${template} template instead`;
+  };
+  const vibe2D = async (description: string, at: number) => {
+    await openTab(page, "vibe");
+    await range(page, at, at + 4);
+    const before = await page.locator(".effect-chip").count();
+    await page.getByTestId("vibe-description").fill(description);
+    await page.getByTestId("vibe-generate").click();
+    await expect(page.locator(".effect-chip")).toHaveCount(before + 1, { timeout: 240_000 });
+    return `"${description}"`;
+  };
+  if (LIVE) {
+    await step("Vibe effect 2D #1 (Muse Wonder)", () => vibe2D("A bold lower-third title card that slides in: 'Meeting notes → summary in 2 minutes'", 1), () => builtin2D("title-pop", 1));
+    await step("Vibe effect 2D #2 (Muse Wonder)", () => vibe2D("A glowing arrow that swoops in and points at the terminal output, with a small 'it works!' label", 60), () => builtin2D("arrow-whoosh", 60));
+  } else {
+    log.push(`2D effects: ${await builtin2D("title-pop", 1)}; ${await builtin2D("arrow-whoosh", 60)} (no AI).`);
+  }
 
-  // 3D：桌上螢幕、吉祥物
+  // 3D：桌上螢幕、吉祥物（內建範本）
   await openTab(page, "vibe3d");
   await range(page, 20, 26);
   await page.locator('[data-template="desk-reveal"]').click();
-  await range(page, 90, 94);
+  await range(page, 88, 92);
   await page.locator('[data-template="mascot-point"]').click();
-  log.push("3D: Desk screen (20–26 s), Mascot points (90–94 s).");
-  await expect(page.locator(".effect-chip")).toHaveCount(4);
-  await page.evaluate(() => (window as unknown as { __wordblade: Hook }).__wordblade.dispatch({ type: "clearRange" }));
-  await seek(page, 0);
+  log.push("3D: Desk screen (20–26 s), Mascot points (88–92 s).");
 
-  // 寫出：素材檔放 media/，路徑改成 sample/media/...（匯入的檔案沒有路徑，用位元組寫出）
+  // 背景配樂（AI 配樂，放在片頭之後；片頭插入時會一起往後移）
+  if (LIVE) {
+    await step("Background music (Muse Spark → synth)", async () => {
+      await openTab(page, "audio");
+      await page.getByTestId("music-description").fill("Light, upbeat lo-fi tech background for a coding tutorial, soft drums, warm keys, unobtrusive under speech");
+      await page.getByTestId("music-bars").selectOption("16");
+      await page.getByTestId("music-generate").click();
+      await expect(page.getByTestId("music-result")).toBeVisible({ timeout: 240_000 });
+      await range(page, 0, 1);
+      await page.getByTestId("music-add").click();
+      await expect(page.locator('.track-row[data-track-id="A2"] .clip')).toHaveCount(1, { timeout: 60_000 });
+      return "16 bars on the music track";
+    });
+  }
+  await dispatch(page, { type: "clearRange" });
+
+  // 一鍵片頭（翻頁式，封面是 Muse Image 生的；內建配樂）——最後插，前面的東西一起往後移
+  const covers = existsSync(COVERS) ? readdirSync(COVERS).filter((f) => f.endsWith(".webp")).map((f) => path.join(COVERS, f)) : [];
+  if (covers.length) {
+    await openTab(page, "media");
+    chooser = page.waitForEvent("filechooser");
+    await page.getByTestId("import-media").click();
+    await (await chooser).setFiles(covers);
+    // 一張一張匯入：等全部進了素材庫（「處理中」可能在兩張之間短暫歸零）
+    await expect(page.locator(".media-item", { hasText: "cover-" })).toHaveCount(covers.length, { timeout: 120_000 });
+    await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 60_000 });
+    await openTab(page, "intro");
+    await page.getByTestId("intro-title").fill("Meeting Notes AI");
+    await page.getByTestId("intro-subtitle").fill("a CLI tool in 2 minutes");
+    await page.getByTestId("intro-generate").click();
+    await expect(page.getByTestId("intro-notice")).toContainText("intro at the start", { timeout: 120_000 });
+    log.push(`Intro: flip intro with ${covers.length} covers made by Muse Image (scripts/sample/covers.mjs), built-in music.`);
+  } else {
+    log.push("Intro: skipped (no covers in samples/sample-covers; run node scripts/sample/covers.mjs).");
+  }
+
+  // 發佈包＋縮圖
+  if (LIVE) {
+    await step("Publish kit (Muse Spark)", async () => {
+      await openTab(page, "publish");
+      await page.getByTestId("publish-generate").click();
+      await expect(page.getByTestId("publish-titles").locator("input[type=text]")).toHaveCount(3, { timeout: 180_000 });
+      return `titles: ${(await page.getByTestId("publish-titles").locator("input[type=text]").first().inputValue())} …`;
+    });
+    await step("Thumbnail (Muse Image)", async () => {
+      await openTab(page, "publish");
+      await dispatch(page, { type: "seek", time: 40 });
+      await page.waitForTimeout(1500);
+      await page.getByTestId("thumb-ai").click();
+      await expect(page.getByTestId("thumb-ai")).toHaveText("Restyle with AI", { timeout: 240_000 });
+      await expect(page.getByTestId("publish-error")).toHaveCount(0);
+      return "restyled the frame at 40 s";
+    });
+  }
+  await dispatch(page, { type: "seek", time: 0 });
+
+  // 寫出：素材檔放 media/，路徑改成 sample/media/...（匯入與產生的檔案都用位元組寫出）
   const project = await page.evaluate(() => (window as unknown as { __wordblade: Hook }).__wordblade.project());
   rmSync(OUT, { recursive: true, force: true });
   mkdirSync(path.join(OUT, "media"), { recursive: true });
@@ -109,13 +257,16 @@ test("打包範例專案", async ({ page }) => {
     media.push({ ...rest, path: `sample/media/${name}` });
   }
   writeFileSync(path.join(OUT, "project.json"), toProjectFile({ ...project, media }, { projectDir: "", savedAt: Date.now() }));
+  const thumb = await page.evaluate(() => (window as unknown as { __wordblade: Hook }).__wordblade.thumbnail());
+  if (thumb) writeFileSync(path.join(OUT, "thumbnail.png"), Buffer.from(thumb));
   writeFileSync(path.join(OUT, "BUILD.md"), [
     "# Sample project build",
     "",
     `Built ${new Date().toISOString()} by e2e/sample-build.spec.ts (mode: ${MODE}).`,
-    "Footage: samples/demo-2min.mp4 — synthetic screen recording with a TTS voice-over, made by scripts/demo-sample (the API key in it is fake).",
+    "Footage: samples/demo-2min.mp4 — a synthetic screen recording with a TTS voice-over, made by scripts/demo-sample (the API key in it is fake).",
     "",
     ...log.map((l) => `- ${l}`),
     "",
   ].join("\n"));
+  void hook;
 });

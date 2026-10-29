@@ -16,10 +16,11 @@ test("範例專案：離線也能開、有逐字稿與特效、可以匯出", as
   await page.goto("/");
   await page.getByTestId("load-sample").click();
 
-  await expect(page.locator('.track-row[data-track-id="V1"] .clip')).toHaveCount(1);
-  await expect(page.locator(".effect-chip")).toHaveCount(4);
+  // V1：片頭佔位＋剪掉贅詞後的多段
+  await expect.poll(() => page.locator('.track-row[data-track-id="V1"] .clip').count()).toBeGreaterThan(2);
+  await expect(page.locator(".effect-chip")).toHaveCount(5);
   await openTab(page, "transcript");
-  await expect(page.getByText("Hey everyone.", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("meeting notes", { exact: false }).first()).toBeVisible();
   // 示範狀態：沒編輯前不自動存
   expect(await page.evaluate(() => localStorage.getItem("wordblade.session"))).toBeNull();
 

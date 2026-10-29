@@ -83,7 +83,7 @@ export function IntroTab({ project, engine, importSources, dispatch }: {
       const effect = flipEffect(plan, plugin, `intro-${crypto.randomUUID().slice(0, 8)}`, 0);
       dispatch({ type: "commit", edits: [{ kind: "insertIntro", intro: { effect, plugin, placeholderId, duration: plan.duration, sounds, music } }] });
       dispatch({ type: "seek", time: 0 });
-      setNotice(plan.warnings.join(" ") || `Added a ${plan.duration.toFixed(1)} s intro at the start. Ctrl+Z removes it.`);
+      setNotice([`Added a ${plan.duration.toFixed(1)} s intro at the start. Ctrl+Z removes it.`, ...plan.warnings].join(" "));
     } catch (e) {
       setNotice(e instanceof Error ? e.message : String(e));
     } finally {

@@ -6,7 +6,7 @@ import { setEffectParams } from "./core/effects";
 import { PluginService } from "./anim/pluginService";
 import { createEngine } from "./engine/createEngine";
 import { demoProject } from "./ui/demoProject";
-import { loadSample } from "./project/sample";
+import { loadSample, samplePath } from "./project/sample";
 import { EditPanel } from "./ui/EditPanel";
 import { MediaTab } from "./ui/MediaTab";
 import { PreviewPane } from "./ui/PreviewPane";
@@ -82,6 +82,9 @@ function App() {
   const [zoomEdit, setZoomEdit] = useState<ZoomEdit | null>(null);
   /** 發佈包的縮圖（只在記憶體；匯出時寫在影片旁邊） */
   const [thumbnail, setThumbnail] = useState<Thumbnail | null>(null);
+  /** 最新的縮圖（開發用匯出鉤子讀） */
+  const thumbRef = useRef(thumbnail);
+  thumbRef.current = thumbnail;
   const editingZoom = zoomEdit ? project.zooms?.find((z) => z.id === zoomEdit.zoomId) ?? null : null;
   const v1Track = project.tracks.filter((t) => t.kind === "video").sort((a, b) => a.index - b.index)[0]?.id;
   /** 播放頭所在、用到這段放大的素材的 V1 片段 */
@@ -193,6 +196,13 @@ function App() {
     reset(project.media);
     dispatch({ type: "load", project: sample });
     for (const m of sample.media) enqueuePrepare(m);
+    // 發佈包的縮圖不在專案裡：範例資料夾有 thumbnail.png 就一起載入（匯出時寫在影片旁邊）
+    const thumbUrl = engine.mediaUrl({ id: "sample-thumbnail", kind: "image", duration: 0, path: samplePath("sample/thumbnail.png", opened.root) });
+    const res = await fetch(thumbUrl).catch(() => null);
+    if (res?.ok) {
+      const blob = await res.blob();
+      setThumbnail({ blob, url: URL.createObjectURL(blob) });
+    }
   };
 
   // 網址帶 ?sample=1 就直接開範例專案（e2e 與分享連結用）
@@ -210,6 +220,7 @@ function App() {
     (window as unknown as { __wordblade?: unknown }).__wordblade = {
       project: () => latestProject.current,
       dispatch,
+      thumbnail: async () => (thumbRef.current ? Array.from(new Uint8Array(await thumbRef.current.blob.arrayBuffer())) : null),
       fileBytes: (handleKey: string) => (engine as unknown as { fileBytes?: (k: string) => Promise<Uint8Array | null> }).fileBytes?.(handleKey) ?? Promise.resolve(null),
     };
   }, [engine, dispatch]);
