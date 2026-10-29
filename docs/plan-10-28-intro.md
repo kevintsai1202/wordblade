@@ -49,3 +49,7 @@ IntroRequest ──flipIntro()──► IntroPlan { duration, cues[], effect par
 | I4 | 完成（10/29） | `intro/insert.ts`：`flipEffect`（圖片去重、索引）、`insertIntro`（V1 漣漪插入佔位、特效、插件登記一次、A3 音效／A2 配樂片段，鎖住的軌略過）；history `insertIntro`；Vitest 4 |
 | I5 | 完成（10/29，先無聲） | Effects › Intro 子頁籤（勾圖、標題、副標、icon、Shuffle、Generate）；佔位黑圖 `intro-black.png` 走 importGenerated。e2e `intro.spec.ts`：翻頁段雙色調、揭曉後藍方塊白字、Ctrl+Z 一次復原（截圖 output/ui-shots/intro-*.png）。桌面自我檢查：產生的 PNG 匯入成 image 320×180 |
 | I6 | 未做（建議砍） | |
+
+## 待辦（開發者 2026-10-29：之後再一起做）
+
+- 重新產生片頭時取代舊的：偵測時間軸開頭已有 `flip-intro` 特效，就先拿掉它的特效、`intro-*` 片段並漣漪刪除那一段，再插入新的（一次復原）。約 30 分鐘。
