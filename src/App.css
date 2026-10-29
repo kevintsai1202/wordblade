@@ -253,3 +253,16 @@ button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor
 .param-field.publish-field > span { display: flex; gap: 8px; align-items: baseline; }
 .publish-field textarea { width: 100%; resize: vertical; font: inherit; font-size: 12px; }
 .publish-thumb { width: 100%; border-radius: 4px; border: 1px solid #3a3f4b; }
+
+/* AI 導演的剪輯腳本：依章節分組、每項的目的、引用的旁白、審查意見 */
+.director-group { list-style: none; margin: 6px 0; }
+.director-group > ul { padding: 0; margin: 0; }
+.director-group-title { font-size: 12px; font-weight: 600; color: #c9d1e0; border-bottom: 1px solid #3a3f4b; padding: 2px 0; }
+.director-group.removed .director-group-title { color: #888; }
+.director-group.removed li { opacity: 0.55; }
+.director-quote { display: block; font-style: italic; color: #9aa3b5; font-size: 11px; }
+.director-review { display: block; font-size: 11px; color: #7fbf7f; }
+.director-review.revised, .director-review.added { color: #e0b050; }
+.director-review.drop { color: #d07070; }
+.director-check-spacer { display: inline-block; width: 13px; }
+.director-empty { font-size: 11px; }

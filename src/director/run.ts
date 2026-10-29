@@ -1,22 +1,25 @@
-// AI 導演的一次執行（spec §5.11）：依停頓切段 → 每段轉 480p、每秒 2 格、無聲的小檔（呼叫端注入）＋那段的詞 → 建工作、逐段上傳
-// （上傳後閘道在背景分析，這邊接著轉下一段）→ 輪詢到完成 → 建議（補上 id、素材、狀態，前端再檢查一次）。
-import type { Media, Suggestion, Word } from "../core/model";
-import type { DirectorView, SegmentMeta } from "./api";
+// AI 導演的一次執行（spec §5.11；docs/plan-10-29-director2.md）：
+// 依停頓切段 → 每段算畫面變化區（比對縮圖）、轉 480p、每秒 2 格、無聲的小檔、連同那段的詞上傳（閘道 Spark 逐段理解）→ 規劃者寫剪輯腳本（planned）
+// → 依各項開頭的畫面拼一張縮圖總表送審（審查者獨立判定，有退回就改一輪）→ 剪輯腳本＋章節。
+// 前端補上素材、狀態與 id 前綴；審查刪掉的狀態是略過；放大項目若指向活動區，帶上跟著變化走的路徑。各步驟由呼叫端注入（測試換成假的）。
+import type { DirectorChapter, Media, Suggestion, Word } from "../core/model";
+import { zoomFromActivity, type Activity } from "./activity";
+import type { DirectorSuggestion, DirectorView, SegmentMeta } from "./api";
 import { planSegments } from "./segments";
 import { clampSuggestions } from "./suggestions";
 
 /** 每格大約多少 prompt tokens（Muse Spark，480p、每秒 2 格；2026-10-27／28 實測約 130） */
 export const TOKENS_PER_FRAME = 130;
 
-/** 估計要用多少 tokens（Spark 看影片＋Wonder 統籌約 1 成） */
+/** 估計要用多少 tokens（Spark 看影片＋Wonder 規劃與審查約 2 成） */
 export function estimateTokens(duration: number): number {
-  return Math.round(duration * 2 * TOKENS_PER_FRAME * 1.1);
+  return Math.round(duration * 2 * TOKENS_PER_FRAME * 1.2);
 }
 
 /** 進度 */
 export interface DirectorProgress {
-  /** converting（轉第 n 段）、analysing（閘道逐段分析，done／total）、planning（統籌） */
-  stage: "converting" | "analysing" | "planning";
+  /** converting（轉第 n 段）、analysing（閘道逐段理解，done／total）、planning（規劃）、reviewing（審查） */
+  stage: "converting" | "analysing" | "planning" | "reviewing";
   done: number;
   total: number;
 }
@@ -24,7 +27,7 @@ export interface DirectorProgress {
 /** 失敗代碼 → 給使用者看的訊息 */
 const ERRORS: Record<string, string> = {
   "segments-failed": "The AI couldn't analyse any part of this video. Try again.",
-  "plan-failed": "The AI couldn't put the suggestions together. Try again.",
+  "plan-failed": "The AI couldn't put the edit plan together. Try again.",
 };
 
 /** 執行參數 */
@@ -32,13 +35,18 @@ export interface DirectorRunOptions {
   media: Media;
   /** 這支素材的詞（素材時間） */
   words: Word[];
-  /** 3D 場景（運鏡建議只能用這些） */
+  /** 3D 場景（轉場只能用這些） */
   scenes: { id: string; name: string }[];
   /** 素材 [s, e) → 480p、每秒 2 格、無聲的 MP4 */
   makeClip: (s: number, e: number) => Promise<Uint8Array>;
+  /** 素材 [s, e) 的畫面變化區（比對縮圖）；不給就不送活動區 */
+  activities?: (s: number, e: number) => Promise<Activity[]>;
+  /** 依各項開頭的畫面拼縮圖總表；不給就只送文字給審查者 */
+  contactSheet?: (items: DirectorSuggestion[]) => Promise<Blob | null>;
   api: {
     start(body: { mediaName: string; duration: number; segments: number; scenes: { id: string; name: string }[] }): Promise<string>;
     upload(jobId: string, index: number, meta: SegmentMeta, video: Uint8Array): Promise<void>;
+    review(jobId: string, sheet: Blob | null): Promise<void>;
     poll(jobId: string): Promise<DirectorView>;
     cancel(jobId: string): Promise<void>;
   };
@@ -47,11 +55,17 @@ export interface DirectorRunOptions {
   pollMs?: number;
 }
 
+/** 執行結果：剪輯腳本（含審查刪掉的，狀態是略過）與章節 */
+export interface DirectorResult {
+  suggestions: Suggestion[];
+  chapters: DirectorChapter[];
+}
+
 /** 已取消 */
 const aborted = () => new DOMException("Cancelled", "AbortError");
 
-/** 執行一次 AI 導演；回傳建議（狀態 pending） */
-export async function runDirector(opts: DirectorRunOptions): Promise<Suggestion[]> {
+/** 執行一次 AI 導演 */
+export async function runDirector(opts: DirectorRunOptions): Promise<DirectorResult> {
   const { media } = opts;
   const words = opts.words.filter((w) => w.mediaId === media.id).sort((a, b) => a.start - b.start);
   const segments = planSegments(words, media.duration);
@@ -60,24 +74,66 @@ export async function runDirector(opts: DirectorRunOptions): Promise<Suggestion[
     await opts.api.cancel(jobId).catch(() => undefined);
     throw aborted();
   };
+  /** 送出去的活動區（放大項目用 id 找回路徑） */
+  const activities = new Map<string, Activity>();
   for (const [i, seg] of segments.entries()) {
     if (opts.signal?.aborted) await stop();
     opts.onProgress?.({ stage: "converting", done: i, total: segments.length });
+    const acts = opts.activities ? await opts.activities(seg.start, seg.end) : [];
+    for (const a of acts) activities.set(a.id, a);
     const video = await opts.makeClip(seg.start, seg.end);
     if (opts.signal?.aborted) await stop();
     const segWords = words.filter((w) => w.start >= seg.start && w.start < seg.end).map((w) => ({ id: w.id, t: Math.round(w.start * 100) / 100, text: w.text }));
-    await opts.api.upload(jobId, i, { start: seg.start, end: seg.end, words: segWords }, video);
+    await opts.api.upload(jobId, i, {
+      start: seg.start, end: seg.end, words: segWords,
+      activities: acts.map(({ id, start, end, x, y, w, h }) => ({ id, start, end, x, y, w, h })),
+    }, video);
   }
+  let reviewSent = false;
   for (;;) {
     if (opts.signal?.aborted) await stop();
     const view = await opts.api.poll(jobId);
-    if (view.status === "done") {
-      const list: Suggestion[] = view.suggestions.map((s, n) => ({ ...s, id: `sug-${media.id}-${Date.now().toString(36)}-${n}`, mediaId: media.id, status: "pending" }));
-      return clampSuggestions(list, { duration: media.duration, scenes: new Set(opts.scenes.map((s) => s.id)), wordIds: new Set(words.map((w) => w.id)) });
+    if (view.status === "planned" && !reviewSent) {
+      reviewSent = true;
+      opts.onProgress?.({ stage: "reviewing", done: 0, total: 1 });
+      const sheet = opts.contactSheet ? await opts.contactSheet(view.suggestions).catch(() => null) : null;
+      await opts.api.review(jobId, sheet);
+    } else if (view.status === "done") {
+      return toResult(view, media, words, opts.scenes, activities);
+    } else if (view.status === "failed") {
+      throw new Error(ERRORS[view.error ?? ""] ?? "The AI director failed. Try again.");
+    } else if (view.status === "cancelled") {
+      throw aborted();
+    } else {
+      opts.onProgress?.(view.status === "planning" ? { stage: "planning", done: view.segmentsDone, total: view.segmentsTotal }
+        : view.status === "reviewing" || view.status === "planned" ? { stage: "reviewing", done: 0, total: 1 }
+          : { stage: "analysing", done: view.segmentsDone + view.segmentsFailed, total: view.segmentsTotal });
     }
-    if (view.status === "failed") throw new Error(ERRORS[view.error ?? ""] ?? "The AI director failed. Try again.");
-    if (view.status === "cancelled") throw aborted();
-    opts.onProgress?.(view.status === "planning" ? { stage: "planning", done: view.segmentsDone, total: view.segmentsTotal } : { stage: "analysing", done: view.segmentsDone + view.segmentsFailed, total: view.segmentsTotal });
     await new Promise((r) => setTimeout(r, opts.pollMs ?? 2000));
   }
+}
+
+/** 閘道的結果 → 專案的建議與章節 */
+function toResult(view: DirectorView, media: Media, words: Word[], scenes: { id: string }[], activities: Map<string, Activity>): DirectorResult {
+  const stamp = Date.now().toString(36);
+  const convert = (s: DirectorSuggestion, status: Suggestion["status"]): Suggestion => {
+    const payload = { ...s.payload };
+    // 放大指向活動區：帶上跟著變化走的框寬與路徑（只留這一項時間內的點）
+    const act = s.kind === "zoom" && typeof payload.activity === "string" ? activities.get(payload.activity) : undefined;
+    if (act) {
+      const z = zoomFromActivity(act);
+      const inside = z.path.filter((p) => p.src >= s.start && p.src <= s.end);
+      Object.assign(payload, { w: z.w, cx: z.path[0].cx, cy: z.path[0].cy, path: inside.length ? inside : [{ ...z.path[0], src: s.start }] });
+    }
+    return {
+      id: `sug-${media.id}-${stamp}-${s.id}`, mediaId: media.id, kind: s.kind, start: s.start, end: s.end, payload, reason: s.purpose || s.reason,
+      status, purpose: s.purpose, quote: s.quote, chapter: s.chapter, review: s.review ?? undefined,
+    };
+  };
+  const kept = clampSuggestions(view.suggestions.map((s) => convert(s, "pending")), { duration: media.duration, scenes: new Set(scenes.map((s) => s.id)), wordIds: new Set(words.map((w) => w.id)) });
+  const removed = (view.removed ?? []).map((s) => convert(s, "skipped"));
+  return {
+    suggestions: [...kept, ...removed].sort((a, b) => a.start - b.start),
+    chapters: (view.chapters ?? []).map((c) => ({ mediaId: media.id, title: c.title, start: c.start, end: c.end })),
+  };
 }

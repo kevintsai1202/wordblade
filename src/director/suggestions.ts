@@ -42,9 +42,13 @@ export function adoptEdits(project: Project, s: Suggestion): Edit[] | null {
       return [{ kind: "cutRanges", ranges: [{ mediaId: s.mediaId, start: s.start, end: s.end }] }, applied(s)];
     case "zoom": {
       const w = Math.min(1, Math.max(0.25, Number(p.w) || 0.5));
+      // 跟著畫面變化區走的路徑（導演改版：活動區算好的 path）；沒有就固定在 cx、cy
+      const path = Array.isArray(p.path) && p.path.length
+        ? (p.path as { src: number; cx: number; cy: number }[]).filter((q) => q.src >= s.start - 1e-6 && q.src <= s.end + 1e-6)
+        : [];
       const cx = Math.min(1, Math.max(0, Number(p.cx) || 0.5));
       const cy = Math.min(1, Math.max(0, Number(p.cy) || 0.5));
-      return [{ kind: "addZoom", zoom: { id: `zoom-${s.id}`, mediaId: s.mediaId, start: s.start, end: s.end, w, path: [{ src: s.start, cx, cy }], enabled: true } }, applied(s)];
+      return [{ kind: "addZoom", zoom: { id: `zoom-${s.id}`, mediaId: s.mediaId, start: s.start, end: s.end, w, path: path.length ? path : [{ src: s.start, cx, cy }], enabled: true } }, applied(s)];
     }
     case "fix": {
       const ids = Array.isArray(p.wordIds) ? (p.wordIds as unknown[]).map(String) : [];
@@ -91,6 +95,11 @@ function validPayload(s: Suggestion, scenes: Set<string>, wordIds: Set<string>):
     case "camera": return str(p.description) && typeof p.scene === "string" && scenes.has(p.scene);
     case "fix": return str(p.text) && Array.isArray(p.wordIds) && p.wordIds.length > 0 && (p.wordIds as unknown[]).every((id) => wordIds.has(String(id)));
     case "zoom": return unit(p.cx) && unit(p.cy) && unit(p.w);
+    case "transition": return typeof p.scene === "string" && scenes.has(p.scene);
+    case "mascot": return ["x", "y", "w", "h"].every((k) => unit(p[k]));
+    case "captionStyle": return ["off", "fill", "scale", "box"].includes(String(p.karaoke));
+    case "music": return str(p.description);
+    case "intro": return str(p.title);
     default: return false;
   }
 }

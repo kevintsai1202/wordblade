@@ -5,24 +5,9 @@
 import { useMemo, useState, type Dispatch } from "react";
 import type { Media, Project } from "../core/model";
 import type { Engine, ImportSource } from "../engine/Engine";
-import { flipIntro, FLIP_MIN_IMAGES } from "../intro/flip";
-import { flipEffect, type IntroSound } from "../intro/insert";
-import { INTRO_MUSIC, INTRO_MUSIC_REVEAL, introSoundCues, introSoundSpecs } from "../intro/sounds";
-import { renderMusic, renderSound, synthToWav } from "../audio/synth/render";
-import { builtinPlugins3D } from "../three/builtins";
+import { buildIntro, PLACEHOLDER_NAME } from "../intro/build";
+import { FLIP_MIN_IMAGES } from "../intro/flip";
 import { FPS, type Action } from "./state";
-
-/** V1 佔位素材的檔名（產生過就沿用同一支） */
-const PLACEHOLDER_NAME = "intro-black.png";
-
-/** 做一張 320×180 的黑色 PNG（V1 佔位；片頭特效會整個蓋住，刪掉特效時看到的是黑畫面） */
-async function blackPng(): Promise<Uint8Array> {
-  const canvas = new OffscreenCanvas(320, 180);
-  const g = canvas.getContext("2d")!;
-  g.fillStyle = "#000";
-  g.fillRect(0, 0, 320, 180);
-  return new Uint8Array(await (await canvas.convertToBlob({ type: "image/png" })).arrayBuffer());
-}
 
 /** Intro 頁籤 */
 export function IntroTab({ project, engine, importSources, dispatch }: {
@@ -57,31 +42,11 @@ export function IntroTab({ project, engine, importSources, dispatch }: {
     setBusy(true);
     setNotice(null);
     try {
-      const plan = flipIntro({
-        imageIds: chosen.map((m) => m.id), title: title.trim(), subtitle: subtitle.trim() || undefined, iconId: iconId || undefined, fps: FPS, seed,
-        ...(withMusic ? { reveal: INTRO_MUSIC_REVEAL, duration: 8 } : {}),
+      const { intro, plan } = await buildIntro({
+        project, engine, importSources, imageIds: chosen.map((m) => m.id), title: title.trim(), subtitle: subtitle.trim() || undefined,
+        iconId: iconId || undefined, seed, fps: FPS, withMusic,
       });
-      const plugin = (await builtinPlugins3D()).get("flip-intro")!;
-      /** 產生過的素材沿用；沒有就做出來匯入（回傳素材 id） */
-      const generated = async (name: string, make: () => Promise<Uint8Array>): Promise<string> => {
-        const existing = project.media.find((m) => m.name === name);
-        if (existing) return existing.id;
-        const [media] = await importSources([await engine.importGenerated(name, await make())]);
-        if (!media) throw new Error(`Couldn't make ${name}.`);
-        return media.id;
-      };
-      const placeholderId = await generated(PLACEHOLDER_NAME, blackPng);
-      // 音效：每種算一次（上升音長度隨片頭，檔名帶長度）
-      const specs = introSoundSpecs(plan);
-      const ids: Record<string, string> = {};
-      for (const [key, spec] of Object.entries(specs)) {
-        const name = key === "riser" ? `intro-riser-${spec.length.toFixed(2)}.wav` : `intro-${key}.wav`;
-        ids[key] = await generated(name, async () => synthToWav(await renderSound(spec)));
-      }
-      const sounds: IntroSound[] = introSoundCues(plan).map((c) => ({ mediaId: ids[c.key], t: c.t, volume: c.volume }));
-      const music = withMusic ? { mediaId: await generated("intro-music.wav", async () => synthToWav(await renderMusic(INTRO_MUSIC))), srcIn: INTRO_MUSIC_REVEAL - plan.reveal, volume: 0.8 } : undefined;
-      const effect = flipEffect(plan, plugin, `intro-${crypto.randomUUID().slice(0, 8)}`, 0);
-      dispatch({ type: "commit", edits: [{ kind: "insertIntro", intro: { effect, plugin, placeholderId, duration: plan.duration, sounds, music } }] });
+      dispatch({ type: "commit", edits: [{ kind: "insertIntro", intro }] });
       dispatch({ type: "seek", time: 0 });
       setNotice([`Added a ${plan.duration.toFixed(1)} s intro at the start. Ctrl+Z removes it.`, ...plan.warnings].join(" "));
     } catch (e) {
