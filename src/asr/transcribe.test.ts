@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Envelope } from "../audio/envelope";
 import type { Media } from "../core/model";
-import { transcribeMedia, type AsrResponse } from "./transcribe";
+import { collapseRepeats, transcribeMedia, type AsrResponse } from "./transcribe";
 
 /** 由有聲區間組包絡 */
 function env(duration: number, voiced: [number, number][]): Envelope {
@@ -90,5 +90,21 @@ describe("transcribeMedia：DELTA 錨點", () => {
     expect(result.words[2].start).toBeCloseTo(61, 0);
     // turn 時間扣掉 DELTA 延遲
     expect(result.turns[0].start).toBeCloseTo(1.4 - 0.35, 2);
+  });
+});
+
+describe("collapseRepeats：Muse 偶爾把一個英文字重複輸出（2026-10-29 實測：每 2 分鐘 3～7 處、每次不同字）", () => {
+  const w = (text: string, start: number, end: number) => ({ id: `${text}@${start}`, mediaId: "m1", text, start, end });
+
+  it("相鄰的同一個英文字併成一個：留第一個、時間延到第二個的結尾、標點用第二個的", () => {
+    const words = [w("the", 1, 1.2), w("kind", 1.2, 1.4), w("kind", 1.4, 1.5), w("of", 1.5, 1.6), w("write.", 2, 2.3), w("write.", 2.3, 2.4), w("File", 3, 3.2), w("file,", 3.5, 3.7)];
+    expect(collapseRepeats(words).map((x) => [x.text, x.start, x.end])).toEqual([
+      ["the", 1, 1.2], ["kind", 1.2, 1.5], ["of", 1.5, 1.6], ["write.", 2, 2.4], ["File,", 3, 3.7],
+    ]);
+  });
+
+  it("中日文的疊字不動（謝謝、看看是真的詞）；不同的字、中間隔了別的字都不動", () => {
+    const words = [w("謝", 0, 0.2), w("謝", 0.2, 0.4), w("look", 1, 1.2), w("at", 1.2, 1.3), w("look", 1.3, 1.5)];
+    expect(collapseRepeats(words)).toEqual(words);
   });
 });
