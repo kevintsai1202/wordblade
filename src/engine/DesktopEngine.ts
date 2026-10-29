@@ -196,6 +196,14 @@ export class DesktopEngine implements Engine {
     return invoke<string | null>("find_samples_dir");
   }
 
+  /** 範例專案：Rust 找安裝資料夾（或 repo 的 public\sample\）並放行讀取，再經 asset 協定讀 project.json */
+  async openSample(): Promise<{ root: string; text: string } | null> {
+    const root = await invoke<string | null>("find_sample_dir");
+    if (!root) return null;
+    const res = await fetch(convertFileSrc(`${root}\\project.json`)).catch(() => null);
+    return res?.ok ? { root, text: await res.text() } : null;
+  }
+
   async makeMezzanine(_mediaId: string): Promise<string> {
     throw new NotImplementedError("makeMezzanine");
   }

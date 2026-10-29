@@ -346,6 +346,25 @@ pub fn find_samples_dir(app: AppHandle) -> Option<String> {
     None
 }
 
+/// 範例專案（spec §5.22）的資料夾：安裝版在資源資料夾的 sample\，開發時往上找 repo 的 public\sample\；
+/// 找到就放行 asset 協定讀取（project.json 與素材都從這裡讀），找不到回 None
+#[tauri::command]
+pub fn find_sample_dir(app: AppHandle) -> Option<String> {
+    let mut candidates: Vec<PathBuf> = Vec::new();
+    if let Ok(dir) = app.path().resource_dir() {
+        candidates.push(dir.join("sample"));
+    }
+    let starts = [std::env::current_exe().ok().and_then(|p| p.parent().map(Path::to_path_buf)), std::env::current_dir().ok()];
+    for start in starts.into_iter().flatten() {
+        for dir in start.ancestors() {
+            candidates.push(dir.join("public").join("sample"));
+        }
+    }
+    let found = candidates.into_iter().find(|d| d.join("project.json").exists())?;
+    app.asset_protocol_scope().allow_directory(&found, true).ok()?;
+    Some(found.to_string_lossy().to_string())
+}
+
 /// 音量包絡：ffmpeg 解成 8 kHz 單聲道 16 位元 PCM，每 10 ms 算一個 RMS，回傳 little-endian f32 的位元組
 #[tauri::command]
 pub async fn media_envelope(app: AppHandle, path: String) -> Result<tauri::ipc::Response, String> {

@@ -1,0 +1,2683 @@
+{
+ "format": "wordblade-project",
+ "v": 1,
+ "savedAt": 1793256907547,
+ "media": {
+  "m-a04bb114": {
+   "path": "sample/media/demo-2min.mp4",
+   "rel": "sample/media/demo-2min.mp4"
+  }
+ },
+ "project": {
+  "media": [
+   {
+    "id": "m-a04bb114",
+    "name": "demo-2min.mp4",
+    "kind": "video",
+    "duration": 108.279,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "hasAlpha": false,
+    "audio": true,
+    "path": "sample/media/demo-2min.mp4"
+   }
+  ],
+  "tracks": [
+   {
+    "id": "V1",
+    "kind": "video",
+    "index": 0,
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "V2",
+    "kind": "video",
+    "index": 1,
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A1",
+    "kind": "audio",
+    "index": 0,
+    "role": "dialogue",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A2",
+    "kind": "audio",
+    "index": 1,
+    "role": "music",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A3",
+    "kind": "audio",
+    "index": 2,
+    "role": "sfx",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   }
+  ],
+  "clips": [
+   {
+    "id": "m-a04bb114@V1",
+    "mediaId": "m-a04bb114",
+    "trackId": "V1",
+    "srcIn": 0,
+    "srcOut": 108.279,
+    "start": 0,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-a04bb114@A1",
+    "mediaId": "m-a04bb114",
+    "trackId": "A1",
+    "srcIn": 0,
+    "srcOut": 108.279,
+    "start": 0,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   }
+  ],
+  "words": [
+   {
+    "id": "w0-0",
+    "mediaId": "m-a04bb114",
+    "text": "Hey",
+    "start": 0.8,
+    "end": 1.089
+   },
+   {
+    "id": "w0-1",
+    "mediaId": "m-a04bb114",
+    "text": "everyone.",
+    "start": 1.109,
+    "end": 1.399
+   },
+   {
+    "id": "w0-2",
+    "mediaId": "m-a04bb114",
+    "text": "In",
+    "start": 1.419,
+    "end": 1.708
+   },
+   {
+    "id": "w0-3",
+    "mediaId": "m-a04bb114",
+    "text": "this",
+    "start": 1.728,
+    "end": 2.018
+   },
+   {
+    "id": "w0-4",
+    "mediaId": "m-a04bb114",
+    "text": "short",
+    "start": 2.038,
+    "end": 2.327
+   },
+   {
+    "id": "w0-5",
+    "mediaId": "m-a04bb114",
+    "text": "video,",
+    "start": 2.347,
+    "end": 2.636
+   },
+   {
+    "id": "w0-6",
+    "mediaId": "m-a04bb114",
+    "text": "I'm",
+    "start": 2.656,
+    "end": 2.946
+   },
+   {
+    "id": "w0-7",
+    "mediaId": "m-a04bb114",
+    "text": "going",
+    "start": 2.966,
+    "end": 3.255
+   },
+   {
+    "id": "w0-8",
+    "mediaId": "m-a04bb114",
+    "text": "to",
+    "start": 3.275,
+    "end": 3.564
+   },
+   {
+    "id": "w0-9",
+    "mediaId": "m-a04bb114",
+    "text": "build",
+    "start": 3.584,
+    "end": 3.874
+   },
+   {
+    "id": "w0-10",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 3.894,
+    "end": 4.183
+   },
+   {
+    "id": "w0-11",
+    "mediaId": "m-a04bb114",
+    "text": "tiny",
+    "start": 4.203,
+    "end": 4.493
+   },
+   {
+    "id": "w0-12",
+    "mediaId": "m-a04bb114",
+    "text": "command",
+    "start": 4.513,
+    "end": 4.802
+   },
+   {
+    "id": "w0-13",
+    "mediaId": "m-a04bb114",
+    "text": "line",
+    "start": 4.822,
+    "end": 5.111
+   },
+   {
+    "id": "w0-14",
+    "mediaId": "m-a04bb114",
+    "text": "tool",
+    "start": 5.131,
+    "end": 5.421
+   },
+   {
+    "id": "w0-15",
+    "mediaId": "m-a04bb114",
+    "text": "that",
+    "start": 5.441,
+    "end": 5.73
+   },
+   {
+    "id": "w0-16",
+    "mediaId": "m-a04bb114",
+    "text": "summarizes",
+    "start": 5.75,
+    "end": 6.039
+   },
+   {
+    "id": "w0-17",
+    "mediaId": "m-a04bb114",
+    "text": "your",
+    "start": 6.059,
+    "end": 6.349
+   },
+   {
+    "id": "w0-18",
+    "mediaId": "m-a04bb114",
+    "text": "meeting",
+    "start": 6.369,
+    "end": 6.658
+   },
+   {
+    "id": "w0-19",
+    "mediaId": "m-a04bb114",
+    "text": "notes",
+    "start": 6.678,
+    "end": 6.968
+   },
+   {
+    "id": "w0-20",
+    "mediaId": "m-a04bb114",
+    "text": "with",
+    "start": 6.987,
+    "end": 7.277
+   },
+   {
+    "id": "w0-21",
+    "mediaId": "m-a04bb114",
+    "text": "an",
+    "start": 7.297,
+    "end": 7.586
+   },
+   {
+    "id": "w0-22",
+    "mediaId": "m-a04bb114",
+    "text": "AI",
+    "start": 7.606,
+    "end": 7.896
+   },
+   {
+    "id": "w0-23",
+    "mediaId": "m-a04bb114",
+    "text": "model.",
+    "start": 7.916,
+    "end": 8.205
+   },
+   {
+    "id": "w1-0",
+    "mediaId": "m-a04bb114",
+    "text": "It",
+    "start": 8.725,
+    "end": 9
+   },
+   {
+    "id": "w1-1",
+    "mediaId": "m-a04bb114",
+    "text": "takes,",
+    "start": 9.02,
+    "end": 9.294
+   },
+   {
+    "id": "w1-2",
+    "mediaId": "m-a04bb114",
+    "text": "um,",
+    "start": 9.314,
+    "end": 9.589
+   },
+   {
+    "id": "w1-3",
+    "mediaId": "m-a04bb114",
+    "text": "about",
+    "start": 9.609,
+    "end": 9.884
+   },
+   {
+    "id": "w1-4",
+    "mediaId": "m-a04bb114",
+    "text": "two",
+    "start": 9.904,
+    "end": 10.179
+   },
+   {
+    "id": "w1-5",
+    "mediaId": "m-a04bb114",
+    "text": "minutes,",
+    "start": 10.199,
+    "end": 10.473
+   },
+   {
+    "id": "w1-6",
+    "mediaId": "m-a04bb114",
+    "text": "so",
+    "start": 10.493,
+    "end": 10.768
+   },
+   {
+    "id": "w1-7",
+    "mediaId": "m-a04bb114",
+    "text": "let's",
+    "start": 10.788,
+    "end": 11.063
+   },
+   {
+    "id": "w1-8",
+    "mediaId": "m-a04bb114",
+    "text": "jump",
+    "start": 11.083,
+    "end": 11.358
+   },
+   {
+    "id": "w1-9",
+    "mediaId": "m-a04bb114",
+    "text": "right",
+    "start": 11.378,
+    "end": 11.652
+   },
+   {
+    "id": "w1-10",
+    "mediaId": "m-a04bb114",
+    "text": "in.",
+    "start": 11.672,
+    "end": 11.947
+   },
+   {
+    "id": "w2-0",
+    "mediaId": "m-a04bb114",
+    "text": "Here's",
+    "start": 12.567,
+    "end": 12.791
+   },
+   {
+    "id": "w2-1",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 12.811,
+    "end": 13.036
+   },
+   {
+    "id": "w2-2",
+    "mediaId": "m-a04bb114",
+    "text": "kind",
+    "start": 13.056,
+    "end": 13.28
+   },
+   {
+    "id": "w2-3",
+    "mediaId": "m-a04bb114",
+    "text": "of",
+    "start": 13.3,
+    "end": 13.524
+   },
+   {
+    "id": "w2-4",
+    "mediaId": "m-a04bb114",
+    "text": "notes",
+    "start": 13.544,
+    "end": 13.769
+   },
+   {
+    "id": "w2-5",
+    "mediaId": "m-a04bb114",
+    "text": "I",
+    "start": 13.789,
+    "end": 14.013
+   },
+   {
+    "id": "w2-6",
+    "mediaId": "m-a04bb114",
+    "text": "mean.",
+    "start": 14.033,
+    "end": 14.258
+   },
+   {
+    "id": "w2-7",
+    "mediaId": "m-a04bb114",
+    "text": "Just",
+    "start": 14.278,
+    "end": 14.502
+   },
+   {
+    "id": "w2-8",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 14.522,
+    "end": 14.746
+   },
+   {
+    "id": "w2-9",
+    "mediaId": "m-a04bb114",
+    "text": "few",
+    "start": 14.766,
+    "end": 14.991
+   },
+   {
+    "id": "w2-10",
+    "mediaId": "m-a04bb114",
+    "text": "bullet",
+    "start": 15.011,
+    "end": 15.235
+   },
+   {
+    "id": "w2-11",
+    "mediaId": "m-a04bb114",
+    "text": "points",
+    "start": 15.255,
+    "end": 15.48
+   },
+   {
+    "id": "w2-12",
+    "mediaId": "m-a04bb114",
+    "text": "from",
+    "start": 15.5,
+    "end": 15.724
+   },
+   {
+    "id": "w2-13",
+    "mediaId": "m-a04bb114",
+    "text": "our",
+    "start": 15.744,
+    "end": 15.968
+   },
+   {
+    "id": "w2-14",
+    "mediaId": "m-a04bb114",
+    "text": "weekly",
+    "start": 15.988,
+    "end": 16.213
+   },
+   {
+    "id": "w2-15",
+    "mediaId": "m-a04bb114",
+    "text": "sync.",
+    "start": 16.233,
+    "end": 16.457
+   },
+   {
+    "id": "w3-0",
+    "mediaId": "m-a04bb114",
+    "text": "Nothing",
+    "start": 16.877,
+    "end": 17.174
+   },
+   {
+    "id": "w3-1",
+    "mediaId": "m-a04bb114",
+    "text": "fancy,",
+    "start": 17.194,
+    "end": 17.492
+   },
+   {
+    "id": "w3-2",
+    "mediaId": "m-a04bb114",
+    "text": "um,",
+    "start": 17.512,
+    "end": 17.809
+   },
+   {
+    "id": "w3-3",
+    "mediaId": "m-a04bb114",
+    "text": "just",
+    "start": 17.829,
+    "end": 18.126
+   },
+   {
+    "id": "w3-4",
+    "mediaId": "m-a04bb114",
+    "text": "plain",
+    "start": 18.146,
+    "end": 18.444
+   },
+   {
+    "id": "w3-5",
+    "mediaId": "m-a04bb114",
+    "text": "markdown",
+    "start": 18.464,
+    "end": 18.761
+   },
+   {
+    "id": "w3-6",
+    "mediaId": "m-a04bb114",
+    "text": "that",
+    "start": 18.781,
+    "end": 19.078
+   },
+   {
+    "id": "w3-7",
+    "mediaId": "m-a04bb114",
+    "text": "anyone",
+    "start": 19.098,
+    "end": 19.395
+   },
+   {
+    "id": "w3-8",
+    "mediaId": "m-a04bb114",
+    "text": "on",
+    "start": 19.415,
+    "end": 19.713
+   },
+   {
+    "id": "w3-9",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 19.733,
+    "end": 20.03
+   },
+   {
+    "id": "w3-10",
+    "mediaId": "m-a04bb114",
+    "text": "team",
+    "start": 20.05,
+    "end": 20.347
+   },
+   {
+    "id": "w3-11",
+    "mediaId": "m-a04bb114",
+    "text": "can",
+    "start": 20.367,
+    "end": 20.665
+   },
+   {
+    "id": "w3-12",
+    "mediaId": "m-a04bb114",
+    "text": "write.",
+    "start": 20.685,
+    "end": 20.982
+   },
+   {
+    "id": "w4-0",
+    "mediaId": "m-a04bb114",
+    "text": "First,",
+    "start": 22.002,
+    "end": 22.347
+   },
+   {
+    "id": "w4-1",
+    "mediaId": "m-a04bb114",
+    "text": "I'll",
+    "start": 22.367,
+    "end": 22.712
+   },
+   {
+    "id": "w4-2",
+    "mediaId": "m-a04bb114",
+    "text": "create",
+    "start": 22.732,
+    "end": 23.077
+   },
+   {
+    "id": "w4-3",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 23.097,
+    "end": 23.442
+   },
+   {
+    "id": "w4-4",
+    "mediaId": "m-a04bb114",
+    "text": "new",
+    "start": 23.462,
+    "end": 23.807
+   },
+   {
+    "id": "w4-5",
+    "mediaId": "m-a04bb114",
+    "text": "folder",
+    "start": 23.827,
+    "end": 24.172
+   },
+   {
+    "id": "w4-6",
+    "mediaId": "m-a04bb114",
+    "text": "and",
+    "start": 24.192,
+    "end": 24.537
+   },
+   {
+    "id": "w4-7",
+    "mediaId": "m-a04bb114",
+    "text": "install",
+    "start": 24.557,
+    "end": 24.902
+   },
+   {
+    "id": "w4-8",
+    "mediaId": "m-a04bb114",
+    "text": "two",
+    "start": 24.922,
+    "end": 25.267
+   },
+   {
+    "id": "w4-9",
+    "mediaId": "m-a04bb114",
+    "text": "packages,",
+    "start": 25.287,
+    "end": 25.632
+   },
+   {
+    "id": "w4-10",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 25.652,
+    "end": 25.997
+   },
+   {
+    "id": "w4-11",
+    "mediaId": "m-a04bb114",
+    "text": "OpenAI",
+    "start": 26.017,
+    "end": 26.362
+   },
+   {
+    "id": "w4-12",
+    "mediaId": "m-a04bb114",
+    "text": "client",
+    "start": 26.382,
+    "end": 26.727
+   },
+   {
+    "id": "w4-13",
+    "mediaId": "m-a04bb114",
+    "text": "and",
+    "start": 26.747,
+    "end": 27.092
+   },
+   {
+    "id": "w4-14",
+    "mediaId": "m-a04bb114",
+    "text": "dotenv.",
+    "start": 27.112,
+    "end": 27.457
+   },
+   {
+    "id": "w5-0",
+    "mediaId": "m-a04bb114",
+    "text": "Okay,",
+    "start": 27.877,
+    "end": 28.312
+   },
+   {
+    "id": "w5-1",
+    "mediaId": "m-a04bb114",
+    "text": "that's",
+    "start": 28.332,
+    "end": 28.767
+   },
+   {
+    "id": "w5-2",
+    "mediaId": "m-a04bb114",
+    "text": "done.",
+    "start": 28.787,
+    "end": 29.222
+   },
+   {
+    "id": "w6-0",
+    "mediaId": "m-a04bb114",
+    "text": "Next,",
+    "start": 30.242,
+    "end": 30.538
+   },
+   {
+    "id": "w6-1",
+    "mediaId": "m-a04bb114",
+    "text": "uh,",
+    "start": 30.558,
+    "end": 30.855
+   },
+   {
+    "id": "w6-2",
+    "mediaId": "m-a04bb114",
+    "text": "I'll",
+    "start": 30.875,
+    "end": 31.171
+   },
+   {
+    "id": "w6-3",
+    "mediaId": "m-a04bb114",
+    "text": "open",
+    "start": 31.191,
+    "end": 31.487
+   },
+   {
+    "id": "w6-4",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 31.507,
+    "end": 31.803
+   },
+   {
+    "id": "w6-5",
+    "mediaId": "m-a04bb114",
+    "text": "dot",
+    "start": 31.823,
+    "end": 32.12
+   },
+   {
+    "id": "w6-6",
+    "mediaId": "m-a04bb114",
+    "text": "env",
+    "start": 32.14,
+    "end": 32.436
+   },
+   {
+    "id": "w6-7",
+    "mediaId": "m-a04bb114",
+    "text": "file",
+    "start": 32.456,
+    "end": 32.752
+   },
+   {
+    "id": "w6-8",
+    "mediaId": "m-a04bb114",
+    "text": "and",
+    "start": 32.772,
+    "end": 33.069
+   },
+   {
+    "id": "w6-9",
+    "mediaId": "m-a04bb114",
+    "text": "paste",
+    "start": 33.089,
+    "end": 33.385
+   },
+   {
+    "id": "w6-10",
+    "mediaId": "m-a04bb114",
+    "text": "my",
+    "start": 33.405,
+    "end": 33.701
+   },
+   {
+    "id": "w6-11",
+    "mediaId": "m-a04bb114",
+    "text": "API",
+    "start": 33.721,
+    "end": 34.017
+   },
+   {
+    "id": "w6-12",
+    "mediaId": "m-a04bb114",
+    "text": "key",
+    "start": 34.037,
+    "end": 34.334
+   },
+   {
+    "id": "w6-13",
+    "mediaId": "m-a04bb114",
+    "text": "here.",
+    "start": 34.354,
+    "end": 34.65
+   },
+   {
+    "id": "w7-0",
+    "mediaId": "m-a04bb114",
+    "text": "You",
+    "start": 35.17,
+    "end": 35.427
+   },
+   {
+    "id": "w7-1",
+    "mediaId": "m-a04bb114",
+    "text": "know,",
+    "start": 35.447,
+    "end": 35.703
+   },
+   {
+    "id": "w7-2",
+    "mediaId": "m-a04bb114",
+    "text": "you",
+    "start": 35.723,
+    "end": 35.98
+   },
+   {
+    "id": "w7-3",
+    "mediaId": "m-a04bb114",
+    "text": "should",
+    "start": 36,
+    "end": 36.256
+   },
+   {
+    "id": "w7-4",
+    "mediaId": "m-a04bb114",
+    "text": "never",
+    "start": 36.276,
+    "end": 36.533
+   },
+   {
+    "id": "w7-5",
+    "mediaId": "m-a04bb114",
+    "text": "hard-code",
+    "start": 36.553,
+    "end": 36.809
+   },
+   {
+    "id": "w7-6",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 36.829,
+    "end": 37.086
+   },
+   {
+    "id": "w7-7",
+    "mediaId": "m-a04bb114",
+    "text": "key",
+    "start": 37.106,
+    "end": 37.363
+   },
+   {
+    "id": "w7-8",
+    "mediaId": "m-a04bb114",
+    "text": "in",
+    "start": 37.383,
+    "end": 37.639
+   },
+   {
+    "id": "w7-9",
+    "mediaId": "m-a04bb114",
+    "text": "your",
+    "start": 37.659,
+    "end": 37.916
+   },
+   {
+    "id": "w7-10",
+    "mediaId": "m-a04bb114",
+    "text": "source",
+    "start": 37.936,
+    "end": 38.192
+   },
+   {
+    "id": "w7-11",
+    "mediaId": "m-a04bb114",
+    "text": "code.",
+    "start": 38.212,
+    "end": 38.469
+   },
+   {
+    "id": "w8-0",
+    "mediaId": "m-a04bb114",
+    "text": "And,",
+    "start": 38.889,
+    "end": 39.125
+   },
+   {
+    "id": "w8-1",
+    "mediaId": "m-a04bb114",
+    "text": "um,",
+    "start": 39.145,
+    "end": 39.382
+   },
+   {
+    "id": "w8-2",
+    "mediaId": "m-a04bb114",
+    "text": "please",
+    "start": 39.402,
+    "end": 39.638
+   },
+   {
+    "id": "w8-3",
+    "mediaId": "m-a04bb114",
+    "text": "don't",
+    "start": 39.658,
+    "end": 39.894
+   },
+   {
+    "id": "w8-4",
+    "mediaId": "m-a04bb114",
+    "text": "share",
+    "start": 39.914,
+    "end": 40.151
+   },
+   {
+    "id": "w8-5",
+    "mediaId": "m-a04bb114",
+    "text": "it",
+    "start": 40.171,
+    "end": 40.407
+   },
+   {
+    "id": "w8-6",
+    "mediaId": "m-a04bb114",
+    "text": "on",
+    "start": 40.427,
+    "end": 40.663
+   },
+   {
+    "id": "w8-7",
+    "mediaId": "m-a04bb114",
+    "text": "screen",
+    "start": 40.683,
+    "end": 40.92
+   },
+   {
+    "id": "w8-8",
+    "mediaId": "m-a04bb114",
+    "text": "like",
+    "start": 40.94,
+    "end": 41.176
+   },
+   {
+    "id": "w8-9",
+    "mediaId": "m-a04bb114",
+    "text": "I",
+    "start": 41.196,
+    "end": 41.432
+   },
+   {
+    "id": "w8-10",
+    "mediaId": "m-a04bb114",
+    "text": "just",
+    "start": 41.452,
+    "end": 41.689
+   },
+   {
+    "id": "w8-11",
+    "mediaId": "m-a04bb114",
+    "text": "did.",
+    "start": 41.709,
+    "end": 41.945
+   },
+   {
+    "id": "w9-0",
+    "mediaId": "m-a04bb114",
+    "text": "Now",
+    "start": 42.965,
+    "end": 43.22
+   },
+   {
+    "id": "w9-1",
+    "mediaId": "m-a04bb114",
+    "text": "let's",
+    "start": 43.24,
+    "end": 43.495
+   },
+   {
+    "id": "w9-2",
+    "mediaId": "m-a04bb114",
+    "text": "write",
+    "start": 43.515,
+    "end": 43.77
+   },
+   {
+    "id": "w9-3",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 43.791,
+    "end": 44.046
+   },
+   {
+    "id": "w9-4",
+    "mediaId": "m-a04bb114",
+    "text": "main",
+    "start": 44.066,
+    "end": 44.321
+   },
+   {
+    "id": "w9-5",
+    "mediaId": "m-a04bb114",
+    "text": "script.",
+    "start": 44.341,
+    "end": 44.596
+   },
+   {
+    "id": "w10-0",
+    "mediaId": "m-a04bb114",
+    "text": "We",
+    "start": 44.916,
+    "end": 45.164
+   },
+   {
+    "id": "w10-1",
+    "mediaId": "m-a04bb114",
+    "text": "load",
+    "start": 45.184,
+    "end": 45.432
+   },
+   {
+    "id": "w10-2",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 45.452,
+    "end": 45.7
+   },
+   {
+    "id": "w10-3",
+    "mediaId": "m-a04bb114",
+    "text": "key",
+    "start": 45.72,
+    "end": 45.967
+   },
+   {
+    "id": "w10-4",
+    "mediaId": "m-a04bb114",
+    "text": "with",
+    "start": 45.987,
+    "end": 46.235
+   },
+   {
+    "id": "w10-5",
+    "mediaId": "m-a04bb114",
+    "text": "dotenv,",
+    "start": 46.255,
+    "end": 46.503
+   },
+   {
+    "id": "w10-6",
+    "mediaId": "m-a04bb114",
+    "text": "and",
+    "start": 46.523,
+    "end": 46.771
+   },
+   {
+    "id": "w10-7",
+    "mediaId": "m-a04bb114",
+    "text": "read",
+    "start": 46.791,
+    "end": 47.039
+   },
+   {
+    "id": "w10-8",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 47.059,
+    "end": 47.307
+   },
+   {
+    "id": "w10-9",
+    "mediaId": "m-a04bb114",
+    "text": "notes",
+    "start": 47.327,
+    "end": 47.575
+   },
+   {
+    "id": "w10-10",
+    "mediaId": "m-a04bb114",
+    "text": "file",
+    "start": 47.595,
+    "end": 47.843
+   },
+   {
+    "id": "w10-11",
+    "mediaId": "m-a04bb114",
+    "text": "from",
+    "start": 47.863,
+    "end": 48.11
+   },
+   {
+    "id": "w10-12",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 48.13,
+    "end": 48.378
+   },
+   {
+    "id": "w10-13",
+    "mediaId": "m-a04bb114",
+    "text": "first",
+    "start": 48.398,
+    "end": 48.646
+   },
+   {
+    "id": "w10-14",
+    "mediaId": "m-a04bb114",
+    "text": "argument.",
+    "start": 48.666,
+    "end": 48.914
+   },
+   {
+    "id": "w11-0",
+    "mediaId": "m-a04bb114",
+    "text": "Then",
+    "start": 49.334,
+    "end": 49.563
+   },
+   {
+    "id": "w11-1",
+    "mediaId": "m-a04bb114",
+    "text": "we",
+    "start": 49.583,
+    "end": 49.811
+   },
+   {
+    "id": "w11-2",
+    "mediaId": "m-a04bb114",
+    "text": "call",
+    "start": 49.831,
+    "end": 50.06
+   },
+   {
+    "id": "w11-3",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 50.08,
+    "end": 50.309
+   },
+   {
+    "id": "w11-4",
+    "mediaId": "m-a04bb114",
+    "text": "chat",
+    "start": 50.329,
+    "end": 50.558
+   },
+   {
+    "id": "w11-5",
+    "mediaId": "m-a04bb114",
+    "text": "endpoint",
+    "start": 50.578,
+    "end": 50.806
+   },
+   {
+    "id": "w11-6",
+    "mediaId": "m-a04bb114",
+    "text": "with,",
+    "start": 50.826,
+    "end": 51.055
+   },
+   {
+    "id": "w11-7",
+    "mediaId": "m-a04bb114",
+    "text": "uh,",
+    "start": 51.075,
+    "end": 51.304
+   },
+   {
+    "id": "w11-8",
+    "mediaId": "m-a04bb114",
+    "text": "with",
+    "start": 51.324,
+    "end": 51.553
+   },
+   {
+    "id": "w11-9",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 51.573,
+    "end": 51.801
+   },
+   {
+    "id": "w11-10",
+    "mediaId": "m-a04bb114",
+    "text": "wrong",
+    "start": 51.821,
+    "end": 52.05
+   },
+   {
+    "id": "w12-0",
+    "mediaId": "m-a04bb114",
+    "text": "Sorry,",
+    "start": 52.67,
+    "end": 52.964
+   },
+   {
+    "id": "w12-1",
+    "mediaId": "m-a04bb114",
+    "text": "let",
+    "start": 52.984,
+    "end": 53.278
+   },
+   {
+    "id": "w12-2",
+    "mediaId": "m-a04bb114",
+    "text": "me",
+    "start": 53.298,
+    "end": 53.592
+   },
+   {
+    "id": "w12-3",
+    "mediaId": "m-a04bb114",
+    "text": "say",
+    "start": 53.612,
+    "end": 53.907
+   },
+   {
+    "id": "w12-4",
+    "mediaId": "m-a04bb114",
+    "text": "that",
+    "start": 53.927,
+    "end": 54.221
+   },
+   {
+    "id": "w12-5",
+    "mediaId": "m-a04bb114",
+    "text": "again.",
+    "start": 54.241,
+    "end": 54.535
+   },
+   {
+    "id": "w13-0",
+    "mediaId": "m-a04bb114",
+    "text": "Then",
+    "start": 55.055,
+    "end": 55.314
+   },
+   {
+    "id": "w13-1",
+    "mediaId": "m-a04bb114",
+    "text": "we",
+    "start": 55.334,
+    "end": 55.592
+   },
+   {
+    "id": "w13-2",
+    "mediaId": "m-a04bb114",
+    "text": "call",
+    "start": 55.612,
+    "end": 55.871
+   },
+   {
+    "id": "w13-3",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 55.891,
+    "end": 56.15
+   },
+   {
+    "id": "w13-4",
+    "mediaId": "m-a04bb114",
+    "text": "chat",
+    "start": 56.17,
+    "end": 56.429
+   },
+   {
+    "id": "w13-5",
+    "mediaId": "m-a04bb114",
+    "text": "completions",
+    "start": 56.449,
+    "end": 56.707
+   },
+   {
+    "id": "w13-6",
+    "mediaId": "m-a04bb114",
+    "text": "endpoint",
+    "start": 56.727,
+    "end": 56.986
+   },
+   {
+    "id": "w13-7",
+    "mediaId": "m-a04bb114",
+    "text": "with",
+    "start": 57.006,
+    "end": 57.265
+   },
+   {
+    "id": "w13-8",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 57.285,
+    "end": 57.544
+   },
+   {
+    "id": "w13-9",
+    "mediaId": "m-a04bb114",
+    "text": "model",
+    "start": 57.564,
+    "end": 57.822
+   },
+   {
+    "id": "w13-10",
+    "mediaId": "m-a04bb114",
+    "text": "name",
+    "start": 57.843,
+    "end": 58.101
+   },
+   {
+    "id": "w13-11",
+    "mediaId": "m-a04bb114",
+    "text": "and",
+    "start": 58.121,
+    "end": 58.38
+   },
+   {
+    "id": "w13-12",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 58.4,
+    "end": 58.659
+   },
+   {
+    "id": "w13-13",
+    "mediaId": "m-a04bb114",
+    "text": "short",
+    "start": 58.679,
+    "end": 58.938
+   },
+   {
+    "id": "w13-14",
+    "mediaId": "m-a04bb114",
+    "text": "system",
+    "start": 58.958,
+    "end": 59.216
+   },
+   {
+    "id": "w13-15",
+    "mediaId": "m-a04bb114",
+    "text": "prompt.",
+    "start": 59.236,
+    "end": 59.495
+   },
+   {
+    "id": "w14-0",
+    "mediaId": "m-a04bb114",
+    "text": "Finally,",
+    "start": 59.915,
+    "end": 60.231
+   },
+   {
+    "id": "w14-1",
+    "mediaId": "m-a04bb114",
+    "text": "we",
+    "start": 60.251,
+    "end": 60.566
+   },
+   {
+    "id": "w14-2",
+    "mediaId": "m-a04bb114",
+    "text": "print",
+    "start": 60.586,
+    "end": 60.902
+   },
+   {
+    "id": "w14-3",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 60.922,
+    "end": 61.237
+   },
+   {
+    "id": "w14-4",
+    "mediaId": "m-a04bb114",
+    "text": "summary.",
+    "start": 61.257,
+    "end": 61.573
+   },
+   {
+    "id": "w15-0",
+    "mediaId": "m-a04bb114",
+    "text": "Let's,",
+    "start": 62.593,
+    "end": 62.848
+   },
+   {
+    "id": "w15-1",
+    "mediaId": "m-a04bb114",
+    "text": "um,",
+    "start": 62.868,
+    "end": 63.123
+   },
+   {
+    "id": "w15-2",
+    "mediaId": "m-a04bb114",
+    "text": "try",
+    "start": 63.143,
+    "end": 63.398
+   },
+   {
+    "id": "w15-3",
+    "mediaId": "m-a04bb114",
+    "text": "it",
+    "start": 63.418,
+    "end": 63.673
+   },
+   {
+    "id": "w15-4",
+    "mediaId": "m-a04bb114",
+    "text": "on",
+    "start": 63.693,
+    "end": 63.948
+   },
+   {
+    "id": "w15-5",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 63.968,
+    "end": 64.223
+   },
+   {
+    "id": "w15-6",
+    "mediaId": "m-a04bb114",
+    "text": "real",
+    "start": 64.243,
+    "end": 64.498
+   },
+   {
+    "id": "w15-7",
+    "mediaId": "m-a04bb114",
+    "text": "meeting.",
+    "start": 64.518,
+    "end": 64.773
+   },
+   {
+    "id": "w16-0",
+    "mediaId": "m-a04bb114",
+    "text": "And",
+    "start": 65.293,
+    "end": 65.574
+   },
+   {
+    "id": "w16-1",
+    "mediaId": "m-a04bb114",
+    "text": "there",
+    "start": 65.594,
+    "end": 65.876
+   },
+   {
+    "id": "w16-2",
+    "mediaId": "m-a04bb114",
+    "text": "it",
+    "start": 65.896,
+    "end": 66.177
+   },
+   {
+    "id": "w16-3",
+    "mediaId": "m-a04bb114",
+    "text": "is:",
+    "start": 66.197,
+    "end": 66.479
+   },
+   {
+    "id": "w16-4",
+    "mediaId": "m-a04bb114",
+    "text": "three",
+    "start": 66.499,
+    "end": 66.78
+   },
+   {
+    "id": "w16-5",
+    "mediaId": "m-a04bb114",
+    "text": "bullet",
+    "start": 66.8,
+    "end": 67.081
+   },
+   {
+    "id": "w16-6",
+    "mediaId": "m-a04bb114",
+    "text": "points",
+    "start": 67.101,
+    "end": 67.383
+   },
+   {
+    "id": "w16-7",
+    "mediaId": "m-a04bb114",
+    "text": "and",
+    "start": 67.403,
+    "end": 67.684
+   },
+   {
+    "id": "w16-8",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 67.704,
+    "end": 67.985
+   },
+   {
+    "id": "w16-9",
+    "mediaId": "m-a04bb114",
+    "text": "list",
+    "start": 68.005,
+    "end": 68.287
+   },
+   {
+    "id": "w16-10",
+    "mediaId": "m-a04bb114",
+    "text": "of",
+    "start": 68.307,
+    "end": 68.588
+   },
+   {
+    "id": "w16-11",
+    "mediaId": "m-a04bb114",
+    "text": "action",
+    "start": 68.608,
+    "end": 68.89
+   },
+   {
+    "id": "w16-12",
+    "mediaId": "m-a04bb114",
+    "text": "items.",
+    "start": 68.91,
+    "end": 69.191
+   },
+   {
+    "id": "w17-0",
+    "mediaId": "m-a04bb114",
+    "text": "That",
+    "start": 69.611,
+    "end": 69.905
+   },
+   {
+    "id": "w17-1",
+    "mediaId": "m-a04bb114",
+    "text": "took",
+    "start": 69.925,
+    "end": 70.219
+   },
+   {
+    "id": "w17-2",
+    "mediaId": "m-a04bb114",
+    "text": "about,",
+    "start": 70.239,
+    "end": 70.534
+   },
+   {
+    "id": "w17-3",
+    "mediaId": "m-a04bb114",
+    "text": "uh,",
+    "start": 70.553,
+    "end": 70.848
+   },
+   {
+    "id": "w17-4",
+    "mediaId": "m-a04bb114",
+    "text": "four",
+    "start": 70.868,
+    "end": 71.162
+   },
+   {
+    "id": "w17-5",
+    "mediaId": "m-a04bb114",
+    "text": "seconds,",
+    "start": 71.182,
+    "end": 71.476
+   },
+   {
+    "id": "w17-6",
+    "mediaId": "m-a04bb114",
+    "text": "which",
+    "start": 71.496,
+    "end": 71.79
+   },
+   {
+    "id": "w17-7",
+    "mediaId": "m-a04bb114",
+    "text": "is",
+    "start": 71.81,
+    "end": 72.104
+   },
+   {
+    "id": "w17-8",
+    "mediaId": "m-a04bb114",
+    "text": "fast",
+    "start": 72.124,
+    "end": 72.419
+   },
+   {
+    "id": "w17-9",
+    "mediaId": "m-a04bb114",
+    "text": "enough",
+    "start": 72.439,
+    "end": 72.733
+   },
+   {
+    "id": "w17-10",
+    "mediaId": "m-a04bb114",
+    "text": "for",
+    "start": 72.753,
+    "end": 73.047
+   },
+   {
+    "id": "w17-11",
+    "mediaId": "m-a04bb114",
+    "text": "me.",
+    "start": 73.067,
+    "end": 73.361
+   },
+   {
+    "id": "w18-0",
+    "mediaId": "m-a04bb114",
+    "text": "One",
+    "start": 74.381,
+    "end": 74.664
+   },
+   {
+    "id": "w18-1",
+    "mediaId": "m-a04bb114",
+    "text": "more",
+    "start": 74.684,
+    "end": 74.968
+   },
+   {
+    "id": "w18-2",
+    "mediaId": "m-a04bb114",
+    "text": "thing.",
+    "start": 74.988,
+    "end": 75.271
+   },
+   {
+    "id": "w18-3",
+    "mediaId": "m-a04bb114",
+    "text": "If",
+    "start": 75.291,
+    "end": 75.574
+   },
+   {
+    "id": "w18-4",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 75.594,
+    "end": 75.878
+   },
+   {
+    "id": "w18-5",
+    "mediaId": "m-a04bb114",
+    "text": "file",
+    "start": 75.898,
+    "end": 76.181
+   },
+   {
+    "id": "w18-6",
+    "mediaId": "m-a04bb114",
+    "text": "is",
+    "start": 76.201,
+    "end": 76.484
+   },
+   {
+    "id": "w18-7",
+    "mediaId": "m-a04bb114",
+    "text": "missing,",
+    "start": 76.504,
+    "end": 76.788
+   },
+   {
+    "id": "w18-8",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 76.808,
+    "end": 77.091
+   },
+   {
+    "id": "w18-9",
+    "mediaId": "m-a04bb114",
+    "text": "script",
+    "start": 77.111,
+    "end": 77.395
+   },
+   {
+    "id": "w18-10",
+    "mediaId": "m-a04bb114",
+    "text": "crashes",
+    "start": 77.415,
+    "end": 77.698
+   },
+   {
+    "id": "w18-11",
+    "mediaId": "m-a04bb114",
+    "text": "with",
+    "start": 77.718,
+    "end": 78.001
+   },
+   {
+    "id": "w18-12",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 78.021,
+    "end": 78.305
+   },
+   {
+    "id": "w18-13",
+    "mediaId": "m-a04bb114",
+    "text": "pretty",
+    "start": 78.325,
+    "end": 78.608
+   },
+   {
+    "id": "w18-14",
+    "mediaId": "m-a04bb114",
+    "text": "ugly",
+    "start": 78.628,
+    "end": 78.911
+   },
+   {
+    "id": "w18-15",
+    "mediaId": "m-a04bb114",
+    "text": "stack",
+    "start": 78.931,
+    "end": 79.215
+   },
+   {
+    "id": "w18-16",
+    "mediaId": "m-a04bb114",
+    "text": "trace.",
+    "start": 79.235,
+    "end": 79.518
+   },
+   {
+    "id": "w19-0",
+    "mediaId": "m-a04bb114",
+    "text": "So",
+    "start": 79.938,
+    "end": 80.204
+   },
+   {
+    "id": "w19-1",
+    "mediaId": "m-a04bb114",
+    "text": "let's",
+    "start": 80.224,
+    "end": 80.491
+   },
+   {
+    "id": "w19-2",
+    "mediaId": "m-a04bb114",
+    "text": "add",
+    "start": 80.511,
+    "end": 80.777
+   },
+   {
+    "id": "w19-3",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 80.797,
+    "end": 81.064
+   },
+   {
+    "id": "w19-4",
+    "mediaId": "m-a04bb114",
+    "text": "small",
+    "start": 81.084,
+    "end": 81.35
+   },
+   {
+    "id": "w19-5",
+    "mediaId": "m-a04bb114",
+    "text": "error",
+    "start": 81.37,
+    "end": 81.637
+   },
+   {
+    "id": "w19-6",
+    "mediaId": "m-a04bb114",
+    "text": "handler",
+    "start": 81.657,
+    "end": 81.923
+   },
+   {
+    "id": "w19-7",
+    "mediaId": "m-a04bb114",
+    "text": "that",
+    "start": 81.943,
+    "end": 82.21
+   },
+   {
+    "id": "w19-8",
+    "mediaId": "m-a04bb114",
+    "text": "prints",
+    "start": 82.23,
+    "end": 82.496
+   },
+   {
+    "id": "w19-9",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 82.516,
+    "end": 82.783
+   },
+   {
+    "id": "w19-10",
+    "mediaId": "m-a04bb114",
+    "text": "friendly",
+    "start": 82.803,
+    "end": 83.069
+   },
+   {
+    "id": "w19-11",
+    "mediaId": "m-a04bb114",
+    "text": "message",
+    "start": 83.089,
+    "end": 83.356
+   },
+   {
+    "id": "w19-12",
+    "mediaId": "m-a04bb114",
+    "text": "instead.",
+    "start": 83.376,
+    "end": 83.642
+   },
+   {
+    "id": "w20-0",
+    "mediaId": "m-a04bb114",
+    "text": "And",
+    "start": 84.062,
+    "end": 84.314
+   },
+   {
+    "id": "w20-1",
+    "mediaId": "m-a04bb114",
+    "text": "now,",
+    "start": 84.334,
+    "end": 84.586
+   },
+   {
+    "id": "w20-2",
+    "mediaId": "m-a04bb114",
+    "text": "when",
+    "start": 84.606,
+    "end": 84.858
+   },
+   {
+    "id": "w20-3",
+    "mediaId": "m-a04bb114",
+    "text": "I",
+    "start": 84.878,
+    "end": 85.13
+   },
+   {
+    "id": "w20-4",
+    "mediaId": "m-a04bb114",
+    "text": "run",
+    "start": 85.15,
+    "end": 85.402
+   },
+   {
+    "id": "w20-5",
+    "mediaId": "m-a04bb114",
+    "text": "it",
+    "start": 85.422,
+    "end": 85.674
+   },
+   {
+    "id": "w20-6",
+    "mediaId": "m-a04bb114",
+    "text": "again",
+    "start": 85.694,
+    "end": 85.946
+   },
+   {
+    "id": "w20-7",
+    "mediaId": "m-a04bb114",
+    "text": "with",
+    "start": 85.966,
+    "end": 86.218
+   },
+   {
+    "id": "w20-8",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 86.238,
+    "end": 86.489
+   },
+   {
+    "id": "w20-9",
+    "mediaId": "m-a04bb114",
+    "text": "wrong",
+    "start": 86.509,
+    "end": 86.761
+   },
+   {
+    "id": "w20-10",
+    "mediaId": "m-a04bb114",
+    "text": "file",
+    "start": 86.781,
+    "end": 87.033
+   },
+   {
+    "id": "w20-11",
+    "mediaId": "m-a04bb114",
+    "text": "name,",
+    "start": 87.053,
+    "end": 87.305
+   },
+   {
+    "id": "w20-12",
+    "mediaId": "m-a04bb114",
+    "text": "we",
+    "start": 87.325,
+    "end": 87.577
+   },
+   {
+    "id": "w20-13",
+    "mediaId": "m-a04bb114",
+    "text": "get",
+    "start": 87.597,
+    "end": 87.849
+   },
+   {
+    "id": "w20-14",
+    "mediaId": "m-a04bb114",
+    "text": "one",
+    "start": 87.869,
+    "end": 88.121
+   },
+   {
+    "id": "w20-15",
+    "mediaId": "m-a04bb114",
+    "text": "clear",
+    "start": 88.141,
+    "end": 88.393
+   },
+   {
+    "id": "w20-16",
+    "mediaId": "m-a04bb114",
+    "text": "line.",
+    "start": 88.413,
+    "end": 88.665
+   },
+   {
+    "id": "w21-0",
+    "mediaId": "m-a04bb114",
+    "text": "Let",
+    "start": 89.685,
+    "end": 89.949
+   },
+   {
+    "id": "w21-1",
+    "mediaId": "m-a04bb114",
+    "text": "me",
+    "start": 89.969,
+    "end": 90.233
+   },
+   {
+    "id": "w21-2",
+    "mediaId": "m-a04bb114",
+    "text": "quickly",
+    "start": 90.253,
+    "end": 90.517
+   },
+   {
+    "id": "w21-3",
+    "mediaId": "m-a04bb114",
+    "text": "recap.",
+    "start": 90.537,
+    "end": 90.801
+   },
+   {
+    "id": "w22-0",
+    "mediaId": "m-a04bb114",
+    "text": "We",
+    "start": 91.121,
+    "end": 91.411
+   },
+   {
+    "id": "w22-1",
+    "mediaId": "m-a04bb114",
+    "text": "installed",
+    "start": 91.431,
+    "end": 91.722
+   },
+   {
+    "id": "w22-2",
+    "mediaId": "m-a04bb114",
+    "text": "two",
+    "start": 91.742,
+    "end": 92.032
+   },
+   {
+    "id": "w22-3",
+    "mediaId": "m-a04bb114",
+    "text": "packages,",
+    "start": 92.052,
+    "end": 92.343
+   },
+   {
+    "id": "w22-4",
+    "mediaId": "m-a04bb114",
+    "text": "stored",
+    "start": 92.363,
+    "end": 92.653
+   },
+   {
+    "id": "w22-5",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 92.673,
+    "end": 92.964
+   },
+   {
+    "id": "w22-6",
+    "mediaId": "m-a04bb114",
+    "text": "key",
+    "start": 92.984,
+    "end": 93.274
+   },
+   {
+    "id": "w22-7",
+    "mediaId": "m-a04bb114",
+    "text": "in",
+    "start": 93.294,
+    "end": 93.585
+   },
+   {
+    "id": "w22-8",
+    "mediaId": "m-a04bb114",
+    "text": "a",
+    "start": 93.605,
+    "end": 93.895
+   },
+   {
+    "id": "w22-9",
+    "mediaId": "m-a04bb114",
+    "text": "dot",
+    "start": 93.915,
+    "end": 94.206
+   },
+   {
+    "id": "w22-10",
+    "mediaId": "m-a04bb114",
+    "text": "env",
+    "start": 94.226,
+    "end": 94.516
+   },
+   {
+    "id": "w22-11",
+    "mediaId": "m-a04bb114",
+    "text": "file,",
+    "start": 94.536,
+    "end": 94.827
+   },
+   {
+    "id": "w22-12",
+    "mediaId": "m-a04bb114",
+    "text": "and",
+    "start": 94.847,
+    "end": 95.137
+   },
+   {
+    "id": "w22-13",
+    "mediaId": "m-a04bb114",
+    "text": "called",
+    "start": 95.157,
+    "end": 95.448
+   },
+   {
+    "id": "w22-14",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 95.468,
+    "end": 95.758
+   },
+   {
+    "id": "w22-15",
+    "mediaId": "m-a04bb114",
+    "text": "chat",
+    "start": 95.778,
+    "end": 96.069
+   },
+   {
+    "id": "w22-16",
+    "mediaId": "m-a04bb114",
+    "text": "completions",
+    "start": 96.089,
+    "end": 96.379
+   },
+   {
+    "id": "w22-17",
+    "mediaId": "m-a04bb114",
+    "text": "endpoint",
+    "start": 96.399,
+    "end": 96.69
+   },
+   {
+    "id": "w22-18",
+    "mediaId": "m-a04bb114",
+    "text": "with",
+    "start": 96.71,
+    "end": 97
+   },
+   {
+    "id": "w22-19",
+    "mediaId": "m-a04bb114",
+    "text": "our",
+    "start": 97.02,
+    "end": 97.311
+   },
+   {
+    "id": "w22-20",
+    "mediaId": "m-a04bb114",
+    "text": "notes.",
+    "start": 97.331,
+    "end": 97.621
+   },
+   {
+    "id": "w23-0",
+    "mediaId": "m-a04bb114",
+    "text": "In",
+    "start": 98.441,
+    "end": 98.725
+   },
+   {
+    "id": "w23-1",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 98.745,
+    "end": 99.03
+   },
+   {
+    "id": "w23-2",
+    "mediaId": "m-a04bb114",
+    "text": "next",
+    "start": 99.05,
+    "end": 99.334
+   },
+   {
+    "id": "w23-3",
+    "mediaId": "m-a04bb114",
+    "text": "video,",
+    "start": 99.354,
+    "end": 99.638
+   },
+   {
+    "id": "w23-4",
+    "mediaId": "m-a04bb114",
+    "text": "I'll",
+    "start": 99.658,
+    "end": 99.943
+   },
+   {
+    "id": "w23-5",
+    "mediaId": "m-a04bb114",
+    "text": "add",
+    "start": 99.963,
+    "end": 100.247
+   },
+   {
+    "id": "w23-6",
+    "mediaId": "m-a04bb114",
+    "text": "streaming,",
+    "start": 100.267,
+    "end": 100.551
+   },
+   {
+    "id": "w23-7",
+    "mediaId": "m-a04bb114",
+    "text": "so",
+    "start": 100.571,
+    "end": 100.856
+   },
+   {
+    "id": "w23-8",
+    "mediaId": "m-a04bb114",
+    "text": "the",
+    "start": 100.876,
+    "end": 101.16
+   },
+   {
+    "id": "w23-9",
+    "mediaId": "m-a04bb114",
+    "text": "summary",
+    "start": 101.18,
+    "end": 101.464
+   },
+   {
+    "id": "w23-10",
+    "mediaId": "m-a04bb114",
+    "text": "shows",
+    "start": 101.484,
+    "end": 101.769
+   },
+   {
+    "id": "w23-11",
+    "mediaId": "m-a04bb114",
+    "text": "up",
+    "start": 101.789,
+    "end": 102.073
+   },
+   {
+    "id": "w23-12",
+    "mediaId": "m-a04bb114",
+    "text": "word",
+    "start": 102.093,
+    "end": 102.377
+   },
+   {
+    "id": "w23-13",
+    "mediaId": "m-a04bb114",
+    "text": "by",
+    "start": 102.397,
+    "end": 102.682
+   },
+   {
+    "id": "w23-14",
+    "mediaId": "m-a04bb114",
+    "text": "word.",
+    "start": 102.702,
+    "end": 102.986
+   },
+   {
+    "id": "w24-0",
+    "mediaId": "m-a04bb114",
+    "text": "Thanks",
+    "start": 103.406,
+    "end": 103.723
+   },
+   {
+    "id": "w24-1",
+    "mediaId": "m-a04bb114",
+    "text": "for",
+    "start": 103.743,
+    "end": 104.061
+   },
+   {
+    "id": "w24-2",
+    "mediaId": "m-a04bb114",
+    "text": "watching,",
+    "start": 104.081,
+    "end": 104.398
+   },
+   {
+    "id": "w24-3",
+    "mediaId": "m-a04bb114",
+    "text": "and,",
+    "start": 104.418,
+    "end": 104.735
+   },
+   {
+    "id": "w24-4",
+    "mediaId": "m-a04bb114",
+    "text": "you",
+    "start": 104.755,
+    "end": 105.073
+   },
+   {
+    "id": "w24-5",
+    "mediaId": "m-a04bb114",
+    "text": "know,",
+    "start": 105.093,
+    "end": 105.41
+   },
+   {
+    "id": "w24-6",
+    "mediaId": "m-a04bb114",
+    "text": "see",
+    "start": 105.43,
+    "end": 105.747
+   },
+   {
+    "id": "w24-7",
+    "mediaId": "m-a04bb114",
+    "text": "you",
+    "start": 105.767,
+    "end": 106.084
+   },
+   {
+    "id": "w24-8",
+    "mediaId": "m-a04bb114",
+    "text": "next",
+    "start": 106.104,
+    "end": 106.422
+   },
+   {
+    "id": "w24-9",
+    "mediaId": "m-a04bb114",
+    "text": "time.",
+    "start": 106.442,
+    "end": 106.759
+   }
+  ],
+  "captionBreaks": [],
+  "masks": [],
+  "effects": [
+   {
+    "id": "fx-0e9f2d26",
+    "kind": "anim2d",
+    "start": 1,
+    "end": 5,
+    "pluginId": "4d96c51f9bae759c15e4eb690e53e3dd",
+    "anchorIds": [],
+    "params": {
+     "template": "title-pop",
+     "title": "Title card",
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.6,
+      "h": 0.18
+     },
+     "layers": [
+      {
+       "component": "4d96c51f9bae759c15e4eb690e53e3dd",
+       "params": {
+        "mode": "pop"
+       }
+      }
+     ],
+     "sounds": []
+    }
+   },
+   {
+    "id": "fx-d1969fba",
+    "kind": "anim2d",
+    "start": 62,
+    "end": 66,
+    "pluginId": "b26d29532ba1dcadebe744835a805e2b",
+    "anchorIds": [],
+    "params": {
+     "template": "arrow-whoosh",
+     "title": "Arrow",
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.2,
+      "h": 0.12
+     },
+     "layers": [
+      {
+       "component": "b26d29532ba1dcadebe744835a805e2b",
+       "params": {
+        "motion": "fly",
+        "from": "left"
+       }
+      }
+     ],
+     "sounds": []
+    }
+   },
+   {
+    "id": "fx-d832298c",
+    "kind": "scene3d",
+    "start": 20,
+    "end": 26,
+    "pluginId": "f578834bf8a7b02c5871b1c3349a23e5",
+    "anchorIds": [],
+    "params": {
+     "title": "Desk screen",
+     "template": "desk-reveal",
+     "params": {
+      "scene": "desk",
+      "motion": "reveal",
+      "tilt": 7,
+      "ramp": 1.2
+     }
+    }
+   },
+   {
+    "id": "fx-8e871b0b",
+    "kind": "anim3d",
+    "start": 90,
+    "end": 94,
+    "pluginId": "b3cc83b2bddf60d44ad6de78daa902a3",
+    "anchorIds": [],
+    "params": {
+     "title": "Mascot points",
+     "template": "mascot-point",
+     "params": {
+      "action": "point",
+      "from": "left",
+      "color": "#ffb020",
+      "height": 0.35,
+      "walk": 1.6
+     },
+     "box": {
+      "cx": 0.6,
+      "cy": 0.45,
+      "w": 0.25,
+      "h": 0.25
+     }
+    }
+   }
+  ],
+  "anchors": [],
+  "suggestions": [],
+  "plugins": [
+   {
+    "hash": "4d96c51f9bae759c15e4eb690e53e3dd",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "title",
+     "version": 2,
+     "schema": 2,
+     "category": "text",
+     "preview": {
+      "t": 1,
+      "box": {
+       "w": 0.6,
+       "h": 0.18
+      }
+     },
+     "kind": "visual",
+     "name": "動畫字卡",
+     "description": "在框的中央出現標題文字：彈出、打字機、逐字跳入或漸層，最多三行",
+     "tags": [
+      "字卡",
+      "標題",
+      "文字"
+     ],
+     "params": {
+      "text": {
+       "type": "text",
+       "maxLength": 40,
+       "default": "Key point!",
+       "label": "文字"
+      },
+      "mode": {
+       "type": "enum",
+       "values": [
+        "pop",
+        "typewriter",
+        "bounce",
+        "gradient"
+       ],
+       "labels": [
+        "彈出",
+        "打字機",
+        "逐字跳入",
+        "漸層"
+       ],
+       "default": "pop",
+       "label": "效果"
+      },
+      "font": {
+       "type": "font",
+       "default": "sans",
+       "label": "字型"
+      },
+      "size": {
+       "type": "number",
+       "min": 24,
+       "max": 200,
+       "step": 2,
+       "default": 96,
+       "label": "字級"
+      },
+      "color": {
+       "type": "color",
+       "role": "primary",
+       "default": "#ffffff",
+       "label": "顏色"
+      },
+      "accent": {
+       "type": "color",
+       "role": "secondary",
+       "default": "#ffd400",
+       "label": "漸層第二色"
+      },
+      "outline": {
+       "type": "color",
+       "role": "outline",
+       "default": "#000000",
+       "label": "描邊顏色"
+      },
+      "outlineWidth": {
+       "type": "number",
+       "min": 0,
+       "max": 30,
+       "step": 1,
+       "default": 10,
+       "label": "描邊粗細"
+      },
+      "inDur": {
+       "type": "duration",
+       "min": 0.1,
+       "max": 3,
+       "default": 0.5,
+       "label": "進場秒數"
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box, cx = b.x + b.w / 2, cy = b.y + b.h / 2, fade = clamp((env.duration - t) / 0.3, 0, 1);\n  const lines = p.text.split('\\n').slice(0, 3), lh = p.size * 1.25;\n  const style = {size: p.size, font: p.font, weight: 900, color: p.color, outline: p.outline, outlineWidth: p.outlineWidth,\n    shadow: {color: '#00000099', blur: 14, x: 0, y: 6}};\n  if (p.mode === 'gradient') style.gradient = {type: 'linear', x0: 0, y0: -p.size / 2, x1: 0, y1: p.size / 2, stops: [[0, p.color], [1, p.accent]]};\n  const total = lines.reduce((n, l) => n + [...l].length, 0);\n  const shown = p.mode === 'typewriter' ? Math.floor(clamp(t / p.inDur, 0, 1) * total) : total;\n  let typed = 0;  // 打字機：前面幾行的字數\n  g.save(); g.alpha(fade);\n  for (let i = 0; i < lines.length; i++) {\n    const chars = [...lines[i]], y = cy + (i - (lines.length - 1) / 2) * lh;\n    if (p.mode === 'typewriter') {\n      const n = clamp(shown - typed, 0, chars.length); typed += chars.length;\n      if (n <= 0) continue;\n      const full = g.measure(lines[i], style), part = chars.slice(0, n).join('');\n      g.text(part, cx - full / 2, y, {...style, align: 'left'});\n      if (n < chars.length || (shown >= total && i === lines.length - 1 && Math.floor(t * 2) % 2 === 0)) {\n        g.begin(); g.rect(cx - full / 2 + g.measure(part, style) + 6, y - p.size * 0.45, p.size * 0.08, p.size * 0.9); g.fill({color: p.color});\n      }\n    } else if (p.mode === 'bounce') {\n      let x = cx - g.measure(lines[i], style) / 2;\n      for (let k = 0; k < chars.length; k++) {\n        const w = g.measure(chars[k], style), local = clamp((t - (k + i * 4) * 0.06) / 0.5, 0, 1);\n        if (local > 0) g.text(chars[k], x + w / 2, y - (1 - ease.outBounce(local)) * p.size * 1.2, {...style, alpha: clamp(local * 3, 0, 1)});\n        x += w;\n      }\n    } else {\n      const local = clamp((t - i * 0.1) / p.inDur, 0, 1);\n      if (local <= 0) continue;\n      const s = p.mode === 'pop' ? ease.outBack(local) : lerp(0.85, 1, ease.outCubic(local));\n      g.save(); g.translate(cx, y); g.scale(s, s);\n      if (p.mode === 'pop') g.rotate((1 - local) * -0.12);\n      g.text(lines[i], 0, 0, {...style, alpha: p.mode === 'pop' ? 1 : ease.outCubic(local)});\n      g.restore();\n    }\n  }\n  g.restore();\n}"
+    }
+   },
+   {
+    "hash": "b26d29532ba1dcadebe744835a805e2b",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "arrow",
+     "version": 2,
+     "schema": 2,
+     "category": "pointer",
+     "preview": {
+      "t": 1,
+      "box": {
+       "w": 0.2,
+       "h": 0.12
+      }
+     },
+     "kind": "visual",
+     "name": "箭頭",
+     "description": "從框外某個方向畫出、飛入或彈入一支箭頭，尖端指向框的邊緣或角",
+     "tags": [
+      "指向",
+      "箭頭"
+     ],
+     "params": {
+      "from": {
+       "type": "direction",
+       "default": "left",
+       "label": "從哪邊來"
+      },
+      "motion": {
+       "type": "enum",
+       "values": [
+        "draw",
+        "fly",
+        "bounce"
+       ],
+       "labels": [
+        "畫出",
+        "飛入",
+        "彈入"
+       ],
+       "default": "draw",
+       "label": "進場"
+      },
+      "color": {
+       "type": "color",
+       "role": "primary",
+       "default": "#ff3b30",
+       "label": "顏色"
+      },
+      "width": {
+       "type": "number",
+       "min": 4,
+       "max": 40,
+       "step": 1,
+       "default": 12,
+       "label": "粗細"
+      },
+      "length": {
+       "type": "number",
+       "min": 60,
+       "max": 800,
+       "step": 10,
+       "default": 220,
+       "label": "長度"
+      },
+      "inDur": {
+       "type": "duration",
+       "min": 0.1,
+       "max": 3,
+       "default": 0.6,
+       "label": "進場秒數"
+      },
+      "shadow": {
+       "type": "boolean",
+       "default": true,
+       "label": "陰影"
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box, gap = 12;\n  // 方向表用兩個陣列：top 是禁用的屬性名（瀏覽器頂層視窗），不能當物件的鍵\n  const names = ['left', 'right', 'top', 'bottom', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];\n  const vecs = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];\n  const d = vecs[Math.max(0, names.indexOf(p.from))], n = Math.hypot(d[0], d[1]), dx = d[0] / n, dy = d[1] / n;\n  // 尖端：框上朝來向的那一點（邊的中點或角），往外留一點空隙\n  const tipX = b.x + b.w * (0.5 + d[0] * 0.5) + dx * gap, tipY = b.y + b.h * (0.5 + d[1] * 0.5) + dy * gap;\n  const u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);\n  let ox = 0, oy = 0, s = 1, prog = 1;\n  if (p.motion === 'draw') prog = ease.outCubic(u);\n  else if (p.motion === 'fly') { const k = (1 - ease.outCubic(u)) * p.length * 1.5; ox = dx * k; oy = dy * k; }\n  else { s = ease.outBack(u); if (u >= 1) { const k = Math.sin((t - p.inDur) * 7) * 8; ox = dx * k; oy = dy * k; } }\n  if (s <= 0.001) return;\n  const head = p.width * 2.8, px = -dy, py = dx;\n  g.save(); g.alpha(fade); g.translate(tipX + ox, tipY + oy); g.scale(s, s);\n  if (p.shadow) g.glow({color: '#00000080', blur: 10});\n  g.begin(); g.moveTo(dx * p.length, dy * p.length); g.lineTo(dx * head * 0.6, dy * head * 0.6);\n  g.stroke({color: p.color, width: p.width, cap: 'round', progress: prog});\n  const hs = p.motion === 'draw' ? ease.outBack(clamp((u - 0.75) / 0.25, 0, 1)) : 1;\n  if (hs > 0.001) {\n    g.begin(); g.moveTo(0, 0);\n    g.lineTo((dx * head + px * head * 0.6) * hs, (dy * head + py * head * 0.6) * hs);\n    g.lineTo((dx * head - px * head * 0.6) * hs, (dy * head - py * head * 0.6) * hs);\n    g.close(); g.fill({color: p.color});\n  }\n  g.restore();\n}"
+    }
+   },
+   {
+    "hash": "f578834bf8a7b02c5871b1c3349a23e5",
+    "kind": "3d",
+    "source": "builtin",
+    "component": {
+     "id": "desk-screen",
+     "kind": "3d",
+     "effectKind": "scene3d",
+     "name": "Screen in a scene",
+     "description": "The video plays on a screen in a 3D scene (desk, classroom board or studio); starts and ends full-frame so it cuts in seamlessly",
+     "params": {
+      "scene": {
+       "type": "enum",
+       "values": [
+        "desk",
+        "classroom",
+        "studio"
+       ],
+       "labels": [
+        "Wooden desk",
+        "Classroom board",
+        "Studio"
+       ],
+       "default": "desk",
+       "label": "Scene"
+      },
+      "motion": {
+       "type": "enum",
+       "values": [
+        "reveal",
+        "push",
+        "orbit"
+       ],
+       "labels": [
+        "Pull back and return",
+        "Slow push in",
+        "Orbit"
+       ],
+       "default": "reveal",
+       "label": "Camera (no keyframes)"
+      },
+      "tilt": {
+       "type": "number",
+       "min": 0,
+       "max": 20,
+       "step": 1,
+       "default": 7,
+       "label": "Screen tilt (°)"
+      },
+      "ramp": {
+       "type": "duration",
+       "min": 0.3,
+       "max": 3,
+       "default": 1.2,
+       "label": "In/out (sec)"
+      }
+     },
+     "code": "'use strict';\r\n/** 3D 場景的鏡頭關鍵幀內插（spec §5.8；經典腳本，全域 CAMERA3D，串在場景插件前面送進沙盒，Vitest 用 vm 測）。\r\n *  關鍵幀 {t（相對區段開頭的秒數）, position [x,y,z], target [x,y,z]（看向的點）, fov（垂直視角，度）}；\r\n *  兩個關鍵幀之間用 smoothstep（慢進慢出），第一個之前停在第一個、最後一個之後停在最後一個。 */\r\nconst CAMERA3D = (() => {\r\n  /** 慢進慢出 */\r\n  const smooth = (u) => { const x = Math.min(1, Math.max(0, u)); return x * x * (3 - 2 * x); };\r\n  /** 向量線性內插 */\r\n  const mix = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);\r\n\r\n  /** 時間 t 的鏡頭；沒有關鍵幀回 null */\r\n  function cameraAt(keys, t) {\r\n    if (!keys || !keys.length) return null;\r\n    const ks = [...keys].sort((a, b) => a.t - b.t);\r\n    const pick = (k) => ({ position: [...k.position], target: [...k.target], fov: k.fov });\r\n    if (t <= ks[0].t) return pick(ks[0]);\r\n    for (let i = 1; i < ks.length; i++) {\r\n      const a = ks[i - 1], b = ks[i];\r\n      if (t < b.t) {\r\n        const k = smooth((t - a.t) / (b.t - a.t));\r\n        return { position: mix(a.position, b.position, k), target: mix(a.target, b.target, k), fov: a.fov + (b.fov - a.fov) * k };\r\n      }\r\n    }\r\n    return pick(ks[ks.length - 1]);\r\n  }\r\n\r\n  return { cameraAt };\r\n})();\r\n\n;\n// 內建 3D 範本「Screen in a scene」（spec §5.8）：螢幕播當格畫面（V1），放在三種程式畫的場景裡：\r\n//   desk（木紋桌上的螢幕）、classroom（教室黑板，影片就是板面）、studio（攝影棚，螢幕立在架上、聚光）。\r\n// 場景全部用程式畫（沒有外部素材，開發者 2026-10-27 決定）；桌上螢幕移植自 spikes/export-bench/src/scene3d.ts。\r\n// 三個場景的螢幕位置、大小相同，運鏡共用。頭尾接回滿版：區段開頭與結尾鏡頭正對螢幕、螢幕剛好填滿畫面。\r\n// 鏡頭：有鏡頭關鍵幀（env.params.cameraKeys，前面串了 cameraPath.js 的 CAMERA3D）就照關鍵幀走，否則用 motion 預設運鏡。\r\n// 參數：scene、motion（reveal 拉遠再推回／push 慢慢推近／orbit 繞半圈）、tilt（螢幕後仰度數）、ramp（頭尾過場秒數）。\r\n/* global CAMERA3D */\r\n\r\n/** 畫面只由 t 決定（跳格不必從頭推） */\r\nconst pure = true;\r\n\r\n/** 螢幕寬高（場景單位）與中心高度 */\r\nconst SCREEN_W = 4.0;\r\nconst SCREEN_H = SCREEN_W * 9 / 16;\r\nconst CENTER_Y = 1.25;\r\n\r\n/** 場景物件（setup 建、update 用） */\r\nconst S = {};\r\n\r\n/** 木紋程序貼圖：幾個頻率的正弦疊成年輪＋固定偽雜訊（每次都一樣）；tone 調深淺 */\r\nfunction woodTexture(THREE, tone) {\r\n  const size = 256;\r\n  const data = new Uint8Array(size * size * 4);\r\n  for (let y = 0; y < size; y++) {\r\n    const ring = Math.sin(y * 0.21) * 0.5 + Math.sin(y * 0.047 + 1.3) * 0.35 + Math.sin(y * 0.9) * 0.15;\r\n    for (let x = 0; x < size; x++) {\r\n      const noise = ((x * 7919 + y * 104729) % 97) / 97 - 0.5;\r\n      const k = (0.62 + ring * 0.16 + noise * 0.05) * tone;\r\n      const i = (y * size + x) * 4;\r\n      data[i] = Math.min(255, 168 * k + 20);\r\n      data[i + 1] = Math.min(255, 112 * k + 12);\r\n      data[i + 2] = Math.min(255, 66 * k + 8);\r\n      data[i + 3] = 255;\r\n    }\r\n  }\r\n  const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);\r\n  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;\r\n  tex.repeat.set(4, 3);\r\n  tex.colorSpace = THREE.SRGBColorSpace;\r\n  tex.generateMipmaps = true;\r\n  tex.minFilter = THREE.LinearMipmapLinearFilter;\r\n  tex.needsUpdate = true;\r\n  return tex;\r\n}\r\n\r\n/** 垂直漸層貼圖（攝影棚背景） */\r\nfunction gradientTexture(THREE, top, bottom) {\r\n  const c = new OffscreenCanvas(4, 256);\r\n  const g = c.getContext('2d');\r\n  const grad = g.createLinearGradient(0, 0, 0, 256);\r\n  grad.addColorStop(0, top);\r\n  grad.addColorStop(1, bottom);\r\n  g.fillStyle = grad;\r\n  g.fillRect(0, 0, 4, 256);\r\n  const tex = new THREE.CanvasTexture(c);\r\n  tex.colorSpace = THREE.SRGBColorSpace;\r\n  return tex;\r\n}\r\n\r\n/** 木紋桌：桌面、螢幕邊框與底座、桌上的方塊和杯子 */\r\nfunction buildDesk(THREE, scene, group) {\r\n  scene.background = new THREE.Color(0x1a1410);\r\n  const desk = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 1), roughness: 0.75 }));\r\n  desk.rotation.x = -Math.PI / 2;\r\n  scene.add(desk);\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.22, SCREEN_H + 0.22, 0.1), new THREE.MeshStandardMaterial({ color: 0x15171c, roughness: 0.4, metalness: 0.3 })));\r\n  const stand = new THREE.MeshStandardMaterial({ color: 0x2a2d35, roughness: 0.5, metalness: 0.4 });\r\n  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.2, 0.12), stand);\r\n  neck.position.set(0, -0.95, -0.1);\r\n  group.add(neck);\r\n  const base = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.0), stand);\r\n  base.position.set(0, 0.03, 0.15);\r\n  scene.add(base);\r\n  const block = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.7), new THREE.MeshStandardMaterial({ color: 0x3b7ddd, roughness: 0.6 }));\r\n  block.position.set(-3.2, 0.25, 1.2);\r\n  block.rotation.y = 0.5;\r\n  scene.add(block);\r\n  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 0.6, 32), new THREE.MeshStandardMaterial({ color: 0xe9e6df, roughness: 0.3 }));\r\n  cup.position.set(3.1, 0.3, 1.6);\r\n  scene.add(cup);\r\n}\r\n\r\n/** 教室：牆、木地板、黑板邊框與粉筆槽（影片就是板面）、講桌 */\r\nfunction buildClassroom(THREE, scene, group) {\r\n  scene.background = new THREE.Color(0xd9d2c3);\r\n  const wall = new THREE.Mesh(new THREE.PlaneGeometry(30, 12), new THREE.MeshStandardMaterial({ color: 0xe8e0cf, roughness: 0.95 }));\r\n  wall.position.set(0, 4, -0.3);\r\n  scene.add(wall);\r\n  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 16), new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 0.75), roughness: 0.8 }));\r\n  floor.rotation.x = -Math.PI / 2;\r\n  floor.position.y = -0.6;\r\n  scene.add(floor);\r\n  // 黑板木框（比螢幕大一圈）與粉筆槽\r\n  const frame = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.7 });\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.5, SCREEN_H + 0.5, 0.08), frame));\r\n  const tray = new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.5, 0.08, 0.25), frame);\r\n  tray.position.set(0, -SCREEN_H / 2 - 0.28, 0.12);\r\n  group.add(tray);\r\n  for (let i = 0; i < 3; i++) {\r\n    const chalk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.22, 10), new THREE.MeshStandardMaterial({ color: [0xffffff, 0xf7e27a, 0xf2a3b3][i], roughness: 0.9 }));\r\n    chalk.rotation.z = Math.PI / 2;\r\n    chalk.position.set(-1.2 + i * 0.35, -SCREEN_H / 2 - 0.2, 0.15);\r\n    group.add(chalk);\r\n  }\r\n  // 講桌\r\n  const lectern = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.1, 0.8), frame);\r\n  lectern.position.set(2.8, -0.05, 2.2);\r\n  scene.add(lectern);\r\n}\r\n\r\n/** 攝影棚：漸層背幕、地面、螢幕立架、兩盞聚光的光錐 */\r\nfunction buildStudio(THREE, scene, group) {\r\n  scene.background = new THREE.Color(0x101318);\r\n  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 16), new THREE.MeshBasicMaterial({ map: gradientTexture(THREE, '#2c3240', '#0d0f14') }));\r\n  backdrop.position.set(0, 4, -6);\r\n  scene.add(backdrop);\r\n  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshStandardMaterial({ color: 0x1b1f27, roughness: 0.35, metalness: 0.2 }));\r\n  floor.rotation.x = -Math.PI / 2;\r\n  floor.position.y = -0.6;\r\n  scene.add(floor);\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.14, SCREEN_H + 0.14, 0.08), new THREE.MeshStandardMaterial({ color: 0x0b0c10, roughness: 0.3, metalness: 0.5 })));\r\n  // 立架：從螢幕下緣到地面（沒有環境貼圖，金屬感調低免得暗掉），底下一塊圓底座\r\n  const steel = new THREE.MeshStandardMaterial({ color: 0x9aa3b2, metalness: 0.3, roughness: 0.4 });\r\n  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 16), steel);\r\n  pole.position.set(0, -0.6 + 0.9 - CENTER_Y, -0.1);\r\n  group.add(pole);\r\n  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.05, 32), steel);\r\n  foot.position.set(0, -0.575, 0);\r\n  scene.add(foot);\r\n  for (const x of [-4.5, 4.5]) {\r\n    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.8, 7, 32, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff3d6, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));\r\n    cone.position.set(x, 3, -1);\r\n    cone.rotation.z = x < 0 ? -0.35 : 0.35;\r\n    scene.add(cone);\r\n  }\r\n}\r\n\r\n/** 建場景 */\r\nfunction setup(THREE, scene, camera, env) {\r\n  scene.add(new THREE.AmbientLight(0xffffff, 1.1));\r\n  const sun = new THREE.DirectionalLight(0xfff1dd, 2.2);\r\n  sun.position.set(-4, 8, 6);\r\n  scene.add(sun);\r\n\r\n  const tilt = -(env.params.tilt ?? 7) * Math.PI / 180;\r\n  const group = new THREE.Group();\r\n  group.position.set(0, CENTER_Y, 0);\r\n  group.rotation.x = tilt;\r\n  scene.add(group);\r\n  const kind = env.params.scene || 'desk';\r\n  if (kind === 'classroom') buildClassroom(THREE, scene, group);\r\n  else if (kind === 'studio') buildStudio(THREE, scene, group);\r\n  else buildDesk(THREE, scene, group);\r\n  const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), env.frameMaterial());\r\n  screen.position.z = 0.056;\r\n  group.add(screen);\r\n\r\n  // 滿版位置：正對螢幕、沿螢幕法線退到剛好填滿畫面的距離（畫面比螢幕寬時以高度為準）\r\n  S.fov0 = camera.fov;\r\n  const fov = camera.fov * Math.PI / 180;\r\n  const aspect = env.width / env.height;\r\n  const dist = Math.max(SCREEN_H / 2, SCREEN_W / 2 / aspect) / Math.tan(fov / 2) + 0.056;\r\n  const normal = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(1, 0, 0), tilt);\r\n  const center = new THREE.Vector3(0, CENTER_Y, 0).add(normal.clone().multiplyScalar(0.056));\r\n  S.THREE = THREE;\r\n  S.camera = camera;\r\n  S.flat = { pos: center.clone().add(normal.clone().multiplyScalar(dist - 0.056)), look: center.clone(), up: new THREE.Vector3(0, 1, 0).applyAxisAngle(new THREE.Vector3(1, 0, 0), tilt), fov: camera.fov };\r\n}\r\n\r\n/** 平滑（頭尾慢、中間快） */\r\nfunction smooth(u) {\r\n  const x = Math.min(1, Math.max(0, u));\r\n  return x * x * (3 - 2 * x);\r\n}\r\n\r\n/** 預設運鏡的中間段（u：0～1） */\r\nfunction presetCamera(THREE, motion, u) {\r\n  const look = new THREE.Vector3(0, CENTER_Y * 0.8, 0);\r\n  if (motion === 'orbit') {\r\n    const a = -0.8 + u * 1.6;\r\n    return { pos: new THREE.Vector3(Math.sin(a) * 9, 4.2, Math.cos(a) * 9), look, fov: S.fov0 };\r\n  }\r\n  if (motion === 'push') return { pos: new THREE.Vector3(0.8 - u * 0.8, 3.6 - u * 1.2, 10 - u * 3.5), look, fov: S.fov0 };\r\n  return { pos: new THREE.Vector3(-1.2 + u * 2.4, 4.4, 9.5), look, fov: S.fov0 };\r\n}\r\n\r\n/** 中間段在時間 t 的鏡頭：有關鍵幀照關鍵幀，否則預設運鏡 */\r\nfunction middleCamera(THREE, env, t, ramp) {\r\n  const keys = env.params.cameraKeys;\r\n  if (keys && keys.length) {\r\n    const c = CAMERA3D.cameraAt(keys, t);\r\n    return { pos: new THREE.Vector3(...c.position), look: new THREE.Vector3(...c.target), fov: c.fov };\r\n  }\r\n  const L = env.duration;\r\n  return presetCamera(THREE, env.params.motion || 'reveal', L > 2 * ramp ? (t - ramp) / (L - 2 * ramp) : 0.5);\r\n}\r\n\r\n/** 每格更新鏡頭：頭尾在滿版與中間段之間過場 */\r\nfunction update(t, env) {\r\n  const THREE = S.THREE;\r\n  const camera = S.camera;\r\n  const L = env.duration;\r\n  const ramp = Math.min(env.params.ramp ?? 1.2, L / 3);\r\n  let k = 1;\r\n  let target;\r\n  if (t < ramp) { k = smooth(t / ramp); target = middleCamera(THREE, env, ramp, ramp); }\r\n  else if (t > L - ramp) { k = smooth((L - t) / ramp); target = middleCamera(THREE, env, L - ramp, ramp); }\r\n  else target = middleCamera(THREE, env, t, ramp);\r\n  camera.position.copy(S.flat.pos).lerp(target.pos, k);\r\n  camera.up.copy(S.flat.up).lerp(new THREE.Vector3(0, 1, 0), k).normalize();\r\n  camera.lookAt(S.flat.look.clone().lerp(target.look, k));\r\n  camera.fov = S.flat.fov + (target.fov - S.flat.fov) * k;\r\n  camera.updateProjectionMatrix();\r\n}\r\n"
+    }
+   },
+   {
+    "hash": "b3cc83b2bddf60d44ad6de78daa902a3",
+    "kind": "3d",
+    "source": "builtin",
+    "component": {
+     "id": "mascot",
+     "kind": "3d",
+     "effectKind": "anim3d",
+     "name": "Mascot",
+     "description": "A little 3D character walks in, stops next to the target box and waves or points at it",
+     "params": {
+      "action": {
+       "type": "enum",
+       "values": [
+        "point",
+        "wave"
+       ],
+       "labels": [
+        "Point at the box",
+        "Wave"
+       ],
+       "default": "point",
+       "label": "Action"
+      },
+      "from": {
+       "type": "enum",
+       "values": [
+        "left",
+        "right"
+       ],
+       "labels": [
+        "Left",
+        "Right"
+       ],
+       "default": "left",
+       "label": "Walks in from"
+      },
+      "color": {
+       "type": "color",
+       "default": "#ffb020",
+       "label": "Color"
+      },
+      "height": {
+       "type": "number",
+       "min": 0.15,
+       "max": 0.7,
+       "step": 0.05,
+       "default": 0.35,
+       "label": "Height (of frame)"
+      },
+      "walk": {
+       "type": "duration",
+       "min": 0.3,
+       "max": 4,
+       "default": 1.6,
+       "label": "Walk time (sec)"
+      }
+     },
+     "code": "// 內建 3D 範本「Mascot」（spec §5.7、§5.8 吉祥物）：基本幾何組成的小角色，疊在影片上（anim3d，透明背景）。\r\n// 從畫面一側走進來，停在目標框旁邊，然後揮手或指著目標框；目標框 env.box（0～1）可以在預覽上拖。\r\n// 畫面只由 t 決定（pure）；鏡頭固定，畫面座標用 z=0 平面換算（box 的位置對得上畫面）。\r\n// 參數：action（wave 揮手／point 指著框）、from（left／right 從哪邊走進來）、color、height（角色高度佔畫面高的比例）、walk（走路秒數）。\r\n\r\n/** 畫面只由 t 決定 */\r\nconst pure = true;\r\n\r\n/** 場景物件 */\r\nconst M = {};\r\n\r\n/** 建角色：身體、頭、眼睛、手腳（每個關節一個 Group，方便轉） */\r\nfunction buildMascot(THREE, color) {\r\n  const body = new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.05 });\r\n  const dark = new THREE.MeshStandardMaterial({ color: 0x1b1d24, roughness: 0.6 });\r\n  const white = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });\r\n  const root = new THREE.Group();\r\n\r\n  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 0.55, 8, 16), body);\r\n  torso.position.y = 1.15;\r\n  root.add(torso);\r\n  const head = new THREE.Group();\r\n  head.position.y = 2.05;\r\n  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.48, 24, 16), body));\r\n  for (const side of [-1, 1]) {\r\n    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), white);\r\n    eye.position.set(0.17 * side, 0.06, 0.4);\r\n    head.add(eye);\r\n    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 8), dark);\r\n    pupil.position.set(0.17 * side, 0.06, 0.5);\r\n    head.add(pupil);\r\n  }\r\n  root.add(head);\r\n\r\n  /** 一條手或腳：肩（髖）關節 Group，裡面一根膠囊往下垂 */\r\n  const limb = (x, y, len, radius) => {\r\n    const joint = new THREE.Group();\r\n    joint.position.set(x, y, 0);\r\n    const m = new THREE.Mesh(new THREE.CapsuleGeometry(radius, len, 6, 12), body);\r\n    m.position.y = -len / 2 - radius;\r\n    joint.add(m);\r\n    root.add(joint);\r\n    return joint;\r\n  };\r\n  return {\r\n    root, head,\r\n    armL: limb(-0.52, 1.5, 0.55, 0.12), armR: limb(0.52, 1.5, 0.55, 0.12),\r\n    legL: limb(-0.2, 0.68, 0.42, 0.14), legR: limb(0.2, 0.68, 0.42, 0.14),\r\n  };\r\n}\r\n\r\n/** 建場景 */\r\nfunction setup(THREE, scene, camera, env) {\r\n  scene.add(new THREE.AmbientLight(0xffffff, 1.3));\r\n  const key = new THREE.DirectionalLight(0xffffff, 2.2);\r\n  key.position.set(3, 6, 8);\r\n  scene.add(key);\r\n  camera.position.set(0, 0, 20);\r\n  camera.lookAt(0, 0, 0);\r\n  camera.updateProjectionMatrix();\r\n  // z=0 平面上看得到的範圍（畫面座標換算用）\r\n  M.viewH = 2 * 20 * Math.tan(camera.fov * Math.PI / 360);\r\n  M.viewW = M.viewH * camera.aspect;\r\n  M.parts = buildMascot(THREE, new THREE.Color(env.params.color || '#ffb020'));\r\n  scene.add(M.parts.root);\r\n}\r\n\r\n/** 畫面座標（0～1，y 往下）→ z=0 平面的世界座標 */\r\nfunction toWorld(x, y) {\r\n  return { x: (x - 0.5) * M.viewW, y: (0.5 - y) * M.viewH };\r\n}\r\n\r\n/** 平滑（頭尾慢） */\r\nfunction smooth(u) {\r\n  const x = Math.min(1, Math.max(0, u));\r\n  return x * x * (3 - 2 * x);\r\n}\r\n\r\n/** 每格：走路 → 停在框旁 → 揮手或指著框 */\r\nfunction update(t, env) {\r\n  const p = env.params;\r\n  const box = env.box || { cx: 0.5, cy: 0.5, w: 0.3, h: 0.2 };\r\n  const P = M.parts;\r\n  const fromLeft = (p.from || 'left') === 'left';\r\n  const size = (p.height ?? 0.35) * M.viewH / 2.6;  // 角色模型高約 2.6\r\n  P.root.scale.setScalar(size);\r\n\r\n  // 站的位置：框靠近入場那一側的外面，腳底對齊框的下緣（畫面外就夾回來）\r\n  const standX = Math.min(0.92, Math.max(0.08, fromLeft ? box.cx - box.w / 2 - 0.07 : box.cx + box.w / 2 + 0.07));\r\n  const footY = Math.min(0.98, box.cy + box.h / 2);\r\n  const start = toWorld(fromLeft ? -0.12 : 1.12, footY);\r\n  const stand = toWorld(standX, footY);\r\n  const walk = Math.min(p.walk ?? 1.6, env.duration * 0.6);\r\n  const k = smooth(t / walk);\r\n  P.root.position.set(start.x + (stand.x - start.x) * k, stand.y, 0);\r\n\r\n  // 走路：腳前後擺、身體上下彈，面向前進方向；到了就轉正面向鏡頭\r\n  const walking = t < walk;\r\n  const phase = t * 9;\r\n  const swing = walking ? Math.sin(phase) * 0.7 : 0;\r\n  P.legL.rotation.x = swing;\r\n  P.legR.rotation.x = -swing;\r\n  P.root.rotation.y = walking ? (fromLeft ? 1 : -1) * 0.9 * (1 - smooth((t - walk + 0.3) / 0.3)) : 0;\r\n  P.root.position.y += walking ? Math.abs(Math.sin(phase)) * 0.08 * size : 0;\r\n\r\n  // 手：走路時跟著擺；到了以後揮手（靠框那隻手舉高左右揮）或指著框中心\r\n  const near = fromLeft ? P.armR : P.armL;\r\n  const far = fromLeft ? P.armL : P.armR;\r\n  if (walking) {\r\n    near.rotation.set(-swing * 0.8, 0, 0);\r\n    far.rotation.set(swing * 0.8, 0, 0);\r\n    P.head.rotation.z = 0;\r\n  } else {\r\n    const a = smooth((t - walk) / 0.35);\r\n    far.rotation.set(0, 0, (fromLeft ? 1 : -1) * 0.15 * a);\r\n    if ((p.action || 'point') === 'wave') {\r\n      near.rotation.set(0, 0, (fromLeft ? 1 : -1) * (2.6 * a + Math.sin((t - walk) * 10) * 0.35 * a));\r\n    } else {\r\n      // 指向框中心：從肩膀到框中心的角度（手臂預設朝下，所以加 90°）\r\n      const shoulder = P.root.localToWorld(near.position.clone());\r\n      const target = toWorld(box.cx, box.cy);\r\n      const angle = Math.atan2(target.y - shoulder.y, target.x - shoulder.x) + Math.PI / 2;\r\n      near.rotation.set(0, 0, angle * a);\r\n    }\r\n    P.head.rotation.z = Math.sin((t - walk) * 2.2) * 0.06;\r\n  }\r\n}\r\n"
+    }
+   }
+  ],
+  "synths": [],
+  "stems": [],
+  "zooms": [],
+  "captionStyle": {
+   "preset": "outline",
+   "size": 0.055,
+   "bottom": 0.08,
+   "color": "#ffffff",
+   "karaoke": "fill",
+   "highlight": "#ffd400"
+  }
+ }
+}
