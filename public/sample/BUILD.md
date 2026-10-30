@@ -1,10 +1,10 @@
 # Sample project build
 
-Built 2026-10-29T12:01:54.079Z by e2e/sample-build.spec.ts (mode: live).
+Built 2026-10-29T17:07:03.770Z by e2e/sample-build.spec.ts (mode: live).
 Footage: samples/demo-2min.mp4 — a synthetic screen recording with a TTS voice-over, made by scripts/demo-sample (the API key in it is fake).
 
-- Transcript (Muse ASR): 303 words in 8.4 s (11 s)
-- Filler words: removed 3 (0 s)
-- AI director (Spark understands, Wonder plans, a second Wonder reviews; apply all that passed): 15 items [intro@0.00(revised), music@0.00(keep), zoom@12.70(added), zoom@22.10(keep), fix@27.30(keep), mask@30.30(revised), fix@32.00(keep), transition@41.00(revised), zoom@44.90(added), fix@46.10(keep), cut@49.40(keep), zoom@55.10(keep), effect@65.30(keep), transition@80.00(keep), effect@85.30(keep)]; applied 15 checked. Applied 15 edits. Ctrl+Z undoes them all at once. (342 s)
-- Publish kit (Muse Spark): titles: Build a CLI That Summarizes Meeting Notes with AI … (19 s)
-- Thumbnail (Muse Image): restyled the frame at 40 s (36 s)
+- Transcript (Muse ASR): 305 words in 15.5 s (25 s)
+- Filler words: removed 2 (1 s)
+- AI director, plain style (Spark understands, Wonder writes a treatment and plans with frames, a second Wonder reviews; apply the checked ones): 9 items [captionStyle@0.00(added), zoom@22.10(keep), fix@27.30(keep), mask@30.00(keep), zoom@43.00(keep), fix@46.20(keep), cut@49.40(keep), zoom@62.60(revised), zoom@83.00(revised)]; applied 9 checked. Director's notes: 00:22 The terminal commands to create the folder and install the two packages are too small to read. | 00:43 The code typed in index.js, including the chat completions call, is too small to read. | 01:02 The summary printed in the terminal is small and easy to miss. | 01:24 The single-line friendly error message in the terminal is small and easy to miss.. Applied 9 edits. Ctrl+Z undoes them all at once. (388 s)
+- Publish kit (Muse Spark): titles: Build a CLI to Summarize Meeting Notes with AI … (14 s)
+- Thumbnail (Muse Image): restyled the frame at 40 s (50 s)

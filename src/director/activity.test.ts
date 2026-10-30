@@ -66,6 +66,33 @@ describe("zoomFromActivity", () => {
     expect(z.path[z.path.length - 1].cy).toBeGreaterThan(z.path[1].cy);
   });
 
+  it("同一區塊裡打字（中心小幅移動）：框固定不動，只有開頭與結尾兩個同位置的點", () => {
+    const path = Array.from({ length: 8 }, (_, i) => ({ t: 10 + i, cx: 0.4 + (i % 3) * 0.02, cy: 0.3 + (i % 2) * 0.015, w: 0.08, h: 0.04 }));
+    const z = zoomFromActivity({ id: "a100", start: 9.5, end: 17, x: 0.36, y: 0.28, w: 0.12, h: 0.05, path });
+    expect(z.path).toHaveLength(2);
+    expect(z.path[0].src).toBe(9.5);
+    expect(z.path[1].src).toBe(17);
+    expect(z.path[1].cx).toBe(z.path[0].cx);
+    expect(z.path[1].cy).toBe(z.path[0].cy);
+  });
+
+  it("打字跳到另一個區塊：前一塊固定到跳之前，再移一次到新區塊並固定；只出現一次的雜訊不會讓框跳", () => {
+    const top = Array.from({ length: 5 }, (_, i) => ({ t: 20 + i, cx: 0.3, cy: 0.2, w: 0.08, h: 0.04 }));
+    const noise = [{ t: 25, cx: 0.85, cy: 0.5, w: 0.05, h: 0.04 }];
+    const bottom = Array.from({ length: 5 }, (_, i) => ({ t: 26 + i, cx: 0.7, cy: 0.8, w: 0.08, h: 0.04 }));
+    const z = zoomFromActivity({ id: "a200", start: 19.5, end: 30, x: 0.2, y: 0.15, w: 0.6, h: 0.7, path: [...top, ...noise, ...bottom] });
+    // 兩塊：各自的「開始、固定到結束」→ 四個點，中間只有一次移動
+    expect(z.path).toHaveLength(4);
+    const [a, b, c, d] = z.path;
+    expect([a.cx, a.cy]).toEqual([b.cx, b.cy]);
+    expect([c.cx, c.cy]).toEqual([d.cx, d.cy]);
+    expect(c.cx).toBeGreaterThan(b.cx);
+    expect(c.cy).toBeGreaterThan(b.cy);
+    expect(b.src).toBeLessThan(c.src);
+    expect(c.src - b.src).toBeLessThanOrEqual(0.8);
+    expect(d.src).toBe(30);
+  });
+
   it("框寬包得住活動區（留邊、0.3～0.8），路徑點用素材時間、框不超出畫面", () => {
     const act = { id: "a3", start: 3, end: 9, x: 0.31, y: 0.33, w: 0.15, h: 0.06, path: [{ t: 3, cx: 0.33, cy: 0.36, w: 0.05, h: 0.06 }, { t: 6, cx: 0.38, cy: 0.36, w: 0.05, h: 0.06 }, { t: 9, cx: 0.97, cy: 0.98, w: 0.05, h: 0.06 }] };
     const z = zoomFromActivity(act);

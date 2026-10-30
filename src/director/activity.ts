@@ -154,23 +154,56 @@ export function findActivities(frames: LumaFrame[]): Activity[] {
 /** 夾在範圍內 */
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
+/** 一個區塊的變化要塞進框的多少比例以內（留邊） */
+const BLOCK_FILL = 0.9;
+/** 換區塊時移動多久（秒；前一塊固定到移動開始） */
+const BLOCK_MOVE: Seconds = 0.6;
+
+/** 一次變化的外框 */
+type Box = { x0: number; y0: number; x1: number; y1: number };
+const boxOf = (p: Activity["path"][number]): Box => ({ x0: p.cx - p.w / 2, y0: p.cy - p.h / 2, x1: p.cx + p.w / 2, y1: p.cy + p.h / 2 });
+const union = (a: Box, b: Box): Box => ({ x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) });
+/** 外框放得進寬 w 的放大框（寬高都以畫面比例計，留邊） */
+const fits = (b: Box, w: number) => b.x1 - b.x0 <= w * BLOCK_FILL && b.y1 - b.y0 <= w * BLOCK_FILL;
+
 /**
- * 活動區 → 局部放大（ZoomRegion 的框寬與路徑；素材時間）：框寬看「每次變化」的大小（中位數，不看整段的聯集——
- * 一行一行往下打字時聯集會變成半個畫面）並留邊（0.3～0.8，倍率 1.25～3.3），
- * 路徑點是各次變化的中心（相鄰三點平均，免得跳動），夾住讓框不超出畫面。
+ * 活動區 → 局部放大（ZoomRegion 的框寬與路徑；素材時間）。放大時畫面晃動會讓觀看者不舒服（2026-10-30 開發者回饋），所以框是固定的：
+ * - 框寬看「每次變化」的大小（中位數，不看整段的聯集——一行一行往下打字時聯集會變成半個畫面）並留邊（0.3～0.8，倍率 1.25～3.3）。
+ * - 依時間把變化分成區塊：還放得進同一個框就算同一塊；放不進、而且下一次變化也在新位置，才換區塊（只出現一次的變化當雜訊略過）。
+ * - 每塊的框對準那塊所有變化的聯集中心，從開始固定到結束；換區塊時前一塊固定到移動前 0.6 秒，再移到新位置。
+ * - 框夾住不超出畫面。
  */
 export function zoomFromActivity(a: Activity): { w: number; path: ZoomPoint[] } {
   const pts = a.path.length ? a.path : [{ t: a.start, cx: a.x + a.w / 2, cy: a.y + a.h / 2, w: a.w, h: a.h }];
   const sizes = pts.map((p) => Math.max(p.w, p.h)).sort((x, y) => x - y);
   const w = clamp(sizes[Math.floor(sizes.length / 2)] * 1.6 + 0.12, 0.3, 0.8);
-  const path = pts.map((p, i) => {
-    const near3 = pts.slice(Math.max(0, i - 1), i + 2);
-    const cx = near3.reduce((s, q) => s + q.cx, 0) / near3.length;
-    const cy = near3.reduce((s, q) => s + q.cy, 0) / near3.length;
-    return { src: p.t, cx: clamp(cx, w / 2, 1 - w / 2), cy: clamp(cy, w / 2, 1 - w / 2) };
+  /** 區塊：開始時間（第一次變化）、最後一次變化時間、所有變化的外框聯集 */
+  const blocks: { start: Seconds; last: Seconds; box: Box }[] = [];
+  for (let i = 0; i < pts.length; i++) {
+    const cur = blocks[blocks.length - 1];
+    const b = boxOf(pts[i]);
+    if (cur && fits(union(cur.box, b), w)) {
+      cur.box = union(cur.box, b);
+      cur.last = pts[i].t;
+      continue;
+    }
+    // 放不進目前的框：下一次變化也和它在一起才換區塊，否則當雜訊
+    const next = pts[i + 1];
+    if (cur && next && !fits(union(b, boxOf(next)), w)) continue;
+    if (cur && !next) continue;
+    blocks.push({ start: pts[i].t, last: pts[i].t, box: b });
+  }
+  const center = (b: Box) => ({ cx: clamp((b.x0 + b.x1) / 2, w / 2, 1 - w / 2), cy: clamp((b.y0 + b.y1) / 2, w / 2, 1 - w / 2) });
+  const path: ZoomPoint[] = [];
+  blocks.forEach((blk, k) => {
+    const c = center(blk.box);
+    const from = k === 0 ? a.start : blk.start;
+    const nextStart = blocks[k + 1]?.start;
+    // 固定到：下一塊移動開始前（至少到這塊最後一次變化）；最後一塊固定到活動結束
+    const until = nextStart === undefined ? Math.max(a.end, blk.last) : Math.max(blk.last, nextStart - BLOCK_MOVE);
+    path.push({ src: from, ...c });
+    if (until > from) path.push({ src: until, ...c });
   });
-  // 第一個點對齊活動開始（放大從那裡開始就已經對準）
-  path[0] = { ...path[0], src: a.start };
   return { w, path };
 }
 

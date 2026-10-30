@@ -1,77 +1,17 @@
 {
  "format": "wordblade-project",
  "v": 1,
- "savedAt": 1793275311232,
+ "savedAt": 1793293617833,
  "media": {
-  "m-7a4bfae0": {
+  "m-6a8b0c2e": {
    "path": "sample/media/demo-2min.mp4",
    "rel": "sample/media/demo-2min.mp4"
-  },
-  "m-81938e96": {
-   "path": "sample/media/music-director-a7c285.wav",
-   "rel": "sample/media/music-director-a7c285.wav"
-  },
-  "m-3186e6bf": {
-   "path": "sample/media/intro-cover-1.jpg",
-   "rel": "sample/media/intro-cover-1.jpg"
-  },
-  "m-b3bd3b88": {
-   "path": "sample/media/intro-cover-2.jpg",
-   "rel": "sample/media/intro-cover-2.jpg"
-  },
-  "m-3531671c": {
-   "path": "sample/media/intro-cover-3.jpg",
-   "rel": "sample/media/intro-cover-3.jpg"
-  },
-  "m-3dc350d2": {
-   "path": "sample/media/intro-cover-4.jpg",
-   "rel": "sample/media/intro-cover-4.jpg"
-  },
-  "m-95effc97": {
-   "path": "sample/media/intro-cover-5.jpg",
-   "rel": "sample/media/intro-cover-5.jpg"
-  },
-  "m-734ffb6e": {
-   "path": "sample/media/intro-cover-6.jpg",
-   "rel": "sample/media/intro-cover-6.jpg"
-  },
-  "m-ac551209": {
-   "path": "sample/media/intro-cover-7.jpg",
-   "rel": "sample/media/intro-cover-7.jpg"
-  },
-  "m-912300ae": {
-   "path": "sample/media/intro-cover-8.jpg",
-   "rel": "sample/media/intro-cover-8.jpg"
-  },
-  "m-bfd8eeb9": {
-   "path": "sample/media/intro-black.png",
-   "rel": "sample/media/intro-black.png"
-  },
-  "m-79ae0924": {
-   "path": "sample/media/intro-flipSlow.wav",
-   "rel": "sample/media/intro-flipSlow.wav"
-  },
-  "m-5c3a2966": {
-   "path": "sample/media/intro-flipFast.wav",
-   "rel": "sample/media/intro-flipFast.wav"
-  },
-  "m-abc65924": {
-   "path": "sample/media/intro-riser-2.20.wav",
-   "rel": "sample/media/intro-riser-2.20.wav"
-  },
-  "m-0be4cfb3": {
-   "path": "sample/media/intro-impact.wav",
-   "rel": "sample/media/intro-impact.wav"
-  },
-  "m-07125fb7": {
-   "path": "sample/media/intro-music.wav",
-   "rel": "sample/media/intro-music.wav"
   }
  },
  "project": {
   "media": [
    {
-    "id": "m-7a4bfae0",
+    "id": "m-6a8b0c2e",
     "name": "demo-2min.mp4",
     "kind": "video",
     "duration": 108.279,
@@ -81,144 +21,6 @@
     "hasAlpha": false,
     "audio": true,
     "path": "sample/media/demo-2min.mp4"
-   },
-   {
-    "id": "m-81938e96",
-    "name": "music-director-a7c285.wav",
-    "kind": "audio",
-    "duration": 51.2,
-    "audio": true,
-    "path": "sample/media/music-director-a7c285.wav"
-   },
-   {
-    "id": "m-3186e6bf",
-    "name": "intro-cover-1.jpg",
-    "kind": "image",
-    "duration": 86400,
-    "width": 1280,
-    "height": 720,
-    "hasAlpha": true,
-    "path": "sample/media/intro-cover-1.jpg"
-   },
-   {
-    "id": "m-b3bd3b88",
-    "name": "intro-cover-2.jpg",
-    "kind": "image",
-    "duration": 86400,
-    "width": 1280,
-    "height": 720,
-    "hasAlpha": true,
-    "path": "sample/media/intro-cover-2.jpg"
-   },
-   {
-    "id": "m-3531671c",
-    "name": "intro-cover-3.jpg",
-    "kind": "image",
-    "duration": 86400,
-    "width": 1280,
-    "height": 720,
-    "hasAlpha": true,
-    "path": "sample/media/intro-cover-3.jpg"
-   },
-   {
-    "id": "m-3dc350d2",
-    "name": "intro-cover-4.jpg",
-    "kind": "image",
-    "duration": 86400,
-    "width": 1280,
-    "height": 720,
-    "hasAlpha": true,
-    "path": "sample/media/intro-cover-4.jpg"
-   },
-   {
-    "id": "m-95effc97",
-    "name": "intro-cover-5.jpg",
-    "kind": "image",
-    "duration": 86400,
-    "width": 1280,
-    "height": 720,
-    "hasAlpha": true,
-    "path": "sample/media/intro-cover-5.jpg"
-   },
-   {
-    "id": "m-734ffb6e",
-    "name": "intro-cover-6.jpg",
-    "kind": "image",
-    "duration": 86400,
-    "width": 1280,
-    "height": 720,
-    "hasAlpha": true,
-    "path": "sample/media/intro-cover-6.jpg"
-   },
-   {
-    "id": "m-ac551209",
-    "name": "intro-cover-7.jpg",
-    "kind": "image",
-    "duration": 86400,
-    "width": 1280,
-    "height": 720,
-    "hasAlpha": true,
-    "path": "sample/media/intro-cover-7.jpg"
-   },
-   {
-    "id": "m-912300ae",
-    "name": "intro-cover-8.jpg",
-    "kind": "image",
-    "duration": 86400,
-    "width": 1280,
-    "height": 720,
-    "hasAlpha": true,
-    "path": "sample/media/intro-cover-8.jpg"
-   },
-   {
-    "id": "m-bfd8eeb9",
-    "name": "intro-black.png",
-    "kind": "image",
-    "duration": 86400,
-    "width": 320,
-    "height": 180,
-    "hasAlpha": true,
-    "path": "sample/media/intro-black.png"
-   },
-   {
-    "id": "m-79ae0924",
-    "name": "intro-flipSlow.wav",
-    "kind": "audio",
-    "duration": 0.32,
-    "audio": true,
-    "path": "sample/media/intro-flipSlow.wav"
-   },
-   {
-    "id": "m-5c3a2966",
-    "name": "intro-flipFast.wav",
-    "kind": "audio",
-    "duration": 0.12,
-    "audio": true,
-    "path": "sample/media/intro-flipFast.wav"
-   },
-   {
-    "id": "m-abc65924",
-    "name": "intro-riser-2.20.wav",
-    "kind": "audio",
-    "duration": 2.2,
-    "audio": true,
-    "path": "sample/media/intro-riser-2.20.wav"
-   },
-   {
-    "id": "m-0be4cfb3",
-    "name": "intro-impact.wav",
-    "kind": "audio",
-    "duration": 1.6,
-    "audio": true,
-    "path": "sample/media/intro-impact.wav"
-   },
-   {
-    "id": "m-07125fb7",
-    "name": "intro-music.wav",
-    "kind": "audio",
-    "duration": 8,
-    "audio": true,
-    "path": "sample/media/intro-music.wav"
    }
   ],
   "tracks": [
@@ -268,12 +70,12 @@
   ],
   "clips": [
    {
-    "id": "m-7a4bfae0@V1",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e@V1",
+    "mediaId": "m-6a8b0c2e",
     "trackId": "V1",
     "srcIn": 0,
-    "srcOut": 9.47,
-    "start": 8,
+    "srcOut": 9.31,
+    "start": 0,
     "speed": 1,
     "opacity": 1,
     "fadeIn": 0,
@@ -281,12 +83,12 @@
     "volume": 1
    },
    {
-    "id": "m-7a4bfae0@V1-4",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e@V1-3",
+    "mediaId": "m-6a8b0c2e",
     "trackId": "V1",
-    "srcIn": 9.97,
-    "srcOut": 17.96,
-    "start": 17.47,
+    "srcIn": 9.81,
+    "srcOut": 17.71,
+    "start": 9.31,
     "speed": 1,
     "opacity": 1,
     "fadeIn": 0,
@@ -294,12 +96,12 @@
     "volume": 1
    },
    {
-    "id": "m-7a4bfae0@V1-3",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e@V1-2",
+    "mediaId": "m-6a8b0c2e",
     "trackId": "V1",
-    "srcIn": 18.1,
+    "srcIn": 17.811,
     "srcOut": 49.4,
-    "start": 25.46,
+    "start": 17.21,
     "speed": 1,
     "opacity": 1,
     "fadeIn": 0,
@@ -307,25 +109,12 @@
     "volume": 1
    },
    {
-    "id": "m-7a4bfae0@V1-3-2",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e@V1-2-2",
+    "mediaId": "m-6a8b0c2e",
     "trackId": "V1",
     "srcIn": 55.1,
-    "srcOut": 63.01,
-    "start": 56.76,
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "volume": 1
-   },
-   {
-    "id": "m-7a4bfae0@V1-2",
-    "mediaId": "m-7a4bfae0",
-    "trackId": "V1",
-    "srcIn": 63.51,
     "srcOut": 108.279,
-    "start": 64.67,
+    "start": 48.799,
     "speed": 1,
     "opacity": 1,
     "fadeIn": 0,
@@ -333,12 +122,12 @@
     "volume": 1
    },
    {
-    "id": "m-7a4bfae0@A1",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e@A1",
+    "mediaId": "m-6a8b0c2e",
     "trackId": "A1",
     "srcIn": 0,
-    "srcOut": 9.47,
-    "start": 8,
+    "srcOut": 9.31,
+    "start": 0,
     "speed": 1,
     "opacity": 1,
     "fadeIn": 0,
@@ -346,12 +135,12 @@
     "volume": 1
    },
    {
-    "id": "m-7a4bfae0@A1-4",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e@A1-3",
+    "mediaId": "m-6a8b0c2e",
     "trackId": "A1",
-    "srcIn": 9.97,
-    "srcOut": 17.96,
-    "start": 17.47,
+    "srcIn": 9.81,
+    "srcOut": 17.71,
+    "start": 9.31,
     "speed": 1,
     "opacity": 1,
     "fadeIn": 0,
@@ -359,12 +148,12 @@
     "volume": 1
    },
    {
-    "id": "m-7a4bfae0@A1-3",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e@A1-2",
+    "mediaId": "m-6a8b0c2e",
     "trackId": "A1",
-    "srcIn": 18.1,
+    "srcIn": 17.811,
     "srcOut": 49.4,
-    "start": 25.46,
+    "start": 17.21,
     "speed": 1,
     "opacity": 1,
     "fadeIn": 0,
@@ -372,2424 +161,2152 @@
     "volume": 1
    },
    {
-    "id": "m-7a4bfae0@A1-3-2",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e@A1-2-2",
+    "mediaId": "m-6a8b0c2e",
     "trackId": "A1",
     "srcIn": 55.1,
-    "srcOut": 63.01,
-    "start": 56.76,
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "volume": 1
-   },
-   {
-    "id": "m-7a4bfae0@A1-2",
-    "mediaId": "m-7a4bfae0",
-    "trackId": "A1",
-    "srcIn": 63.51,
     "srcOut": 108.279,
-    "start": 64.67,
+    "start": 48.799,
     "speed": 1,
     "opacity": 1,
     "fadeIn": 0,
     "fadeOut": 0,
     "volume": 1
-   },
-   {
-    "id": "m-81938e96@A2",
-    "mediaId": "m-81938e96",
-    "trackId": "A2",
-    "srcIn": 0,
-    "srcOut": 51.2,
-    "start": 8,
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "volume": 1
-   },
-   {
-    "id": "intro@V1",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-bfd8eeb9",
-    "trackId": "V1",
-    "srcIn": 0,
-    "srcOut": 8,
-    "start": 0,
-    "volume": 1
-   },
-   {
-    "id": "intro-sfx@A3",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-79ae0924",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.32,
-    "start": 1.7,
-    "volume": 1
-   },
-   {
-    "id": "intro-sfx@A3-2",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-79ae0924",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.32,
-    "start": 1.96,
-    "volume": 0.915
-   },
-   {
-    "id": "intro-sfx@A3-3",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-79ae0924",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.32,
-    "start": 2.1836,
-    "volume": 0.842
-   },
-   {
-    "id": "intro-sfx@A3-4",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-79ae0924",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.32,
-    "start": 2.375896,
-    "volume": 0.78
-   },
-   {
-    "id": "intro-sfx@A3-5",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-79ae0924",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.32,
-    "start": 2.541271,
-    "volume": 0.726
-   },
-   {
-    "id": "intro-sfx@A3-6",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 2.683493,
-    "volume": 0.408
-   },
-   {
-    "id": "intro-sfx@A3-7",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 2.805804,
-    "volume": 0.384
-   },
-   {
-    "id": "intro-sfx@A3-8",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 2.910991,
-    "volume": 0.363
-   },
-   {
-    "id": "intro-sfx@A3-9",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 3.001452,
-    "volume": 0.346
-   },
-   {
-    "id": "intro-sfx@A3-10",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 3.079249,
-    "volume": 0.33
-   },
-   {
-    "id": "intro-sfx@A3-11",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 3.146154,
-    "volume": 0.33
-   },
-   {
-    "id": "intro-sfx@A3-12",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 3.212821,
-    "volume": 0.33
-   },
-   {
-    "id": "intro-sfx@A3-13",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 3.279488,
-    "volume": 0.33
-   },
-   {
-    "id": "intro-sfx@A3-14",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 3.346154,
-    "volume": 0.33
-   },
-   {
-    "id": "intro-sfx@A3-15",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 3.412821,
-    "volume": 0.33
-   },
-   {
-    "id": "intro-sfx@A3-16",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-5c3a2966",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 0.12,
-    "start": 3.479488,
-    "volume": 0.33
-   },
-   {
-    "id": "intro-sfx@A3-17",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-abc65924",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 2.2,
-    "start": 1.5,
-    "volume": 0.8
-   },
-   {
-    "id": "intro-sfx@A3-18",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0,
-    "mediaId": "m-0be4cfb3",
-    "trackId": "A3",
-    "srcIn": 0,
-    "srcOut": 1.6,
-    "start": 4,
-    "volume": 1
-   },
-   {
-    "id": "intro-music@A2",
-    "speed": 1,
-    "opacity": 1,
-    "fadeIn": 0,
-    "fadeOut": 0.6,
-    "mediaId": "m-07125fb7",
-    "trackId": "A2",
-    "srcIn": 0,
-    "srcOut": 8,
-    "start": 0,
-    "volume": 0.8
    }
   ],
   "words": [
    {
-    "id": "m-7a4bfae0:w0",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w0",
+    "mediaId": "m-6a8b0c2e",
     "text": "Hey",
     "start": 0.85,
-    "end": 1.01
+    "end": 1.09
    },
    {
-    "id": "m-7a4bfae0:w1",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w1",
+    "mediaId": "m-6a8b0c2e",
     "text": "everyone,",
-    "start": 1.01,
+    "start": 1.09,
     "end": 1.48
    },
    {
-    "id": "m-7a4bfae0:w2",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w2",
+    "mediaId": "m-6a8b0c2e",
     "text": "in",
     "start": 1.91,
     "end": 2.21
    },
    {
-    "id": "m-7a4bfae0:w3",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w3",
+    "mediaId": "m-6a8b0c2e",
     "text": "this",
     "start": 2.21,
-    "end": 2.37
+    "end": 2.45
    },
    {
-    "id": "m-7a4bfae0:w4",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w4",
+    "mediaId": "m-6a8b0c2e",
     "text": "short",
-    "start": 2.37,
-    "end": 2.53
+    "start": 2.45,
+    "end": 2.61
    },
    {
-    "id": "m-7a4bfae0:w5",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w5",
+    "mediaId": "m-6a8b0c2e",
     "text": "video,",
-    "start": 2.53,
+    "start": 2.61,
+    "end": 2.77
+   },
+   {
+    "id": "m-6a8b0c2e:w6",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I'm",
+    "start": 2.77,
     "end": 2.85
    },
    {
-    "id": "m-7a4bfae0:w6",
-    "mediaId": "m-7a4bfae0",
-    "text": "I'm",
-    "start": 3.23,
-    "end": 3.41
-   },
-   {
-    "id": "m-7a4bfae0:w7",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w7",
+    "mediaId": "m-6a8b0c2e",
     "text": "going",
-    "start": 3.41,
-    "end": 3.81
+    "start": 3.23,
+    "end": 3.65
    },
    {
-    "id": "m-7a4bfae0:w8",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w8",
+    "mediaId": "m-6a8b0c2e",
     "text": "to",
-    "start": 3.81,
-    "end": 3.861
-   },
-   {
-    "id": "m-7a4bfae0:w9",
-    "mediaId": "m-7a4bfae0",
-    "text": "build",
-    "start": 3.837,
+    "start": 3.65,
     "end": 3.89
    },
    {
-    "id": "m-7a4bfae0:w10",
-    "mediaId": "m-7a4bfae0",
-    "text": "a",
+    "id": "m-6a8b0c2e:w9",
+    "mediaId": "m-6a8b0c2e",
+    "text": "build",
     "start": 3.89,
-    "end": 4.05
+    "end": 4.21
    },
    {
-    "id": "m-7a4bfae0:w11",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w10",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 4.21,
+    "end": 4.37
+   },
+   {
+    "id": "m-6a8b0c2e:w11",
+    "mediaId": "m-6a8b0c2e",
     "text": "tiny",
-    "start": 4.05,
+    "start": 4.37,
     "end": 4.45
    },
    {
-    "id": "m-7a4bfae0:w12",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w12",
+    "mediaId": "m-6a8b0c2e",
     "text": "command",
     "start": 4.45,
-    "end": 4.69
+    "end": 4.844
    },
    {
-    "id": "m-7a4bfae0:w13",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w13",
+    "mediaId": "m-6a8b0c2e",
     "text": "line",
-    "start": 4.69,
-    "end": 4.85
+    "start": 4.844,
+    "end": 5.09
    },
    {
-    "id": "m-7a4bfae0:w14",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w14",
+    "mediaId": "m-6a8b0c2e",
     "text": "tool",
-    "start": 4.85,
-    "end": 5.3
+    "start": 5.09,
+    "end": 5.25
    },
    {
-    "id": "m-7a4bfae0:w15",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w15",
+    "mediaId": "m-6a8b0c2e",
     "text": "that",
-    "start": 5.65,
-    "end": 6.13
+    "start": 5.25,
+    "end": 5.301
    },
    {
-    "id": "m-7a4bfae0:w16",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w16",
+    "mediaId": "m-6a8b0c2e",
     "text": "summarizes",
-    "start": 6.13,
-    "end": 6.37
+    "start": 5.65,
+    "end": 6.335
    },
    {
-    "id": "m-7a4bfae0:w17",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w17",
+    "mediaId": "m-6a8b0c2e",
     "text": "your",
-    "start": 6.37,
-    "end": 6.555
+    "start": 6.335,
+    "end": 6.61
    },
    {
-    "id": "m-7a4bfae0:w18",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w18",
+    "mediaId": "m-6a8b0c2e",
     "text": "meeting",
-    "start": 6.555,
-    "end": 6.85
+    "start": 6.61,
+    "end": 6.93
    },
    {
-    "id": "m-7a4bfae0:w19",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w19",
+    "mediaId": "m-6a8b0c2e",
     "text": "notes",
-    "start": 6.85,
+    "start": 6.93,
     "end": 7.17
    },
    {
-    "id": "m-7a4bfae0:w20",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w20",
+    "mediaId": "m-6a8b0c2e",
     "text": "with",
     "start": 7.17,
-    "end": 7.65
+    "end": 7.37
    },
    {
-    "id": "m-7a4bfae0:w21",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w21",
+    "mediaId": "m-6a8b0c2e",
     "text": "an",
-    "start": 7.65,
-    "end": 7.73
+    "start": 7.37,
+    "end": 7.49
    },
    {
-    "id": "m-7a4bfae0:w22",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w22",
+    "mediaId": "m-6a8b0c2e",
     "text": "AI",
-    "start": 7.73,
+    "start": 7.49,
     "end": 7.81
    },
    {
-    "id": "m-7a4bfae0:w23",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w23",
+    "mediaId": "m-6a8b0c2e",
     "text": "model.",
     "start": 7.81,
     "end": 8.08
    },
    {
-    "id": "m-7a4bfae0:w24",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w24",
+    "mediaId": "m-6a8b0c2e",
     "text": "It",
     "start": 8.74,
-    "end": 8.85
+    "end": 8.791
    },
    {
-    "id": "m-7a4bfae0:w25",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w25",
+    "mediaId": "m-6a8b0c2e",
     "text": "takes",
-    "start": 8.85,
-    "end": 9.47
+    "start": 8.76,
+    "end": 9.31
    },
    {
-    "id": "m-7a4bfae0:w26",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w26",
+    "mediaId": "m-6a8b0c2e",
     "text": "um",
-    "start": 9.47,
-    "end": 9.97
+    "start": 9.31,
+    "end": 9.81
    },
    {
-    "id": "m-7a4bfae0:w27",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w27",
+    "mediaId": "m-6a8b0c2e",
     "text": "about",
-    "start": 9.97,
+    "start": 9.81,
+    "end": 10.098
+   },
+   {
+    "id": "m-6a8b0c2e:w28",
+    "mediaId": "m-6a8b0c2e",
+    "text": "two",
+    "start": 10.098,
     "end": 10.29
    },
    {
-    "id": "m-7a4bfae0:w28",
-    "mediaId": "m-7a4bfae0",
-    "text": "two",
-    "start": 10.29,
-    "end": 10.43
-   },
-   {
-    "id": "m-7a4bfae0:w29",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w29",
+    "mediaId": "m-6a8b0c2e",
     "text": "minutes,",
-    "start": 10.43,
-    "end": 10.93
+    "start": 10.29,
+    "end": 10.61
    },
    {
-    "id": "m-7a4bfae0:w30",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w30",
+    "mediaId": "m-6a8b0c2e",
     "text": "so",
-    "start": 10.93,
-    "end": 11.01
+    "start": 10.61,
+    "end": 11.09
    },
    {
-    "id": "m-7a4bfae0:w31",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w31",
+    "mediaId": "m-6a8b0c2e",
     "text": "let's",
-    "start": 11.01,
+    "start": 11.09,
     "end": 11.31
    },
    {
-    "id": "m-7a4bfae0:w32",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w32",
+    "mediaId": "m-6a8b0c2e",
     "text": "jump",
     "start": 11.31,
     "end": 11.79
    },
    {
-    "id": "m-7a4bfae0:w33",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w33",
+    "mediaId": "m-6a8b0c2e",
     "text": "right",
     "start": 12.63,
     "end": 12.681000000000001
    },
    {
-    "id": "m-7a4bfae0:w34",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w34",
+    "mediaId": "m-6a8b0c2e",
     "text": "in.",
     "start": 12.65,
     "end": 12.701
    },
    {
-    "id": "m-7a4bfae0:w35",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w35",
+    "mediaId": "m-6a8b0c2e",
     "text": "Here's",
     "start": 12.67,
+    "end": 12.721
+   },
+   {
+    "id": "m-6a8b0c2e:w36",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 12.69,
+    "end": 12.85
+   },
+   {
+    "id": "m-6a8b0c2e:w37",
+    "mediaId": "m-6a8b0c2e",
+    "text": "kind",
+    "start": 12.85,
     "end": 12.93
    },
    {
-    "id": "m-7a4bfae0:w36",
-    "mediaId": "m-7a4bfae0",
-    "text": "the",
-    "start": 12.93,
-    "end": 12.981
-   },
-   {
-    "id": "m-7a4bfae0:w37",
-    "mediaId": "m-7a4bfae0",
-    "text": "kind",
-    "start": 12.966,
-    "end": 13.017
-   },
-   {
-    "id": "m-7a4bfae0:w38",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w38",
+    "mediaId": "m-6a8b0c2e",
     "text": "of",
-    "start": 13.01,
-    "end": 13.17
+    "start": 12.93,
+    "end": 13.41
    },
    {
-    "id": "m-7a4bfae0:w39",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w40",
+    "mediaId": "m-6a8b0c2e",
     "text": "notes",
-    "start": 13.17,
+    "start": 13.41,
     "end": 13.65
    },
    {
-    "id": "m-7a4bfae0:w40",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w41",
+    "mediaId": "m-6a8b0c2e",
     "text": "I",
     "start": 13.65,
     "end": 13.73
    },
    {
-    "id": "m-7a4bfae0:w41",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w42",
+    "mediaId": "m-6a8b0c2e",
     "text": "mean.",
     "start": 13.73,
     "end": 13.88
    },
    {
-    "id": "m-7a4bfae0:w42",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w43",
+    "mediaId": "m-6a8b0c2e",
     "text": "Just",
     "start": 14.33,
-    "end": 14.45
+    "end": 14.621
    },
    {
-    "id": "m-7a4bfae0:w43",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w44",
+    "mediaId": "m-6a8b0c2e",
     "text": "a",
-    "start": 14.45,
-    "end": 14.77
+    "start": 14.621,
+    "end": 14.85
    },
    {
-    "id": "m-7a4bfae0:w44",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w45",
+    "mediaId": "m-6a8b0c2e",
     "text": "few",
-    "start": 14.77,
+    "start": 14.85,
+    "end": 14.995
+   },
+   {
+    "id": "m-6a8b0c2e:w46",
+    "mediaId": "m-6a8b0c2e",
+    "text": "bullet",
+    "start": 14.995,
     "end": 15.25
    },
    {
-    "id": "m-7a4bfae0:w45",
-    "mediaId": "m-7a4bfae0",
-    "text": "bullet",
-    "start": 15.25,
-    "end": 15.301
-   },
-   {
-    "id": "m-7a4bfae0:w46",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w47",
+    "mediaId": "m-6a8b0c2e",
     "text": "points",
-    "start": 15.29,
-    "end": 15.341
+    "start": 15.25,
+    "end": 15.53
    },
    {
-    "id": "m-7a4bfae0:w47",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w48",
+    "mediaId": "m-6a8b0c2e",
     "text": "from",
-    "start": 15.33,
-    "end": 15.65
+    "start": 15.53,
+    "end": 15.73
    },
    {
-    "id": "m-7a4bfae0:w48",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w49",
+    "mediaId": "m-6a8b0c2e",
     "text": "our",
-    "start": 15.65,
-    "end": 15.97
+    "start": 15.73,
+    "end": 16.05
    },
    {
-    "id": "m-7a4bfae0:w49",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w50",
+    "mediaId": "m-6a8b0c2e",
     "text": "weekly",
-    "start": 15.97,
-    "end": 16.29
+    "start": 16.05,
+    "end": 16.21
    },
    {
-    "id": "m-7a4bfae0:w50",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w51",
+    "mediaId": "m-6a8b0c2e",
     "text": "sync.",
-    "start": 16.29,
+    "start": 16.21,
     "end": 16.37
    },
    {
-    "id": "m-7a4bfae0:w51",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w52",
+    "mediaId": "m-6a8b0c2e",
     "text": "Nothing",
     "start": 16.9,
-    "end": 17.41
+    "end": 17.141
    },
    {
-    "id": "m-7a4bfae0:w52",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w53",
+    "mediaId": "m-6a8b0c2e",
     "text": "fancy,",
-    "start": 17.41,
-    "end": 17.75
+    "start": 17.141,
+    "end": 17.71
    },
    {
-    "id": "m-7a4bfae0:w53",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w54",
+    "mediaId": "m-6a8b0c2e",
     "text": "um",
-    "start": 18.01,
-    "end": 18.1
+    "start": 17.71,
+    "end": 17.761
    },
    {
-    "id": "m-7a4bfae0:w54",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w55",
+    "mediaId": "m-6a8b0c2e",
     "text": "just",
-    "start": 18.1,
-    "end": 18.45
+    "start": 18.01,
+    "end": 18.61
    },
    {
-    "id": "m-7a4bfae0:w55",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w56",
+    "mediaId": "m-6a8b0c2e",
     "text": "plain",
-    "start": 18.45,
-    "end": 18.99
+    "start": 18.61,
+    "end": 18.91
    },
    {
-    "id": "m-7a4bfae0:w56",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w57",
+    "mediaId": "m-6a8b0c2e",
     "text": "markdown",
-    "start": 18.99,
-    "end": 19.49
+    "start": 18.91,
+    "end": 19.41
    },
    {
-    "id": "m-7a4bfae0:w57",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w58",
+    "mediaId": "m-6a8b0c2e",
     "text": "that",
-    "start": 19.49,
-    "end": 19.87
+    "start": 19.41,
+    "end": 19.65
    },
    {
-    "id": "m-7a4bfae0:w58",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w59",
+    "mediaId": "m-6a8b0c2e",
     "text": "anyone",
-    "start": 19.87,
-    "end": 20.37
+    "start": 19.65,
+    "end": 19.97
    },
    {
-    "id": "m-7a4bfae0:w59",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w60",
+    "mediaId": "m-6a8b0c2e",
     "text": "on",
-    "start": 20.37,
-    "end": 20.421
+    "start": 19.97,
+    "end": 20.29
    },
    {
-    "id": "m-7a4bfae0:w60",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w61",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 20.41,
-    "end": 20.463
+    "start": 20.29,
+    "end": 20.45
    },
    {
-    "id": "m-7a4bfae0:w61",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w62",
+    "mediaId": "m-6a8b0c2e",
     "text": "team",
-    "start": 20.463,
-    "end": 20.53
+    "start": 20.45,
+    "end": 20.61
    },
    {
-    "id": "m-7a4bfae0:w62",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w63",
+    "mediaId": "m-6a8b0c2e",
     "text": "can",
-    "start": 20.53,
+    "start": 20.61,
     "end": 20.9
    },
    {
-    "id": "m-7a4bfae0:w63",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w64",
+    "mediaId": "m-6a8b0c2e",
     "text": "write.",
     "start": 22.09,
     "end": 22.141
    },
    {
-    "id": "m-7a4bfae0:w64",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w65",
+    "mediaId": "m-6a8b0c2e",
     "text": "First",
     "start": 22.11,
-    "end": 22.29
+    "end": 22.21
    },
    {
-    "id": "m-7a4bfae0:w65",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w66",
+    "mediaId": "m-6a8b0c2e",
     "text": "I'll",
-    "start": 22.29,
-    "end": 22.435
+    "start": 22.21,
+    "end": 22.61
    },
    {
-    "id": "m-7a4bfae0:w66",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w67",
+    "mediaId": "m-6a8b0c2e",
     "text": "create",
-    "start": 22.435,
-    "end": 22.69
+    "start": 22.61,
+    "end": 22.921
    },
    {
-    "id": "m-7a4bfae0:w67",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w68",
+    "mediaId": "m-6a8b0c2e",
     "text": "a",
-    "start": 22.69,
-    "end": 22.797
-   },
-   {
-    "id": "m-7a4bfae0:w68",
-    "mediaId": "m-7a4bfae0",
-    "text": "new",
-    "start": 22.797,
+    "start": 22.921,
     "end": 23.01
    },
    {
-    "id": "m-7a4bfae0:w69",
-    "mediaId": "m-7a4bfae0",
-    "text": "folder",
+    "id": "m-6a8b0c2e:w69",
+    "mediaId": "m-6a8b0c2e",
+    "text": "new",
     "start": 23.01,
     "end": 23.25
    },
    {
-    "id": "m-7a4bfae0:w70",
-    "mediaId": "m-7a4bfae0",
-    "text": "and",
+    "id": "m-6a8b0c2e:w70",
+    "mediaId": "m-6a8b0c2e",
+    "text": "folder",
     "start": 23.25,
-    "end": 23.73
+    "end": 23.57
    },
    {
-    "id": "m-7a4bfae0:w71",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w71",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 23.57,
+    "end": 23.71
+   },
+   {
+    "id": "m-6a8b0c2e:w72",
+    "mediaId": "m-6a8b0c2e",
     "text": "install",
-    "start": 23.73,
-    "end": 24.03
+    "start": 23.71,
+    "end": 24.21
    },
    {
-    "id": "m-7a4bfae0:w72",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w73",
+    "mediaId": "m-6a8b0c2e",
     "text": "two",
-    "start": 24.03,
-    "end": 24.53
+    "start": 24.21,
+    "end": 24.29
    },
    {
-    "id": "m-7a4bfae0:w73",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w74",
+    "mediaId": "m-6a8b0c2e",
     "text": "packages,",
-    "start": 24.53,
-    "end": 24.820999999999998
+    "start": 24.29,
+    "end": 24.8
    },
    {
-    "id": "m-7a4bfae0:w75",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w76",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
     "start": 25.28,
-    "end": 25.55
+    "end": 25.65
    },
    {
-    "id": "m-7a4bfae0:w76",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w77",
+    "mediaId": "m-6a8b0c2e",
     "text": "OpenAI",
-    "start": 25.55,
-    "end": 26.05
+    "start": 25.65,
+    "end": 26.13
    },
    {
-    "id": "m-7a4bfae0:w77",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w78",
+    "mediaId": "m-6a8b0c2e",
     "text": "client",
-    "start": 26.05,
-    "end": 26.37
+    "start": 26.13,
+    "end": 26.45
    },
    {
-    "id": "m-7a4bfae0:w78",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w79",
+    "mediaId": "m-6a8b0c2e",
     "text": "and",
-    "start": 26.37,
+    "start": 26.45,
     "end": 27.31
    },
    {
-    "id": "m-7a4bfae0:w79",
-    "mediaId": "m-7a4bfae0",
-    "text": "dotenv.",
+    "id": "m-6a8b0c2e:w80",
+    "mediaId": "m-6a8b0c2e",
+    "text": "dotenv",
     "start": 27.31,
     "end": 27.360999999999997
    },
    {
-    "id": "m-7a4bfae0:w80",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w81",
+    "mediaId": "m-6a8b0c2e",
     "text": "Okay,",
     "start": 27.91,
     "end": 28.33
    },
    {
-    "id": "m-7a4bfae0:w81",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w82",
+    "mediaId": "m-6a8b0c2e",
     "text": "that's",
     "start": 28.61,
     "end": 28.85
    },
    {
-    "id": "m-7a4bfae0:w82",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w83",
+    "mediaId": "m-6a8b0c2e",
     "text": "done.",
     "start": 28.85,
     "end": 29.09
    },
    {
-    "id": "m-7a4bfae0:w83",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w84",
+    "mediaId": "m-6a8b0c2e",
     "text": "Next,",
-    "start": 30.27,
+    "start": 30.59,
     "end": 30.66
    },
    {
-    "id": "m-7a4bfae0:w84",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w85",
+    "mediaId": "m-6a8b0c2e",
     "text": "I'll",
     "start": 31.13,
-    "end": 31.65
-   },
-   {
-    "id": "m-7a4bfae0:w85",
-    "mediaId": "m-7a4bfae0",
-    "text": "open",
-    "start": 31.65,
     "end": 31.81
    },
    {
-    "id": "m-7a4bfae0:w86",
-    "mediaId": "m-7a4bfae0",
-    "text": "the",
+    "id": "m-6a8b0c2e:w86",
+    "mediaId": "m-6a8b0c2e",
+    "text": "open",
     "start": 31.81,
-    "end": 32.03
+    "end": 31.89
    },
    {
-    "id": "m-7a4bfae0:w87",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w87",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 31.89,
+    "end": 32.13
+   },
+   {
+    "id": "m-6a8b0c2e:w88",
+    "mediaId": "m-6a8b0c2e",
     "text": ".env",
-    "start": 32.03,
-    "end": 32.53
+    "start": 32.13,
+    "end": 32.379
    },
    {
-    "id": "m-7a4bfae0:w88",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w89",
+    "mediaId": "m-6a8b0c2e",
     "text": "file",
-    "start": 32.53,
+    "start": 32.379,
     "end": 32.64
    },
    {
-    "id": "m-7a4bfae0:w89",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w90",
+    "mediaId": "m-6a8b0c2e",
     "text": "and",
     "start": 33.01,
-    "end": 33.17
+    "end": 33.061
    },
    {
-    "id": "m-7a4bfae0:w90",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w91",
+    "mediaId": "m-6a8b0c2e",
     "text": "paste",
-    "start": 33.17,
-    "end": 33.41
+    "start": 33.03,
+    "end": 33.39
    },
    {
-    "id": "m-7a4bfae0:w91",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w92",
+    "mediaId": "m-6a8b0c2e",
     "text": "my",
-    "start": 33.41,
-    "end": 33.63
+    "start": 33.39,
+    "end": 33.89
    },
    {
-    "id": "m-7a4bfae0:w92",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w93",
+    "mediaId": "m-6a8b0c2e",
     "text": "API",
-    "start": 33.63,
-    "end": 34.13
+    "start": 33.89,
+    "end": 34.21
    },
    {
-    "id": "m-7a4bfae0:w93",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w94",
+    "mediaId": "m-6a8b0c2e",
     "text": "key",
-    "start": 34.13,
+    "start": 34.21,
+    "end": 34.281
+   },
+   {
+    "id": "m-6a8b0c2e:w95",
+    "mediaId": "m-6a8b0c2e",
+    "text": "here.",
+    "start": 34.281,
     "end": 34.37
    },
    {
-    "id": "m-7a4bfae0:w94",
-    "mediaId": "m-7a4bfae0",
-    "text": "here.",
+    "id": "m-6a8b0c2e:w96",
+    "mediaId": "m-6a8b0c2e",
+    "text": "key",
     "start": 34.37,
+    "end": 34.45
+   },
+   {
+    "id": "m-6a8b0c2e:w97",
+    "mediaId": "m-6a8b0c2e",
+    "text": "here.",
+    "start": 34.45,
     "end": 34.6
    },
    {
-    "id": "m-7a4bfae0:w95",
-    "mediaId": "m-7a4bfae0",
-    "text": "you",
+    "id": "m-6a8b0c2e:w98",
+    "mediaId": "m-6a8b0c2e",
+    "text": "You",
     "start": 35.2,
     "end": 35.251000000000005
    },
    {
-    "id": "m-7a4bfae0:w96",
-    "mediaId": "m-7a4bfae0",
-    "text": "know",
-    "start": 35.25,
-    "end": 35.41
+    "id": "m-6a8b0c2e:w99",
+    "mediaId": "m-6a8b0c2e",
+    "text": "know,",
+    "start": 35.22,
+    "end": 35.65
    },
    {
-    "id": "m-7a4bfae0:w97",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w100",
+    "mediaId": "m-6a8b0c2e",
     "text": "you",
-    "start": 35.41,
-    "end": 35.68
+    "start": 35.65,
+    "end": 35.701
    },
    {
-    "id": "m-7a4bfae0:w98",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w101",
+    "mediaId": "m-6a8b0c2e",
     "text": "should",
     "start": 36.02,
     "end": 36.29
    },
    {
-    "id": "m-7a4bfae0:w99",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w103",
+    "mediaId": "m-6a8b0c2e",
     "text": "never",
     "start": 36.29,
-    "end": 36.59
+    "end": 36.75
    },
    {
-    "id": "m-7a4bfae0:w100",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w104",
+    "mediaId": "m-6a8b0c2e",
     "text": "hard",
-    "start": 36.59,
-    "end": 37.09
+    "start": 36.75,
+    "end": 37.25
    },
    {
-    "id": "m-7a4bfae0:w101",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w105",
+    "mediaId": "m-6a8b0c2e",
     "text": "code",
-    "start": 37.09,
-    "end": 37.376
+    "start": 37.25,
+    "end": 37.421
    },
    {
-    "id": "m-7a4bfae0:w102",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w106",
+    "mediaId": "m-6a8b0c2e",
     "text": "a",
-    "start": 37.376,
+    "start": 37.421,
     "end": 37.49
    },
    {
-    "id": "m-7a4bfae0:w103",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w107",
+    "mediaId": "m-6a8b0c2e",
     "text": "key",
     "start": 37.49,
-    "end": 37.89
+    "end": 37.81
    },
    {
-    "id": "m-7a4bfae0:w104",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w108",
+    "mediaId": "m-6a8b0c2e",
     "text": "in",
-    "start": 37.89,
-    "end": 37.95
+    "start": 37.81,
+    "end": 37.87
    },
    {
-    "id": "m-7a4bfae0:w105",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w109",
+    "mediaId": "m-6a8b0c2e",
     "text": "your",
-    "start": 37.95,
-    "end": 38.05
+    "start": 37.87,
+    "end": 37.97
    },
    {
-    "id": "m-7a4bfae0:w106",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w110",
+    "mediaId": "m-6a8b0c2e",
     "text": "source",
-    "start": 38.05,
-    "end": 38.19
+    "start": 37.97,
+    "end": 38.21
    },
    {
-    "id": "m-7a4bfae0:w107",
-    "mediaId": "m-7a4bfae0",
-    "text": "code",
-    "start": 38.19,
+    "id": "m-6a8b0c2e:w111",
+    "mediaId": "m-6a8b0c2e",
+    "text": "code.",
+    "start": 38.21,
     "end": 38.33
    },
    {
-    "id": "m-7a4bfae0:w108",
-    "mediaId": "m-7a4bfae0",
-    "text": "and",
+    "id": "m-6a8b0c2e:w112",
+    "mediaId": "m-6a8b0c2e",
+    "text": "And",
     "start": 38.93,
-    "end": 39.33
+    "end": 39.41
    },
    {
-    "id": "m-7a4bfae0:w109",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w113",
+    "mediaId": "m-6a8b0c2e",
     "text": "please",
-    "start": 39.33,
-    "end": 39.75
+    "start": 39.41,
+    "end": 39.73
    },
    {
-    "id": "m-7a4bfae0:w110",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w114",
+    "mediaId": "m-6a8b0c2e",
     "text": "don't",
-    "start": 39.75,
+    "start": 39.73,
     "end": 40.05
    },
    {
-    "id": "m-7a4bfae0:w111",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w115",
+    "mediaId": "m-6a8b0c2e",
     "text": "share",
     "start": 40.05,
-    "end": 40.21
+    "end": 40.477
    },
    {
-    "id": "m-7a4bfae0:w112",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w116",
+    "mediaId": "m-6a8b0c2e",
     "text": "it",
-    "start": 40.21,
-    "end": 40.29
-   },
-   {
-    "id": "m-7a4bfae0:w113",
-    "mediaId": "m-7a4bfae0",
-    "text": "on",
-    "start": 40.29,
+    "start": 40.477,
     "end": 40.69
    },
    {
-    "id": "m-7a4bfae0:w114",
-    "mediaId": "m-7a4bfae0",
-    "text": "screen",
+    "id": "m-6a8b0c2e:w117",
+    "mediaId": "m-6a8b0c2e",
+    "text": "on",
     "start": 40.69,
+    "end": 40.762
+   },
+   {
+    "id": "m-6a8b0c2e:w118",
+    "mediaId": "m-6a8b0c2e",
+    "text": "screen",
+    "start": 40.762,
     "end": 40.93
    },
    {
-    "id": "m-7a4bfae0:w115",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w119",
+    "mediaId": "m-6a8b0c2e",
     "text": "like",
     "start": 40.93,
+    "end": 41.17
+   },
+   {
+    "id": "m-6a8b0c2e:w120",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I",
+    "start": 41.17,
     "end": 41.41
    },
    {
-    "id": "m-7a4bfae0:w116",
-    "mediaId": "m-7a4bfae0",
-    "text": "I",
-    "start": 41.41,
-    "end": 41.73
-   },
-   {
-    "id": "m-7a4bfae0:w117",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w121",
+    "mediaId": "m-6a8b0c2e",
     "text": "just",
-    "start": 41.73,
-    "end": 41.81
+    "start": 41.41,
+    "end": 41.49
    },
    {
-    "id": "m-7a4bfae0:w118",
-    "mediaId": "m-7a4bfae0",
-    "text": "did",
-    "start": 41.81,
+    "id": "m-6a8b0c2e:w122",
+    "mediaId": "m-6a8b0c2e",
+    "text": "did.",
+    "start": 41.49,
     "end": 41.9
    },
    {
-    "id": "m-7a4bfae0:w119",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w123",
+    "mediaId": "m-6a8b0c2e",
     "text": "Now",
     "start": 42.99,
-    "end": 43.041000000000004
+    "end": 43.51
    },
    {
-    "id": "m-7a4bfae0:w120",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w124",
+    "mediaId": "m-6a8b0c2e",
     "text": "let's",
-    "start": 43.01,
-    "end": 43.83
+    "start": 43.51,
+    "end": 43.75
    },
    {
-    "id": "m-7a4bfae0:w122",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w125",
+    "mediaId": "m-6a8b0c2e",
     "text": "write",
-    "start": 43.83,
-    "end": 43.99
+    "start": 43.75,
+    "end": 43.942
    },
    {
-    "id": "m-7a4bfae0:w123",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w126",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 43.99,
-    "end": 44.097
+    "start": 43.942,
+    "end": 44.07
    },
    {
-    "id": "m-7a4bfae0:w124",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w127",
+    "mediaId": "m-6a8b0c2e",
     "text": "main",
-    "start": 44.097,
-    "end": 44.23
+    "start": 44.07,
+    "end": 44.39
    },
    {
-    "id": "m-7a4bfae0:w125",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w128",
+    "mediaId": "m-6a8b0c2e",
     "text": "script.",
-    "start": 44.23,
+    "start": 44.39,
     "end": 44.58
    },
    {
-    "id": "m-7a4bfae0:w126",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w129",
+    "mediaId": "m-6a8b0c2e",
     "text": "We",
     "start": 44.93,
-    "end": 45.19
+    "end": 45.08
    },
    {
-    "id": "m-7a4bfae0:w127",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w130",
+    "mediaId": "m-6a8b0c2e",
     "text": "load",
-    "start": 45.19,
-    "end": 45.457
+    "start": 45.08,
+    "end": 45.43
    },
    {
-    "id": "m-7a4bfae0:w128",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w131",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 45.457,
-    "end": 45.67
-   },
-   {
-    "id": "m-7a4bfae0:w129",
-    "mediaId": "m-7a4bfae0",
-    "text": "key",
-    "start": 45.67,
+    "start": 45.43,
     "end": 45.75
    },
    {
-    "id": "m-7a4bfae0:w130",
-    "mediaId": "m-7a4bfae0",
-    "text": "with",
+    "id": "m-6a8b0c2e:w132",
+    "mediaId": "m-6a8b0c2e",
+    "text": "key",
     "start": 45.75,
-    "end": 46.05
+    "end": 45.801
    },
    {
-    "id": "m-7a4bfae0:w131",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w133",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 45.786,
+    "end": 46.21
+   },
+   {
+    "id": "m-6a8b0c2e:w134",
+    "mediaId": "m-6a8b0c2e",
     "text": "dotenv",
-    "start": 46.05,
+    "start": 46.21,
     "end": 46.42
    },
    {
-    "id": "m-7a4bfae0:w132",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w135",
+    "mediaId": "m-6a8b0c2e",
     "text": "and",
     "start": 46.88,
-    "end": 46.95
+    "end": 46.931000000000004
    },
    {
-    "id": "m-7a4bfae0:w133",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w136",
+    "mediaId": "m-6a8b0c2e",
     "text": "read",
-    "start": 46.95,
+    "start": 46.9,
     "end": 47.35
    },
    {
-    "id": "m-7a4bfae0:w134",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w137",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
     "start": 47.35,
-    "end": 47.59
+    "end": 47.67
    },
    {
-    "id": "m-7a4bfae0:w135",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w138",
+    "mediaId": "m-6a8b0c2e",
     "text": "notes",
-    "start": 47.59,
+    "start": 47.67,
+    "end": 47.801
+   },
+   {
+    "id": "m-6a8b0c2e:w139",
+    "mediaId": "m-6a8b0c2e",
+    "text": "file",
+    "start": 47.801,
     "end": 47.91
    },
    {
-    "id": "m-7a4bfae0:w136",
-    "mediaId": "m-7a4bfae0",
-    "text": "file",
-    "start": 47.91,
-    "end": 47.961
-   },
-   {
-    "id": "m-7a4bfae0:w137",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w140",
+    "mediaId": "m-6a8b0c2e",
     "text": "from",
-    "start": 47.95,
-    "end": 48.001000000000005
+    "start": 47.91,
+    "end": 48.07
    },
    {
-    "id": "m-7a4bfae0:w138",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w141",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 47.99,
-    "end": 48.31
+    "start": 48.07,
+    "end": 48.39
    },
    {
-    "id": "m-7a4bfae0:w139",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w142",
+    "mediaId": "m-6a8b0c2e",
     "text": "first",
-    "start": 48.31,
-    "end": 48.63
+    "start": 48.39,
+    "end": 48.47
    },
    {
-    "id": "m-7a4bfae0:w140",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w143",
+    "mediaId": "m-6a8b0c2e",
     "text": "argument.",
-    "start": 48.63,
+    "start": 48.47,
     "end": 48.8
    },
    {
-    "id": "m-7a4bfae0:w141",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w144",
+    "mediaId": "m-6a8b0c2e",
     "text": "Then",
     "start": 49.37,
-    "end": 49.421
+    "end": 49.51
    },
    {
-    "id": "m-7a4bfae0:w142",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w145",
+    "mediaId": "m-6a8b0c2e",
     "text": "we",
-    "start": 49.39,
-    "end": 49.75
+    "start": 49.51,
+    "end": 49.59
    },
    {
-    "id": "m-7a4bfae0:w143",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w146",
+    "mediaId": "m-6a8b0c2e",
     "text": "call",
-    "start": 49.75,
-    "end": 49.928
+    "start": 49.59,
+    "end": 49.99
    },
    {
-    "id": "m-7a4bfae0:w144",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w147",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 49.928,
-    "end": 50.07
+    "start": 49.99,
+    "end": 50.31
    },
    {
-    "id": "m-7a4bfae0:w145",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w148",
+    "mediaId": "m-6a8b0c2e",
     "text": "chat",
-    "start": 50.07,
-    "end": 50.23
+    "start": 50.31,
+    "end": 50.47
    },
    {
-    "id": "m-7a4bfae0:w146",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w149",
+    "mediaId": "m-6a8b0c2e",
     "text": "endpoint",
-    "start": 50.23,
-    "end": 50.77
+    "start": 50.47,
+    "end": 50.881
    },
    {
-    "id": "m-7a4bfae0:w147",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w150",
+    "mediaId": "m-6a8b0c2e",
     "text": "with",
-    "start": 50.77,
-    "end": 51.91
+    "start": 50.881,
+    "end": 51.421
    },
    {
-    "id": "m-7a4bfae0:w149",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w152",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 51.91,
-    "end": 51.99
+    "start": 51.421,
+    "end": 51.67
    },
    {
-    "id": "m-7a4bfae0:w150",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w153",
+    "mediaId": "m-6a8b0c2e",
     "text": "wrong",
-    "start": 51.99,
-    "end": 52.041000000000004
+    "start": 51.67,
+    "end": 52.03
    },
    {
-    "id": "m-7a4bfae0:w151",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w154",
+    "mediaId": "m-6a8b0c2e",
     "text": "sorry",
     "start": 52.7,
-    "end": 53.07
+    "end": 53.03
    },
    {
-    "id": "m-7a4bfae0:w152",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w155",
+    "mediaId": "m-6a8b0c2e",
     "text": "let",
+    "start": 53.03,
+    "end": 53.081
+   },
+   {
+    "id": "m-6a8b0c2e:w156",
+    "mediaId": "m-6a8b0c2e",
+    "text": "me",
     "start": 53.45,
     "end": 53.59
    },
    {
-    "id": "m-7a4bfae0:w153",
-    "mediaId": "m-7a4bfae0",
-    "text": "me",
+    "id": "m-6a8b0c2e:w157",
+    "mediaId": "m-6a8b0c2e",
+    "text": "say",
     "start": 53.59,
-    "end": 53.796
+    "end": 53.91
    },
    {
-    "id": "m-7a4bfae0:w154",
-    "mediaId": "m-7a4bfae0",
-    "text": "say",
-    "start": 53.796,
+    "id": "m-6a8b0c2e:w158",
+    "mediaId": "m-6a8b0c2e",
+    "text": "that",
+    "start": 53.91,
     "end": 54.07
    },
    {
-    "id": "m-7a4bfae0:w155",
-    "mediaId": "m-7a4bfae0",
-    "text": "that",
-    "start": 54.07,
-    "end": 54.31
-   },
-   {
-    "id": "m-7a4bfae0:w156",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w159",
+    "mediaId": "m-6a8b0c2e",
     "text": "again.",
-    "start": 54.31,
-    "end": 54.361000000000004
+    "start": 54.07,
+    "end": 54.36
    },
    {
-    "id": "m-7a4bfae0:w157",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w160",
+    "mediaId": "m-6a8b0c2e",
     "text": "Then",
     "start": 55.09,
-    "end": 55.215
+    "end": 55.141000000000005
    },
    {
-    "id": "m-7a4bfae0:w158",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w161",
+    "mediaId": "m-6a8b0c2e",
     "text": "we",
-    "start": 55.215,
+    "start": 55.11,
+    "end": 55.35
+   },
+   {
+    "id": "m-6a8b0c2e:w162",
+    "mediaId": "m-6a8b0c2e",
+    "text": "call",
+    "start": 55.35,
     "end": 55.59
    },
    {
-    "id": "m-7a4bfae0:w159",
-    "mediaId": "m-7a4bfae0",
-    "text": "call",
-    "start": 55.59,
-    "end": 55.67
-   },
-   {
-    "id": "m-7a4bfae0:w160",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w163",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 55.67,
-    "end": 55.91
+    "start": 55.59,
+    "end": 55.81
    },
    {
-    "id": "m-7a4bfae0:w161",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w164",
+    "mediaId": "m-6a8b0c2e",
     "text": "chat",
-    "start": 55.91,
-    "end": 56.45
+    "start": 55.81,
+    "end": 56.31
    },
    {
-    "id": "m-7a4bfae0:w162",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w165",
+    "mediaId": "m-6a8b0c2e",
     "text": "completions",
-    "start": 56.45,
-    "end": 56.95
+    "start": 56.31,
+    "end": 56.79
    },
    {
-    "id": "m-7a4bfae0:w163",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w166",
+    "mediaId": "m-6a8b0c2e",
     "text": "endpoint",
-    "start": 56.95,
+    "start": 56.79,
     "end": 57.19
    },
    {
-    "id": "m-7a4bfae0:w164",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w167",
+    "mediaId": "m-6a8b0c2e",
     "text": "with",
     "start": 57.19,
-    "end": 57.43
+    "end": 57.35
    },
    {
-    "id": "m-7a4bfae0:w165",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w169",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 57.43,
+    "start": 57.35,
+    "end": 57.414
+   },
+   {
+    "id": "m-6a8b0c2e:w170",
+    "mediaId": "m-6a8b0c2e",
+    "text": "model",
+    "start": 57.414,
     "end": 57.51
    },
    {
-    "id": "m-7a4bfae0:w166",
-    "mediaId": "m-7a4bfae0",
-    "text": "model",
-    "start": 57.51,
-    "end": 57.59
-   },
-   {
-    "id": "m-7a4bfae0:w167",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w171",
+    "mediaId": "m-6a8b0c2e",
     "text": "name",
-    "start": 57.59,
-    "end": 57.83
-   },
-   {
-    "id": "m-7a4bfae0:w168",
-    "mediaId": "m-7a4bfae0",
-    "text": "and",
-    "start": 57.83,
+    "start": 57.51,
     "end": 57.91
    },
    {
-    "id": "m-7a4bfae0:w169",
-    "mediaId": "m-7a4bfae0",
-    "text": "a",
+    "id": "m-6a8b0c2e:w172",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
     "start": 58.2,
-    "end": 58.61
+    "end": 58.251000000000005
    },
    {
-    "id": "m-7a4bfae0:w170",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w173",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 58.23,
+    "end": 58.71
+   },
+   {
+    "id": "m-6a8b0c2e:w174",
+    "mediaId": "m-6a8b0c2e",
     "text": "short",
-    "start": 58.61,
-    "end": 59.11
+    "start": 58.71,
+    "end": 58.87
    },
    {
-    "id": "m-7a4bfae0:w171",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w175",
+    "mediaId": "m-6a8b0c2e",
     "text": "system",
-    "start": 59.11,
-    "end": 59.27
+    "start": 58.87,
+    "end": 59.25
    },
    {
-    "id": "m-7a4bfae0:w172",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w176",
+    "mediaId": "m-6a8b0c2e",
     "text": "prompt.",
-    "start": 59.27,
+    "start": 59.25,
     "end": 59.48
    },
    {
-    "id": "m-7a4bfae0:w173",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w177",
+    "mediaId": "m-6a8b0c2e",
     "text": "Finally",
     "start": 60,
-    "end": 60.277
-   },
-   {
-    "id": "m-7a4bfae0:w174",
-    "mediaId": "m-7a4bfae0",
-    "text": "we",
-    "start": 60.277,
     "end": 60.55
    },
    {
-    "id": "m-7a4bfae0:w175",
-    "mediaId": "m-7a4bfae0",
-    "text": "print",
+    "id": "m-6a8b0c2e:w178",
+    "mediaId": "m-6a8b0c2e",
+    "text": "we",
     "start": 60.55,
-    "end": 61.03
+    "end": 60.63
    },
    {
-    "id": "m-7a4bfae0:w176",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w179",
+    "mediaId": "m-6a8b0c2e",
+    "text": "print",
+    "start": 60.63,
+    "end": 61.014
+   },
+   {
+    "id": "m-6a8b0c2e:w180",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 61.03,
+    "start": 61.014,
     "end": 61.27
    },
    {
-    "id": "m-7a4bfae0:w177",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w181",
+    "mediaId": "m-6a8b0c2e",
     "text": "summary.",
     "start": 61.27,
     "end": 61.45
    },
    {
-    "id": "m-7a4bfae0:w178",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w182",
+    "mediaId": "m-6a8b0c2e",
     "text": "Let's",
     "start": 62.61,
-    "end": 63.01
+    "end": 63.11
    },
    {
-    "id": "m-7a4bfae0:w179",
-    "mediaId": "m-7a4bfae0",
-    "text": "um",
-    "start": 63.01,
-    "end": 63.51
-   },
-   {
-    "id": "m-7a4bfae0:w180",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w183",
+    "mediaId": "m-6a8b0c2e",
     "text": "try",
-    "start": 63.51,
-    "end": 63.702
+    "start": 63.11,
+    "end": 63.659
    },
    {
-    "id": "m-7a4bfae0:w181",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w184",
+    "mediaId": "m-6a8b0c2e",
     "text": "it",
-    "start": 63.702,
-    "end": 63.846
+    "start": 63.659,
+    "end": 64.07
    },
    {
-    "id": "m-7a4bfae0:w182",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w185",
+    "mediaId": "m-6a8b0c2e",
     "text": "on",
-    "start": 63.846,
-    "end": 63.99
+    "start": 64.07,
+    "end": 64.214
    },
    {
-    "id": "m-7a4bfae0:w183",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w186",
+    "mediaId": "m-6a8b0c2e",
     "text": "a",
-    "start": 63.99,
-    "end": 64.23
+    "start": 64.214,
+    "end": 64.31
    },
    {
-    "id": "m-7a4bfae0:w184",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w187",
+    "mediaId": "m-6a8b0c2e",
     "text": "real",
-    "start": 64.23,
-    "end": 64.39
+    "start": 64.31,
+    "end": 64.61
    },
    {
-    "id": "m-7a4bfae0:w185",
-    "mediaId": "m-7a4bfae0",
-    "text": "meeting.",
-    "start": 64.39,
-    "end": 64.62
+    "id": "m-6a8b0c2e:w188",
+    "mediaId": "m-6a8b0c2e",
+    "text": "meeting",
+    "start": 64.61,
+    "end": 64.661
    },
    {
-    "id": "m-7a4bfae0:w186",
-    "mediaId": "m-7a4bfae0",
-    "text": "And",
+    "id": "m-6a8b0c2e:w189",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
     "start": 65.33,
-    "end": 65.381
+    "end": 65.49
    },
    {
-    "id": "m-7a4bfae0:w187",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w190",
+    "mediaId": "m-6a8b0c2e",
     "text": "there",
-    "start": 65.35,
-    "end": 65.59
+    "start": 65.49,
+    "end": 65.99
    },
    {
-    "id": "m-7a4bfae0:w188",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w191",
+    "mediaId": "m-6a8b0c2e",
     "text": "it",
-    "start": 65.59,
-    "end": 65.83
-   },
-   {
-    "id": "m-7a4bfae0:w189",
-    "mediaId": "m-7a4bfae0",
-    "text": "is.",
-    "start": 65.83,
+    "start": 65.99,
     "end": 66.06
    },
    {
-    "id": "m-7a4bfae0:w190",
-    "mediaId": "m-7a4bfae0",
-    "text": "Three",
+    "id": "m-6a8b0c2e:w192",
+    "mediaId": "m-6a8b0c2e",
+    "text": "is",
     "start": 66.47,
-    "end": 66.95
+    "end": 66.521
    },
    {
-    "id": "m-7a4bfae0:w191",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w193",
+    "mediaId": "m-6a8b0c2e",
+    "text": "three",
+    "start": 66.49,
+    "end": 66.79
+   },
+   {
+    "id": "m-6a8b0c2e:w194",
+    "mediaId": "m-6a8b0c2e",
     "text": "bullet",
-    "start": 66.95,
-    "end": 67.03
+    "start": 66.79,
+    "end": 67.27
    },
    {
-    "id": "m-7a4bfae0:w192",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w195",
+    "mediaId": "m-6a8b0c2e",
     "text": "points",
-    "start": 67.03,
-    "end": 67.43
+    "start": 67.27,
+    "end": 67.45
    },
    {
-    "id": "m-7a4bfae0:w193",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w196",
+    "mediaId": "m-6a8b0c2e",
     "text": "and",
-    "start": 67.43,
-    "end": 67.48100000000001
-   },
-   {
-    "id": "m-7a4bfae0:w194",
-    "mediaId": "m-7a4bfae0",
-    "text": "a",
     "start": 67.8,
-    "end": 67.99
+    "end": 67.851
    },
    {
-    "id": "m-7a4bfae0:w195",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w197",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 67.83,
+    "end": 68.15
+   },
+   {
+    "id": "m-6a8b0c2e:w198",
+    "mediaId": "m-6a8b0c2e",
     "text": "list",
-    "start": 67.99,
-    "end": 68.44
+    "start": 68.15,
+    "end": 68.23
    },
    {
-    "id": "m-7a4bfae0:w196",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w199",
+    "mediaId": "m-6a8b0c2e",
     "text": "of",
-    "start": 68.44,
-    "end": 68.71
+    "start": 68.23,
+    "end": 68.61
    },
    {
-    "id": "m-7a4bfae0:w197",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w200",
+    "mediaId": "m-6a8b0c2e",
     "text": "action",
-    "start": 68.71,
-    "end": 69.03
+    "start": 68.61,
+    "end": 69.11
    },
    {
-    "id": "m-7a4bfae0:w198",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w201",
+    "mediaId": "m-6a8b0c2e",
     "text": "items.",
-    "start": 69.03,
-    "end": 69.15
+    "start": 69.11,
+    "end": 69.161
    },
    {
-    "id": "m-7a4bfae0:w199",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w202",
+    "mediaId": "m-6a8b0c2e",
     "text": "That",
     "start": 69.64,
-    "end": 69.83
+    "end": 69.71
    },
    {
-    "id": "m-7a4bfae0:w200",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w203",
+    "mediaId": "m-6a8b0c2e",
     "text": "took",
-    "start": 69.83,
-    "end": 69.91
+    "start": 69.71,
+    "end": 69.97
    },
    {
-    "id": "m-7a4bfae0:w201",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w204",
+    "mediaId": "m-6a8b0c2e",
     "text": "about",
-    "start": 69.91,
-    "end": 71.01
+    "start": 69.97,
+    "end": 70.93
    },
    {
-    "id": "m-7a4bfae0:w202",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w205",
+    "mediaId": "m-6a8b0c2e",
     "text": "four",
-    "start": 71.01,
-    "end": 71.51
+    "start": 70.93,
+    "end": 71.49
    },
    {
-    "id": "m-7a4bfae0:w203",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w206",
+    "mediaId": "m-6a8b0c2e",
     "text": "seconds",
-    "start": 71.51,
+    "start": 71.49,
     "end": 71.66
    },
    {
-    "id": "m-7a4bfae0:w204",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w207",
+    "mediaId": "m-6a8b0c2e",
     "text": "which",
     "start": 71.94,
-    "end": 71.991
+    "end": 72.15
    },
    {
-    "id": "m-7a4bfae0:w205",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w208",
+    "mediaId": "m-6a8b0c2e",
     "text": "is",
-    "start": 71.99,
-    "end": 72.45
+    "start": 72.15,
+    "end": 72.55
    },
    {
-    "id": "m-7a4bfae0:w206",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w209",
+    "mediaId": "m-6a8b0c2e",
     "text": "fast",
-    "start": 72.45,
+    "start": 72.55,
+    "end": 72.63
+   },
+   {
+    "id": "m-6a8b0c2e:w210",
+    "mediaId": "m-6a8b0c2e",
+    "text": "enough",
+    "start": 72.63,
+    "end": 72.87
+   },
+   {
+    "id": "m-6a8b0c2e:w211",
+    "mediaId": "m-6a8b0c2e",
+    "text": "for",
+    "start": 72.87,
     "end": 72.95
    },
    {
-    "id": "m-7a4bfae0:w207",
-    "mediaId": "m-7a4bfae0",
-    "text": "enough",
-    "start": 72.95,
-    "end": 73.001
-   },
-   {
-    "id": "m-7a4bfae0:w208",
-    "mediaId": "m-7a4bfae0",
-    "text": "for",
-    "start": 73.001,
-    "end": 73.052
-   },
-   {
-    "id": "m-7a4bfae0:w209",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w212",
+    "mediaId": "m-6a8b0c2e",
     "text": "me.",
-    "start": 73.03,
+    "start": 72.95,
     "end": 73.22
    },
    {
-    "id": "m-7a4bfae0:w210",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w213",
+    "mediaId": "m-6a8b0c2e",
     "text": "One",
     "start": 74.41,
-    "end": 74.461
+    "end": 74.71
    },
    {
-    "id": "m-7a4bfae0:w211",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w214",
+    "mediaId": "m-6a8b0c2e",
     "text": "more",
-    "start": 74.43,
+    "start": 74.71,
+    "end": 74.87
+   },
+   {
+    "id": "m-6a8b0c2e:w215",
+    "mediaId": "m-6a8b0c2e",
+    "text": "thing,",
+    "start": 74.87,
     "end": 74.95
    },
    {
-    "id": "m-7a4bfae0:w212",
-    "mediaId": "m-7a4bfae0",
-    "text": "thing",
+    "id": "m-6a8b0c2e:w216",
+    "mediaId": "m-6a8b0c2e",
+    "text": "if",
     "start": 74.95,
     "end": 75.06
    },
    {
-    "id": "m-7a4bfae0:w213",
-    "mediaId": "m-7a4bfae0",
-    "text": "if",
-    "start": 75.67,
-    "end": 76.07
-   },
-   {
-    "id": "m-7a4bfae0:w214",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w217",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 76.07,
-    "end": 76.23
+    "start": 75.67,
+    "end": 75.75
    },
    {
-    "id": "m-7a4bfae0:w215",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w218",
+    "mediaId": "m-6a8b0c2e",
     "text": "file",
-    "start": 76.23,
-    "end": 76.38
+    "start": 75.75,
+    "end": 76.15
    },
    {
-    "id": "m-7a4bfae0:w216",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w219",
+    "mediaId": "m-6a8b0c2e",
     "text": "is",
-    "start": 76.38,
-    "end": 76.47
+    "start": 76.15,
+    "end": 76.39
    },
    {
-    "id": "m-7a4bfae0:w217",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w220",
+    "mediaId": "m-6a8b0c2e",
     "text": "missing",
-    "start": 76.47,
+    "start": 76.39,
     "end": 76.87
    },
    {
-    "id": "m-7a4bfae0:w218",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w221",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
     "start": 76.87,
-    "end": 77.09
+    "end": 77.088
    },
    {
-    "id": "m-7a4bfae0:w219",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w223",
+    "mediaId": "m-6a8b0c2e",
     "text": "script",
-    "start": 77.09,
-    "end": 77.59
+    "start": 77.088,
+    "end": 77.57
    },
    {
-    "id": "m-7a4bfae0:w220",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w224",
+    "mediaId": "m-6a8b0c2e",
     "text": "crashes",
-    "start": 77.59,
+    "start": 77.57,
     "end": 78.07
    },
    {
-    "id": "m-7a4bfae0:w221",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w225",
+    "mediaId": "m-6a8b0c2e",
     "text": "with",
     "start": 78.07,
-    "end": 78.156
+    "end": 78.15
    },
    {
-    "id": "m-7a4bfae0:w222",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w226",
+    "mediaId": "m-6a8b0c2e",
     "text": "a",
-    "start": 78.156,
-    "end": 78.20700000000001
-   },
-   {
-    "id": "m-7a4bfae0:w223",
-    "mediaId": "m-7a4bfae0",
-    "text": "pretty",
-    "start": 78.19,
+    "start": 78.15,
     "end": 78.31
    },
    {
-    "id": "m-7a4bfae0:w224",
-    "mediaId": "m-7a4bfae0",
-    "text": "ugly",
+    "id": "m-6a8b0c2e:w227",
+    "mediaId": "m-6a8b0c2e",
+    "text": "pretty",
     "start": 78.31,
-    "end": 78.71
+    "end": 78.39
    },
    {
-    "id": "m-7a4bfae0:w225",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w228",
+    "mediaId": "m-6a8b0c2e",
+    "text": "ugly",
+    "start": 78.39,
+    "end": 78.93
+   },
+   {
+    "id": "m-6a8b0c2e:w229",
+    "mediaId": "m-6a8b0c2e",
     "text": "stack",
-    "start": 78.71,
-    "end": 79.07
+    "start": 78.93,
+    "end": 79.43
    },
    {
-    "id": "m-7a4bfae0:w226",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w230",
+    "mediaId": "m-6a8b0c2e",
     "text": "trace.",
-    "start": 79.07,
+    "start": 79.43,
     "end": 79.49
    },
    {
-    "id": "m-7a4bfae0:w227",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w231",
+    "mediaId": "m-6a8b0c2e",
     "text": "So",
     "start": 79.97,
-    "end": 80.31
+    "end": 80.021
    },
    {
-    "id": "m-7a4bfae0:w228",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w232",
+    "mediaId": "m-6a8b0c2e",
     "text": "let's",
-    "start": 80.31,
-    "end": 80.361
+    "start": 79.99,
+    "end": 80.177
    },
    {
-    "id": "m-7a4bfae0:w229",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w233",
+    "mediaId": "m-6a8b0c2e",
     "text": "add",
-    "start": 80.354,
-    "end": 80.45
+    "start": 80.177,
+    "end": 80.47
    },
    {
-    "id": "m-7a4bfae0:w230",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w234",
+    "mediaId": "m-6a8b0c2e",
     "text": "a",
-    "start": 80.45,
-    "end": 80.95
+    "start": 80.47,
+    "end": 80.71
    },
    {
-    "id": "m-7a4bfae0:w231",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w235",
+    "mediaId": "m-6a8b0c2e",
     "text": "small",
-    "start": 80.95,
-    "end": 81.11
+    "start": 80.71,
+    "end": 81.01
    },
    {
-    "id": "m-7a4bfae0:w232",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w236",
+    "mediaId": "m-6a8b0c2e",
     "text": "error",
-    "start": 81.11,
-    "end": 81.43
+    "start": 81.01,
+    "end": 81.51
    },
    {
-    "id": "m-7a4bfae0:w233",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w237",
+    "mediaId": "m-6a8b0c2e",
     "text": "handler",
-    "start": 81.43,
-    "end": 81.59
+    "start": 81.51,
+    "end": 81.67
    },
    {
-    "id": "m-7a4bfae0:w234",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w238",
+    "mediaId": "m-6a8b0c2e",
     "text": "that",
-    "start": 81.59,
-    "end": 81.83
+    "start": 81.67,
+    "end": 81.75
    },
    {
-    "id": "m-7a4bfae0:w235",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w239",
+    "mediaId": "m-6a8b0c2e",
     "text": "prints",
-    "start": 81.83,
-    "end": 82.266
+    "start": 81.75,
+    "end": 82.123
    },
    {
-    "id": "m-7a4bfae0:w236",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w240",
+    "mediaId": "m-6a8b0c2e",
     "text": "a",
-    "start": 82.266,
-    "end": 82.39
+    "start": 82.123,
+    "end": 82.23
    },
    {
-    "id": "m-7a4bfae0:w237",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w241",
+    "mediaId": "m-6a8b0c2e",
     "text": "friendly",
-    "start": 82.39,
-    "end": 82.93
+    "start": 82.23,
+    "end": 82.63
    },
    {
-    "id": "m-7a4bfae0:w238",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w243",
+    "mediaId": "m-6a8b0c2e",
     "text": "message",
-    "start": 82.93,
-    "end": 83.43
+    "start": 82.63,
+    "end": 83.09
    },
    {
-    "id": "m-7a4bfae0:w239",
-    "mediaId": "m-7a4bfae0",
-    "text": "instead.",
-    "start": 83.43,
+    "id": "m-6a8b0c2e:w244",
+    "mediaId": "m-6a8b0c2e",
+    "text": "instead",
+    "start": 83.09,
     "end": 83.52
    },
    {
-    "id": "m-7a4bfae0:w240",
-    "mediaId": "m-7a4bfae0",
-    "text": "and",
+    "id": "m-6a8b0c2e:w245",
+    "mediaId": "m-6a8b0c2e",
+    "text": "And",
     "start": 84.1,
-    "end": 84.4
+    "end": 84.48
    },
    {
-    "id": "m-7a4bfae0:w241",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w246",
+    "mediaId": "m-6a8b0c2e",
     "text": "now,",
-    "start": 84.4,
-    "end": 84.5
+    "start": 84.48,
+    "end": 85.021
    },
    {
-    "id": "m-7a4bfae0:w242",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w248",
+    "mediaId": "m-6a8b0c2e",
     "text": "when",
-    "start": 84.97,
-    "end": 85.28
+    "start": 84.996,
+    "end": 85.047
    },
    {
-    "id": "m-7a4bfae0:w243",
-    "mediaId": "m-7a4bfae0",
-    "text": "i",
-    "start": 85.28,
-    "end": 85.333
+    "id": "m-6a8b0c2e:w249",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I",
+    "start": 85.04,
+    "end": 85.2
    },
    {
-    "id": "m-7a4bfae0:w244",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w250",
+    "mediaId": "m-6a8b0c2e",
     "text": "run",
-    "start": 85.333,
-    "end": 85.44
+    "start": 85.2,
+    "end": 85.36
    },
    {
-    "id": "m-7a4bfae0:w245",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w251",
+    "mediaId": "m-6a8b0c2e",
+    "text": "on",
+    "start": 85.36,
+    "end": 85.48
+   },
+   {
+    "id": "m-6a8b0c2e:w252",
+    "mediaId": "m-6a8b0c2e",
     "text": "it",
-    "start": 85.44,
-    "end": 85.493
-   },
-   {
-    "id": "m-7a4bfae0:w246",
-    "mediaId": "m-7a4bfae0",
-    "text": "again",
-    "start": 85.493,
+    "start": 85.48,
     "end": 85.6
    },
    {
-    "id": "m-7a4bfae0:w247",
-    "mediaId": "m-7a4bfae0",
-    "text": "with",
+    "id": "m-6a8b0c2e:w253",
+    "mediaId": "m-6a8b0c2e",
+    "text": "again",
     "start": 85.6,
-    "end": 86.08
+    "end": 85.68
    },
    {
-    "id": "m-7a4bfae0:w248",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w254",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 85.68,
+    "end": 85.84
+   },
+   {
+    "id": "m-6a8b0c2e:w255",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 86.08,
-    "end": 86.16
+    "start": 85.84,
+    "end": 86.24
    },
    {
-    "id": "m-7a4bfae0:w249",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w256",
+    "mediaId": "m-6a8b0c2e",
     "text": "wrong",
-    "start": 86.16,
-    "end": 86.32
+    "start": 86.24,
+    "end": 86.64
    },
    {
-    "id": "m-7a4bfae0:w250",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w257",
+    "mediaId": "m-6a8b0c2e",
     "text": "file",
-    "start": 86.32,
-    "end": 86.68
-   },
-   {
-    "id": "m-7a4bfae0:w251",
-    "mediaId": "m-7a4bfae0",
-    "text": "name",
-    "start": 86.68,
+    "start": 86.64,
     "end": 86.83
    },
    {
-    "id": "m-7a4bfae0:w252",
-    "mediaId": "m-7a4bfae0",
-    "text": "we",
+    "id": "m-6a8b0c2e:w258",
+    "mediaId": "m-6a8b0c2e",
+    "text": "name,",
     "start": 87.28,
+    "end": 87.331
+   },
+   {
+    "id": "m-6a8b0c2e:w259",
+    "mediaId": "m-6a8b0c2e",
+    "text": "we",
+    "start": 87.3,
+    "end": 87.44
+   },
+   {
+    "id": "m-6a8b0c2e:w260",
+    "mediaId": "m-6a8b0c2e",
+    "text": "get",
+    "start": 87.44,
     "end": 87.52
    },
    {
-    "id": "m-7a4bfae0:w253",
-    "mediaId": "m-7a4bfae0",
-    "text": "get",
-    "start": 87.52,
-    "end": 87.68
-   },
-   {
-    "id": "m-7a4bfae0:w254",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w261",
+    "mediaId": "m-6a8b0c2e",
     "text": "one",
-    "start": 87.68,
-    "end": 87.84
+    "start": 87.52,
+    "end": 87.9
    },
    {
-    "id": "m-7a4bfae0:w255",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w262",
+    "mediaId": "m-6a8b0c2e",
     "text": "clear",
-    "start": 87.84,
-    "end": 88.32
+    "start": 87.9,
+    "end": 88.4
    },
    {
-    "id": "m-7a4bfae0:w256",
-    "mediaId": "m-7a4bfae0",
-    "text": "line",
-    "start": 88.32,
+    "id": "m-6a8b0c2e:w263",
+    "mediaId": "m-6a8b0c2e",
+    "text": "line.",
+    "start": 88.4,
     "end": 88.56
    },
    {
-    "id": "m-7a4bfae0:w257",
-    "mediaId": "m-7a4bfae0",
-    "text": "let",
+    "id": "m-6a8b0c2e:w264",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Let",
     "start": 89.73,
-    "end": 89.92
+    "end": 89.781
    },
    {
-    "id": "m-7a4bfae0:w258",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w265",
+    "mediaId": "m-6a8b0c2e",
     "text": "me",
-    "start": 89.92,
-    "end": 90
+    "start": 89.75,
+    "end": 90.08
    },
    {
-    "id": "m-7a4bfae0:w259",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w266",
+    "mediaId": "m-6a8b0c2e",
     "text": "quickly",
-    "start": 90,
-    "end": 90.54
+    "start": 90.08,
+    "end": 90.4
    },
    {
-    "id": "m-7a4bfae0:w260",
-    "mediaId": "m-7a4bfae0",
-    "text": "recap",
-    "start": 90.54,
-    "end": 91.20100000000001
+    "id": "m-6a8b0c2e:w267",
+    "mediaId": "m-6a8b0c2e",
+    "text": "recap.",
+    "start": 90.4,
+    "end": 90.73
    },
    {
-    "id": "m-7a4bfae0:w262",
-    "mediaId": "m-7a4bfae0",
-    "text": "we",
-    "start": 91.17,
-    "end": 91.221
+    "id": "m-6a8b0c2e:w268",
+    "mediaId": "m-6a8b0c2e",
+    "text": "We",
+    "start": 91.15,
+    "end": 91.44
    },
    {
-    "id": "m-7a4bfae0:w263",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w269",
+    "mediaId": "m-6a8b0c2e",
     "text": "installed",
-    "start": 91.2,
-    "end": 91.771
+    "start": 91.44,
+    "end": 91.92
    },
    {
-    "id": "m-7a4bfae0:w264",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w270",
+    "mediaId": "m-6a8b0c2e",
     "text": "two",
-    "start": 91.771,
-    "end": 92.06
+    "start": 91.92,
+    "end": 92.3
    },
    {
-    "id": "m-7a4bfae0:w265",
-    "mediaId": "m-7a4bfae0",
-    "text": "packages",
-    "start": 92.06,
-    "end": 92.51
+    "id": "m-6a8b0c2e:w271",
+    "mediaId": "m-6a8b0c2e",
+    "text": "packages,",
+    "start": 92.3,
+    "end": 93.18
    },
    {
-    "id": "m-7a4bfae0:w266",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w273",
+    "mediaId": "m-6a8b0c2e",
     "text": "stored",
-    "start": 92.95,
-    "end": 93.52
+    "start": 93.18,
+    "end": 93.68
    },
    {
-    "id": "m-7a4bfae0:w267",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w274",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 93.52,
-    "end": 93.76
+    "start": 93.68,
+    "end": 93.73100000000001
    },
    {
-    "id": "m-7a4bfae0:w268",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w275",
+    "mediaId": "m-6a8b0c2e",
     "text": "key",
-    "start": 93.76,
-    "end": 94
+    "start": 93.72,
+    "end": 93.771
    },
    {
-    "id": "m-7a4bfae0:w269",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w276",
+    "mediaId": "m-6a8b0c2e",
     "text": "in",
-    "start": 94,
-    "end": 94.096
+    "start": 93.76,
+    "end": 93.84
    },
    {
-    "id": "m-7a4bfae0:w270",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w277",
+    "mediaId": "m-6a8b0c2e",
     "text": "a",
-    "start": 94.096,
-    "end": 94.16
+    "start": 93.84,
+    "end": 94.08
    },
    {
-    "id": "m-7a4bfae0:w271",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w278",
+    "mediaId": "m-6a8b0c2e",
     "text": ".env",
-    "start": 94.16,
-    "end": 94.46
+    "start": 94.08,
+    "end": 94.4
    },
    {
-    "id": "m-7a4bfae0:w272",
-    "mediaId": "m-7a4bfae0",
-    "text": "file",
-    "start": 94.46,
-    "end": 94.77
+    "id": "m-6a8b0c2e:w279",
+    "mediaId": "m-6a8b0c2e",
+    "text": "file,",
+    "start": 94.4,
+    "end": 94.72
    },
    {
-    "id": "m-7a4bfae0:w273",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w280",
+    "mediaId": "m-6a8b0c2e",
     "text": "and",
-    "start": 95.12,
-    "end": 95.171
+    "start": 94.72,
+    "end": 94.771
    },
    {
-    "id": "m-7a4bfae0:w274",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w281",
+    "mediaId": "m-6a8b0c2e",
     "text": "called",
-    "start": 95.14,
-    "end": 95.476
+    "start": 95.12,
+    "end": 95.44
    },
    {
-    "id": "m-7a4bfae0:w275",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w282",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 95.476,
-    "end": 95.68
+    "start": 95.44,
+    "end": 95.66
    },
    {
-    "id": "m-7a4bfae0:w276",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w283",
+    "mediaId": "m-6a8b0c2e",
     "text": "chat",
-    "start": 95.68,
-    "end": 95.82
+    "start": 95.66,
+    "end": 96.16
    },
    {
-    "id": "m-7a4bfae0:w277",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w284",
+    "mediaId": "m-6a8b0c2e",
     "text": "completions",
-    "start": 95.82,
-    "end": 96.62
+    "start": 96.16,
+    "end": 96.4
    },
    {
-    "id": "m-7a4bfae0:w278",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w285",
+    "mediaId": "m-6a8b0c2e",
     "text": "endpoint",
-    "start": 96.62,
-    "end": 97.2
+    "start": 96.4,
+    "end": 96.88
    },
    {
-    "id": "m-7a4bfae0:w280",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w286",
+    "mediaId": "m-6a8b0c2e",
     "text": "with",
-    "start": 97.2,
-    "end": 97.289
+    "start": 96.88,
+    "end": 97.04
    },
    {
-    "id": "m-7a4bfae0:w281",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w287",
+    "mediaId": "m-6a8b0c2e",
     "text": "our",
-    "start": 97.289,
-    "end": 97.36
+    "start": 97.04,
+    "end": 97.28
    },
    {
-    "id": "m-7a4bfae0:w282",
-    "mediaId": "m-7a4bfae0",
-    "text": "notes",
-    "start": 97.36,
+    "id": "m-6a8b0c2e:w288",
+    "mediaId": "m-6a8b0c2e",
+    "text": "notes.",
+    "start": 97.28,
     "end": 97.58
    },
    {
-    "id": "m-7a4bfae0:w283",
-    "mediaId": "m-7a4bfae0",
-    "text": "in",
+    "id": "m-6a8b0c2e:w289",
+    "mediaId": "m-6a8b0c2e",
+    "text": "In",
     "start": 98.47,
     "end": 98.521
    },
    {
-    "id": "m-7a4bfae0:w284",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w290",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
     "start": 98.49,
-    "end": 98.64
+    "end": 98.693
    },
    {
-    "id": "m-7a4bfae0:w285",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w291",
+    "mediaId": "m-6a8b0c2e",
     "text": "next",
-    "start": 98.64,
-    "end": 99.2
+    "start": 98.693,
+    "end": 98.96
    },
    {
-    "id": "m-7a4bfae0:w287",
-    "mediaId": "m-7a4bfae0",
-    "text": "video",
-    "start": 99.2,
-    "end": 99.3
+    "id": "m-6a8b0c2e:w292",
+    "mediaId": "m-6a8b0c2e",
+    "text": "video,",
+    "start": 98.96,
+    "end": 99.28
    },
    {
-    "id": "m-7a4bfae0:w288",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w293",
+    "mediaId": "m-6a8b0c2e",
     "text": "I'll",
-    "start": 99.65,
-    "end": 99.84
+    "start": 99.28,
+    "end": 99.331
    },
    {
-    "id": "m-7a4bfae0:w289",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w294",
+    "mediaId": "m-6a8b0c2e",
     "text": "add",
-    "start": 99.84,
-    "end": 100.06
+    "start": 99.65,
+    "end": 100.3
    },
    {
-    "id": "m-7a4bfae0:w290",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w295",
+    "mediaId": "m-6a8b0c2e",
     "text": "streaming",
-    "start": 100.06,
+    "start": 100.3,
     "end": 100.53
    },
    {
-    "id": "m-7a4bfae0:w291",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w296",
+    "mediaId": "m-6a8b0c2e",
     "text": "so",
     "start": 100.9,
-    "end": 100.96
+    "end": 101.12
    },
    {
-    "id": "m-7a4bfae0:w292",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w297",
+    "mediaId": "m-6a8b0c2e",
     "text": "the",
-    "start": 100.96,
-    "end": 101.04
+    "start": 101.12,
+    "end": 101.2
    },
    {
-    "id": "m-7a4bfae0:w293",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w298",
+    "mediaId": "m-6a8b0c2e",
     "text": "summary",
-    "start": 101.04,
-    "end": 101.66
+    "start": 101.2,
+    "end": 101.68
    },
    {
-    "id": "m-7a4bfae0:w294",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w299",
+    "mediaId": "m-6a8b0c2e",
     "text": "shows",
-    "start": 101.66,
-    "end": 102.16
+    "start": 101.68,
+    "end": 101.92
    },
    {
-    "id": "m-7a4bfae0:w295",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w300",
+    "mediaId": "m-6a8b0c2e",
     "text": "up",
-    "start": 102.16,
-    "end": 102.25
+    "start": 101.92,
+    "end": 102.07
    },
    {
-    "id": "m-7a4bfae0:w296",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w301",
+    "mediaId": "m-6a8b0c2e",
     "text": "word",
-    "start": 102.25,
-    "end": 102.4
+    "start": 102.07,
+    "end": 102.32
    },
    {
-    "id": "m-7a4bfae0:w297",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w302",
+    "mediaId": "m-6a8b0c2e",
     "text": "by",
-    "start": 102.4,
-    "end": 102.72
+    "start": 102.32,
+    "end": 102.64
    },
    {
-    "id": "m-7a4bfae0:w298",
-    "mediaId": "m-7a4bfae0",
-    "text": "word",
-    "start": 102.72,
+    "id": "m-6a8b0c2e:w303",
+    "mediaId": "m-6a8b0c2e",
+    "text": "word.",
+    "start": 102.64,
     "end": 102.83
    },
    {
-    "id": "m-7a4bfae0:w299",
-    "mediaId": "m-7a4bfae0",
-    "text": "thanks",
+    "id": "m-6a8b0c2e:w304",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Thanks",
     "start": 103.48,
-    "end": 103.556
+    "end": 103.531
    },
    {
-    "id": "m-7a4bfae0:w300",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w305",
+    "mediaId": "m-6a8b0c2e",
     "text": "for",
-    "start": 103.556,
+    "start": 103.5,
     "end": 103.98
    },
    {
-    "id": "m-7a4bfae0:w301",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w306",
+    "mediaId": "m-6a8b0c2e",
     "text": "watching",
     "start": 103.98,
     "end": 104.32
    },
    {
-    "id": "m-7a4bfae0:w302",
-    "mediaId": "m-7a4bfae0",
-    "text": "and",
+    "id": "m-6a8b0c2e:w307",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and,",
     "start": 104.61,
     "end": 104.85
    },
    {
-    "id": "m-7a4bfae0:w303",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w308",
+    "mediaId": "m-6a8b0c2e",
     "text": "you",
     "start": 105.18,
-    "end": 105.52
+    "end": 105.44
    },
    {
-    "id": "m-7a4bfae0:w304",
-    "mediaId": "m-7a4bfae0",
-    "text": "know",
-    "start": 105.52,
-    "end": 105.76
+    "id": "m-6a8b0c2e:w309",
+    "mediaId": "m-6a8b0c2e",
+    "text": "know,",
+    "start": 105.44,
+    "end": 105.92
    },
    {
-    "id": "m-7a4bfae0:w305",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w310",
+    "mediaId": "m-6a8b0c2e",
     "text": "see",
-    "start": 105.76,
+    "start": 105.92,
     "end": 106.08
    },
    {
-    "id": "m-7a4bfae0:w306",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w311",
+    "mediaId": "m-6a8b0c2e",
     "text": "you",
     "start": 106.08,
-    "end": 106.16
+    "end": 106.258
    },
    {
-    "id": "m-7a4bfae0:w307",
-    "mediaId": "m-7a4bfae0",
+    "id": "m-6a8b0c2e:w312",
+    "mediaId": "m-6a8b0c2e",
     "text": "next",
-    "start": 106.16,
+    "start": 106.258,
     "end": 106.48
    },
    {
-    "id": "m-7a4bfae0:w308",
-    "mediaId": "m-7a4bfae0",
-    "text": "time",
+    "id": "m-6a8b0c2e:w313",
+    "mediaId": "m-6a8b0c2e",
+    "text": "time.",
     "start": 106.48,
     "end": 106.61
    }
@@ -2797,118 +2314,118 @@
   "captionBreaks": [],
   "masks": [
    {
-    "id": "text-406c443c-1",
-    "mediaId": "m-7a4bfae0",
+    "id": "text-81253f84-1",
+    "mediaId": "m-6a8b0c2e",
     "prompt": "API key",
     "label": "API key 1",
     "samples": [
      {
-      "t": 32.3,
+      "t": 32,
+      "box": [
+       0.276,
+       0.078,
+       0.40800000000000003,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 33,
+      "box": [
+       0.276,
+       0.078,
+       0.488,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 34,
+      "box": [
+       0.276,
+       0.078,
+       0.536,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 35,
+      "box": [
+       0.276,
+       0.078,
+       0.536,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 36,
+      "box": [
+       0.276,
+       0.078,
+       0.536,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 37,
       "box": [
        0.276,
        0.076,
-       0.43300000000000005,
+       0.536,
        0.1
       ],
       "mask": null
      },
      {
-      "t": 33.3,
+      "t": 38,
       "box": [
-       0.276,
+       0.296,
        0.076,
-       0.512,
-       0.1
+       0.532,
+       0.098
       ],
       "mask": null
      },
      {
-      "t": 34.3,
+      "t": 39,
       "box": [
-       0.276,
+       0.296,
        0.076,
-       0.549,
-       0.1
+       0.532,
+       0.098
       ],
       "mask": null
      },
      {
-      "t": 35.3,
+      "t": 40,
       "box": [
-       0.276,
+       0.296,
        0.076,
-       0.549,
-       0.1
+       0.532,
+       0.098
       ],
       "mask": null
      },
      {
-      "t": 36.3,
+      "t": 41,
       "box": [
-       0.276,
+       0.296,
        0.076,
-       0.549,
-       0.1
+       0.532,
+       0.098
       ],
       "mask": null
      },
      {
-      "t": 37.3,
+      "t": 42,
       "box": [
-       0.274,
+       0.296,
        0.076,
-       0.549,
-       0.1
-      ],
-      "mask": null
-     },
-     {
-      "t": 38.3,
-      "box": [
-       0.274,
-       0.077,
        0.532,
-       0.099
-      ],
-      "mask": null
-     },
-     {
-      "t": 39.3,
-      "box": [
-       0.274,
-       0.077,
-       0.532,
-       0.099
-      ],
-      "mask": null
-     },
-     {
-      "t": 40.3,
-      "box": [
-       0.274,
-       0.077,
-       0.532,
-       0.099
-      ],
-      "mask": null
-     },
-     {
-      "t": 41.3,
-      "box": [
-       0.274,
-       0.077,
-       0.532,
-       0.099
-      ],
-      "mask": null
-     },
-     {
-      "t": 42.3,
-      "box": [
-       0.274,
-       0.077,
-       0.532,
-       0.099
+       0.098
       ],
       "mask": null
      }
@@ -2924,361 +2441,22 @@
     "shape": "rect"
    }
   ],
-  "effects": [
-   {
-    "id": "fx-f1b47bfe",
-    "kind": "scene3d",
-    "start": 48.36,
-    "end": 51.86,
-    "pluginId": "f578834bf8a7b02c5871b1c3349a23e5",
-    "anchorIds": [],
-    "params": {
-     "title": "Desk screen",
-     "template": "desk-reveal",
-     "params": {
-      "scene": "desk",
-      "motion": "reveal",
-      "tilt": 7,
-      "ramp": 1.2
-     }
-    }
-   },
-   {
-    "id": "fx-9b99f774",
-    "kind": "anim2d",
-    "start": 66.46,
-    "end": 69.96,
-    "pluginId": "605713c49310fc7a4ea3b8848d39dccf",
-    "anchorIds": [],
-    "params": {
-     "title": "Pulsing highlight on terminal ",
-     "box": {
-      "cx": 0.33,
-      "cy": 0.8350000000000001,
-      "w": 0.34,
-      "h": 0.33
-     },
-     "layers": [
-      {
-       "component": "605713c49310fc7a4ea3b8848d39dccf",
-       "params": {
-        "motion": "draw",
-        "color": "#ffd400",
-        "width": 8,
-        "radius": 12,
-        "padding": 10,
-        "pulse": true,
-        "inDur": 0.6,
-        "shadow": true
-       },
-       "start": 0,
-       "end": null,
-       "fade": {
-        "out": 0.3
-       }
-      }
-     ],
-     "sounds": [],
-     "vibe": {
-      "description": "Pulse a highlight around the generated bullet points and action items in the terminal.",
-      "mode": "params"
-     }
-    }
-   },
-   {
-    "id": "fx-83ffa90e",
-    "kind": "scene3d",
-    "start": 81.16,
-    "end": 84.66,
-    "pluginId": "8438de8b8485058a978675fadc50eb84",
-    "anchorIds": [],
-    "params": {
-     "title": "Swing in",
-     "template": "board-swing-in",
-     "params": {
-      "keys": [
-       {
-        "anchor": "start",
-        "t": 0,
-        "rx": 0,
-        "ry": 55,
-        "rz": 0,
-        "size": 0.55,
-        "px": 0.12,
-        "py": 0,
-        "ease": "inOut"
-       },
-       {
-        "anchor": "start",
-        "t": 1.5,
-        "rx": 0,
-        "ry": 0,
-        "rz": 0,
-        "size": 0.82,
-        "px": 0,
-        "py": 0,
-        "ease": "inOut"
-       }
-      ],
-      "float": null,
-      "edges": true,
-      "background": "studio",
-      "color": "#202020",
-      "shadow": 0.55
-     }
-    }
-   },
-   {
-    "id": "fx-ba6c27a6",
-    "kind": "anim2d",
-    "start": 86.46,
-    "end": 90.06,
-    "pluginId": "605713c49310fc7a4ea3b8848d39dccf",
-    "anchorIds": [],
-    "params": {
-     "title": "Friendly error line callout",
-     "box": {
-      "cx": 0.365,
-      "cy": 0.86,
-      "w": 0.41,
-      "h": 0.28
-     },
-     "layers": [
-      {
-       "component": "605713c49310fc7a4ea3b8848d39dccf",
-       "params": {
-        "motion": "pop",
-        "color": "#ff3b30",
-        "width": 8,
-        "radius": 12,
-        "padding": 8,
-        "pulse": true,
-        "inDur": 0.4,
-        "shadow": true
-       },
-       "start": 0,
-       "end": null,
-       "fade": {
-        "out": 0.3
-       },
-       "enter": {
-        "type": "pop",
-        "duration": 0.4,
-        "ease": "outBack"
-       }
-      },
-      {
-       "component": "51ced339d620eba48c01a6df22c12924",
-       "params": {
-        "text": "Friendly error here",
-        "side": "above",
-        "color": "#111827",
-        "textColor": "#ffffff",
-        "size": 42,
-        "inDur": 0.4
-       },
-       "start": 0.15,
-       "end": null,
-       "fade": {
-        "out": 0.3
-       },
-       "enter": {
-        "type": "pop",
-        "duration": 0.45,
-        "ease": "outBack"
-       }
-      }
-     ],
-     "sounds": [],
-     "vibe": {
-      "description": "Pop a callout onto the single friendly error line in the terminal and hold it briefly.",
-      "mode": "compose"
-     }
-    }
-   },
-   {
-    "id": "intro-d8016110",
-    "kind": "scene3d",
-    "start": 0,
-    "end": 8,
-    "pluginId": "8441c1cee950988d1c40923c96cbf4d2",
-    "anchorIds": [],
-    "params": {
-     "title": "Flip intro",
-     "template": "flip-intro",
-     "params": {
-      "tone": "duotone",
-      "accent": "#2f5bff",
-      "dark": "#141a4a",
-      "light": "#a9b8ff",
-      "imageIds": [
-       "m-3531671c",
-       "m-b3bd3b88",
-       "m-ac551209",
-       "m-912300ae",
-       "m-95effc97",
-       "m-3dc350d2",
-       "m-3186e6bf",
-       "m-734ffb6e"
-      ],
-      "pages": [
-       {
-        "t": 1.7,
-        "img": 0,
-        "strength": 1
-       },
-       {
-        "t": 1.96,
-        "img": 1,
-        "strength": 0.9152758620689655
-       },
-       {
-        "t": 2.1835999999999998,
-        "img": 2,
-        "strength": 0.8424131034482758
-       },
-       {
-        "t": 2.3758959999999996,
-        "img": 3,
-        "strength": 0.7797511310344828
-       },
-       {
-        "t": 2.5412705599999996,
-        "img": 4,
-        "strength": 0.7258618347586208
-       },
-       {
-        "t": 2.6834926815999998,
-        "img": 5,
-        "strength": 0.6795170399613794
-       },
-       {
-        "t": 2.805803706176,
-        "img": 6,
-        "strength": 0.6396605164357518
-       },
-       {
-        "t": 2.91099118731136,
-        "img": 7,
-        "strength": 0.6053839062037121
-       },
-       {
-        "t": 3.0014524210877696,
-        "img": 5,
-        "strength": 0.5759060214041578
-       },
-       {
-        "t": 3.079249082135482,
-        "img": 4,
-        "strength": 0.5505550404765412
-       },
-       {
-        "t": 3.1461542106365146,
-        "img": 6,
-        "strength": 0.55
-       },
-       {
-        "t": 3.2128208773031814,
-        "img": 1,
-        "strength": 0.55
-       },
-       {
-        "t": 3.2794875439698483,
-        "img": 2,
-        "strength": 0.55
-       },
-       {
-        "t": 3.346154210636515,
-        "img": 3,
-        "strength": 0.55
-       },
-       {
-        "t": 3.412820877303182,
-        "img": 0,
-        "strength": 0.55
-       },
-       {
-        "t": 3.479487543969849,
-        "img": 7,
-        "strength": 0.55
-       }
-      ],
-      "titleFills": [
-       5,
-       4,
-       7,
-       2,
-       6,
-       0,
-       3
-      ],
-      "icon": null,
-      "montageStart": 1.7,
-      "flash": 3.46,
-      "titleIn": 3.5,
-      "reveal": 4,
-      "title": "Build a Meeting Notes Summarizer",
-      "subtitle": "Tiny Node CLI with OpenAI"
-     }
-    }
-   }
-  ],
+  "effects": [],
   "anchors": [],
   "suggestions": [
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i1",
-    "mediaId": "m-7a4bfae0",
-    "kind": "intro",
-    "start": 0,
-    "end": 1,
-    "payload": {
-     "title": "Build a Meeting Notes Summarizer",
-     "subtitle": "Tiny Node CLI with OpenAI"
-    },
-    "reason": "Introduce the tutorial topic immediately.",
-    "status": "applied",
-    "purpose": "Introduce the tutorial topic immediately.",
-    "quote": "",
-    "chapter": 0,
-    "review": {
-     "verdict": "revised",
-     "note": "Extend the intro beyond 1.0s to about 3.5s so the title and subtitle are readable."
-    }
-   },
-   {
-    "id": "sug-m-7a4bfae0-mvthpswi-i3",
-    "mediaId": "m-7a4bfae0",
-    "kind": "music",
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i1",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "captionStyle",
     "start": 0,
     "end": 108.279,
     "payload": {
-     "description": "Calm, low-volume lo-fi electronic music with soft synth pads and a steady light tempo sitting quietly under speech."
+     "karaoke": "fill"
     },
-    "reason": "Unobtrusive music maintains energy under the narration.",
+    "reason": "so the viewer can follow the spoken instructions while watching the screen",
     "status": "applied",
-    "purpose": "Unobtrusive music maintains energy under the narration.",
+    "purpose": "so the viewer can follow the spoken instructions while watching the screen",
     "quote": "",
-    "chapter": 0,
-    "review": {
-     "verdict": "keep",
-     "note": "Low-volume background music under the full narration is appropriate."
-    }
-   },
-   {
-    "id": "sug-m-7a4bfae0-mvthpswi-i15",
-    "mediaId": "m-7a4bfae0",
-    "kind": "zoom",
-    "start": 12.7,
-    "end": 22.1,
-    "payload": {
-     "cx": 0.5,
-     "cy": 0.45,
-     "w": 0.55
-    },
-    "reason": "Magnify the small example meeting notes text so viewers can read it.",
-    "status": "applied",
-    "purpose": "Magnify the small example meeting notes text so viewers can read it.",
-    "quote": "Here's the kind of notes I mean.",
     "chapter": 0,
     "review": {
      "verdict": "added",
@@ -3286,792 +2464,290 @@
     }
    },
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i4",
-    "mediaId": "m-7a4bfae0",
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i2",
+    "mediaId": "m-6a8b0c2e",
     "kind": "zoom",
     "start": 22.1,
-    "end": 27.9,
+    "end": 30,
     "payload": {
      "activity": "a220",
      "w": 0.3,
-     "cx": 0.281,
-     "cy": 0.6805,
+     "cx": 0.28125,
+     "cy": 0.6945,
      "path": [
       {
-       "src": 24,
-       "cx": 0.31233333333333335,
-       "cy": 0.6849999999999999
-      },
-      {
-       "src": 25,
-       "cx": 0.31233333333333335,
-       "cy": 0.7033333333333333
-      },
-      {
-       "src": 26,
-       "cx": 0.3073333333333333,
-       "cy": 0.7126666666666667
-      },
-      {
-       "src": 27,
-       "cx": 0.302,
-       "cy": 0.722
+       "src": 30,
+       "cx": 0.28125,
+       "cy": 0.6945
       }
      ]
     },
-    "reason": "Make the terminal install commands readable.",
+    "reason": "so the viewer can read the folder-creation and package-install commands",
     "status": "applied",
-    "purpose": "Make the terminal install commands readable.",
-    "quote": "First I'll create a new folder and install two packages, the OpenAI client and Dendov.",
+    "purpose": "so the viewer can read the folder-creation and package-install commands",
+    "quote": "First I'll create a new folder and install two packages, the OpenAI client and Daindov.",
     "chapter": 1,
     "review": {
      "verdict": "keep",
-     "note": "Zoom at 22.1s matches the install narration and makes the terminal commands readable."
-    }
+     "note": "Matches p1 and the transcript, lasts long enough, and the terminal commands are small in the frame."
+    },
+    "problem": "p1"
    },
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i5",
-    "mediaId": "m-7a4bfae0",
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i3",
+    "mediaId": "m-6a8b0c2e",
     "kind": "fix",
     "start": 27.3,
     "end": 27.8,
     "payload": {
      "wordIds": [
-      "m-7a4bfae0:w79"
+      "m-6a8b0c2e:w80"
      ],
-     "text": "dotenv."
+     "text": "dotenv"
     },
-    "reason": "Correct the misheard package name in captions.",
+    "reason": "correct the package name in the transcript",
     "status": "applied",
-    "purpose": "Correct the misheard package name in captions.",
+    "purpose": "correct the package name in the transcript",
     "quote": "",
     "chapter": 1,
     "review": {
      "verdict": "keep",
-     "note": "Fix correctly changes the misheard 'Dendov' at 27.3s to 'dotenv.'"
+     "note": "Correctly changes the transcribed 'Daindov' at 27.3s to 'dotenv'."
     }
    },
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i6",
-    "mediaId": "m-7a4bfae0",
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i4",
+    "mediaId": "m-6a8b0c2e",
     "kind": "mask",
-    "start": 30.3,
-    "end": 42.5,
+    "start": 30,
+    "end": 43,
     "payload": {
      "target": "API key",
-     "x": 0.17,
-     "y": 0.04,
-     "w": 0.55,
-     "h": 0.05
+     "x": 0.24,
+     "y": 0.05,
+     "w": 0.38,
+     "h": 0.04
     },
-    "reason": "Hide the exposed API key for the entire time it is visible.",
+    "reason": "hide the pasted API key for the whole time it is visible",
     "status": "applied",
-    "purpose": "Hide the exposed API key for the entire time it is visible.",
+    "purpose": "hide the pasted API key for the whole time it is visible",
     "quote": "",
-    "chapter": 2,
-    "review": {
-     "verdict": "revised",
-     "note": "Start the mask at 30.3s when the .env file opens, not 31.0s, so the key is never exposed."
-    }
-   },
-   {
-    "id": "sug-m-7a4bfae0-mvthpswi-i7",
-    "mediaId": "m-7a4bfae0",
-    "kind": "fix",
-    "start": 32,
-    "end": 32.5,
-    "payload": {
-     "wordIds": [
-      "m-7a4bfae0:w87"
-     ],
-     "text": ".env"
-    },
-    "reason": "Correct the misheard environment filename in captions.",
-    "status": "applied",
-    "purpose": "Correct the misheard environment filename in captions.",
-    "quote": "",
-    "chapter": 2,
+    "chapter": 1,
     "review": {
      "verdict": "keep",
-     "note": "Fix correctly changes the misheard environment filename to '.env' at the spoken word."
+     "note": "Covers the pasted API key for its full visible period from 30.0s to 43.0s."
     }
    },
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i8",
-    "mediaId": "m-7a4bfae0",
-    "kind": "transition",
-    "start": 41,
-    "end": 44.5,
-    "payload": {
-     "scene": "desk-reveal",
-     "fromChapter": 2,
-     "toChapter": 3
-    },
-    "reason": "Mark the move from setup to writing the main script.",
-    "status": "applied",
-    "purpose": "Mark the move from setup to writing the main script.",
-    "quote": "Now let's write the main script.",
-    "chapter": 3,
-    "review": {
-     "verdict": "revised",
-     "note": "Trim the quote to only 'Now let's write the main script.' since the preceding sentence belongs to the previous chapter."
-    }
-   },
-   {
-    "id": "sug-m-7a4bfae0-mvthpswi-i16",
-    "mediaId": "m-7a4bfae0",
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i5",
+    "mediaId": "m-6a8b0c2e",
     "kind": "zoom",
-    "start": 44.9,
-    "end": 49.4,
+    "start": 43,
+    "end": 57.6,
     "payload": {
      "activity": "a420",
      "w": 0.4208,
-     "cx": 0.27349999999999997,
+     "cx": 0.34375,
      "cy": 0.2104,
      "path": [
       {
-       "src": 45,
-       "cx": 0.27099999999999996,
+       "src": 43,
+       "cx": 0.34375,
        "cy": 0.2104
-      },
-      {
-       "src": 46,
-       "cx": 0.25533333333333336,
-       "cy": 0.2104
-      },
-      {
-       "src": 47,
-       "cx": 0.3336666666666666,
-       "cy": 0.2104
-      },
-      {
-       "src": 48,
-       "cx": 0.35966666666666663,
-       "cy": 0.2104
-      },
-      {
-       "src": 49,
-       "cx": 0.3336666666666667,
-       "cy": 0.25
       }
      ]
     },
-    "reason": "Magnify the first main-script code being written so viewers can read it.",
+    "reason": "so the viewer can read the index.js code as it is typed and explained",
     "status": "applied",
-    "purpose": "Magnify the first main-script code being written so viewers can read it.",
-    "quote": "We load the key with dondov and read the notes file from the first argument.",
-    "chapter": 3,
+    "purpose": "so the viewer can read the index.js code as it is typed and explained",
+    "quote": "Then we call the chat completions endpoint with the model name and a short system prompt.",
+    "chapter": 2,
     "review": {
-     "verdict": "added",
-     "note": "Added after review"
-    }
+     "verdict": "keep",
+     "note": "Matches p2, spans the code being typed, and lasts well over six seconds."
+    },
+    "problem": "p2"
    },
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i9",
-    "mediaId": "m-7a4bfae0",
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i6",
+    "mediaId": "m-6a8b0c2e",
     "kind": "fix",
-    "start": 46.1,
-    "end": 46.6,
+    "start": 46.2,
+    "end": 46.7,
     "payload": {
      "wordIds": [
-      "m-7a4bfae0:w131"
+      "m-6a8b0c2e:w134"
      ],
      "text": "dotenv"
     },
-    "reason": "Correct the misheard package name in captions.",
+    "reason": "correct the package name in the transcript",
     "status": "applied",
-    "purpose": "Correct the misheard package name in captions.",
+    "purpose": "correct the package name in the transcript",
     "quote": "",
-    "chapter": 3,
+    "chapter": 2,
     "review": {
      "verdict": "keep",
-     "note": "Fix correctly changes 'dondov' to 'dotenv' at the spoken word around 46.1s."
+     "note": "Correctly changes the transcribed 'dondov' at 46.2s to 'dotenv'."
     }
    },
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i10",
-    "mediaId": "m-7a4bfae0",
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i7",
+    "mediaId": "m-6a8b0c2e",
     "kind": "cut",
     "start": 49.4,
     "end": 55.1,
     "payload": {},
-    "reason": "Remove the failed attempt and apology before the clean restart.",
+    "reason": "remove the failed chat endpoint wording and the apology before the correct restart",
     "status": "applied",
-    "purpose": "Remove the failed attempt and apology before the clean restart.",
+    "purpose": "remove the failed chat endpoint wording and the apology before the correct restart",
     "quote": "Then we call the chat endpoint with the wrong sorry let me say that again.",
-    "chapter": 3,
+    "chapter": 2,
     "review": {
      "verdict": "keep",
-     "note": "Cut precisely removes the failed attempt and apology from 49.4s to the clean restart at 55.1s."
+     "note": "The quoted failed wording and apology are in the transcript and form a clear retake to remove."
     }
    },
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i11",
-    "mediaId": "m-7a4bfae0",
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i8",
+    "mediaId": "m-6a8b0c2e",
     "kind": "zoom",
-    "start": 55.1,
-    "end": 59.1,
+    "start": 62.6,
+    "end": 70,
     "payload": {
-     "activity": "a420",
-     "w": 0.4208,
-     "cx": 0.27349999999999997,
-     "cy": 0.2104,
+     "activity": "a690",
+     "w": 0.6704,
+     "cx": 0.3352,
+     "cy": 0.6648000000000001,
      "path": [
       {
-       "src": 56,
-       "cx": 0.26033333333333336,
-       "cy": 0.3243333333333333
+       "src": 69,
+       "cx": 0.3352,
+       "cy": 0.6648000000000001
       },
       {
-       "src": 57,
-       "cx": 0.328,
-       "cy": 0.35200000000000004
-      },
-      {
-       "src": 58,
-       "cx": 0.43733333333333335,
-       "cy": 0.37966666666666665
-      },
-      {
-       "src": 59,
-       "cx": 0.539,
-       "cy": 0.389
+       "src": 70,
+       "cx": 0.3352,
+       "cy": 0.6648000000000001
       }
      ]
     },
-    "reason": "Make the chat completions code readable as it is written.",
+    "reason": "so the viewer can read the three bullet points and action items printed as the result",
     "status": "applied",
-    "purpose": "Make the chat completions code readable as it is written.",
-    "quote": "Then we call the chat completions endpoint with the model name and a short system prompt.",
+    "purpose": "so the viewer can read the three bullet points and action items printed as the result",
+    "quote": "Let's try it on a real meeting and there it is three bullet points and a list of action items.",
     "chapter": 3,
     "review": {
-     "verdict": "keep",
-     "note": "Zoom matches the clean chat-completions narration and makes the code readable."
-    }
+     "verdict": "revised",
+     "note": "Shift the zoom to 62.6-70.0s to match p3; starting at 65.0s misses the run's opening and ending at 72.0s lingers after the output discussion."
+    },
+    "problem": "p3"
    },
    {
-    "id": "sug-m-7a4bfae0-mvthpswi-i12",
-    "mediaId": "m-7a4bfae0",
-    "kind": "effect",
-    "start": 65.3,
-    "end": 68.8,
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i9",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "zoom",
+    "start": 83,
+    "end": 89,
     "payload": {
-     "x": 0.16,
-     "y": 0.67,
-     "w": 0.34,
-     "h": 0.33,
-     "description": "Pulse a highlight around the generated bullet points and action items in the terminal."
+     "activity": "a880",
+     "w": 0.7696000000000001,
+     "cx": 0.38480000000000003,
+     "cy": 0.6152,
+     "path": [
+      {
+       "src": 88,
+       "cx": 0.38480000000000003,
+       "cy": 0.6152
+      },
+      {
+       "src": 89,
+       "cx": 0.38480000000000003,
+       "cy": 0.6152
+      }
+     ]
     },
-    "reason": "Direct attention to the successful generated summary.",
+    "reason": "so the viewer can read the one clear friendly error line in the terminal",
     "status": "applied",
-    "purpose": "Direct attention to the successful generated summary.",
-    "quote": "And there it is.",
+    "purpose": "so the viewer can read the one clear friendly error line in the terminal",
+    "quote": "And now, when I run on it again with the wrong file name, we get one clear line.",
     "chapter": 4,
     "review": {
-     "verdict": "keep",
-     "note": "Effect at 65.3s correctly highlights the generated summary as 'And there it is' is spoken."
-    }
-   },
-   {
-    "id": "sug-m-7a4bfae0-mvthpswi-i13",
-    "mediaId": "m-7a4bfae0",
-    "kind": "transition",
-    "start": 80,
-    "end": 83.5,
-    "payload": {
-     "scene": "board-swing-in",
-     "fromChapter": 4,
-     "toChapter": 5
+     "verdict": "revised",
+     "note": "End the zoom at 89.0s to match p4 instead of continuing to 90.5s into the recap chapter."
     },
-    "reason": "Mark the move from the successful run to error handling.",
-    "status": "applied",
-    "purpose": "Mark the move from the successful run to error handling.",
-    "quote": "So let's add a small error handler that prints a friendly message instead.",
-    "chapter": 5,
-    "review": {
-     "verdict": "keep",
-     "note": "Transition sits exactly at the 80.0s chapter boundary over the opening error-handler sentence."
-    }
-   },
-   {
-    "id": "sug-m-7a4bfae0-mvthpswi-i14",
-    "mediaId": "m-7a4bfae0",
-    "kind": "effect",
-    "start": 85.3,
-    "end": 88.9,
-    "payload": {
-     "x": 0.16,
-     "y": 0.72,
-     "w": 0.41,
-     "h": 0.28,
-     "description": "Pop a callout onto the single friendly error line in the terminal and hold it briefly."
-    },
-    "reason": "Direct attention to the single friendly error message.",
-    "status": "applied",
-    "purpose": "Direct attention to the single friendly error message.",
-    "quote": "and now, when i run it again with the wrong file name we get one clear line",
-    "chapter": 5,
-    "review": {
-     "verdict": "keep",
-     "note": "Effect correctly directs attention to the friendly error line in the terminal during the rerun."
-    }
+    "problem": "p4"
    }
   ],
-  "plugins": [
-   {
-    "hash": "f578834bf8a7b02c5871b1c3349a23e5",
-    "kind": "3d",
-    "source": "builtin",
-    "component": {
-     "id": "desk-screen",
-     "kind": "3d",
-     "effectKind": "scene3d",
-     "name": "Screen in a scene",
-     "description": "The video plays on a screen in a 3D scene (desk, classroom board or studio); starts and ends full-frame so it cuts in seamlessly",
-     "params": {
-      "scene": {
-       "type": "enum",
-       "values": [
-        "desk",
-        "classroom",
-        "studio"
-       ],
-       "labels": [
-        "Wooden desk",
-        "Classroom board",
-        "Studio"
-       ],
-       "default": "desk",
-       "label": "Scene"
-      },
-      "motion": {
-       "type": "enum",
-       "values": [
-        "reveal",
-        "push",
-        "orbit"
-       ],
-       "labels": [
-        "Pull back and return",
-        "Slow push in",
-        "Orbit"
-       ],
-       "default": "reveal",
-       "label": "Camera (no keyframes)"
-      },
-      "tilt": {
-       "type": "number",
-       "min": 0,
-       "max": 20,
-       "step": 1,
-       "default": 7,
-       "label": "Screen tilt (°)"
-      },
-      "ramp": {
-       "type": "duration",
-       "min": 0.3,
-       "max": 3,
-       "default": 1.2,
-       "label": "In/out (sec)"
-      }
-     },
-     "code": "'use strict';\r\n/** 3D 場景的鏡頭關鍵幀內插（spec §5.8；經典腳本，全域 CAMERA3D，串在場景插件前面送進沙盒，Vitest 用 vm 測）。\r\n *  關鍵幀 {t（相對區段開頭的秒數）, position [x,y,z], target [x,y,z]（看向的點）, fov（垂直視角，度）}；\r\n *  兩個關鍵幀之間用 smoothstep（慢進慢出），第一個之前停在第一個、最後一個之後停在最後一個。 */\r\nconst CAMERA3D = (() => {\r\n  /** 慢進慢出 */\r\n  const smooth = (u) => { const x = Math.min(1, Math.max(0, u)); return x * x * (3 - 2 * x); };\r\n  /** 向量線性內插 */\r\n  const mix = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);\r\n\r\n  /** 時間 t 的鏡頭；沒有關鍵幀回 null */\r\n  function cameraAt(keys, t) {\r\n    if (!keys || !keys.length) return null;\r\n    const ks = [...keys].sort((a, b) => a.t - b.t);\r\n    const pick = (k) => ({ position: [...k.position], target: [...k.target], fov: k.fov });\r\n    if (t <= ks[0].t) return pick(ks[0]);\r\n    for (let i = 1; i < ks.length; i++) {\r\n      const a = ks[i - 1], b = ks[i];\r\n      if (t < b.t) {\r\n        const k = smooth((t - a.t) / (b.t - a.t));\r\n        return { position: mix(a.position, b.position, k), target: mix(a.target, b.target, k), fov: a.fov + (b.fov - a.fov) * k };\r\n      }\r\n    }\r\n    return pick(ks[ks.length - 1]);\r\n  }\r\n\r\n  return { cameraAt };\r\n})();\r\n\n;\n// 內建 3D 範本「Screen in a scene」（spec §5.8）：螢幕播當格畫面（V1），放在三種程式畫的場景裡：\r\n//   desk（木紋桌上的螢幕）、classroom（教室黑板，影片就是板面）、studio（攝影棚，螢幕立在架上、聚光）。\r\n// 場景全部用程式畫（沒有外部素材，開發者 2026-10-27 決定）；桌上螢幕移植自 spikes/export-bench/src/scene3d.ts。\r\n// 三個場景的螢幕位置、大小相同，運鏡共用。頭尾接回滿版：區段開頭與結尾鏡頭正對螢幕、螢幕剛好填滿畫面。\r\n// 鏡頭：有鏡頭關鍵幀（env.params.cameraKeys，前面串了 cameraPath.js 的 CAMERA3D）就照關鍵幀走，否則用 motion 預設運鏡。\r\n// 參數：scene、motion（reveal 拉遠再推回／push 慢慢推近／orbit 繞半圈）、tilt（螢幕後仰度數）、ramp（頭尾過場秒數）。\r\n/* global CAMERA3D */\r\n\r\n/** 畫面只由 t 決定（跳格不必從頭推） */\r\nconst pure = true;\r\n\r\n/** 螢幕寬高（場景單位）與中心高度 */\r\nconst SCREEN_W = 4.0;\r\nconst SCREEN_H = SCREEN_W * 9 / 16;\r\nconst CENTER_Y = 1.25;\r\n\r\n/** 場景物件（setup 建、update 用） */\r\nconst S = {};\r\n\r\n/** 木紋程序貼圖：幾個頻率的正弦疊成年輪＋固定偽雜訊（每次都一樣）；tone 調深淺 */\r\nfunction woodTexture(THREE, tone) {\r\n  const size = 256;\r\n  const data = new Uint8Array(size * size * 4);\r\n  for (let y = 0; y < size; y++) {\r\n    const ring = Math.sin(y * 0.21) * 0.5 + Math.sin(y * 0.047 + 1.3) * 0.35 + Math.sin(y * 0.9) * 0.15;\r\n    for (let x = 0; x < size; x++) {\r\n      const noise = ((x * 7919 + y * 104729) % 97) / 97 - 0.5;\r\n      const k = (0.62 + ring * 0.16 + noise * 0.05) * tone;\r\n      const i = (y * size + x) * 4;\r\n      data[i] = Math.min(255, 168 * k + 20);\r\n      data[i + 1] = Math.min(255, 112 * k + 12);\r\n      data[i + 2] = Math.min(255, 66 * k + 8);\r\n      data[i + 3] = 255;\r\n    }\r\n  }\r\n  const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);\r\n  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;\r\n  tex.repeat.set(4, 3);\r\n  tex.colorSpace = THREE.SRGBColorSpace;\r\n  tex.generateMipmaps = true;\r\n  tex.minFilter = THREE.LinearMipmapLinearFilter;\r\n  tex.needsUpdate = true;\r\n  return tex;\r\n}\r\n\r\n/** 垂直漸層貼圖（攝影棚背景） */\r\nfunction gradientTexture(THREE, top, bottom) {\r\n  const c = new OffscreenCanvas(4, 256);\r\n  const g = c.getContext('2d');\r\n  const grad = g.createLinearGradient(0, 0, 0, 256);\r\n  grad.addColorStop(0, top);\r\n  grad.addColorStop(1, bottom);\r\n  g.fillStyle = grad;\r\n  g.fillRect(0, 0, 4, 256);\r\n  const tex = new THREE.CanvasTexture(c);\r\n  tex.colorSpace = THREE.SRGBColorSpace;\r\n  return tex;\r\n}\r\n\r\n/** 木紋桌：桌面、螢幕邊框與底座、桌上的方塊和杯子 */\r\nfunction buildDesk(THREE, scene, group) {\r\n  scene.background = new THREE.Color(0x1a1410);\r\n  const desk = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 1), roughness: 0.75 }));\r\n  desk.rotation.x = -Math.PI / 2;\r\n  scene.add(desk);\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.22, SCREEN_H + 0.22, 0.1), new THREE.MeshStandardMaterial({ color: 0x15171c, roughness: 0.4, metalness: 0.3 })));\r\n  const stand = new THREE.MeshStandardMaterial({ color: 0x2a2d35, roughness: 0.5, metalness: 0.4 });\r\n  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.2, 0.12), stand);\r\n  neck.position.set(0, -0.95, -0.1);\r\n  group.add(neck);\r\n  const base = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.0), stand);\r\n  base.position.set(0, 0.03, 0.15);\r\n  scene.add(base);\r\n  const block = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.7), new THREE.MeshStandardMaterial({ color: 0x3b7ddd, roughness: 0.6 }));\r\n  block.position.set(-3.2, 0.25, 1.2);\r\n  block.rotation.y = 0.5;\r\n  scene.add(block);\r\n  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 0.6, 32), new THREE.MeshStandardMaterial({ color: 0xe9e6df, roughness: 0.3 }));\r\n  cup.position.set(3.1, 0.3, 1.6);\r\n  scene.add(cup);\r\n}\r\n\r\n/** 教室：牆、木地板、黑板邊框與粉筆槽（影片就是板面）、講桌 */\r\nfunction buildClassroom(THREE, scene, group) {\r\n  scene.background = new THREE.Color(0xd9d2c3);\r\n  const wall = new THREE.Mesh(new THREE.PlaneGeometry(30, 12), new THREE.MeshStandardMaterial({ color: 0xe8e0cf, roughness: 0.95 }));\r\n  wall.position.set(0, 4, -0.3);\r\n  scene.add(wall);\r\n  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 16), new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 0.75), roughness: 0.8 }));\r\n  floor.rotation.x = -Math.PI / 2;\r\n  floor.position.y = -0.6;\r\n  scene.add(floor);\r\n  // 黑板木框（比螢幕大一圈）與粉筆槽\r\n  const frame = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.7 });\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.5, SCREEN_H + 0.5, 0.08), frame));\r\n  const tray = new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.5, 0.08, 0.25), frame);\r\n  tray.position.set(0, -SCREEN_H / 2 - 0.28, 0.12);\r\n  group.add(tray);\r\n  for (let i = 0; i < 3; i++) {\r\n    const chalk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.22, 10), new THREE.MeshStandardMaterial({ color: [0xffffff, 0xf7e27a, 0xf2a3b3][i], roughness: 0.9 }));\r\n    chalk.rotation.z = Math.PI / 2;\r\n    chalk.position.set(-1.2 + i * 0.35, -SCREEN_H / 2 - 0.2, 0.15);\r\n    group.add(chalk);\r\n  }\r\n  // 講桌\r\n  const lectern = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.1, 0.8), frame);\r\n  lectern.position.set(2.8, -0.05, 2.2);\r\n  scene.add(lectern);\r\n}\r\n\r\n/** 攝影棚：漸層背幕、地面、螢幕立架、兩盞聚光的光錐 */\r\nfunction buildStudio(THREE, scene, group) {\r\n  scene.background = new THREE.Color(0x101318);\r\n  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 16), new THREE.MeshBasicMaterial({ map: gradientTexture(THREE, '#2c3240', '#0d0f14') }));\r\n  backdrop.position.set(0, 4, -6);\r\n  scene.add(backdrop);\r\n  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshStandardMaterial({ color: 0x1b1f27, roughness: 0.35, metalness: 0.2 }));\r\n  floor.rotation.x = -Math.PI / 2;\r\n  floor.position.y = -0.6;\r\n  scene.add(floor);\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.14, SCREEN_H + 0.14, 0.08), new THREE.MeshStandardMaterial({ color: 0x0b0c10, roughness: 0.3, metalness: 0.5 })));\r\n  // 立架：從螢幕下緣到地面（沒有環境貼圖，金屬感調低免得暗掉），底下一塊圓底座\r\n  const steel = new THREE.MeshStandardMaterial({ color: 0x9aa3b2, metalness: 0.3, roughness: 0.4 });\r\n  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 16), steel);\r\n  pole.position.set(0, -0.6 + 0.9 - CENTER_Y, -0.1);\r\n  group.add(pole);\r\n  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.05, 32), steel);\r\n  foot.position.set(0, -0.575, 0);\r\n  scene.add(foot);\r\n  for (const x of [-4.5, 4.5]) {\r\n    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.8, 7, 32, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff3d6, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));\r\n    cone.position.set(x, 3, -1);\r\n    cone.rotation.z = x < 0 ? -0.35 : 0.35;\r\n    scene.add(cone);\r\n  }\r\n}\r\n\r\n/** 建場景 */\r\nfunction setup(THREE, scene, camera, env) {\r\n  scene.add(new THREE.AmbientLight(0xffffff, 1.1));\r\n  const sun = new THREE.DirectionalLight(0xfff1dd, 2.2);\r\n  sun.position.set(-4, 8, 6);\r\n  scene.add(sun);\r\n\r\n  const tilt = -(env.params.tilt ?? 7) * Math.PI / 180;\r\n  const group = new THREE.Group();\r\n  group.position.set(0, CENTER_Y, 0);\r\n  group.rotation.x = tilt;\r\n  scene.add(group);\r\n  const kind = env.params.scene || 'desk';\r\n  if (kind === 'classroom') buildClassroom(THREE, scene, group);\r\n  else if (kind === 'studio') buildStudio(THREE, scene, group);\r\n  else buildDesk(THREE, scene, group);\r\n  const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), env.frameMaterial());\r\n  screen.position.z = 0.056;\r\n  group.add(screen);\r\n\r\n  // 滿版位置：正對螢幕、沿螢幕法線退到剛好填滿畫面的距離（畫面比螢幕寬時以高度為準）\r\n  S.fov0 = camera.fov;\r\n  const fov = camera.fov * Math.PI / 180;\r\n  const aspect = env.width / env.height;\r\n  const dist = Math.max(SCREEN_H / 2, SCREEN_W / 2 / aspect) / Math.tan(fov / 2) + 0.056;\r\n  const normal = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(1, 0, 0), tilt);\r\n  const center = new THREE.Vector3(0, CENTER_Y, 0).add(normal.clone().multiplyScalar(0.056));\r\n  S.THREE = THREE;\r\n  S.camera = camera;\r\n  S.flat = { pos: center.clone().add(normal.clone().multiplyScalar(dist - 0.056)), look: center.clone(), up: new THREE.Vector3(0, 1, 0).applyAxisAngle(new THREE.Vector3(1, 0, 0), tilt), fov: camera.fov };\r\n}\r\n\r\n/** 平滑（頭尾慢、中間快） */\r\nfunction smooth(u) {\r\n  const x = Math.min(1, Math.max(0, u));\r\n  return x * x * (3 - 2 * x);\r\n}\r\n\r\n/** 預設運鏡的中間段（u：0～1） */\r\nfunction presetCamera(THREE, motion, u) {\r\n  const look = new THREE.Vector3(0, CENTER_Y * 0.8, 0);\r\n  if (motion === 'orbit') {\r\n    const a = -0.8 + u * 1.6;\r\n    return { pos: new THREE.Vector3(Math.sin(a) * 9, 4.2, Math.cos(a) * 9), look, fov: S.fov0 };\r\n  }\r\n  if (motion === 'push') return { pos: new THREE.Vector3(0.8 - u * 0.8, 3.6 - u * 1.2, 10 - u * 3.5), look, fov: S.fov0 };\r\n  return { pos: new THREE.Vector3(-1.2 + u * 2.4, 4.4, 9.5), look, fov: S.fov0 };\r\n}\r\n\r\n/** 中間段在時間 t 的鏡頭：有關鍵幀照關鍵幀，否則預設運鏡 */\r\nfunction middleCamera(THREE, env, t, ramp) {\r\n  const keys = env.params.cameraKeys;\r\n  if (keys && keys.length) {\r\n    const c = CAMERA3D.cameraAt(keys, t);\r\n    return { pos: new THREE.Vector3(...c.position), look: new THREE.Vector3(...c.target), fov: c.fov };\r\n  }\r\n  const L = env.duration;\r\n  return presetCamera(THREE, env.params.motion || 'reveal', L > 2 * ramp ? (t - ramp) / (L - 2 * ramp) : 0.5);\r\n}\r\n\r\n/** 每格更新鏡頭：頭尾在滿版與中間段之間過場 */\r\nfunction update(t, env) {\r\n  const THREE = S.THREE;\r\n  const camera = S.camera;\r\n  const L = env.duration;\r\n  const ramp = Math.min(env.params.ramp ?? 1.2, L / 3);\r\n  let k = 1;\r\n  let target;\r\n  if (t < ramp) { k = smooth(t / ramp); target = middleCamera(THREE, env, ramp, ramp); }\r\n  else if (t > L - ramp) { k = smooth((L - t) / ramp); target = middleCamera(THREE, env, L - ramp, ramp); }\r\n  else target = middleCamera(THREE, env, t, ramp);\r\n  camera.position.copy(S.flat.pos).lerp(target.pos, k);\r\n  camera.up.copy(S.flat.up).lerp(new THREE.Vector3(0, 1, 0), k).normalize();\r\n  camera.lookAt(S.flat.look.clone().lerp(target.look, k));\r\n  camera.fov = S.flat.fov + (target.fov - S.flat.fov) * k;\r\n  camera.updateProjectionMatrix();\r\n}\r\n"
-    }
-   },
-   {
-    "hash": "605713c49310fc7a4ea3b8848d39dccf",
-    "kind": "2d",
-    "source": "builtin",
-    "component": {
-     "id": "box",
-     "version": 2,
-     "schema": 2,
-     "category": "emphasis",
-     "preview": {
-      "t": 1,
-      "box": {
-       "w": 0.3,
-       "h": 0.2
-      }
-     },
-     "kind": "visual",
-     "name": "框線",
-     "description": "沿著目標框畫出圓角框線，可改成彈出或淡入，進場後可以輕輕脈動",
-     "tags": [
-      "框",
-      "強調"
-     ],
-     "params": {
-      "motion": {
-       "type": "enum",
-       "values": [
-        "draw",
-        "pop",
-        "fade"
-       ],
-       "labels": [
-        "描邊畫出",
-        "彈出",
-        "淡入"
-       ],
-       "default": "draw",
-       "label": "進場"
-      },
-      "color": {
-       "type": "color",
-       "role": "primary",
-       "default": "#ff3b30",
-       "label": "顏色"
-      },
-      "width": {
-       "type": "number",
-       "min": 3,
-       "max": 30,
-       "step": 1,
-       "default": 8,
-       "label": "粗細"
-      },
-      "radius": {
-       "type": "number",
-       "min": 0,
-       "max": 80,
-       "step": 1,
-       "default": 12,
-       "label": "圓角"
-      },
-      "padding": {
-       "type": "number",
-       "min": 0,
-       "max": 80,
-       "step": 1,
-       "default": 10,
-       "label": "外擴"
-      },
-      "pulse": {
-       "type": "boolean",
-       "default": false,
-       "label": "脈動"
-      },
-      "inDur": {
-       "type": "duration",
-       "min": 0.1,
-       "max": 3,
-       "default": 0.6,
-       "label": "進場秒數"
-      },
-      "shadow": {
-       "type": "boolean",
-       "default": true,
-       "label": "陰影"
-      }
-     },
-     "code": "function draw(g, t, p, env) {\n  const b = env.box, pad = p.padding, u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);\n  const w = b.w + pad * 2, h = b.h + pad * 2;\n  let s = 1, a = fade, prog = 1;\n  if (p.motion === 'draw') prog = ease.outCubic(u);\n  else if (p.motion === 'pop') s = ease.outBack(u);\n  else a = a * ease.outQuad(u);\n  if (p.pulse && u >= 1) s = s * (1 + Math.sin((t - p.inDur) * 6) * 0.025);\n  if (s <= 0.001) return;\n  g.save(); g.alpha(a); g.translate(b.x + b.w / 2, b.y + b.h / 2); g.scale(s, s);\n  if (p.shadow) g.glow({color: '#00000080', blur: 12});\n  g.begin(); g.roundRect(-w / 2, -h / 2, w, h, p.radius);\n  g.stroke({color: p.color, width: p.width, progress: prog});\n  g.restore();\n}"
-    }
-   },
-   {
-    "hash": "8438de8b8485058a978675fadc50eb84",
-    "kind": "3d",
-    "source": "builtin",
-    "component": {
-     "id": "floating-board",
-     "kind": "3d",
-     "effectKind": "scene3d",
-     "name": "Floating board",
-     "description": "The video becomes a board that turns, pushes in and pulls back in space; starts and ends full-frame",
-     "params": {
-      "keys": {
-       "type": "keys",
-       "default": [
-        {
-         "anchor": "start",
-         "t": 0,
-         "rx": 0,
-         "ry": 0,
-         "rz": 0,
-         "size": 1,
-         "px": 0,
-         "py": 0,
-         "ease": "inOut"
-        }
-       ],
-       "label": "Board keyframes"
-      },
-      "float": {
-       "type": "float",
-       "default": null,
-       "label": "Gentle sway"
-      },
-      "edges": {
-       "type": "boolean",
-       "default": true,
-       "label": "Return to full frame at both ends"
-      },
-      "background": {
-       "type": "enum",
-       "values": [
-        "studio",
-        "grid",
-        "blur",
-        "color"
-       ],
-       "labels": [
-        "Studio",
-        "Tech grid",
-        "Blurred video",
-        "Solid color"
-       ],
-       "default": "studio",
-       "label": "Background"
-      },
-      "color": {
-       "type": "color",
-       "default": "#202020",
-       "label": "Background color"
-      },
-      "shadow": {
-       "type": "number",
-       "min": 0,
-       "max": 1,
-       "step": 0.05,
-       "default": 0.55,
-       "label": "Shadow"
-      }
-     },
-     "code": "'use strict';\r\n/** 平面轉 3D 共用數學（純函式：沒有 DOM、沒有全域狀態，node 可直接載入測試）。\r\n *  與 backend/plane3d_math.py 對稱實作，scripts/plane3d-math-parity.js 比對兩邊輸出；改一邊一定要同步改另一邊，\r\n *  否則工作台預覽、MP4 與 XML 的板子位置會對不上。設計見 docs/superpowers/specs/2026-10-25-plane3d-design.md §2、§3。\r\n *  ffmpeg 運算式只有引擎需要，這裡沒有。\r\n *\r\n *  座標約定：姿勢 pose＝{rx, ry, rz, size, px, py}，角度用度；size＝正對鏡頭時板子寬佔畫面寬的比例（1＝滿版）；\r\n *  px／py 以畫面寬、高為 1。旋轉順序 Rz → Rx → Ry，四角順序左上、右上、左下、右下。 */\r\nconst PLANE3D = (() => {\r\n  const FOV_DEG = 40;\r\n  const D0 = 1 / Math.tan(FOV_DEG * Math.PI / 180 / 2);   // size=1（滿版）時的距離\r\n  const PAD = 4;              // 輸出時來源外圍的透明邊（px）；預覽不用\r\n  const EDGE_RAMP = 0.6;      // 頭尾接回平面的秒數（區間太短時取 L/4）\r\n  const MAX_KEYS = 20;\r\n  const MIN_Z = 0.3 * D0;     // 任一角離鏡頭的最近距離\r\n  const MAX_SPREAD = 4;       // 投影點離畫面中心最多幾倍畫面寬／高\r\n  const SHADOW_DY = 0.026;   // 陰影往下偏移（以畫面高為 1）；預覽與輸出共用\r\n  const SHADOW_SIGMA = 0.02; // 陰影模糊的標準差（以畫面高為 1）\r\n  const FLAT = {rx: 0, ry: 0, rz: 0, size: 1, px: 0, py: 0};\r\n  const PARAMS = ['rz', 'rx', 'ry', 'size', 'px', 'py'];\r\n  const RANGES = {rx: [-80, 80], ry: [-80, 80], rz: [-180, 180], size: [0.15, 1.5], px: [-1, 1], py: [-1, 1]};\r\n  const FLOAT_RANGES = {rx: [0, 15], ry: [0, 15], period: [1, 10]};\r\n  const EASES = ['inOut', 'linear', 'in', 'out'];\r\n  const rad = (deg) => deg * Math.PI / 180;\r\n\r\n  /** 緩動：inOut＝easeInOutCubic、in＝u³、out＝1−(1−u)³、linear。u 夾在 0～1。 */\r\n  function ease(kind, u) {\r\n    u = Math.min(1, Math.max(0, u));\r\n    if (kind === 'linear') return u;\r\n    if (kind === 'in') return u ** 3;\r\n    if (kind === 'out') return 1 - (1 - u) ** 3;\r\n    return u < 0.5 ? 4 * u ** 3 : 1 - (2 - 2 * u) ** 3 / 2;\r\n  }\r\n\r\n  /** 頭尾接回平面的秒數。 */\r\n  const edgeRamp = (L) => Math.min(EDGE_RAMP, L / 4);\r\n\r\n  /** 每個使用者關鍵幀的剪後時間（秒，相對區段開頭）；edges 開時 ramp 加在使用者關鍵幀外面。不是嚴格遞增時丟錯。 */\r\n  function keyTimes(effect, L) {\r\n    const r = effect.edges ? edgeRamp(L) : 0;\r\n    const out = effect.keys.map((k) => Math.min(L - r, Math.max(r, (k.anchor || 'start') === 'start' ? r + k.t : L - r - k.t)));\r\n    for (let i = 1; i < out.length; i++) if (out[i] <= out[i - 1]) throw new Error('plane3d: key times not increasing');\r\n    return out;\r\n  }\r\n\r\n  /** 實際使用的關鍵幀時間：keyTimes 不遞增時（區間剪到太短）照順序平均排在 [r, L−r]。 */\r\n  function resolvedTimes(effect, L) {\r\n    try { return keyTimes(effect, L); } catch (err) {\r\n      const r = effect.edges ? edgeRamp(L) : 0, n = effect.keys.length;\r\n      return n > 1 ? effect.keys.map((_, i) => r + (L - 2 * r) * i / (n - 1)) : [r];\r\n    }\r\n  }\r\n\r\n  /** 關鍵幀路徑可不可以用：每個點與相鄰兩點之間每 0.1 取樣（有 float 再加四個擺動極端），全部 poseValid。 */\r\n  function pathValid(keys, float, w, h) {\r\n    const poses = keys.map((k) => Object.fromEntries(PARAMS.map((p) => [p, k[p]])));\r\n    let samples = [...poses];\r\n    for (let i = 1; i < poses.length; i++) {\r\n      const a = poses[i - 1], b = poses[i];\r\n      for (let j = 1; j < 10; j++) samples.push(Object.fromEntries(PARAMS.map((p) => [p, a[p] + (b[p] - a[p]) * j / 10])));\r\n    }\r\n    if (float) samples = samples.flatMap((s) => [-1, 1].flatMap((sx) => [-1, 1].map((sy) => ({...s, rx: s.rx + sx * float.rx, ry: s.ry + sy * float.ry}))));\r\n    return samples.every((s) => poseValid(s, w, h));\r\n  }\r\n\r\n  /** 內插節點 [{T, pose, ease}]；edges 開時頭尾各加滿版平面與 ramp（一律 inOut），同一時間點留前面那個。 */\r\n  function nodes(effect, L) {\r\n    const ts = resolvedTimes(effect, L);\r\n    let ns = effect.keys.map((k, i) => ({T: ts[i], pose: Object.fromEntries(PARAMS.map((p) => [p, k[p]])), ease: k.ease || 'inOut'}));\r\n    const r = effect.edges ? edgeRamp(L) : 0;\r\n    if (effect.edges && r > 0) {\r\n      ns = [{T: 0, pose: {...FLAT}, ease: 'inOut'}, {T: r, pose: {...ns[0].pose}, ease: 'inOut'}, ...ns,\r\n        {T: L - r, pose: {...ns[ns.length - 1].pose}, ease: 'inOut'}, {T: L, pose: {...FLAT}, ease: 'inOut'}];\r\n      ns = ns.filter((n, i) => i === 0 || n.T > ns[i - 1].T);\r\n    }\r\n    return ns;\r\n  }\r\n\r\n  /** 擺動權重：edges 開時頭尾 ramp 內從 0 漸到 1。 */\r\n  function floatWeight(effect, L, T) {\r\n    if (!effect.edges) return 1;\r\n    const r = edgeRamp(L);\r\n    return r <= 0 ? 1 : ease('inOut', T / r) * ease('inOut', (L - T) / r);\r\n  }\r\n\r\n  /** 剪後時間 T 的姿勢：關鍵幀分段內插＋float 擺動。 */\r\n  function poseAt(effect, L, T) {\r\n    const ns = nodes(effect, L);\r\n    let pose = {...ns[ns.length - 1].pose};\r\n    if (T <= ns[0].T) pose = {...ns[0].pose};\r\n    else {\r\n      for (let i = 1; i < ns.length; i++) {\r\n        const a = ns[i - 1], b = ns[i];\r\n        if (T < b.T) {\r\n          const e = ease(b.ease, (T - a.T) / (b.T - a.T));\r\n          pose = Object.fromEntries(PARAMS.map((p) => [p, a.pose[p] + (b.pose[p] - a.pose[p]) * e]));\r\n          break;\r\n        }\r\n      }\r\n    }\r\n    const fl = effect.float;\r\n    if (fl) {\r\n      const w = floatWeight(effect, L, T);\r\n      const phase = 2 * Math.PI * (T - (effect.edges ? edgeRamp(L) : 0)) / fl.period;\r\n      pose.rx = pose.rx + fl.rx * Math.cos(phase) * w;\r\n      pose.ry = pose.ry + fl.ry * Math.sin(phase) * w;\r\n    }\r\n    return pose;\r\n  }\r\n\r\n  /** 圓角與陰影的強度 0～1：edges 開時頭尾 ramp 內線性 0→1、1→0，中段 1；edges 關恆為 1（同引擎 edge_weight）。 */\r\n  function edgeWeight(effect, L, T) {\r\n    if (!effect.edges) return 1;\r\n    const r = edgeRamp(L);\r\n    if (r <= 0) return 1;\r\n    return Math.min(1, Math.max(0, T / r)) * Math.min(1, Math.max(0, (L - T) / r));\r\n  }\r\n\r\n  /** 四角的 [螢幕 x, 螢幕 y, Z]。 */\r\n  function project(pose, w, h, pad) {\r\n    const rz = rad(pose.rz), rx = rad(pose.rx), ry = rad(pose.ry);\r\n    const f = w / 2 * D0, d = D0 / pose.size;\r\n    const hw = w / (w - 2 * pad), hh = h / w * h / (h - 2 * pad);\r\n    const tx = pose.px * 2 / pose.size, ty = pose.py * 2 * (h / w) / pose.size;\r\n    return [[-hw, -hh], [hw, -hh], [-hw, hh], [hw, hh]].map(([lx, ly]) => {\r\n      const x1 = lx * Math.cos(rz) - ly * Math.sin(rz), y1 = lx * Math.sin(rz) + ly * Math.cos(rz);\r\n      const y2 = y1 * Math.cos(rx), z2 = y1 * Math.sin(rx);\r\n      const x3 = x1 * Math.cos(ry) + z2 * Math.sin(ry), z3 = -x1 * Math.sin(ry) + z2 * Math.cos(ry);\r\n      const X = x3 + tx, Y = y2 + ty, Z = z3 + d;\r\n      return [w / 2 + f * X / Z, h / 2 + f * Y / Z, Z];\r\n    });\r\n  }\r\n\r\n  /** 四角投影到畫面上的像素座標 [[x, y]]×4。pad：輸出用 PAD，預覽用 0。 */\r\n  const corners = (pose, w, h, pad = 0) => project(pose, w, h, pad).map(([x, y]) => [x, y]);\r\n\r\n  /** 姿勢可不可以用：範圍、離鏡頭夠遠、投影點不離畫面太遠、凸四邊形。 */\r\n  function poseValid(pose, w, h) {\r\n    for (const [k, [lo, hi]] of Object.entries(RANGES)) {\r\n      const v = pose[k];\r\n      if (typeof v !== 'number' || !Number.isFinite(v) || v < lo || v > hi) return false;\r\n    }\r\n    const pts = project(pose, w, h, 0);\r\n    if (pts.some(([, , z]) => z < MIN_Z)) return false;\r\n    if (pts.some(([x, y]) => Math.abs(x - w / 2) > MAX_SPREAD * w || Math.abs(y - h / 2) > MAX_SPREAD * h)) return false;\r\n    const ring = [pts[0], pts[1], pts[3], pts[2]];\r\n    const cross = ring.map((p, i) => {\r\n      const q = ring[(i + 1) % 4], r = ring[(i + 2) % 4];\r\n      return (q[0] - p[0]) * (r[1] - q[1]) - (q[1] - p[1]) * (r[0] - q[0]);\r\n    });\r\n    return cross.every((c) => c > 0) || cross.every((c) => c < 0);\r\n  }\r\n\r\n  /** 來源矩形 (0,0)-(w,h) → 四角 dst 的 3×3 投影矩陣（h33=1），列優先（同引擎的高斯消去）。 */\r\n  function homography(dst, w, h) {\r\n    const src = [[0, 0], [w, 0], [0, h], [w, h]];\r\n    const rows = [];\r\n    src.forEach(([x, y], i) => {\r\n      const [u, v] = dst[i];\r\n      rows.push([x, y, 1, 0, 0, 0, -u * x, -u * y, u]);\r\n      rows.push([0, 0, 0, x, y, 1, -v * x, -v * y, v]);\r\n    });\r\n    const n = 8;\r\n    for (let c = 0; c < n; c++) {\r\n      let p = c;\r\n      for (let r = c + 1; r < n; r++) if (Math.abs(rows[r][c]) > Math.abs(rows[p][c])) p = r;\r\n      [rows[c], rows[p]] = [rows[p], rows[c]];\r\n      for (let r = 0; r < n; r++) {\r\n        if (r !== c && rows[r][c]) {\r\n          const k = rows[r][c] / rows[c][c];\r\n          rows[r] = rows[r].map((a, j) => a - k * rows[c][j]);\r\n        }\r\n      }\r\n    }\r\n    const hv = [...Array.from({length: n}, (_, i) => rows[i][8] / rows[i][i]), 1];\r\n    return [hv.slice(0, 3), hv.slice(3, 6), hv.slice(6, 9)];\r\n  }\r\n\r\n  /** CSS transform 字串：把 (0,0)-(w,h) 的元素（transform-origin: 0 0）映射到四角。 */\r\n  function cssMatrix3d(dst, w, h) {\r\n    const m = homography(dst, w, h);\r\n    const v = [m[0][0], m[1][0], 0, m[2][0], m[0][1], m[1][1], 0, m[2][1], 0, 0, 1, 0, m[0][2], m[1][2], 0, m[2][2]];\r\n    return `matrix3d(${v.map((x) => +x.toPrecision(12)).join(',')})`;\r\n  }\r\n\r\n  return {FOV_DEG, D0, PAD, EDGE_RAMP, MAX_KEYS, MIN_Z, MAX_SPREAD, SHADOW_DY, SHADOW_SIGMA, FLAT, PARAMS, RANGES, FLOAT_RANGES, EASES,\r\n    ease, edgeRamp, keyTimes, resolvedTimes, poseAt, edgeWeight, corners, poseValid, pathValid, homography, cssMatrix3d};\r\n})();\r\n\r\n// 瀏覽器：傳統 script，PLANE3D 在全域（index.html 於 plane3d.js 之前載入）。Node：scripts/plane3d-math-parity.js 以 vm 載入。\r\nif (typeof module !== 'undefined' && module.exports) module.exports = PLANE3D;\r\n\n;\n'use strict';\r\n/** 「漂浮的板子」的 three.js 幾何（經典腳本，全域 BOARD3D；串在 3D 插件前面送進沙盒，Vitest 用 node vm 載入）。\r\n *  原專案（vendor/plane3d_math.js）的投影：鏡頭在原點看 +Z、畫面 y 往下、水平視角 40°（f＝w/2×D0），板子四角在相機座標 (X, Y, Z)。\r\n *  three.js 的鏡頭看 −Z、y 往上，所以四角換成 (X, −Y, −Z)，垂直視角取 2·atan(tan(20°)·h/w)；這樣投影出來的四角和 PLANE3D.corners 完全一樣\r\n *  （boardGeometry.test.ts 用 PerspectiveCamera 對照驗證）。依賴 PLANE3D。 */\r\nconst BOARD3D = (() => {\r\n  const P = PLANE3D;\r\n  const rad = (deg) => deg * Math.PI / 180;\r\n\r\n  /** three.js 鏡頭的垂直視角（度）：原專案用水平 40° */\r\n  function verticalFov(w, h) {\r\n    return 2 * Math.atan(Math.tan(rad(P.FOV_DEG / 2)) * h / w) * 180 / Math.PI;\r\n  }\r\n\r\n  /** 板子四角在 three.js 相機座標（鏡頭在原點、看 −Z）的位置：左上、右上、左下、右下，各 [x, y, z] */\r\n  function cornersInCamera(pose, w, h) {\r\n    const rz = rad(pose.rz), rx = rad(pose.rx), ry = rad(pose.ry);\r\n    const d = P.D0 / pose.size;\r\n    const hw = 1, hh = h / w;\r\n    const tx = pose.px * 2 / pose.size, ty = pose.py * 2 * (h / w) / pose.size;\r\n    return [[-hw, -hh], [hw, -hh], [-hw, hh], [hw, hh]].map(([lx, ly]) => {\r\n      const x1 = lx * Math.cos(rz) - ly * Math.sin(rz), y1 = lx * Math.sin(rz) + ly * Math.cos(rz);\r\n      const y2 = y1 * Math.cos(rx), z2 = y1 * Math.sin(rx);\r\n      const x3 = x1 * Math.cos(ry) + z2 * Math.sin(ry), z3 = -x1 * Math.sin(ry) + z2 * Math.cos(ry);\r\n      return [x3 + tx, -(y2 + ty), -(z3 + d)];\r\n    });\r\n  }\r\n\r\n  return { verticalFov, cornersInCamera };\r\n})();\r\n\n;\n// 內建 3D 範本「Floating board」（spec §5.8 漂浮的板子）：V1 畫面變成一塊在空間中轉動、推近、拉遠的板子。\r\n// 姿勢關鍵幀沿用原專案（字導字演）的格式與數學：前面串了 vendor/plane3d_math.js（PLANE3D）與 boardGeometry.js（BOARD3D），\r\n// 投影結果和原專案逐點相同（boardGeometry.test.ts）。頭尾自動回滿版平面（edges），所以前後接原片看不出接縫。\r\n// 參數（env.params）：keys（[{anchor, t, rx, ry, rz, size, px, py, ease}]）、float（{rx, ry, period} 或 null）、edges、\r\n//   background（studio｜grid｜blur｜color）、color（純色背景）、shadow（0～1）。\r\n// 背景全部用程式畫（攝影棚、科技格線的畫法沿用原專案 scripts/plane3d-scenes-build.js）。\r\n/* global PLANE3D, BOARD3D */\r\n\r\n/** 畫面只由 t 決定 */\r\nconst pure = true;\r\n\r\n/** 場景物件 */\r\nconst B = {};\r\n\r\n/** 畫背景（2D canvas）：攝影棚、科技格線、純色；模糊原畫面每格另外畫 */\r\nfunction paintBackground(g, kind, color, w, h) {\r\n  if (kind === 'color') {\r\n    g.fillStyle = color || '#202020';\r\n    g.fillRect(0, 0, w, h);\r\n  } else if (kind === 'grid') {\r\n    const vy = h * 0.55;\r\n    const sky = g.createLinearGradient(0, 0, 0, vy);\r\n    sky.addColorStop(0, '#0a1226');\r\n    sky.addColorStop(1, '#132447');\r\n    g.fillStyle = sky;\r\n    g.fillRect(0, 0, w, vy);\r\n    g.fillStyle = '#0a1226';\r\n    g.fillRect(0, vy, w, h - vy);\r\n    g.strokeStyle = 'rgba(90,170,255,0.28)';\r\n    g.lineWidth = Math.max(1, h / 540);\r\n    g.beginPath();\r\n    for (let k = 1; k <= 12; k++) { const y = vy + (h - vy) * (k / 12) ** 2; g.moveTo(0, y); g.lineTo(w, y); }\r\n    for (let k = 0; k <= 24; k++) { const x = -w + 3 * w * k / 24; g.moveTo(w / 2, vy); g.lineTo(x, h); }\r\n    g.stroke();\r\n  } else {\r\n    const rg = g.createRadialGradient(w / 2, h * 0.35, 0, w / 2, h * 0.35, Math.max(w, h) * 0.8);\r\n    rg.addColorStop(0, '#5a6378');\r\n    rg.addColorStop(0.55, '#2c3240');\r\n    rg.addColorStop(1, '#14171f');\r\n    g.fillStyle = rg;\r\n    g.fillRect(0, 0, w, h);\r\n    const floor = g.createLinearGradient(0, h * 0.68, 0, h);\r\n    floor.addColorStop(0, 'rgba(255,255,255,0.07)');\r\n    floor.addColorStop(1, 'rgba(255,255,255,0)');\r\n    g.fillStyle = floor;\r\n    g.fillRect(0, h * 0.68, w, h * 0.32);\r\n  }\r\n}\r\n\r\n/** 建一個四邊形（四角由 update 依姿勢更新） */\r\nfunction quad(THREE, material) {\r\n  const geo = new THREE.BufferGeometry();\r\n  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12), 3));\r\n  geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]), 2));\r\n  geo.setIndex([0, 2, 1, 2, 3, 1]);\r\n  const mesh = new THREE.Mesh(geo, material);\r\n  mesh.frustumCulled = false;\r\n  return mesh;\r\n}\r\n\r\n/** 把四角寫進四邊形 */\r\nfunction setCorners(mesh, corners) {\r\n  const pos = mesh.geometry.attributes.position;\r\n  corners.forEach(([x, y, z], i) => pos.setXYZ(i, x, y, z));\r\n  pos.needsUpdate = true;\r\n}\r\n\r\n/** 建場景 */\r\nfunction setup(THREE, scene, camera, env) {\r\n  const { width: w, height: h } = env;\r\n  camera.fov = BOARD3D.verticalFov(w, h);\r\n  camera.aspect = w / h;\r\n  camera.position.set(0, 0, 0);\r\n  camera.lookAt(0, 0, -1);\r\n  camera.updateProjectionMatrix();\r\n\r\n  // 背景：遠處一片剛好填滿畫面的平面\r\n  const p = env.params;\r\n  B.kind = p.background || 'studio';\r\n  B.canvas = new OffscreenCanvas(Math.round(w / 2), Math.round(h / 2));\r\n  B.ctx = B.canvas.getContext('2d');\r\n  if (B.kind !== 'blur') paintBackground(B.ctx, B.kind, p.color, B.canvas.width, B.canvas.height);\r\n  B.bgTexture = new THREE.CanvasTexture(B.canvas);\r\n  B.bgTexture.colorSpace = THREE.SRGBColorSpace;\r\n  const far = 50;\r\n  const bh = 2 * far * Math.tan(camera.fov * Math.PI / 360);\r\n  const bg = new THREE.Mesh(new THREE.PlaneGeometry(bh * w / h, bh), new THREE.MeshBasicMaterial({ map: B.bgTexture, toneMapped: false }));\r\n  bg.position.set(0, 0, -far);\r\n  scene.add(bg);\r\n\r\n  // 陰影（板子後面一片半透明黑）與板子\r\n  B.shadow = quad(THREE, new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, depthWrite: false }));\r\n  scene.add(B.shadow);\r\n  B.board = quad(THREE, env.frameMaterial());\r\n  scene.add(B.board);\r\n  B.THREE = THREE;\r\n}\r\n\r\n/** 每格：依姿勢關鍵幀更新板子四角、陰影；模糊背景重畫 */\r\nfunction update(t, env) {\r\n  const p = env.params;\r\n  const w = env.width;\r\n  const h = env.height;\r\n  const effect = { keys: p.keys && p.keys.length ? p.keys : [PLANE3D.FLAT], float: p.float || null, edges: p.edges !== false };\r\n  const pose = PLANE3D.poseAt(effect, env.duration, t);\r\n  const corners = BOARD3D.cornersInCamera(pose, w, h);\r\n  setCorners(B.board, corners);\r\n  // 陰影：往下偏一點、稍微放大，強度隨頭尾漸變（滿版時沒有陰影）\r\n  const weight = PLANE3D.edgeWeight(effect, env.duration, t) * (p.shadow ?? 0.55);\r\n  const dy = PLANE3D.SHADOW_DY * 2 * (h / w);\r\n  setCorners(B.shadow, corners.map(([x, y, z]) => [x * 1.02, y * 1.02 - dy * (-z / PLANE3D.D0), z - 0.001]));\r\n  B.shadow.material.opacity = weight * 0.8;\r\n  if (B.kind === 'blur' && env.frameTexture.image && env.frameTexture.image.width > 1) {\r\n    // 模糊原畫面：放大 1.2 倍、強模糊、壓暗 20%（同原專案）\r\n    const g = B.ctx;\r\n    const cw = B.canvas.width;\r\n    const ch = B.canvas.height;\r\n    const img = env.frameTexture.image;\r\n    g.filter = `blur(${(ch * 0.03).toFixed(1)}px) brightness(0.8)`;\r\n    g.drawImage(img, img.width * 0.083, img.height * 0.083, img.width / 1.2, img.height / 1.2, -cw * 0.05, -ch * 0.05, cw * 1.1, ch * 1.1);\r\n    g.filter = 'none';\r\n    B.bgTexture.needsUpdate = true;\r\n  }\r\n}\r\n"
-    }
-   },
-   {
-    "hash": "51ced339d620eba48c01a6df22c12924",
-    "kind": "2d",
-    "source": "builtin",
-    "component": {
-     "id": "label",
-     "version": 2,
-     "schema": 2,
-     "category": "pointer",
-     "preview": {
-      "t": 1,
-      "box": {
-       "w": 0.2,
-       "h": 0.1
-      }
-     },
-     "kind": "visual",
-     "name": "文字標籤",
-     "description": "在框的上下左右彈出一個小對話框，尖角指向框",
-     "tags": [
-      "標籤",
-      "說明",
-      "對話框"
-     ],
-     "params": {
-      "text": {
-       "type": "text",
-       "maxLength": 30,
-       "default": "Here",
-       "label": "文字"
-      },
-      "side": {
-       "type": "enum",
-       "values": [
-        "above",
-        "below",
-        "left",
-        "right"
-       ],
-       "labels": [
-        "上方",
-        "下方",
-        "左邊",
-        "右邊"
-       ],
-       "default": "above",
-       "label": "位置"
-      },
-      "color": {
-       "type": "color",
-       "role": "primary",
-       "default": "#111827",
-       "label": "底色"
-      },
-      "textColor": {
-       "type": "color",
-       "role": "text",
-       "default": "#ffffff",
-       "label": "字色"
-      },
-      "size": {
-       "type": "number",
-       "min": 16,
-       "max": 120,
-       "step": 2,
-       "default": 40,
-       "label": "字級"
-      },
-      "inDur": {
-       "type": "duration",
-       "min": 0.1,
-       "max": 3,
-       "default": 0.4,
-       "label": "彈出秒數"
-      }
-     },
-     "code": "function draw(g, t, p, env) {\n  const b = env.box, u = clamp(t / p.inDur, 0, 1), s = ease.outBack(u), fade = clamp((env.duration - t) / 0.25, 0, 1);\n  if (s <= 0.001) return;\n  const font = {size: p.size, weight: 700};\n  const w = g.measure(p.text, font) + p.size * 1.2, h = p.size * 1.7, tail = p.size * 0.55;\n  const cx = b.x + b.w / 2, cy = b.y + b.h / 2;\n  let x = cx, y = cy, tx = cx, ty = cy;  // 標籤中心與尖角指的點\n  if (p.side === 'above') { y = b.y - tail - h / 2; ty = b.y - 4; }\n  else if (p.side === 'below') { y = b.y + b.h + tail + h / 2; ty = b.y + b.h + 4; }\n  else if (p.side === 'left') { x = b.x - tail - w / 2; tx = b.x - 4; }\n  else { x = b.x + b.w + tail + w / 2; tx = b.x + b.w + 4; }\n  x = clamp(x, w / 2 + 8, env.width - w / 2 - 8); y = clamp(y, h / 2 + 8, env.height - h / 2 - 8);\n  const ax = tx - x, ay = ty - y, vertical = p.side === 'above' || p.side === 'below';\n  // 以尖角為中心彈出，再把原點移回標籤中心\n  g.save(); g.alpha(fade); g.translate(tx, ty); g.scale(s, s); g.translate(-ax, -ay);\n  g.glow({color: '#00000066', blur: 14});\n  g.begin(); g.roundRect(-w / 2, -h / 2, w, h, h * 0.3); g.fill({color: p.color});\n  g.begin();\n  if (vertical) { const by = Math.sign(ay) * (h / 2 - 1); g.moveTo(-tail * 0.6, by); g.lineTo(ax, ay); g.lineTo(tail * 0.6, by); }\n  else { const bx = Math.sign(ax) * (w / 2 - 1); g.moveTo(bx, -tail * 0.6); g.lineTo(ax, ay); g.lineTo(bx, tail * 0.6); }\n  g.close(); g.fill({color: p.color});\n  g.glow(null);\n  g.text(p.text, 0, 0, {size: p.size, weight: 700, color: p.textColor});\n  g.restore();\n}"
-    }
-   },
-   {
-    "hash": "8441c1cee950988d1c40923c96cbf4d2",
-    "kind": "3d",
-    "source": "builtin",
-    "component": {
-     "id": "flip-intro",
-     "kind": "3d",
-     "effectKind": "scene3d",
-     "name": "Flip intro",
-     "description": "Cover images flip past faster and faster, a flash, then the title punches in",
-     "params": {
-      "tone": {
-       "type": "enum",
-       "values": [
-        "duotone",
-        "original"
-       ],
-       "labels": [
-        "Two-tone",
-        "Original colors"
-       ],
-       "default": "duotone",
-       "label": "Covers"
-      },
-      "accent": {
-       "type": "color",
-       "default": "#2f5bff",
-       "label": "Title block"
-      },
-      "dark": {
-       "type": "color",
-       "default": "#141a4a",
-       "label": "Two-tone dark"
-      },
-      "light": {
-       "type": "color",
-       "default": "#a9b8ff",
-       "label": "Two-tone light"
-      }
-     },
-     "code": "// 內建 3D 插件「翻頁式片頭」（spec §5.23、D34；節奏與畫面參數取自 brand-v2 短版，調查 docs/research/intro-styles.md §1.4～§1.5）。\n// 全畫面（scene3d）：封面一張張以上緣為軸翻下、越翻越快、舞台推近微轉 → 一次閃光 → 標題方塊縮入、字裡輪流透出封面 → 揭曉轉白字＋彈跳＋斜光 → 結尾淡出。\n// 時間表由主程式的 intro/flip.ts 算好放在參數裡（畫面與音效同一份），插件只依 t 畫，所以 pure。\n// 參數（env.params）：\n//   imageIds（主程式解碼成 env.images，順序相同）、pages [{t, img, strength}]（img 是 env.images 的索引）、titleFills [索引]、icon（索引或 null）、\n//   montageStart、titleIn、flash、reveal（秒）、title、subtitle、tone（duotone｜original）、dark、light（雙色調的暗色與亮色）、accent（標題方塊顏色）。\n// 圖片貼圖不做色彩轉換（同 frameMaterial），ImageBitmap 第一列在最上，所以在 shader 翻 v。\n\n/** 畫面只由 t 決定 */\nconst pure = true;\n\n/** 場景物件 */\nconst F = {};\n\n/** 頁面尺寸（世界單位；畫面高 1.08、鏡頭距離 1.8 時剛好是 brand-v2 的 1600×900 頁面在 1920×1080 舞台） */\nconst PAGE_W = 1.6;\nconst PAGE_H = 0.9;\n/** 舞台原點到鏡頭的距離（垂直視角 33.4° 時畫面高 1.08） */\nconst CAM_D = 1.8;\n\n/** GSAP 的 power 系列緩動 */\nconst easeIn = (p, n) => Math.pow(p, n + 1);\nconst easeOut = (p, n) => 1 - Math.pow(1 - p, n + 1);\nconst clamp01 = (x) => Math.max(0, Math.min(1, x));\n\n/** #rrggbb → [r, g, b]（0～1，不做色彩轉換） */\nfunction rgb(hex, fallback) {\n  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '') || /^#?([0-9a-f]{6})$/i.exec(fallback);\n  const n = parseInt(m[1], 16);\n  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];\n}\n\n/** 貼圖（ImageBitmap 或畫布）：不翻轉、不轉色彩、不做 mipmap */\nfunction rawTexture(THREE, image, Ctor) {\n  const tex = new (Ctor || THREE.Texture)(image);\n  tex.flipY = false;\n  tex.colorSpace = THREE.NoColorSpace;\n  tex.generateMipmaps = false;\n  tex.minFilter = THREE.LinearFilter;\n  tex.magFilter = THREE.LinearFilter;\n  tex.needsUpdate = true;\n  return tex;\n}\n\n/** 貼圖材質：可選雙色調（依亮度在 dark、light 之間上色）、整體透明度 */\nfunction pageMaterial(THREE, tex, duo, dark, light) {\n  return new THREE.ShaderMaterial({\n    transparent: true,\n    uniforms: { map: { value: tex }, duo: { value: duo }, dark: { value: new THREE.Vector3(...dark) }, light: { value: new THREE.Vector3(...light) }, opacity: { value: 1 } },\n    vertexShader: 'varying vec2 vUv; void main() { vUv = vec2(uv.x, 1.0 - uv.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',\n    fragmentShader: [\n      'uniform sampler2D map; uniform float duo; uniform vec3 dark; uniform vec3 light; uniform float opacity; varying vec2 vUv;',\n      'void main() {',\n      '  vec4 c = texture2D(map, vUv);',\n      '  float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));',\n      '  vec3 d = mix(dark, light, smoothstep(0.05, 0.95, l));',\n      '  gl_FragColor = vec4(mix(c.rgb, d, duo), c.a * opacity);',\n      '}',\n    ].join('\\n'),\n  });\n}\n\n/** 依 cover 方式把圖片畫進框（裁掉多的） */\nfunction drawCover(g, img, x, y, w, h) {\n  const s = Math.max(w / img.width, h / img.height);\n  const sw = w / s;\n  const sh = h / s;\n  g.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, x, y, w, h);\n}\n\n/** 圓角矩形路徑 */\nfunction roundRect(g, x, y, w, h, r) {\n  g.beginPath();\n  g.moveTo(x + r, y);\n  g.arcTo(x + w, y, x + w, y + h, r);\n  g.arcTo(x + w, y + h, x, y + h, r);\n  g.arcTo(x, y + h, x, y, r);\n  g.arcTo(x, y, x + w, y, r);\n  g.closePath();\n}\n\n/** 建場景 */\nfunction setup(THREE, scene, camera, env) {\n  const p = env.params;\n  const { width: w, height: h } = env;\n  camera.fov = 2 * Math.atan(540 / 1800) * 180 / Math.PI;\n  camera.aspect = w / h;\n  camera.position.set(0, 0, CAM_D);\n  camera.lookAt(0, 0, 0);\n  camera.updateProjectionMatrix();\n  scene.add(camera);\n  F.dark = rgb(p.dark, '#141a4a');\n  F.light = rgb(p.light, '#a9b8ff');\n\n  // 背景：遠處一片暗色漸層（全畫面不透明，蓋住 V1）\n  const bgCanvas = new OffscreenCanvas(64, 36);\n  const bg = bgCanvas.getContext('2d');\n  const grad = bg.createRadialGradient(32, 14, 0, 32, 14, 48);\n  grad.addColorStop(0, '#20264f');\n  grad.addColorStop(1, '#05060d');\n  bg.fillStyle = grad;\n  bg.fillRect(0, 0, 64, 36);\n  const far = 40;\n  const fh = 2 * (far + CAM_D) * Math.tan(camera.fov * Math.PI / 360) * 1.6;\n  const bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(fh * w / h, fh), pageMaterial(THREE, rawTexture(THREE, bgCanvas, THREE.CanvasTexture), 0, F.dark, F.light));\n  bgMesh.position.z = -far;\n  scene.add(bgMesh);\n\n  // 舞台與頁面：幾何往下平移半頁，原點在上緣（翻頁以上緣為軸）\n  F.stage = new THREE.Group();\n  scene.add(F.stage);\n  const textures = (env.images || []).map((b) => rawTexture(THREE, b));\n  const geo = new THREE.PlaneGeometry(PAGE_W, PAGE_H);\n  geo.translate(0, -PAGE_H / 2, 0);\n  const duo = p.tone === 'original' ? 0 : 1;\n  F.pages = (p.pages || []).map((page, i) => {\n    const tex = textures[page.img] || textures[0];\n    const mesh = new THREE.Mesh(geo, tex ? pageMaterial(THREE, tex, duo, F.dark, F.light) : new THREE.MeshBasicMaterial({ color: 0x333a66 }));\n    mesh.position.set(0, PAGE_H / 2, i * 0.002);\n    mesh.visible = false;\n    F.stage.add(mesh);\n    const next = (p.pages[i + 1] || {}).t;\n    const gap = next !== undefined ? next - page.t : (i > 0 ? page.t - p.pages[i - 1].t : 0.2);\n    return { mesh, t: page.t, dur: Math.min(0.55, gap * 1.5) };\n  });\n\n  // 鏡頭前的兩片：標題卡（畫在畫布上）與閃光\n  const dist = 1;\n  const vh = 2 * dist * Math.tan(camera.fov * Math.PI / 360);\n  F.cardCanvas = new OffscreenCanvas(w, h);\n  F.card = F.cardCanvas.getContext('2d');\n  F.cardTex = rawTexture(THREE, F.cardCanvas, THREE.CanvasTexture);\n  F.cardMesh = new THREE.Mesh(new THREE.PlaneGeometry(vh * w / h, vh), pageMaterial(THREE, F.cardTex, 0, F.dark, F.light));\n  F.cardMesh.position.z = -dist;\n  F.cardMesh.renderOrder = 10;\n  F.cardMesh.material.depthTest = false;\n  camera.add(F.cardMesh);\n  F.flash = new THREE.Mesh(new THREE.PlaneGeometry(vh * w / h * 1.1, vh * 1.1), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthTest: false }));\n  F.flash.position.z = -dist * 0.9;\n  F.flash.renderOrder = 11;\n  camera.add(F.flash);\n  // 標題的另一張畫布：先畫字、再用 source-in 把封面填進字裡\n  F.textCanvas = new OffscreenCanvas(w, h);\n  F.text = F.textCanvas.getContext('2d');\n  F.camera = camera;\n}\n\n/** 畫標題卡（t ≥ titleIn） */\nfunction drawCard(t, env) {\n  const p = env.params;\n  const g = F.card;\n  const w = env.width;\n  const h = env.height;\n  g.clearRect(0, 0, w, h);\n  if (t < p.titleIn) return;\n  const imgs = env.images || [];\n  const title = String(p.title || '');\n  const fs = h * 0.13;\n  const font = `900 ${fs}px \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif`;\n  g.font = font;\n  const tw = Math.min(g.measureText(title).width, w * 0.7);\n  const bw = tw + fs * 1.2;\n  const bh = fs * 1.6;\n  const revealed = t >= p.reveal;\n  // 方塊：從 1.22 倍縮入（0.4 秒 power3.out）；揭曉時彈 1.04 倍\n  let scale = 1.22 - 0.22 * easeOut(clamp01((t - p.titleIn) / 0.4), 3);\n  if (revealed && t < p.reveal + 0.25) scale *= 1 + 0.04 * Math.sin(Math.PI * (t - p.reveal) / 0.25);\n  g.save();\n  g.translate(w / 2, h / 2);\n  g.scale(scale, scale);\n  g.globalAlpha = clamp01((t - p.titleIn) / 0.08);\n  const accent = rgb(p.accent, '#2f5bff').map((c) => Math.round(c * 255 * (revealed ? 1 : 0.62)));\n  g.fillStyle = `rgb(${accent.join(',')})`;\n  roundRect(g, -bw / 2, -bh / 2, bw, bh, fs * 0.18);\n  g.fill();\n  // 字：揭曉前每 2 格換一張封面透出，揭曉後白字\n  const tx = F.text;\n  tx.setTransform(1, 0, 0, 1, 0, 0);\n  tx.clearRect(0, 0, w, h);\n  tx.font = font;\n  tx.textAlign = 'center';\n  tx.textBaseline = 'middle';\n  tx.fillStyle = '#ffffff';\n  tx.fillText(title, w / 2, h / 2 + fs * 0.04, w * 0.7);\n  const fills = p.titleFills || [];\n  if (!revealed && fills.length && imgs.length) {\n    const k = Math.floor((t - p.titleIn) * env.fps / 2) % fills.length;\n    const img = imgs[fills[k]] || imgs[0];\n    tx.globalCompositeOperation = 'source-in';\n    drawCover(tx, img, w / 2 - bw / 2, h / 2 - bh / 2, bw, bh);\n    tx.globalCompositeOperation = 'source-over';\n  }\n  g.drawImage(F.textCanvas, -w / 2, -h / 2);\n  // icon：揭曉後彈入，放在方塊左邊\n  const icon = p.icon === null || p.icon === undefined ? null : imgs[p.icon];\n  if (icon && t >= p.reveal + 0.05) {\n    const q = clamp01((t - p.reveal - 0.05) / 0.25);\n    const s = q < 0.6 ? 1.1 * easeOut(q / 0.6, 2) : 1.1 - 0.1 * easeOut((q - 0.6) / 0.4, 1);\n    const size = bh * s;\n    g.save();\n    g.translate(-bw / 2 - bh * 0.7, 0);\n    roundRect(g, -size / 2, -size / 2, size, size, size * 0.2);\n    g.clip();\n    drawCover(g, icon, -size / 2, -size / 2, size, size);\n    g.restore();\n  }\n  // 斜光：揭曉後 0.6 秒掃過方塊（只亮在已畫的地方）\n  const sweep = (t - p.reveal - 0.6) / 0.5;\n  if (sweep > 0 && sweep < 1) {\n    g.globalCompositeOperation = 'source-atop';\n    const x = -bw / 2 - bh + (bw + bh * 2) * sweep;\n    const lg = g.createLinearGradient(x - bh * 0.5, 0, x + bh * 0.5, 0);\n    lg.addColorStop(0, 'rgba(255,255,255,0)');\n    lg.addColorStop(0.5, 'rgba(255,255,255,0.55)');\n    lg.addColorStop(1, 'rgba(255,255,255,0)');\n    g.fillStyle = lg;\n    g.fillRect(-bw, -bh, bw * 2, bh * 2);\n    g.globalCompositeOperation = 'source-over';\n  }\n  g.restore();\n  // 副標：揭曉後逐字出現（每字 0.04 秒）\n  const sub = String(p.subtitle || '');\n  if (sub && t >= p.reveal + 0.15) {\n    const n = Math.min(sub.length, Math.floor((t - p.reveal - 0.15) / 0.04) + 1);\n    g.font = `600 ${fs * 0.36}px \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif`;\n    g.textAlign = 'center';\n    g.textBaseline = 'top';\n    g.fillStyle = 'rgba(255,255,255,0.88)';\n    g.fillText(sub.slice(0, n), w / 2, h / 2 + bh * 0.5 * scale + fs * 0.35, w * 0.8);\n  }\n}\n\n/** 每格更新 */\nfunction update(t, env) {\n  const p = env.params;\n  const start = p.montageStart || 0;\n  const climax = p.titleIn;\n  // 舞台推近微轉：scale 0.72→1.32（鏡頭距離反比）、rotationY −10°→8°、rotationX 6°→−2°，power1.in\n  const m = easeIn(clamp01((t - start) / Math.max(0.01, climax - start)), 1);\n  const s = 0.72 + 0.6 * m;\n  F.camera.position.set(0, 0, CAM_D / s);\n  F.stage.rotation.y = (-10 + 18 * m) * Math.PI / 180;\n  F.stage.rotation.x = (6 - 8 * m) * Math.PI / 180;\n  // 頁面：到時間就整頁不透明（不漸變，避免兩頁半透明疊在一起），從 −105° 翻到 0°（power2.out）；標題進場後收掉\n  for (const page of F.pages) {\n    const on = t >= page.t && t < climax;\n    page.mesh.visible = on;\n    if (on) page.mesh.rotation.x = -105 * (1 - easeOut(clamp01((t - page.t) / page.dur), 2)) * Math.PI / 180;\n  }\n  // 閃光：0.06 秒升到 0.85，0.35 秒退\n  const f = t - p.flash;\n  F.flash.material.opacity = f < 0 ? 0 : f < 0.06 ? 0.85 * f / 0.06 : Math.max(0, 0.85 * (1 - (f - 0.06) / 0.35));\n  drawCard(t, env);\n  F.cardTex.needsUpdate = true;\n  // 結尾 0.35 秒淡出到背景\n  F.cardMesh.material.uniforms.opacity.value = clamp01((env.duration - t) / 0.35);\n}\n"
-    }
-   }
-  ],
+  "plugins": [],
   "synths": [],
   "stems": [],
   "zooms": [
    {
-    "id": "zoom-sug-m-7a4bfae0-mvthpswi-i15",
-    "mediaId": "m-7a4bfae0",
-    "start": 12.7,
-    "end": 22.1,
-    "w": 0.55,
-    "path": [
-     {
-      "src": 12.7,
-      "cx": 0.5,
-      "cy": 0.45
-     }
-    ],
-    "enabled": true
-   },
-   {
-    "id": "zoom-sug-m-7a4bfae0-mvthpswi-i4",
-    "mediaId": "m-7a4bfae0",
+    "id": "zoom-sug-m-6a8b0c2e-mvtsmbkl-i2",
+    "mediaId": "m-6a8b0c2e",
     "start": 22.1,
-    "end": 27.9,
+    "end": 30,
     "w": 0.3,
     "path": [
      {
-      "src": 24,
-      "cx": 0.31233333333333335,
-      "cy": 0.6849999999999999
-     },
-     {
-      "src": 25,
-      "cx": 0.31233333333333335,
-      "cy": 0.7033333333333333
-     },
-     {
-      "src": 26,
-      "cx": 0.3073333333333333,
-      "cy": 0.7126666666666667
-     },
-     {
-      "src": 27,
-      "cx": 0.302,
-      "cy": 0.722
+      "src": 30,
+      "cx": 0.28125,
+      "cy": 0.6945
      }
     ],
     "enabled": true
    },
    {
-    "id": "zoom-sug-m-7a4bfae0-mvthpswi-i16",
-    "mediaId": "m-7a4bfae0",
-    "start": 44.9,
-    "end": 49.4,
+    "id": "zoom-sug-m-6a8b0c2e-mvtsmbkl-i5",
+    "mediaId": "m-6a8b0c2e",
+    "start": 43,
+    "end": 57.6,
     "w": 0.4208,
     "path": [
      {
-      "src": 45,
-      "cx": 0.27099999999999996,
+      "src": 43,
+      "cx": 0.34375,
       "cy": 0.2104
-     },
-     {
-      "src": 46,
-      "cx": 0.25533333333333336,
-      "cy": 0.2104
-     },
-     {
-      "src": 47,
-      "cx": 0.3336666666666666,
-      "cy": 0.2104
-     },
-     {
-      "src": 48,
-      "cx": 0.35966666666666663,
-      "cy": 0.2104
-     },
-     {
-      "src": 49,
-      "cx": 0.3336666666666667,
-      "cy": 0.25
      }
     ],
     "enabled": true
    },
    {
-    "id": "zoom-sug-m-7a4bfae0-mvthpswi-i11",
-    "mediaId": "m-7a4bfae0",
-    "start": 55.1,
-    "end": 59.1,
-    "w": 0.4208,
+    "id": "zoom-sug-m-6a8b0c2e-mvtsmbkl-i8",
+    "mediaId": "m-6a8b0c2e",
+    "start": 62.6,
+    "end": 70,
+    "w": 0.6704,
     "path": [
      {
-      "src": 56,
-      "cx": 0.26033333333333336,
-      "cy": 0.3243333333333333
+      "src": 69,
+      "cx": 0.3352,
+      "cy": 0.6648000000000001
      },
      {
-      "src": 57,
-      "cx": 0.328,
-      "cy": 0.35200000000000004
+      "src": 70,
+      "cx": 0.3352,
+      "cy": 0.6648000000000001
+     }
+    ],
+    "enabled": true
+   },
+   {
+    "id": "zoom-sug-m-6a8b0c2e-mvtsmbkl-i9",
+    "mediaId": "m-6a8b0c2e",
+    "start": 83,
+    "end": 89,
+    "w": 0.7696000000000001,
+    "path": [
+     {
+      "src": 88,
+      "cx": 0.38480000000000003,
+      "cy": 0.6152
      },
      {
-      "src": 58,
-      "cx": 0.43733333333333335,
-      "cy": 0.37966666666666665
-     },
-     {
-      "src": 59,
-      "cx": 0.539,
-      "cy": 0.389
+      "src": 89,
+      "cx": 0.38480000000000003,
+      "cy": 0.6152
      }
     ],
     "enabled": true
@@ -4079,91 +2755,105 @@
   ],
   "directorChapters": [
    {
-    "mediaId": "m-7a4bfae0",
-    "title": "Building a Meeting Summarizer",
+    "mediaId": "m-6a8b0c2e",
+    "title": "Build a notes summarizer",
     "start": 0,
     "end": 22.1
    },
    {
-    "mediaId": "m-7a4bfae0",
-    "title": "Create Folder Install Packages",
+    "mediaId": "m-6a8b0c2e",
+    "title": "Install packages, add key",
     "start": 22.1,
-    "end": 30.3
-   },
-   {
-    "mediaId": "m-7a4bfae0",
-    "title": "Store API Key Securely",
-    "start": 30.3,
     "end": 43
    },
    {
-    "mediaId": "m-7a4bfae0",
-    "title": "Write Main Script",
+    "mediaId": "m-6a8b0c2e",
+    "title": "Write main script",
     "start": 43,
     "end": 62.6
    },
    {
-    "mediaId": "m-7a4bfae0",
-    "title": "Run On Real Meeting",
+    "mediaId": "m-6a8b0c2e",
+    "title": "Run on notes",
     "start": 62.6,
-    "end": 80
+    "end": 74.4
    },
    {
-    "mediaId": "m-7a4bfae0",
-    "title": "Handle Errors And Recap",
-    "start": 80,
+    "mediaId": "m-6a8b0c2e",
+    "title": "Handle missing file",
+    "start": 74.4,
+    "end": 89.7
+   },
+   {
+    "mediaId": "m-6a8b0c2e",
+    "title": "Recap",
+    "start": 89.7,
     "end": 108.279
    }
   ],
+  "captionStyle": {
+   "preset": "outline",
+   "size": 0.055,
+   "bottom": 0.08,
+   "color": "#ffffff",
+   "karaoke": "fill",
+   "highlight": "#ffd400"
+  },
   "publish": {
    "language": "en",
    "titles": [
-    "Build a CLI That Summarizes Meeting Notes with AI",
-    "Summarize Meeting Notes in 4 Seconds with AI",
-    "OpenAI + Dotenv CLI: Bullets and Action Items"
+    "Build a CLI to Summarize Meeting Notes with AI",
+    "Summarize Markdown Notes in 4 Seconds with AI",
+    "Tiny AI Meeting Summarizer: Setup to Error Handling"
    ],
    "title": 0,
-   "description": "Watch a tiny command line tool get built in about two minutes that summarizes markdown meeting notes with an AI model. You will see how to install the OpenAI client and dotenv, store the key in a .env file, and call the chat completions endpoint to print bullet points with action items. It also covers adding a friendly error handler for a missing file and previews streaming for the next video.",
+   "description": "Watch how to build a tiny command line tool that summarizes meeting notes with an AI model. You will see how to install the OpenAI client and dotenv, store the API key in a .env file, call the chat completions endpoint, and add friendly error handling. The demo runs on real weekly sync notes and produces bullet points and action items in about four seconds.",
    "highlights": [
-    "Build a CLI that summarizes meeting notes with AI",
-    "Install OpenAI client and dotenv, use .env for key",
-    "Call chat completions to get bullets and action items",
-    "Add friendly error message for missing file"
+    "Install OpenAI client and dotenv packages",
+    "Store API key safely in .env file",
+    "Call chat completions to summarize notes",
+    "Get bullets and action items in seconds",
+    "Add friendly error for missing files"
    ],
    "chapters": [
     {
      "t": 0,
-     "title": "Plain markdown weekly sync notes"
+     "title": "Intro: Build AI notes summarizer"
     },
     {
-     "t": 37.63,
-     "title": "Store API key in .env file"
+     "t": 12.91,
+     "title": "Example weekly sync notes"
     },
     {
-     "t": 50.35,
-     "title": "Write the main summarizer script"
+     "t": 29.989,
+     "title": "Store API key in .env"
     },
     {
-     "t": 64.27,
-     "title": "Run it on a real meeting"
+     "t": 42.389,
+     "title": "Write main summarizer script"
     },
     {
-     "t": 75.57,
-     "title": "Fix missing file error"
+     "t": 56.309,
+     "title": "Live demo in four seconds"
     },
     {
-     "t": 90.89,
-     "title": "Recap and streaming next"
+     "t": 68.109,
+     "title": "Handle missing file gracefully"
+    },
+    {
+     "t": 83.429,
+     "title": "Recap and next: streaming"
     }
    ],
    "tags": [
-    "ai meeting summarizer cli",
-    "chat completions endpoint",
-    "openai client",
-    "dotenv",
+    "ai meeting summarizer",
+    "openai chat completions",
     "command line tool",
-    "markdown meeting notes",
-    "meeting summary automation"
+    "dotenv",
+    "markdown notes",
+    "python cli",
+    "error handling",
+    "ai tutorial"
    ]
   }
  }
