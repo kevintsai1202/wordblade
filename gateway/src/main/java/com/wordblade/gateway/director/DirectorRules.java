@@ -8,12 +8,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import tools.jackson.databind.JsonNode;
 
 /**
- * AI 導演剪輯腳本的檢查（spec §5.11；docs/plan-10-29-director2.md）：Muse Wonder 回的 {"chapters":[…], "items":[…]} → 章節＋合格的項目＋要回饋的錯誤。
+ * AI 導演剪輯腳本的檢查（spec §5.11；docs/plan-10-29-director2.md、docs/plan-10-30-director3.md）：
+ * Muse Wonder 回的 {"treatment":{…}, "chapters":[…], "items":[…]} → 導演構想＋章節＋合格的項目＋要回饋的錯誤。
  * 規則：
  * - 每項都要有目的（purpose）；剪、放大、特效、轉場、吉祥物要引用對應的旁白（quote）。
+ * - 畫面類（放大、特效、轉場、吉祥物）要用 problem 指名導演構想裡的一個問題（觀眾看不清、會分心的地方）；構想沒給就沿用上一輪的問題。
+ * - 風格（plain／light／playful）決定能用哪些種類；plain 只有剪、改字、遮罩、放大、字幕樣式、片頭。
+ * - 放大至少 6 秒，兩次放大之間至少隔 5 秒（不要一句話放大一次）。
  * - 時間夾在片長內；各種類必填欄位（遮罩的名詞片語、轉場的場景、改字的詞 id、放大的活動區或框、吉祥物的目標框、字幕樣式、配樂描述、片頭標題）。
  * - 3D 轉場只能在章節交界（離某個章節起點 3 秒內）、長 2～6 秒、最多 3 個、彼此相隔 30 秒；特效每 20 秒最多 1 個、整支最多 5 個；吉祥物最多 1 次。
  * - 畫面類（放大、特效、轉場、吉祥物）彼此不重疊；剪的重疊取聯集；改字以詞為準。
@@ -21,26 +26,55 @@ import tools.jackson.databind.JsonNode;
  */
 public final class DirectorRules {
 
-    /** 審查結果（keep：通過；revised：依審查意見改過；null：還沒審查） */
+    /** 審查結果（keep：通過；revised：依審查意見改過；added：審查後補的；prune：審查員認為可有可無、預設不勾；drop：刪掉；null：還沒審查） */
     public record Review(String verdict, String note) {}
 
-    /** 一個合格的項目（素材時間）；reason 和 purpose 相同（舊版介面讀 reason） */
+    /** 一個合格的項目（素材時間）；reason 和 purpose 相同（舊版介面讀 reason）；problem 是它解決的構想問題 id（畫面類才有） */
     public record Suggestion(String id, String kind, double start, double end, String reason, Map<String, Object> payload,
-                             String purpose, String quote, int chapter, Review review) {
+                             String purpose, String quote, int chapter, Review review, String problem) {
         Suggestion withReview(Review r) {
-            return new Suggestion(id, kind, start, end, reason, payload, purpose, quote, chapter, r);
+            return new Suggestion(id, kind, start, end, reason, payload, purpose, quote, chapter, r, problem);
         }
 
         Suggestion withEnd(double e) {
-            return new Suggestion(id, kind, start, e, reason, payload, purpose, quote, chapter, review);
+            return new Suggestion(id, kind, start, e, reason, payload, purpose, quote, chapter, review, problem);
         }
     }
 
     /** 章節（素材時間） */
     public record Chapter(String title, double start, double end) {}
 
-    /** 檢查結果 */
-    public record Result(List<Chapter> chapters, List<Suggestion> suggestions, List<AiError> errors) {}
+    /**
+     * 檢查結果。
+     *
+     * @param treatment  導演構想原文（觀眾、每章帶走的事、問題清單）；沒給是 null
+     * @param problemIds 這一輪可引用的問題 id（構想的；沒給就是沿用的）
+     */
+    public record Result(List<Chapter> chapters, List<Suggestion> suggestions, List<AiError> errors, JsonNode treatment, Set<String> problemIds) {}
+
+    /**
+     * 檢查選項。
+     *
+     * @param style            風格 plain／light／playful（null 或不認得當 plain）
+     * @param fallbackProblems 上一輪構想的問題 id（格式修正或審查後重寫時，模型可能漏掉構想）
+     */
+    public record Options(String style, Set<String> fallbackProblems) {}
+
+    /** 各風格能用的種類：plain 給螢幕教學片（預設），light 加 2D 特效與配樂，playful 再加 3D 轉場與吉祥物 */
+    static final Map<String, Set<String>> STYLES = Map.of(
+            "plain", Set.of("cut", "fix", "mask", "zoom", "captionStyle", "intro"),
+            "light", Set.of("cut", "fix", "mask", "zoom", "captionStyle", "intro", "effect", "music"),
+            "playful", Set.of("cut", "fix", "mask", "zoom", "captionStyle", "intro", "effect", "music", "transition", "mascot"));
+
+    /** 風格名稱正規化：null 或不認得當 plain */
+    public static String style(String style) {
+        return style != null && STYLES.containsKey(style) ? style : "plain";
+    }
+
+    /** 這個風格能用的種類 */
+    public static Set<String> allowedKinds(String style) {
+        return STYLES.get(style(style));
+    }
 
     /** 各種類最多幾項 */
     static final Map<String, Integer> CAPS = Map.ofEntries(
@@ -64,8 +98,17 @@ public final class DirectorRules {
     static final double EFFECT_WINDOW = 20;
     /** 轉場彼此至少相隔幾秒 */
     static final double TRANSITION_GAP = 30;
+    /** 放大最短幾秒（放大後要維持住，讓觀眾看清楚） */
+    static final double ZOOM_MIN = 6;
+    /** 兩次放大之間至少隔幾秒（不要放大、拉回、又放大） */
+    static final double ZOOM_GAP = 5;
 
     private DirectorRules() {}
+
+    /** 檢查 Wonder 的剪輯腳本（所有種類都能用、沒有沿用的問題） */
+    public static Result check(JsonNode root, double duration, Set<String> scenes, Set<String> wordIds, Set<String> activities) {
+        return check(root, duration, scenes, wordIds, activities, new Options("playful", Set.of()));
+    }
 
     /**
      * 檢查 Wonder 的剪輯腳本。
@@ -73,16 +116,27 @@ public final class DirectorRules {
      * @param scenes     可用的 3D 場景 id
      * @param wordIds    送出去的詞 id（改字用）
      * @param activities 畫面變化區的 id（放大用）
+     * @param options    風格與沿用的問題 id
      */
-    public static Result check(JsonNode root, double duration, Set<String> scenes, Set<String> wordIds, Set<String> activities) {
+    public static Result check(JsonNode root, double duration, Set<String> scenes, Set<String> wordIds, Set<String> activities, Options options) {
         List<AiError> errors = new ArrayList<>();
         JsonNode list = root == null ? null : root.path("items");
         if (root == null || !root.isObject() || !list.isArray()) {
-            errors.add(error("The response must be a JSON object with \"chapters\" and \"items\" arrays."));
-            return new Result(List.of(), List.of(), errors);
+            errors.add(error("The response must be a JSON object with \"treatment\", \"chapters\" and \"items\"."));
+            return new Result(List.of(), List.of(), errors, null, options.fallbackProblems());
         }
         List<Chapter> chapters = chapters(root.path("chapters"), duration);
         if (chapters.isEmpty()) errors.add(error("\"chapters\" must list the video's sections (title, start, end), at least one."));
+        // 導演構想的問題 id；這一輪沒給就沿用上一輪的
+        JsonNode treatment = root.path("treatment").isObject() ? root.path("treatment") : null;
+        Set<String> problems = new TreeSet<>();
+        if (treatment != null) treatment.path("problems").forEach(p -> {
+            String pid = p.path("id").asString("").strip();
+            if (!pid.isEmpty()) problems.add(pid);
+        });
+        if (problems.isEmpty()) problems.addAll(options.fallbackProblems());
+        String style = style(options.style());
+        Set<String> allowed = allowedKinds(style);
 
         List<Suggestion> ok = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
@@ -93,7 +147,11 @@ public final class DirectorRules {
             if (id.isEmpty()) id = "i" + (i + 1);
             String where = "items[" + i + "] (" + id + ")";
             if (!CAPS.containsKey(kind)) {
-                errors.add(error(where + ": unknown kind \"" + kind + "\" (use " + String.join(", ", CAPS.keySet()) + ")."));
+                errors.add(error(where + ": unknown kind \"" + kind + "\" (use " + String.join(", ", new TreeSet<>(allowed)) + ")."));
+                continue;
+            }
+            if (!allowed.contains(kind)) {
+                errors.add(error(where + ": " + kind + " is not allowed in the \"" + style + "\" style — drop it."));
                 continue;
             }
             String purpose = s.path("purpose").asString("").strip();
@@ -105,6 +163,19 @@ public final class DirectorRules {
             if (NEEDS_QUOTE.contains(kind) && quote.isEmpty()) {
                 errors.add(error(where + ": " + kind + " needs \"quote\" — the transcript sentence it belongs to."));
                 continue;
+            }
+            // 畫面類要說它解決構想裡的哪個問題；剪、改字、遮罩本身就有理由，不用
+            String problem = null;
+            if (VISUAL.contains(kind)) {
+                problem = s.path("problem").asString("").strip();
+                if (problems.isEmpty()) {
+                    errors.add(error(where + ": " + kind + " needs \"problem\", but there is no \"treatment\" with problems — write the treatment first."));
+                    continue;
+                }
+                if (!problems.contains(problem)) {
+                    errors.add(error(where + ": " + kind + " needs \"problem\": the id of the treatment problem it solves (" + String.join(", ", problems) + "); if it solves none, drop it."));
+                    continue;
+                }
             }
             double start = Math.max(0, s.path("start").asDouble(Double.NaN));
             double end = Math.min(duration, s.path("end").asDouble(Double.NaN));
@@ -119,15 +190,15 @@ public final class DirectorRules {
                 continue;
             }
             Map<String, Object> payload = new LinkedHashMap<>();
-            String problem = fields(kind, s, payload, scenes, wordIds, activities, start, end, chapters);
-            if (problem != null) {
-                errors.add(error(where + ": " + problem));
+            String bad = fields(kind, s, payload, scenes, wordIds, activities, start, end, chapters);
+            if (bad != null) {
+                errors.add(error(where + ": " + bad));
                 continue;
             }
             int chapter = s.path("chapter").asInt(-1);
-            ok.add(new Suggestion(id, kind, start, end, purpose, payload, purpose, quote, chapter, null));
+            ok.add(new Suggestion(id, kind, start, end, purpose, payload, purpose, quote, chapter, null, problem));
         }
-        return new Result(chapters, merge(ok, errors), errors);
+        return new Result(chapters, merge(ok, errors), errors, treatment, Set.copyOf(problems));
     }
 
     /** 章節：夾在片長內、依起點排序、去掉空的 */
@@ -164,6 +235,7 @@ public final class DirectorRules {
                 yield ids.isEmpty() || !wordIds.containsAll(ids) ? "wordIds must be ids of the transcript words you were given." : t;
             }
             case "zoom" -> {
+                if (end - start < ZOOM_MIN) yield "a zoom lasts at least " + (int) ZOOM_MIN + " seconds — zoom in, hold while the viewer reads, then pull out.";
                 String activity = s.path("activity").asString("").strip();
                 if (!activity.isEmpty()) {
                     payload.put("activity", activity);
@@ -266,6 +338,10 @@ public final class DirectorRules {
                 }
                 if (s.kind().equals("effect") && out.stream().anyMatch(o -> o.kind().equals("effect") && s.start() - o.start() < EFFECT_WINDOW)) {
                     errors.add(error(where + ": at most one effect per " + (int) EFFECT_WINDOW + " seconds."));
+                    continue;
+                }
+                if (s.kind().equals("zoom") && out.stream().anyMatch(o -> o.kind().equals("zoom") && s.start() - o.end() < ZOOM_GAP)) {
+                    errors.add(error(where + ": zooms must be at least " + (int) ZOOM_GAP + " seconds apart — extend the earlier zoom instead."));
                     continue;
                 }
                 if (s.kind().equals("transition") && out.stream().anyMatch(o -> o.kind().equals("transition") && s.start() - o.start() < TRANSITION_GAP)) {

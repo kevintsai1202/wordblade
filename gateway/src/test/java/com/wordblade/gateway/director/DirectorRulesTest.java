@@ -23,8 +23,10 @@ class DirectorRulesTest {
         return DirectorRules.check(json.readTree(text), 100, scenes, words, activities);
     }
 
-    /** 三個章節：0–40、40–75、75–100 */
+    /** 導演構想（問題 p1～p3）＋三個章節：0–40、40–75、75–100 */
     private static final String CHAPTERS = """
+            "treatment":{"audience":"developers new to the OpenAI API","problems":[{"id":"p1","start":44,"end":58,"what":"code typed in small text"},
+             {"id":"p2","start":78,"end":95,"what":"the result is easy to miss"},{"id":"p3","start":38,"end":44,"what":"new file opens"}]},
             "chapters":[{"title":"Setup","start":0,"end":40},{"title":"Write the script","start":40,"end":75},{"title":"Run it","start":75,"end":100}]""";
 
     @Test
@@ -33,10 +35,10 @@ class DirectorRulesTest {
                 ,"items":[
                  {"id":"i1","kind":"cut","start":10,"end":14,"chapter":0,"purpose":"Remove the retake","quote":"sorry, let me say that again"},
                  {"id":"i2","kind":"mask","start":30,"end":38,"chapter":0,"purpose":"Hide the API key","target":"API key","x":0.28,"y":0.07,"w":0.25,"h":0.03},
-                 {"id":"i3","kind":"transition","start":39,"end":43,"chapter":1,"purpose":"Move from setup to writing code","quote":"Now let's write the main script.","scene":"desk-reveal","fromChapter":0,"toChapter":1},
-                 {"id":"i4","kind":"zoom","start":44,"end":58,"chapter":1,"purpose":"Show the code being typed","quote":"We load the key with dotenv","activity":"a1"},
-                 {"id":"i5","kind":"effect","start":80,"end":84,"chapter":2,"purpose":"Celebrate the result","quote":"And there it is","description":"A bright box pops around the three bullet points"},
-                 {"id":"i6","kind":"mascot","start":88,"end":92,"chapter":2,"purpose":"Point at the timing","quote":"that took about four seconds","x":0.6,"y":0.7,"w":0.2,"h":0.1,"action":"point"},
+                 {"id":"i3","kind":"transition","start":39,"end":43,"chapter":1,"problem":"p3","purpose":"Move from setup to writing code","quote":"Now let's write the main script.","scene":"desk-reveal","fromChapter":0,"toChapter":1},
+                 {"id":"i4","kind":"zoom","start":44,"end":58,"chapter":1,"problem":"p1","purpose":"Show the code being typed","quote":"We load the key with dotenv","activity":"a1"},
+                 {"id":"i5","kind":"effect","start":80,"end":84,"chapter":2,"problem":"p2","purpose":"Celebrate the result","quote":"And there it is","description":"A bright box pops around the three bullet points"},
+                 {"id":"i6","kind":"mascot","start":88,"end":92,"chapter":2,"problem":"p2","purpose":"Point at the timing","quote":"that took about four seconds","x":0.6,"y":0.7,"w":0.2,"h":0.1,"action":"point"},
                  {"id":"i7","kind":"fix","start":1,"end":2,"chapter":0,"purpose":"Misheard library name","wordIds":["m:w1"],"text":"dotenv"},
                  {"id":"i8","kind":"captionStyle","start":0,"end":100,"purpose":"Tutorial: follow along word by word","karaoke":"fill"},
                  {"id":"i9","kind":"music","start":0,"end":100,"purpose":"Light background under speech","description":"Soft lo-fi beat"},
@@ -61,8 +63,8 @@ class DirectorRulesTest {
     void 沒有目的_該引用旁白卻沒有_都退回() {
         var r = check("{" + CHAPTERS + """
                 ,"items":[
-                 {"id":"i1","kind":"effect","start":80,"end":84,"purpose":"","quote":"x","description":"d"},
-                 {"id":"i2","kind":"zoom","start":44,"end":50,"purpose":"Show code","activity":"a1"}
+                 {"id":"i1","kind":"effect","start":80,"end":84,"problem":"p2","purpose":"","quote":"x","description":"d"},
+                 {"id":"i2","kind":"zoom","start":44,"end":50,"problem":"p1","purpose":"Show code","activity":"a1"}
                 ]}""");
         assertThat(r.suggestions()).isEmpty();
         assertThat(r.errors()).hasSize(2);
@@ -74,9 +76,9 @@ class DirectorRulesTest {
     void 轉場只能在章節交界_最多三個_相隔三十秒_長度二到六秒() {
         var r = check("{" + CHAPTERS + """
                 ,"items":[
-                 {"id":"i1","kind":"transition","start":20,"end":24,"purpose":"p","quote":"q","scene":"desk-reveal"},
-                 {"id":"i2","kind":"transition","start":39,"end":49,"purpose":"p","quote":"q","scene":"desk-reveal"},
-                 {"id":"i3","kind":"camera","start":74,"end":77,"purpose":"p","quote":"q","scene":"board-float"}
+                 {"id":"i1","kind":"transition","start":20,"end":24,"problem":"p3","purpose":"p","quote":"q","scene":"desk-reveal"},
+                 {"id":"i2","kind":"transition","start":39,"end":49,"problem":"p3","purpose":"p","quote":"q","scene":"desk-reveal"},
+                 {"id":"i3","kind":"camera","start":74,"end":77,"problem":"p3","purpose":"p","quote":"q","scene":"board-float"}
                 ]}""");
         // 20 秒不在交界；10 秒太長；camera 是舊名稱，當作 transition（75 秒是交界）
         assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::kind).containsExactly("transition");
@@ -88,10 +90,10 @@ class DirectorRulesTest {
     void 特效每二十秒最多一個_畫面類項目不能重疊_放大的活動區要存在() {
         var r = check("{" + CHAPTERS + """
                 ,"items":[
-                 {"id":"i1","kind":"effect","start":80,"end":83,"purpose":"p","quote":"q","description":"d"},
-                 {"id":"i2","kind":"effect","start":90,"end":93,"purpose":"p","quote":"q","description":"d"},
-                 {"id":"i3","kind":"zoom","start":81,"end":86,"purpose":"p","quote":"q","activity":"a2"},
-                 {"id":"i4","kind":"zoom","start":44,"end":50,"purpose":"p","quote":"q","activity":"nope"}
+                 {"id":"i1","kind":"effect","start":80,"end":83,"problem":"p2","purpose":"p","quote":"q","description":"d"},
+                 {"id":"i2","kind":"effect","start":90,"end":93,"problem":"p2","purpose":"p","quote":"q","description":"d"},
+                 {"id":"i3","kind":"zoom","start":81,"end":88,"problem":"p1","purpose":"p","quote":"q","activity":"a2"},
+                 {"id":"i4","kind":"zoom","start":44,"end":50,"problem":"p1","purpose":"p","quote":"q","activity":"nope"}
                 ]}""");
         assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1");
         assertThat(r.errors()).extracting(e -> e.message())
@@ -102,7 +104,7 @@ class DirectorRulesTest {
     void 吉祥物要有目標框_最多一次_字幕樣式與片頭欄位要對() {
         var r = check("{" + CHAPTERS + """
                 ,"items":[
-                 {"id":"i1","kind":"mascot","start":88,"end":92,"purpose":"p","quote":"q"},
+                 {"id":"i1","kind":"mascot","start":88,"end":92,"problem":"p2","purpose":"p","quote":"q"},
                  {"id":"i2","kind":"captionStyle","start":0,"end":100,"purpose":"p","karaoke":"rainbow"},
                  {"id":"i3","kind":"intro","start":0,"end":1,"purpose":"p","title":""}
                 ]}""");
@@ -132,5 +134,66 @@ class DirectorRulesTest {
         assertThat(r.errors()).hasSize(1);
         assertThat(r.suggestions().get(3).payload()).isEqualTo(Map.of("target", "human face"));
         assertThat(List.of(r.suggestions().get(0).id(), r.suggestions().get(1).id())).containsExactly("i3", "i4");
+    }
+
+    @Test
+    void 畫面類項目要指名構想裡的問題_剪改字遮罩不用_導演構想帶回() {
+        var r = check("{" + CHAPTERS + """
+                ,"items":[
+                 {"id":"i1","kind":"zoom","start":44,"end":52,"purpose":"p","quote":"q","activity":"a1"},
+                 {"id":"i2","kind":"effect","start":80,"end":84,"problem":"p9","purpose":"p","quote":"q","description":"d"},
+                 {"id":"i3","kind":"cut","start":10,"end":14,"purpose":"p","quote":"q"},
+                 {"id":"i4","kind":"zoom","start":60,"end":68,"problem":"p1","purpose":"p","quote":"q","activity":"a2"}
+                ]}""");
+        assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i3", "i4");
+        assertThat(r.suggestions().get(1).problem()).isEqualTo("p1");
+        assertThat(r.errors()).hasSize(2).allMatch(e -> e.message().contains("problem"));
+        assertThat(r.problemIds()).containsExactlyInAnyOrder("p1", "p2", "p3");
+        assertThat(r.treatment().path("audience").asString()).contains("developers");
+    }
+
+    @Test
+    void 沒有導演構想時沿用上一輪的問題_都沒有就退回並要求補上構想() {
+        String noTreatment = """
+                {"chapters":[{"title":"All","start":0,"end":100}],"items":[
+                 {"id":"i1","kind":"zoom","start":44,"end":52,"problem":"p1","purpose":"p","quote":"q","activity":"a1"}]}""";
+        var reuse = DirectorRules.check(json.readTree(noTreatment), 100, scenes, words, activities, new DirectorRules.Options("playful", Set.of("p1")));
+        assertThat(reuse.errors()).isEmpty();
+        assertThat(reuse.problemIds()).containsExactly("p1");
+        var none = check(noTreatment);
+        assertThat(none.suggestions()).isEmpty();
+        assertThat(none.errors()).extracting(e -> e.message()).anyMatch(m -> m.contains("treatment"));
+    }
+
+    @Test
+    void 放大至少六秒_兩次放大至少相隔五秒() {
+        var r = check("{" + CHAPTERS + """
+                ,"items":[
+                 {"id":"i1","kind":"zoom","start":44,"end":48,"problem":"p1","purpose":"p","quote":"q","activity":"a1"},
+                 {"id":"i2","kind":"zoom","start":50,"end":58,"problem":"p1","purpose":"p","quote":"q","activity":"a1"},
+                 {"id":"i3","kind":"zoom","start":60,"end":68,"problem":"p1","purpose":"p","quote":"q","activity":"a2"},
+                 {"id":"i4","kind":"zoom","start":74,"end":82,"problem":"p2","purpose":"p","quote":"q","activity":"a2"}
+                ]}""");
+        assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i2", "i4");
+        assertThat(r.errors()).extracting(e -> e.message()).anyMatch(m -> m.contains("6 seconds")).anyMatch(m -> m.contains("5 seconds"));
+    }
+
+    @Test
+    void 風格決定能用哪些種類_plain_只有剪改字遮罩放大字幕片頭_沒給風格當_plain() {
+        String all = "{" + CHAPTERS + """
+                ,"items":[
+                 {"id":"i1","kind":"zoom","start":44,"end":52,"problem":"p1","purpose":"p","quote":"q","activity":"a1"},
+                 {"id":"i2","kind":"effect","start":80,"end":84,"problem":"p2","purpose":"p","quote":"q","description":"d"},
+                 {"id":"i3","kind":"transition","start":39,"end":43,"problem":"p3","purpose":"p","quote":"q","scene":"desk-reveal"},
+                 {"id":"i4","kind":"music","start":0,"end":100,"purpose":"p","description":"lo-fi"},
+                 {"id":"i5","kind":"intro","start":0,"end":1,"purpose":"p","title":"T"}
+                ]}""";
+        var plain = DirectorRules.check(json.readTree(all), 100, scenes, words, activities, new DirectorRules.Options(null, Set.of()));
+        assertThat(plain.suggestions()).extracting(DirectorRules.Suggestion::kind).containsExactlyInAnyOrder("zoom", "intro");
+        assertThat(plain.errors()).hasSize(3).allMatch(e -> e.message().contains("not allowed in the \"plain\" style"));
+        var light = DirectorRules.check(json.readTree(all), 100, scenes, words, activities, new DirectorRules.Options("light", Set.of()));
+        assertThat(light.suggestions()).extracting(DirectorRules.Suggestion::kind).containsExactlyInAnyOrder("zoom", "effect", "music", "intro");
+        assertThat(DirectorRules.allowedKinds("plain")).containsExactlyInAnyOrder("cut", "fix", "mask", "zoom", "captionStyle", "intro");
+        assertThat(DirectorRules.allowedKinds("bogus")).isEqualTo(DirectorRules.allowedKinds("plain"));
     }
 }

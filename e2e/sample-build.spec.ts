@@ -121,8 +121,9 @@ test("打包範例專案", async ({ page }) => {
   });
 
   if (LIVE) {
-    // AI 導演（docs/plan-10-29-director2.md）：理解 → 規劃剪輯腳本 → 縮圖總表審查 → 套用審查通過的全部（剪、遮罩、放大、特效、3D 轉場、字幕、配樂、片頭）
-    await step("AI director (Spark understands, Wonder plans, a second Wonder reviews; apply all that passed)", async () => {
+    // AI 導演（docs/plan-10-30-director3.md）：預設風格 plain（剪、改字、遮罩、放大、字幕、片頭）；理解 → 先寫導演構想再規劃（看畫面總表）
+    // → 縮圖總表審查 → 套用勾選的（審查員點名可刪的預設不勾）
+    await step("AI director, plain style (Spark understands, Wonder writes a treatment and plans with frames, a second Wonder reviews; apply the checked ones)", async () => {
       await openTab(page, "director");
       await expect(page.getByTestId("director-ask")).toBeEnabled({ timeout: 120_000 });
       await page.getByTestId("director-ask").click();
@@ -130,11 +131,12 @@ test("打包範例專案", async ({ page }) => {
       const rows = page.getByTestId("director-row");
       const plan: string[] = [];
       for (const r of await rows.all()) plan.push(`${await r.getAttribute("data-kind")}@${await r.getAttribute("data-start")}(${await r.getAttribute("data-review")})`);
-      const checked = await page.getByTestId("director-check").count();
+      const checked = await page.locator('[data-testid="director-check"]:checked').count();
+      const notes = await page.getByTestId("director-treatment").locator("li").allTextContents().catch(() => [] as string[]);
       await page.getByTestId("director-apply-checked").click();
       await expect(page.getByTestId("director-apply-checked")).toHaveCount(0, { timeout: 900_000 });
       const failed = await page.getByTestId("director-message").innerText().catch(() => "");
-      return `${plan.length} items [${plan.join(", ")}]; applied ${checked} checked. ${failed}`.trim();
+      return `${plan.length} items [${plan.join(", ")}]; applied ${checked} checked. Director's notes: ${notes.join(" | ") || "none"}. ${failed}`.trim();
     });
   } else {
     // 不呼叫 AI 的最小版：逐字高亮、內建 2D 範本、桌上螢幕＋吉祥物、片頭

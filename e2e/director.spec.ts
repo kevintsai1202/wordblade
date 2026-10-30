@@ -35,9 +35,19 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
   /** 收到審查（縮圖總表）了沒 */
   let reviewed = false;
   let sheetSent = false;
+  /** 建工作時送的風格、規劃前有沒有送畫面總表（docs/plan-10-30-director3.md） */
+  let style = "";
+  let framesSent = false;
   await page.route(`${GATEWAY}/v1/ai/director**`, async (route) => {
     const req = route.request();
-    if (req.method() === "POST" && req.url().endsWith("/v1/ai/director")) return reply(route, 202, { jobId: "d1" });
+    if (req.method() === "POST" && req.url().endsWith("/v1/ai/director")) {
+      style = JSON.parse(req.postData() ?? "{}").style;
+      return reply(route, 202, { jobId: "d1" });
+    }
+    if (req.method() === "POST" && req.url().endsWith("/frames")) {
+      framesSent = uploads === 0;
+      return reply(route, 202);
+    }
     if (req.method() === "POST" && req.url().includes("/segments/")) {
       uploads++;
       const body = req.postDataBuffer()!.toString("latin1");
@@ -59,12 +69,13 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
         it("i3", "zoom", 0.5, 2, 0, "Small text", { cx: 0.3, cy: 0.3, w: 0.5 }, "revised"),
         it("i4", "mask", 1, 2, 0, "Person on screen", { target: "person" }),
         it("i5", "effect", 1.2, 2, 0, "Key point", { description: "A pop of confetti" }),
-        it("i6", "cut", 2.4, 4, 1, "Retake", {}),
+        it("i6", "cut", 2.4, 4, 1, "Retake", {}, "prune"),
       ];
       const chapters = [{ title: "Greeting", start: 0, end: 2.4 }, { title: "Again", start: 2.4, end: 4 }];
+      const treatment = { audience: "beginners", problems: [{ id: "p1", start: 0.5, end: 2, what: "Small text on the slide" }] };
       if (!reviewed) return reply(route, 200, { status: "planned", segmentsDone: 1, segmentsTotal: 1, segmentsFailed: 0, error: null, chapters, suggestions: items, removed: [] });
       return reply(route, 200, {
-        status: "done", segmentsDone: 1, segmentsTotal: 1, segmentsFailed: 0, error: null, chapters, suggestions: items,
+        status: "done", segmentsDone: 1, segmentsTotal: 1, segmentsFailed: 0, error: null, chapters, suggestions: items, treatment,
         removed: [it("i7", "mascot", 3, 4, 1, "Wave", { x: 0.5, y: 0.5, w: 0.1, h: 0.1 }, "drop")],
       });
     }
@@ -89,6 +100,12 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
   expect(uploads).toBe(1);
   // 送了縮圖總表給審查者；依章節分組、審查刪掉的吉祥物灰色列在最後（略過狀態）、改過的有標記
   expect(sheetSent).toBe(true);
+  // 預設風格 plain；規劃前（第一段上傳前）送了畫面總表；審查員點名可刪的剪預設不勾；顯示導演構想
+  expect(style).toBe("plain");
+  expect(framesSent).toBe(true);
+  await expect(page.locator('[data-kind="cut"] [data-testid="director-check"]')).not.toBeChecked();
+  await expect(page.locator('[data-kind="cut"]')).toContainText("could go");
+  await expect(page.getByTestId("director-treatment")).toContainText("beginners");
   await expect(page.getByTestId("director-chapter")).toHaveCount(3);
   await expect(page.locator('[data-kind="mascot"]')).toHaveAttribute("data-status", "skipped");
   await expect(page.locator('[data-kind="zoom"]')).toContainText("revised by review");

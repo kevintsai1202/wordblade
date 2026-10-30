@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Media, Word } from "../core/model";
 import type { Activity } from "./activity";
 import type { DirectorSuggestion, DirectorView } from "./api";
-import { runDirector } from "./run";
+import { planFrames, runDirector } from "./run";
 
 // AI 導演的一次執行（docs/plan-10-29-director2.md；不連網）：切段 → 每段算畫面變化區、轉小檔、連同詞上傳 → 規劃完（planned）→
 // 依各項時間拼縮圖總表送審 → 審查完（done）→ 剪輯腳本（補 id、素材、狀態；審查刪掉的是略過；放大帶活動區的路徑）＋章節。
@@ -22,7 +22,8 @@ function fakeApi(final: Partial<DirectorView> = {}) {
   return {
     calls,
     api: {
-      async start(body: { segments: number; scenes: { id: string }[] }) { calls.push({ kind: `start:${body.segments}:${body.scenes.length}` }); return "d1"; },
+      async start(body: { segments: number; scenes: { id: string }[]; style?: string }) { calls.push({ kind: `start:${body.segments}:${body.scenes.length}:${body.style}` }); return "d1"; },
+      async frames(_id: string, sheet: Blob) { calls.push({ kind: "frames", sheet: !!sheet }); },
       async upload(_id: string, index: number, meta: { activities?: unknown[] }) { calls.push({ kind: "upload", index, activities: meta.activities?.length ?? 0 }); },
       async review(_id: string, sheet: Blob | null) { reviewed = true; calls.push({ kind: "review", sheet: !!sheet }); },
       async poll(): Promise<DirectorView> {
@@ -31,7 +32,8 @@ function fakeApi(final: Partial<DirectorView> = {}) {
         if (!reviewed) return { ...base, status: "planned", suggestions: [item("i1", "cut", 10, 12), item("i2", "zoom", 102, 110, { activity: "a1000" }), item("i3", "effect", 200, 204, { description: "d" })] };
         return {
           ...base, status: "done",
-          suggestions: [item("i1", "cut", 10, 12, {}, { verdict: "keep", note: "ok" }), item("i2", "zoom", 102, 110, { activity: "a1000" }, { verdict: "revised", note: "start at 102" })],
+          suggestions: [item("i1", "cut", 10, 12, {}, { verdict: "prune", note: "not needed" }), { ...item("i2", "zoom", 102, 110, { activity: "a1000" }, { verdict: "revised", note: "start at 102" }), problem: "p1" }],
+          treatment: { audience: "devs", problems: [{ id: "p1", start: 100, end: 112, what: "small code" }] },
           removed: [item("i3", "effect", 200, 204, { description: "d" }, { verdict: "drop", note: "nothing on screen" })],
           ...final,
         };
@@ -64,12 +66,38 @@ describe("runDirector", () => {
     expect(stages).toEqual(expect.arrayContaining(["converting", "analysing", "reviewing"]));
     expect(result.chapters.map((c) => [c.mediaId, c.title])).toEqual([["m1", "Setup"], ["m1", "Code"]]);
     const byId = Object.fromEntries(result.suggestions.map((s) => [s.id.split("-").pop(), s]));
-    expect(byId.i1).toMatchObject({ kind: "cut", status: "pending", mediaId: "m1", purpose: "purpose i1", quote: "quote i1", review: { verdict: "keep", note: "ok" } });
+    expect(byId.i1).toMatchObject({ kind: "cut", status: "pending", mediaId: "m1", purpose: "purpose i1", quote: "quote i1", review: { verdict: "prune", note: "not needed" } });
+    expect(byId.i2.problem).toBe("p1");
+    expect(result.treatment?.audience).toBe("devs");
     expect(byId.i3).toMatchObject({ kind: "effect", status: "skipped", review: { verdict: "drop", note: "nothing on screen" } });
     const zoomPath = byId.i2.payload.path as { src: number }[];
     expect(zoomPath.length).toBeGreaterThan(0);
     expect(byId.i2.payload.w).toBeGreaterThan(0.25);
     expect(result.suggestions.map((s) => s.start)).toEqual([...result.suggestions.map((s) => s.start)].sort((a, b) => a - b));
+  });
+
+  it("風格傳給閘道；規劃前的畫面總表在最後一段上傳前送出", async () => {
+    const { api, calls } = fakeApi();
+    const asked: string[][] = [];
+    await runDirector({
+      media, words, scenes: [{ id: "desk-reveal", name: "Desk" }], api, pollMs: 0, style: "light",
+      makeClip: async () => new Uint8Array(8), activities,
+      planSheet: async (cells) => { asked.push(cells.map((c) => c.label)); return new Blob(["x"], { type: "image/jpeg" }); },
+    });
+    expect(calls[0].kind).toBe("start:3:1:light");
+    const kinds = calls.map((c) => c.kind);
+    expect(kinds.indexOf("frames")).toBeGreaterThan(0);
+    expect(kinds.indexOf("frames")).toBeLessThan(kinds.lastIndexOf("upload"));
+    expect(asked[0]).toContain("a1000");
+  });
+
+  it("規劃用畫面：每個活動區取中間一格（標 id），其餘每 15 秒一格（標秒數），最多 32 格、依時間排序", () => {
+    const cells = planFrames([{ id: "a1", start: 10, end: 20, x: 0, y: 0, w: 1, h: 1, path: [] }], 60);
+    expect(cells[0]).toEqual({ label: "t=0s", t: 0.5 });
+    expect(cells.find((c) => c.label === "a1")?.t).toBe(15);
+    expect(cells.map((c) => c.t)).toEqual([...cells.map((c) => c.t)].sort((a, b) => a - b));
+    expect(cells.filter((c) => c.label.startsWith("t=")).length).toBe(4);
+    expect(planFrames([], 3600).length).toBe(32);
   });
 
   it("取消：通知閘道、丟 AbortError；閘道回失敗：丟給使用者看的訊息；沒有總表也能審查", async () => {

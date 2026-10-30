@@ -18,9 +18,9 @@ test("範例專案：離線也能開、有逐字稿與特效、可以匯出", as
   await page.goto("/");
   await page.getByTestId("load-sample").click();
 
-  // V1：片頭佔位＋剪掉贅詞後的多段
-  await expect.poll(() => page.locator('.track-row[data-track-id="V1"] .clip').count()).toBeGreaterThan(2);
-  await expect.poll(() => page.locator(".effect-chip").count()).toBeGreaterThan(2);
+  // V1：剪掉重講後的多段；導演 plain 風格（docs/plan-10-30-director3.md）沒有特效，改看放大條
+  await expect.poll(() => page.locator('.track-row[data-track-id="V1"] .clip').count()).toBeGreaterThan(1);
+  await expect.poll(() => page.locator(".zoomband").count()).toBeGreaterThan(2);
   await openTab(page, "transcript");
   await expect(page.getByText("meeting notes", { exact: false }).first()).toBeVisible();
   // 示範狀態：沒編輯前不自動存

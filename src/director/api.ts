@@ -15,8 +15,20 @@ export interface DirectorSuggestion {
   purpose: string;
   quote: string;
   chapter: number;
+  /** 解決導演構想裡的哪個問題（畫面類才有） */
+  problem?: string | null;
   /** 審查結果（還沒審查是 null） */
-  review: { verdict: "keep" | "revised" | "added" | "drop"; note: string } | null;
+  review: { verdict: "keep" | "revised" | "added" | "prune" | "drop"; note: string } | null;
+}
+
+/** 導演風格：plain 只做剪、改字、遮罩、放大、字幕、片頭（螢幕教學片預設）；light 加 2D 特效與配樂；playful 再加 3D 轉場與吉祥物 */
+export type DirectorStyle = "plain" | "light" | "playful";
+
+/** 導演構想（規劃者剪輯前先寫的：觀眾、每章帶走的事、觀眾會看不清或分心的問題） */
+export interface DirectorTreatment {
+  audience?: string;
+  takeaways?: string[];
+  problems?: { id: string; start: number; end: number; what: string }[];
 }
 
 /** 閘道回的章節（素材時間） */
@@ -38,6 +50,8 @@ export interface DirectorView {
   /** 審查刪掉的 */
   removed: DirectorSuggestion[];
   error: string | null;
+  /** 導演構想（舊版閘道沒有） */
+  treatment?: DirectorTreatment | null;
 }
 
 /** 一段的詞與畫面變化區（素材時間） */
@@ -69,7 +83,7 @@ export class DirectorApi {
   constructor(private readonly settings: GatewaySettings) {}
 
   /** 建工作 */
-  async start(body: { mediaName: string; duration: number; segments: number; scenes: { id: string; name: string }[] }): Promise<string> {
+  async start(body: { mediaName: string; duration: number; segments: number; scenes: { id: string; name: string }[]; style?: DirectorStyle }): Promise<string> {
     const { jobId } = await call<{ jobId: string }>(this.settings, "/v1/ai/director", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     return jobId;
   }
@@ -80,6 +94,13 @@ export class DirectorApi {
     form.append("video", new Blob([video as Uint8Array<ArrayBuffer>], { type: "video/mp4" }), "segment.mp4");
     form.append("meta", JSON.stringify(meta));
     await call<void>(this.settings, `/v1/ai/director/${encodeURIComponent(jobId)}/segments/${index}`, { method: "POST", body: form });
+  }
+
+  /** 規劃前的畫面總表（每個畫面變化區、每隔一段時間一格）：要在最後一段上傳前送 */
+  async frames(jobId: string, sheet: Blob): Promise<void> {
+    const form = new FormData();
+    form.append("sheet", sheet, sheet.type === "image/png" ? "frames.png" : "frames.jpg");
+    await call<void>(this.settings, `/v1/ai/director/${encodeURIComponent(jobId)}/frames`, { method: "POST", body: form });
   }
 
   /** 審查：送縮圖總表（每項一格、標上項目 id；沒有就只看文字） */

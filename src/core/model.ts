@@ -191,8 +191,10 @@ export interface Suggestion {
   quote?: string;
   /** 屬於第幾個章節（Project.directorChapters 裡這支素材的順序） */
   chapter?: number;
-  /** 審查結果：keep 通過、revised 依審查改過、added 審查後補上、drop 審查刪掉（狀態是 skipped） */
-  review?: { verdict: "keep" | "revised" | "added" | "drop"; note: string };
+  /** 解決導演構想裡的哪個問題（問題 id；畫面類才有，docs/plan-10-30-director3.md） */
+  problem?: string;
+  /** 審查結果：keep 通過、revised 依審查改過、added 審查後補上、prune 審查員認為可有可無（預設不勾）、drop 審查刪掉（狀態是 skipped） */
+  review?: { verdict: "keep" | "revised" | "added" | "prune" | "drop"; note: string };
 }
 
 /** AI 導演整理的章節（素材時間） */

@@ -12,9 +12,9 @@ import { beginBusy } from "../core/busy";
 import type { Media, Project, Suggestion } from "../core/model";
 import { clipEnd } from "../core/timeline";
 import { findActivities, sampleLuma } from "../director/activity";
-import { DirectorApi } from "../director/api";
+import { DirectorApi, type DirectorStyle, type DirectorTreatment } from "../director/api";
 import { applyScript } from "../director/apply";
-import { buildContactSheet, frameSource, makeApplyDeps } from "../director/browser";
+import { buildContactSheet, buildFrameSheet, frameSource, makeApplyDeps } from "../director/browser";
 import { estimateTokens, runDirector, type DirectorProgress } from "../director/run";
 import { suggestionSpan } from "../director/suggestions";
 import type { Engine, ImportSource } from "../engine/Engine";
@@ -62,8 +62,15 @@ function detail(s: Suggestion): string {
 /** 審查結果的標記 */
 function reviewBadge(s: Suggestion): string {
   if (!s.review) return "";
-  return { keep: "✓ reviewed", revised: "✎ revised by review", added: "＋ added by review", drop: "✕ removed by review" }[s.review.verdict];
+  return { keep: "✓ reviewed", revised: "✎ revised by review", added: "＋ added by review", prune: "− reviewer: could go", drop: "✕ removed by review" }[s.review.verdict];
 }
+
+/** 風格選項（docs/plan-10-30-director3.md）：plain 是螢幕教學片的預設 */
+const STYLES: { id: DirectorStyle; label: string }[] = [
+  { id: "plain", label: "Plain — cuts, fixes, masks, zooms" },
+  { id: "light", label: "Light — plus callouts and music" },
+  { id: "playful", label: "Playful — plus 3D transitions and mascot" },
+];
 
 /** AI 導演頁籤 */
 export function DirectorTab({ project, engine, envelopes, plugins, playhead, importSources, dispatch }: {
@@ -88,6 +95,9 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
   const [selected, setSelected] = useState<string | null>(null);
   const [adopting, setAdopting] = useState<string | null>(null);
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set());
+  /** 風格與這次的導演構想（構想只在這次執行後顯示，不存進專案） */
+  const [style, setStyle] = useState<DirectorStyle>("plain");
+  const [treatment, setTreatment] = useState<DirectorTreatment | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   /** 最新的專案（套用時各步驟要讀） */
@@ -149,7 +159,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
       const src = await frameSource(engine, media);
       setProgress({ stage: "converting", done: 0, total: 1 });
       const result = await runDirector({
-        media, words, scenes: TEMPLATES_3D.map((t) => ({ id: t.id, name: t.name })), api: new DirectorApi(settings), signal: abort.signal, onProgress: setProgress,
+        media, words, scenes: TEMPLATES_3D.map((t) => ({ id: t.id, name: t.name })), api: new DirectorApi(settings), signal: abort.signal, onProgress: setProgress, style,
         makeClip: async (s, e) => (await makeSamClip(src, s, e, { fps: 2, maxWidth: Infinity, maxHeight: 480, bitrate: 250_000, scan: false, videoW: media.width ?? 1920, videoH: media.height ?? 1080, signal: abort.signal })).bytes,
         activities: async (s, e) => {
           const times: number[] = [];
@@ -157,9 +167,12 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
           return findActivities(await sampleLuma(src, times));
         },
         contactSheet: (items) => buildContactSheet(src, items),
+        planSheet: (cells) => buildFrameSheet(src, cells),
       });
       dispatch({ type: "commit", edits: [{ kind: "setSuggestions", mediaId: media.id, suggestions: result.suggestions, chapters: result.chapters }] });
-      setUnchecked(new Set());
+      // 審查員點名可有可無的項目預設不勾
+      setUnchecked(new Set(result.suggestions.filter((s) => s.review?.verdict === "prune").map((s) => s.id)));
+      setTreatment(result.treatment);
       const pending = result.suggestions.filter((s) => s.status === "pending").length;
       const removed = result.suggestions.length - pending;
       setMessage({ kind: "info", text: pending ? `${pending} edits in ${result.chapters.length} chapters${removed ? ` (${removed} removed by review)` : ""}. Check what you want and apply — or click one to preview.` : "The director has no suggestions for this video." });
@@ -306,8 +319,11 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
       {!candidates.length ? <p className="muted placeholder">Import a video with sound first.</p> : (
         <>
           <div className="vibe-actions">
-            <select data-testid="director-media" value={media?.id ?? ""} disabled={busy} onChange={(e) => setMediaId(e.target.value)}>
+            <select data-testid="director-media" value={media?.id ?? ""} disabled={busy} onChange={(e) => { setMediaId(e.target.value); setTreatment(null); }}>
               {candidates.map((m) => <option key={m.id} value={m.id}>{m.name ?? m.id}</option>)}
+            </select>
+            <select data-testid="director-style" value={style} disabled={busy} title="What kinds of edit the director may use" onChange={(e) => setStyle(e.target.value as DirectorStyle)}>
+              {STYLES.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
             </select>
             <span className="spacer" />
             {busy && progress?.stage !== "applying"
@@ -325,6 +341,12 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
         </div>
       )}
       {message && <p className={message.kind === "error" ? "error" : "muted"} data-testid="director-message">{message.text}</p>}
+      {treatment?.problems?.length ? (
+        <details className="director-treatment" data-testid="director-treatment">
+          <summary>Director's notes{treatment.audience ? ` — for ${treatment.audience}` : ""}</summary>
+          <ul>{treatment.problems.map((p) => <li key={p.id}><span className="timecode">{formatTimecode(p.start).slice(3, 8)}</span> {p.what}</li>)}</ul>
+        </details>
+      ) : null}
       {checked.length > 0 && (
         <div className="vibe-actions">
           <span className="muted">{checked.length} checked</span>

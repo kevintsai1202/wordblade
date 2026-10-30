@@ -14,6 +14,7 @@ import { targetRoute } from "../sam/locate";
 import { TEMPLATES_3D, builtinPlugins3D, template3DEffect } from "../three/builtins";
 import type { ApplyDeps } from "./apply";
 import type { DirectorSuggestion } from "./api";
+import type { FrameCell } from "./run";
 import { maskFromBox } from "./suggestions";
 
 /** 縮圖總表：每列幾格、每格寬、標籤列高 */
@@ -33,9 +34,16 @@ export async function frameSource(engine: Engine, media: Media): Promise<Blob | 
  * 每格上方黑底白字標上項目 id、種類與秒數，讓模型一次看完所有時間點。
  */
 export async function buildContactSheet(source: Blob | string, items: DirectorSuggestion[]): Promise<Blob | null> {
-  const list = items.slice(0, SHEET_MAX);
+  return buildFrameSheet(source, items.map((s) => ({ label: `${s.id}  ${s.kind}  ${s.start.toFixed(1)}s`, t: s.start + 0.3 })));
+}
+
+/**
+ * 依格子拼總表（審查用與規劃用共用）：每格取素材某一秒（寬 480），拼成每列 4 格的一張 JPEG，每格上方黑底白字標上標籤。
+ */
+export async function buildFrameSheet(source: Blob | string, cells: FrameCell[]): Promise<Blob | null> {
+  const list = cells.slice(0, SHEET_MAX);
   if (!list.length) return null;
-  const jpegs = await grabJpegs(source, list.map((s) => s.start + 0.3), CELL_W);
+  const jpegs = await grabJpegs(source, list.map((c) => c.t), CELL_W);
   const bitmaps = await Promise.all(jpegs.map((b) => (b.length ? createImageBitmap(new Blob([b as Uint8Array<ArrayBuffer>], { type: "image/jpeg" })).catch(() => null) : Promise.resolve(null))));
   const cellH = Math.round((CELL_W * 9) / 16);
   const rows = Math.ceil(list.length / SHEET_COLS);
@@ -52,7 +60,7 @@ export async function buildContactSheet(source: Blob | string, items: DirectorSu
     g.fillRect(x, y, CELL_W, LABEL_H);
     g.fillStyle = "#fff";
     g.font = "bold 18px Arial, sans-serif";
-    g.fillText(`${s.id}  ${s.kind}  ${s.start.toFixed(1)}s`, x + 8, y + 21);
+    g.fillText(s.label, x + 8, y + 21);
     bmp?.close();
   });
   return canvas.convertToBlob({ type: "image/jpeg", quality: 0.8 });

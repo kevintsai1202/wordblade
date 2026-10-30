@@ -23,7 +23,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * AI 導演（spec §5.11）：
- * - POST /v1/ai/director {mediaName, duration, segments, scenes:[{id,name}]} → 202 {jobId}
+ * - POST /v1/ai/director {mediaName, duration, segments, scenes:[{id,name}], style} → 202 {jobId}
+ * - POST /v1/ai/director/{jobId}/frames（multipart：sheet＝規劃者要看的畫面總表）→ 202；要在最後一段上傳前送
  * - POST /v1/ai/director/{jobId}/segments/{index}（multipart：video＝480p 每秒 2 格無聲 MP4、meta＝{start, end, words:[{id,t,text}]}）→ 202
  * - GET /v1/ai/director/{jobId} → 狀態、段落進度、建議
  * - DELETE /v1/ai/director/{jobId} → 取消
@@ -64,14 +65,25 @@ public class DirectorController {
     @PostMapping(path = "/v1/ai/director/{jobId}/review", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> review(@PathVariable String jobId, @RequestPart(name = "sheet", required = false) MultipartFile sheet,
                                        HttpServletRequest req) throws IOException {
-        AiModel.Image image = null;
-        if (sheet != null && !sheet.isEmpty()) {
-            String type = sheet.getContentType();
-            if (sheet.getSize() > MAX_SHEET_BYTES || !("image/jpeg".equals(type) || "image/png".equals(type))) throw new IllegalArgumentException("bad sheet");
-            image = new AiModel.Image(type, sheet.getBytes());
-        }
-        jobs.review(token(req).id(), jobId, image);
+        jobs.review(token(req).id(), jobId, image(sheet));
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
+
+    /** 規劃前的畫面總表（每個畫面變化區、每隔一段時間一格）：最後一段上傳前送，規劃者第一次規劃時看 */
+    @PostMapping(path = "/v1/ai/director/{jobId}/frames", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> frames(@PathVariable String jobId, @RequestPart("sheet") MultipartFile sheet, HttpServletRequest req) throws IOException {
+        AiModel.Image image = image(sheet);
+        if (image == null) throw new IllegalArgumentException("no sheet");
+        jobs.frames(token(req).id(), jobId, image);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
+
+    /** 上傳的總表 → 圖片（JPEG／PNG、6 MB 以內）；沒送回 null，格式不對丟 IllegalArgumentException */
+    private static AiModel.Image image(MultipartFile sheet) throws IOException {
+        if (sheet == null || sheet.isEmpty()) return null;
+        String type = sheet.getContentType();
+        if (sheet.getSize() > MAX_SHEET_BYTES || !("image/jpeg".equals(type) || "image/png".equals(type))) throw new IllegalArgumentException("bad sheet");
+        return new AiModel.Image(type, sheet.getBytes());
     }
 
     /** 狀態與建議 */

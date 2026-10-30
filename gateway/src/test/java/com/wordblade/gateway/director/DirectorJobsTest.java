@@ -65,20 +65,21 @@ class DirectorJobsTest {
     private final List<String> usage = Collections.synchronizedList(new ArrayList<>());
     private final DirectorJobs jobs = new DirectorJobs(spark, planner, reviewer, Runnable::run, (t, m, in, out) -> usage.add(t + ":" + m));
 
-    private final DirectorJobs.StartRequest req = new DirectorJobs.StartRequest("talk.mp4", 200, 2, List.of(new DirectorJobs.Scene("desk-reveal", "Desk")));
+    private final DirectorJobs.StartRequest req = new DirectorJobs.StartRequest("talk.mp4", 200, 2, List.of(new DirectorJobs.Scene("desk-reveal", "Desk")), "playful");
 
     private DirectorJobs.SegmentMeta meta(double start, double end, String wordId) {
         return new DirectorJobs.SegmentMeta(start, end, List.of(new DirectorJobs.Word(wordId, start + 1, "hello")),
                 List.of(new DirectorJobs.Activity("a" + (int) start, start + 10, start + 20, 0.5, 0.3, 0.4, 0.2)));
     }
 
-    /** 規劃者的腳本：兩章、一個剪、一個轉場（在 100 秒的交界）、一個特效 */
+    /** 規劃者的腳本：導演構想（問題 p1、p2）、兩章、一個剪、一個轉場（在 100 秒的交界）、一個特效 */
     private static final String SCRIPT = """
-            {"chapters":[{"title":"Setup","start":0,"end":100},{"title":"Code","start":100,"end":200}],
+            {"treatment":{"audience":"devs","problems":[{"id":"p1","start":98,"end":102,"what":"switch to the editor"},{"id":"p2","start":150,"end":154,"what":"result is easy to miss"}]},
+             "chapters":[{"title":"Setup","start":0,"end":100},{"title":"Code","start":100,"end":200}],
              "items":[
               {"id":"i1","kind":"cut","start":102,"end":104,"chapter":1,"purpose":"Remove the stumble","quote":"sorry"},
-              {"id":"i2","kind":"transition","start":98,"end":102,"chapter":1,"purpose":"Into the code part","quote":"Now let's write it","scene":"desk-reveal"},
-              {"id":"i3","kind":"effect","start":150,"end":154,"chapter":1,"purpose":"Celebrate","quote":"it works","description":"Confetti"}
+              {"id":"i2","kind":"transition","start":98,"end":102,"chapter":1,"problem":"p1","purpose":"Into the code part","quote":"Now let's write it","scene":"desk-reveal"},
+              {"id":"i3","kind":"effect","start":150,"end":154,"chapter":1,"problem":"p2","purpose":"Celebrate","quote":"it works","description":"Confetti"}
              ]}""";
 
     /** 送兩段（第二段的詞 id 是 w2） */
@@ -134,7 +135,7 @@ class DirectorJobsTest {
                 {"chapters":[{"title":"Setup","start":0,"end":100},{"title":"Code","start":100,"end":200}],
                  "items":[
                   {"id":"i1","kind":"cut","start":102,"end":104,"purpose":"Remove the stumble","quote":"sorry"},
-                  {"id":"i2","kind":"transition","start":99,"end":103,"purpose":"Into the code part","quote":"Now let's write it","scene":"desk-reveal"},
+                  {"id":"i2","kind":"transition","start":99,"end":103,"problem":"p1","purpose":"Into the code part","quote":"Now let's write it","scene":"desk-reveal"},
                   {"id":"i4","kind":"mask","start":5,"end":8,"purpose":"Hide the key","target":"API key"}
                  ]}""");
         String id = twoSegments();
@@ -154,7 +155,7 @@ class DirectorJobsTest {
 
     @Test
     void 規劃不合格就帶錯誤重問一次_還沒規劃完不能審查() {
-        planner.replies.add("{\"chapters\":[{\"title\":\"A\",\"start\":0,\"end\":200}],\"items\":[{\"id\":\"i1\",\"kind\":\"transition\",\"start\":1,\"end\":4,\"purpose\":\"p\",\"quote\":\"q\",\"scene\":\"moon\"}]}");
+        planner.replies.add("{\"treatment\":{\"problems\":[{\"id\":\"p1\"}]},\"chapters\":[{\"title\":\"A\",\"start\":0,\"end\":200}],\"items\":[{\"id\":\"i1\",\"kind\":\"transition\",\"start\":1,\"end\":4,\"problem\":\"p1\",\"purpose\":\"p\",\"quote\":\"q\",\"scene\":\"moon\"}]}");
         planner.replies.add("{\"chapters\":[{\"title\":\"A\",\"start\":0,\"end\":200}],\"items\":[{\"id\":\"i1\",\"kind\":\"cut\",\"start\":1,\"end\":4,\"purpose\":\"p\",\"quote\":\"q\"}]}");
         String id = jobs.start(7, req);
         assertThatThrownBy(() -> jobs.review(7, id, null)).isInstanceOf(IllegalArgumentException.class);
@@ -179,7 +180,7 @@ class DirectorJobsTest {
 
     @Test
     void 全部失敗就失敗_取消_權杖隔離_段號不對() {
-        DirectorJobs.StartRequest one = new DirectorJobs.StartRequest("a", 100, 1, List.of());
+        DirectorJobs.StartRequest one = new DirectorJobs.StartRequest("a", 100, 1, List.of(), null);
         spark.failSecond = true;
         String id = jobs.start(7, one);
         jobs.addSegment(7, id, 0, meta(0, 100, "m:w9"), new byte[3]);
@@ -190,5 +191,46 @@ class DirectorJobsTest {
         assertThatThrownBy(() -> jobs.view(8, id2)).isInstanceOf(DirectorJobs.NotFoundException.class);
         String id3 = jobs.start(7, req);
         assertThatThrownBy(() -> jobs.addSegment(7, id3, 5, meta(0, 1, "x"), new byte[3])).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void 規劃前送的畫面總表只附在第一次規劃_風格與能用的種類寫進資料_導演構想帶回() {
+        planner.replies.add(SCRIPT);
+        String id = jobs.start(7, req);
+        jobs.frames(7, id, new AiModel.Image("image/jpeg", new byte[] {1}));
+        jobs.addSegment(7, id, 0, meta(0, 100, "m:w1"), new byte[3]);
+        jobs.addSegment(7, id, 1, meta(100, 200, "m:w2"), new byte[3]);
+        assertThat(planner.images).containsExactly(true);
+        assertThat(planner.received.get(0)).contains("\"style\":\"playful\"").contains("\"allowedKinds\"").contains("transition");
+        assertThat(jobs.view(7, id).treatment().path("audience").asString()).isEqualTo("devs");
+        // 已經在規劃就不能再送
+        assertThatThrownBy(() -> jobs.frames(7, id, new AiModel.Image("image/jpeg", new byte[] {1}))).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void 沒給風格當_plain_不送3D場景_轉場與特效被擋下() {
+        planner.replies.add(SCRIPT);
+        planner.replies.add(SCRIPT);
+        String id = jobs.start(7, new DirectorJobs.StartRequest("talk.mp4", 200, 2, List.of(new DirectorJobs.Scene("desk-reveal", "Desk")), null));
+        jobs.addSegment(7, id, 0, meta(0, 100, "m:w1"), new byte[3]);
+        jobs.addSegment(7, id, 1, meta(100, 200, "m:w2"), new byte[3]);
+        assertThat(planner.received.get(0)).contains("\"style\":\"plain\"").doesNotContain("desk-reveal");
+        assertThat(planner.received.get(1)).contains("not allowed in the \"plain\" style").contains("treatment");
+        assertThat(jobs.view(7, id).suggestions()).extracting(DirectorRules.Suggestion::kind).containsExactly("cut");
+    }
+
+    @Test
+    void 審查員點名可刪的項目標成_prune_不交回規劃者() {
+        planner.replies.add(SCRIPT);
+        reviewer.replies.add("""
+                {"verdicts":[{"id":"i1","verdict":"keep","note":"ok"},{"id":"i2","verdict":"keep","note":"ok"},{"id":"i3","verdict":"keep","note":"ok"}],
+                 "missing":[],"prune":[{"id":"i3","note":"The result is already obvious"}]}""");
+        String id = twoSegments();
+        jobs.review(7, id, null);
+        DirectorJobs.View v = jobs.view(7, id);
+        assertThat(planner.received).hasSize(1);
+        assertThat(v.suggestions().stream().filter(s -> s.id().equals("i3")).findFirst().orElseThrow().review())
+                .isEqualTo(new DirectorRules.Review("prune", "The result is already obvious"));
+        assertThat(reviewer.received.get(0)).contains("\"style\":\"playful\"");
     }
 }

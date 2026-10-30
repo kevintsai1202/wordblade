@@ -26,10 +26,12 @@ import tools.jackson.databind.node.ObjectNode;
  * AI 導演的工作（spec §5.11；docs/plan-10-29-director2.md）：
  * 1. 理解：桌面建工作（片長、段數、3D 場景）→ 逐段上傳（480p、每秒 2 格、無聲影片＋那段的詞＋本機算的畫面變化區）→ 每段交給 Muse Spark
  *    （段落報告：章節、重講、隱私、重點、畫面變化區是什麼、聽錯的詞；段內秒數）。
- * 2. 規劃：全部回來後把報告換成素材時間，交給 Muse Wonder（規劃者）寫剪輯腳本（章節＋每項附目的與引用的旁白）→ DirectorRules 檢查，
- *    不合格帶錯誤重問一次 → planned。
+ * 2. 規劃：全部回來後把報告換成素材時間，交給 Muse Wonder（規劃者）寫剪輯腳本（先寫導演構想：觀眾、每章帶走的事、觀眾會看不清或分心的問題；
+ *    再寫章節＋每項附目的、引用的旁白、畫面類要指名解決哪個問題）。桌面規劃前送來的畫面總表附在第一次規劃；風格決定能用的種類。
+ *    DirectorRules 檢查，不合格帶錯誤重問一次 → planned。
  * 3. 審查：桌面依各項時間截圖拼成一張縮圖總表送來 → 另一個 Muse Wonder（審查者，獨立對話與系統提示詞，只看腳本、大綱、逐字稿與總表）
  *    逐項判定 keep／revise／drop 並指出漏掉的 → 有退回或漏掉就把意見交回規劃者改一輪 → 審查刪掉的移到 removed → done。
+ *    審查員另外點名「最先刪」的項目（prune）不交回規劃者，標上 prune 讓使用者預設不勾。
  * 段落失敗照樣規劃（記失敗段數），全部失敗才算失敗。工作放記憶體，一小時後清掉，只有建立它的權杖看得到；影片位元組用完就丟。
  */
 public class DirectorJobs {
@@ -45,8 +47,8 @@ public class DirectorJobs {
     /** 3D 場景（規劃者選轉場用） */
     public record Scene(String id, String name) {}
 
-    /** 建工作 */
-    public record StartRequest(String mediaName, double duration, int segments, List<Scene> scenes) {}
+    /** 建工作；style 是風格 plain／light／playful（舊版桌面沒有，當 plain） */
+    public record StartRequest(String mediaName, double duration, int segments, List<Scene> scenes, String style) {}
 
     /** 一個詞（素材時間） */
     public record Word(String id, double t, String text) {}
@@ -68,7 +70,7 @@ public class DirectorJobs {
      * @param error  失敗原因代碼（segments-failed、plan-failed）
      */
     public record View(String status, int segmentsDone, int segmentsTotal, int segmentsFailed, List<DirectorRules.Chapter> chapters,
-                       List<DirectorRules.Suggestion> suggestions, List<DirectorRules.Suggestion> removed, String error) {}
+                       List<DirectorRules.Suggestion> suggestions, List<DirectorRules.Suggestion> removed, String error, JsonNode treatment) {}
 
     /** 看一段影片的模型（Muse Spark；RestClient 直接送 video_url） */
     @FunctionalInterface
@@ -107,6 +109,12 @@ public class DirectorJobs {
         volatile List<DirectorRules.Suggestion> suggestions = List.of();
         volatile List<DirectorRules.Suggestion> removed = List.of();
         volatile boolean cancelled;
+        /** 規劃前桌面送的畫面總表（每個畫面變化區、每隔一段時間一格）；只附在第一次規劃 */
+        volatile AiModel.Image planSheet;
+        /** 導演構想（觀眾、每章帶走的事、問題清單）；最近一輪有給的 */
+        volatile JsonNode treatment;
+        /** 構想的問題 id（之後幾輪模型漏給構想時沿用） */
+        volatile Set<String> problemIds = Set.of();
 
         Job(long tokenId, StartRequest req) {
             this.tokenId = tokenId;
@@ -141,6 +149,18 @@ public class DirectorJobs {
         String id = UUID.randomUUID().toString();
         jobs.put(id, new Job(tokenId, req));
         return id;
+    }
+
+    /**
+     * 規劃者要看的畫面總表（每個畫面變化區一格、每隔一段時間一格，標上 id 或秒數）。
+     * 要在最後一段上傳前送到（規劃在最後一段分析完時就開始）；已經開始規劃丟 IllegalArgumentException。
+     */
+    public void frames(long tokenId, String id, AiModel.Image sheet) {
+        Job job = own(tokenId, id);
+        synchronized (job) {
+            if (!job.status.equals("collecting")) throw new IllegalArgumentException("already planning");
+            job.planSheet = sheet;
+        }
     }
 
     /** 收一段：交給 Spark（背景）；段號不對或重複丟 IllegalArgumentException */
@@ -221,14 +241,22 @@ public class DirectorJobs {
         }
     }
 
-    /** 問規劃者（同一段對話）；格式不合格帶錯誤重問一次 */
+    /**
+     * 問規劃者（同一段對話）；格式不合格帶錯誤重問一次。
+     * 畫面總表只附在整個工作的第一次呼叫；每輪記下構想與問題 id，下一輪模型漏給構想時沿用。
+     */
     private DirectorRules.Result askPlanner(Job job, String message) {
         Sets s = sets(job);
         DirectorRules.Result result = null;
         for (int round = 1; round <= MAX_ROUNDS && !job.cancelled; round++) {
-            AiModel.Reply r = planner.call(job.plannerConversation, message, null);
+            AiModel.Image sheet = job.planSheet;
+            job.planSheet = null;
+            AiModel.Reply r = planner.call(job.plannerConversation, message, sheet);
             usage.record(job.tokenId, r.model(), r.inputTokens(), r.outputTokens());
-            result = DirectorRules.check(read(r.text()), job.req.duration(), s.scenes(), s.words(), s.activities());
+            result = DirectorRules.check(read(r.text()), job.req.duration(), s.scenes(), s.words(), s.activities(),
+                    new DirectorRules.Options(job.req.style(), job.problemIds));
+            if (result.treatment() != null) job.treatment = result.treatment();
+            job.problemIds = result.problemIds();
             if (result.errors().isEmpty() || round == MAX_ROUNDS) break;
             message = feedback(result.errors());
         }
@@ -269,6 +297,9 @@ public class DirectorJobs {
                 String verdict = v.path("verdict").asString("keep");
                 verdicts.put(v.path("id").asString(""), new DirectorRules.Review(Set.of("keep", "revise", "drop").contains(verdict) ? verdict : "keep", v.path("note").asString("").strip()));
             });
+            // 審查員點名「可有可無、最先刪」的項目：不交回規劃者，標成 prune 讓使用者預設不勾
+            Map<String, String> prune = new LinkedHashMap<>();
+            if (root != null) root.path("prune").forEach(p -> prune.put(p.path("id").asString(""), p.path("note").asString("").strip()));
             List<String> missing = new ArrayList<>();
             if (root != null) root.path("missing").forEach(m -> missing.add(String.format(Locale.ROOT, "%s at %.1f–%.1f s: %s",
                     m.path("kind").asString("item"), m.path("start").asDouble(0), m.path("end").asDouble(0), m.path("note").asString(""))));
@@ -289,7 +320,8 @@ public class DirectorJobs {
             for (DirectorRules.Suggestion s : after) {
                 DirectorRules.Review v = verdicts.get(s.id());
                 if (v != null && v.verdict().equals("drop")) continue;
-                if (v == null) kept.add(s.withReview(originalIds.contains(s.id()) ? new DirectorRules.Review("keep", "") : new DirectorRules.Review("added", "Added after review")));
+                if (prune.containsKey(s.id())) kept.add(s.withReview(new DirectorRules.Review("prune", prune.get(s.id()))));
+                else if (v == null) kept.add(s.withReview(originalIds.contains(s.id()) ? new DirectorRules.Review("keep", "") : new DirectorRules.Review("added", "Added after review")));
                 else kept.add(s.withReview(v.verdict().equals("revise") ? new DirectorRules.Review("revised", v.note()) : v));
             }
             for (DirectorRules.Suggestion s : before) {
@@ -314,8 +346,13 @@ public class DirectorJobs {
         ObjectNode root = json.createObjectNode();
         root.put("video", job.req.mediaName());
         root.put("duration", round1(job.req.duration()));
+        putStyle(root, job);
+        root.put("frames", job.planSheet != null
+                ? "Attached: a contact sheet with one frame per screen activity region (labelled with its id) and frames every few seconds (labelled with the time)."
+                : "No frames attached.");
+        // 3D 場景只在能用轉場、吉祥物的風格才送（不送就不會被拿來裝飾）
         ArrayNode scenes = root.putArray("scenes");
-        if (job.req.scenes() != null) job.req.scenes().forEach(s -> scenes.addObject().put("id", s.id()).put("name", s.name()));
+        if (job.req.scenes() != null && DirectorRules.allowedKinds(job.req.style()).contains("transition")) job.req.scenes().forEach(s -> scenes.addObject().put("id", s.id()).put("name", s.name()));
         ArrayNode segments = root.putArray("segments");
         for (int i = 0; i < job.req.segments(); i++) {
             SegmentMeta meta = job.metas.get(i);
@@ -391,6 +428,8 @@ public class DirectorJobs {
         ObjectNode root = json.createObjectNode();
         root.put("duration", round1(job.req.duration()));
         root.put("contactSheet", hasSheet ? "Attached: one frame per item at its start time, labelled with the item id." : "No frames attached.");
+        putStyle(root, job);
+        if (job.treatment != null) root.set("treatment", job.treatment);
         ArrayNode chapters = root.putArray("chapters");
         job.chapters.forEach(c -> chapters.addObject().put("title", c.title()).put("start", round1(c.start())).put("end", round1(c.end())));
         ArrayNode items = root.putArray("items");
@@ -398,6 +437,7 @@ public class DirectorJobs {
             ObjectNode o = items.addObject();
             o.put("id", s.id()).put("kind", s.kind()).put("start", round1(s.start())).put("end", round1(s.end()));
             o.put("purpose", s.purpose()).put("quote", s.quote());
+            if (s.problem() != null) o.put("problem", s.problem());
             s.payload().forEach((k, v) -> o.set(k, json.valueToTree(v)));
         }
         ArrayNode transcript = root.putArray("transcript");
@@ -410,7 +450,7 @@ public class DirectorJobs {
 
     /** 交回規劃者的審查意見 */
     private static String revisionRequest(List<DirectorRules.Suggestion> items, Map<String, DirectorRules.Review> verdicts, List<String> missing) {
-        StringBuilder sb = new StringBuilder("An independent reviewer checked your edit script against the transcript and the frames. Apply the notes and return the full corrected JSON. "
+        StringBuilder sb = new StringBuilder("An independent reviewer checked your edit script against the transcript and the frames. Apply the notes and return the complete corrected JSON (treatment, chapters, items). "
                 + "Keep the same id for items you keep or change; remove items marked drop; give new items new ids.\n");
         for (DirectorRules.Suggestion s : items) {
             DirectorRules.Review v = verdicts.get(s.id());
@@ -418,6 +458,13 @@ public class DirectorJobs {
         }
         for (String m : missing) sb.append("- missing: ").append(m).append('\n');
         return sb.toString();
+    }
+
+    /** 資料裡寫上風格與能用的種類（規劃者只能用這些、審查者不會要求補裝飾） */
+    private static void putStyle(ObjectNode root, Job job) {
+        root.put("style", DirectorRules.style(job.req.style()));
+        ArrayNode kinds = root.putArray("allowedKinds");
+        new java.util.TreeSet<>(DirectorRules.allowedKinds(job.req.style())).forEach(kinds::add);
     }
 
     private static double round1(double v) {
@@ -430,7 +477,7 @@ public class DirectorJobs {
 
     /** 回饋給規劃者的格式錯誤 */
     private static String feedback(List<AiError> errors) {
-        StringBuilder sb = new StringBuilder("Some items were invalid and were dropped. Return the full corrected JSON again:");
+        StringBuilder sb = new StringBuilder("Some items were invalid and were dropped. Return the complete corrected JSON again (treatment, chapters, items):");
         errors.stream().limit(12).forEach(e -> sb.append("\n- ").append(e.message()));
         return sb.toString();
     }
@@ -438,7 +485,7 @@ public class DirectorJobs {
     /** 狀態 */
     public View view(long tokenId, String id) {
         Job job = own(tokenId, id);
-        return new View(job.status, job.reports.size(), job.req.segments(), job.failed.size(), job.chapters, job.suggestions, job.removed, job.error);
+        return new View(job.status, job.reports.size(), job.req.segments(), job.failed.size(), job.chapters, job.suggestions, job.removed, job.error, job.treatment);
     }
 
     /** 取消 */
