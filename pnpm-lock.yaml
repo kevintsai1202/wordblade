@@ -29,6 +29,9 @@ importers:
       mediabunny:
         specifier: ^1.62.1
         version: 1.62.1
+      opencc-js:
+        specifier: 1.0.5
+        version: 1.0.5
       react:
         specifier: ^19.1.0
         version: 19.3.1
@@ -507,6 +510,9 @@ packages:
     resolution: {integrity: sha512-5vvB5+W7ePv+p3uqxi+RcW1XAzLW0/hxt3/4X4Lc4qHudzOhmBiBwOY6DRob4WnanAEGvNcLjF+KNOufrUoEQw==}
     engines: {node: '>=12.20.0'}
 
+  opencc-js@1.0.5:
+    resolution: {integrity: sha512-LD+1SoNnZdlRwtYTjnQdFrSVCAaYpuDqL5CkmOaHOkKoKh7mFxUicLTRVNLU5C+Jmi1vXQ3QL4jWdgSaa4sKjg==}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -977,6 +983,8 @@ snapshots:
       webidl-conversions: 8.0.1
 
   obug@3.0.0: {}
+
+  opencc-js@1.0.5: {}
 
   picocolors@1.1.1: {}
 

@@ -3,6 +3,7 @@
 import type { Envelope } from "../audio/envelope";
 import type { Media, Word } from "../core/model";
 import { splitAtSilence } from "./segment";
+import { toTraditional } from "./traditional";
 import { coverage, DELTA_DELAY, deltasToWords, turnsToWords, type Delta, type Turn } from "./wordTiming";
 
 /** 閘道 /v1/asr 的回應 */
@@ -127,6 +128,7 @@ export async function transcribeMedia(
   const all = turns.flat().sort((a, b) => a.start - b.start);
   // 每段都有 DELTA 事件：用它當詞級時間的錨點；否則照舊依包絡把 turn 的字攤開
   const anchored = deltas.every((d) => d !== null);
-  const words = collapseRepeats(anchored ? deltasToWords(media.id, deltas.flatMap((d) => d!), env) : turnsToWords(media.id, all, env));
+  // 中文一律用繁體（Muse ASR 對台灣口音也回簡體）
+  const words = await toTraditional(collapseRepeats(anchored ? deltasToWords(media.id, deltas.flatMap((d) => d!), env) : turnsToWords(media.id, all, env)));
   return { words, segments: segments.length, coverage: coverage(all, env, 0, media.duration), turns: all };
 }

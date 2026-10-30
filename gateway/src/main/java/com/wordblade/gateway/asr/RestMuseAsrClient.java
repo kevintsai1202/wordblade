@@ -50,13 +50,14 @@ public class RestMuseAsrClient implements MuseAsrClient {
         // Meta 對這種寫法回 400「Malformed multipart body」（2026-10-27 實測；拿掉就 200）
         String boundary = "wordblade-" + UUID.randomUUID();
         byte[] payload = multipart(boundary, json.writeValueAsString(request), wav);
-        String body;
+        byte[] body;
         try {
             body = rest.post().uri("/v1/asr/transcribe")
                     .contentType(MediaType.parseMediaType("multipart/form-data; boundary=" + boundary))
                     .accept(MediaType.TEXT_EVENT_STREAM)
                     .body(payload)
-                    .retrieve().body(String.class);
+                    // 讀成位元組再用 UTF-8 解：Meta 的 text/event-stream 不帶 charset，body(String.class) 會當 ISO-8859-1，中文變亂碼
+                    .retrieve().body(byte[].class);
         } catch (RestClientResponseException e) {
             // 上游的錯誤訊息只記 log（前 300 字），不回給桌面
             String detail = e.getResponseBodyAsString();
@@ -66,7 +67,7 @@ public class RestMuseAsrClient implements MuseAsrClient {
             log.warn("ASR upstream unreachable: {}", e.getMessage());
             throw new AsrUpstreamException(0, "ASR upstream unreachable");
         }
-        return parse(body);
+        return parse(body == null ? "" : new String(body, StandardCharsets.UTF_8));
     }
 
     /** 組 multipart 本體：request（JSON）與 audio（WAV）兩個 part，part 只帶 Content-Disposition 與 Content-Type */
