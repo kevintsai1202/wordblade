@@ -2,7 +2,7 @@
 // 點字：播放頭跳到那個字；Shift＋點：選一段；Delete／Backspace：剪掉選的字（cutWords，V1 漣漪＋跨軌規則）；
 // 雙擊：就地改字（editWords，字數變了在原本的總時間內重新分配）；Esc：取消選取或編輯。每次剪或改都是一筆可復原的編輯。
 import { useMemo, useState, type Dispatch, type KeyboardEvent } from "react";
-import { timelineWords, type Caption, type TimelineWord } from "../core/captions";
+import { joinWords, needsSpace, timelineWords, type Caption, type TimelineWord } from "../core/captions";
 import type { Project } from "../core/model";
 import { formatTimecode, type Action } from "./state";
 
@@ -51,14 +51,14 @@ export function TranscriptTab({ project, captions, playhead, dispatch }: { proje
   /** 雙擊：改選取的字（雙擊的字不在選取裡就只改那一個字） */
   const onDoubleClick = (i: number) => {
     const range = selected(i) && selection ? { from: selection.from, to: selection.to } : { from: i, to: i };
-    setEditing({ ...range, draft: words.slice(range.from, range.to + 1).map((w) => w.text).join(" ") });
+    setEditing({ ...range, draft: joinWords(words.slice(range.from, range.to + 1).map((w) => w.text)) });
   };
 
   /** 送出改字 */
   const commitEdit = () => {
     if (!editing) return;
     const ids = [...new Set(words.slice(editing.from, editing.to + 1).map((w) => w.id))];
-    const before = words.slice(editing.from, editing.to + 1).map((w) => w.text).join(" ");
+    const before = joinWords(words.slice(editing.from, editing.to + 1).map((w) => w.text));
     if (editing.draft.trim() && editing.draft.trim() !== before) dispatch({ type: "commit", edits: [{ kind: "editWords", wordIds: ids, text: editing.draft }] });
     setEditing(null);
     setSelection(null);
@@ -89,7 +89,8 @@ export function TranscriptTab({ project, captions, playhead, dispatch }: { proje
               const active = playhead >= word.start && playhead < word.end;
               return (
                 <span key={`${word.clipId ?? ""}:${word.id}`}>
-                  {n > 0 && " "}
+                  {/* 詞間空白：中文字之間不加 */}
+                  {n > 0 && needsSpace(list[n - 1].word.text, word.text) && " "}
                   <span
                     className={`word${active ? " playing" : ""}${selected(index) ? " selected" : ""}`}
                     data-word-id={word.id}

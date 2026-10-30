@@ -46,7 +46,24 @@ export interface Caption {
   lines: string[];
   /** 每一行的詞 id（逐字高亮用；和 lines 一一對應） */
   lineWordIds: string[][];
+  /** 每一行的詞文字（和 lineWordIds 一一對應；排版用，中文的行沒有空白可以切） */
+  lineWords: string[][];
   wordIds: string[];
+}
+
+/** 不用空白分詞的文字：漢字、日文假名、全形標點（CJK 符號、全形字元） */
+const NO_SPACE = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}　-〿＀-￯]/u;
+
+/** 兩個相鄰的詞之間要不要空白：任一邊貼著的是中文、日文或全形標點就不要（中英交界照舊加） */
+export function needsSpace(prev: string, next: string): boolean {
+  const a = [...prev].pop() ?? "";
+  const b = [...next][0] ?? "";
+  return !(NO_SPACE.test(a) && NO_SPACE.test(b)) && !/^[　-〿＀-￯]$/u.test(b) && !/^[　-〿＀-￯]$/u.test(a);
+}
+
+/** 把詞接成一串文字：英文詞間一個空白，中文字之間不加（2026-10-31 開發者回饋：中文字幕不要「我 們 接 下 來」） */
+export function joinWords(words: string[]): string {
+  return words.reduce((out, w, i) => (i === 0 ? w : out + (needsSpace(words[i - 1], w) ? " " : "") + w), "");
 }
 
 /** 去掉標點、轉小寫，用來比對詞表 */
@@ -95,16 +112,16 @@ export function breakLines(words: string[], maxChars: number = MAX_LINE_CHARS): 
   const lines: string[][] = [];
   let rest = words;
   while (rest.length > 0) {
-    if (rest.join(" ").length <= maxChars) {
+    if (joinWords(rest).length <= maxChars) {
       lines.push(rest);
       break;
     }
     // 先求總行數最少（這一行＋剩下的字至少要幾行），只在行數最少的斷點裡比分數
     const candidates: { k: number; lines: number; score: number }[] = [];
     for (let k = 1; k < rest.length; k++) {
-      const len = rest.slice(0, k).join(" ").length;
+      const len = joinWords(rest.slice(0, k)).length;
       if (len > maxChars) break;
-      const restLen = rest.slice(k).join(" ").length;
+      const restLen = joinWords(rest.slice(k)).length;
       candidates.push({ k, lines: 1 + Math.ceil(restLen / maxChars), score: breakScore(rest, k, len, restLen <= maxChars, maxChars) });
     }
     const fewest = Math.min(...candidates.map((c) => c.lines));
@@ -193,8 +210,9 @@ export function buildCaptions(project: Project): Caption[] {
     id: g[0].id,
     start: g[0].start,
     end: g[g.length - 1].end,
-    lines: sentenceLines(g, overrides).map((line) => line.map((w) => w.text).join(" ")),
+    lines: sentenceLines(g, overrides).map((line) => joinWords(line.map((w) => w.text))),
     lineWordIds: sentenceLines(g, overrides).map((line) => line.map((w) => w.id)),
+    lineWords: sentenceLines(g, overrides).map((line) => line.map((w) => w.text)),
     wordIds: g.map((w) => w.id),
   }));
   // 顯示時間：至少 1 秒、閱讀速度不超過每秒 17 字元，但不超過 7 秒、不蓋到下一段
