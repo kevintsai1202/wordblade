@@ -1,5 +1,5 @@
 // 字幕（spec §5.2 第 5 步、D26）：字幕不另存文字，是「V1 上片段用到的詞＋斷句規則＋CaptionBreak」算出來的。
-// 規則以英文為主：句末標點或停頓 ≥ 0.5 秒斷句；每行最多 42 字元、每段最多 2 行；
+// 規則以英文為主：句末標點（含全形。？！）或停頓 ≥ 0.5 秒斷句；每行最多 42 字元（中文字算 2.2 個，約 19 字）、每段最多 2 行；
 // 優先斷在逗號／分號／冒號之後，其次是連接詞與介系詞之前；冠詞、介系詞不留在行尾；不拆開數字與單位；
 // 每段最短 1 秒、最長 7 秒；閱讀速度上限每秒 17 字元（超過就延長顯示，不蓋到下一段）。
 import type { Project, Seconds } from "./model";
@@ -15,8 +15,10 @@ const SENTENCE_PAUSE: Seconds = 0.5;
 /** 每段字幕的最短與最長顯示時間（秒） */
 const MIN_CAPTION: Seconds = 1;
 const MAX_CAPTION: Seconds = 7;
-/** 閱讀速度上限（字元／秒） */
+/** 閱讀速度上限（字元／秒；中文字依 CJK_WIDTH 折算，約每秒 7.7 字） */
 const MAX_CPS = 17;
+/** 一個中文字（漢字、假名、全形標點）算幾個英文字元寬：每行 42 → 約 19 個中文字（2026-10-31 開發者回饋：中文一行太長） */
+const CJK_WIDTH = 2.2;
 
 /** 斷行時偏好斷在它之前的連接詞 */
 const CONJUNCTIONS = new Set(["and", "but", "so", "or", "because", "if", "when", "while", "although", "though", "unless", "until", "since", "then", "which", "that"]);
@@ -61,6 +63,13 @@ export function needsSpace(prev: string, next: string): boolean {
   return !(NO_SPACE.test(a) && NO_SPACE.test(b)) && !/^[　-〿＀-￯]$/u.test(b) && !/^[　-〿＀-￯]$/u.test(a);
 }
 
+/** 顯示寬度（英文字元數；中文字算 CJK_WIDTH 個） */
+export function displayLength(text: string): number {
+  let n = 0;
+  for (const c of text) n += NO_SPACE.test(c) ? CJK_WIDTH : 1;
+  return n;
+}
+
 /** 把詞接成一串文字：英文詞間一個空白，中文字之間不加（2026-10-31 開發者回饋：中文字幕不要「我 們 接 下 來」） */
 export function joinWords(words: string[]): string {
   return words.reduce((out, w, i) => (i === 0 ? w : out + (needsSpace(words[i - 1], w) ? " " : "") + w), "");
@@ -97,7 +106,7 @@ function breakScore(words: string[], k: number, lineLength: number, restFits: bo
   const next = bare(words[k]);
   const prevBare = bare(prev);
   let score = (lineLength / maxChars) * 1.5;
-  if (/[,;:]$/.test(prev)) score += 3;
+  if (/[,;:，；：、]$/.test(prev)) score += 3;
   if (CONJUNCTIONS.has(next)) score += 2;
   else if (PREPOSITIONS.has(next)) score += 1;
   if (ARTICLES.has(prevBare) || PREPOSITIONS.has(prevBare)) score -= 5;
@@ -112,16 +121,16 @@ export function breakLines(words: string[], maxChars: number = MAX_LINE_CHARS): 
   const lines: string[][] = [];
   let rest = words;
   while (rest.length > 0) {
-    if (joinWords(rest).length <= maxChars) {
+    if (displayLength(joinWords(rest)) <= maxChars) {
       lines.push(rest);
       break;
     }
     // 先求總行數最少（這一行＋剩下的字至少要幾行），只在行數最少的斷點裡比分數
     const candidates: { k: number; lines: number; score: number }[] = [];
     for (let k = 1; k < rest.length; k++) {
-      const len = joinWords(rest.slice(0, k)).length;
+      const len = displayLength(joinWords(rest.slice(0, k)));
       if (len > maxChars) break;
-      const restLen = joinWords(rest.slice(k)).length;
+      const restLen = displayLength(joinWords(rest.slice(k)));
       candidates.push({ k, lines: 1 + Math.ceil(restLen / maxChars), score: breakScore(rest, k, len, restLen <= maxChars, maxChars) });
     }
     const fewest = Math.min(...candidates.map((c) => c.lines));
@@ -147,7 +156,7 @@ function sentences(words: TimelineWord[], overrides: Map<string, string>): Timel
     current.push(w);
     const next = words[i + 1];
     const kind = overrides.get(w.id);
-    const natural = !next || /[.?!]["')\]]*$/.test(w.text) || next.start - w.end >= SENTENCE_PAUSE;
+    const natural = !next || /[.?!。？！]["')\]」』]*$/.test(w.text) || next.start - w.end >= SENTENCE_PAUSE;
     if (kind === "breakAfter" || (kind !== "joinAfter" && natural)) {
       out.push(current);
       current = [];
@@ -217,7 +226,7 @@ export function buildCaptions(project: Project): Caption[] {
   }));
   // 顯示時間：至少 1 秒、閱讀速度不超過每秒 17 字元，但不超過 7 秒、不蓋到下一段
   captions.forEach((c, i) => {
-    const chars = c.lines.join(" ").length;
+    const chars = displayLength(c.lines.join(" "));
     // 閱讀需要的時間無條件進位到微秒，量化後才不會差一點點超過上限
     const readEnd = c.start + Math.ceil((chars / MAX_CPS) * 1e6) / 1e6;
     const wanted = Math.max(c.end, c.start + MIN_CAPTION, readEnd);

@@ -10,6 +10,8 @@ const gateway = process.env.WORDBLADE_LIVE_GATEWAY;
 const token = process.env.WORDBLADE_LIVE_TOKEN;
 /** 換素材（例如 samples/lecture-a.en.mp4）時只看能不能跑完、印出建議，不比對正確答案、不採用 */
 const OTHER = process.env.WORDBLADE_DIRECTOR_SAMPLE;
+/** 換素材時套用勾選的建議並匯出（$env:WORDBLADE_DIRECTOR_APPLY="1"） */
+const APPLY = process.env.WORDBLADE_DIRECTOR_APPLY === "1";
 const SAMPLE = OTHER ? path.resolve(OTHER) : path.join(import.meta.dirname, "..", "samples", "demo-2min.mp4");
 const truth = JSON.parse(readFileSync(path.join(import.meta.dirname, "..", "samples", "demo-2min.truth.json"), "utf8"));
 
@@ -28,10 +30,12 @@ async function overlapping(rows: Locator, kind: string, a: number, b: number): P
 }
 
 test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({ page }) => {
-  test.setTimeout(900_000);
+  test.setTimeout(APPLY ? 3_000_000 : 900_000);
   await page.addInitScript(([url, tok]) => {
     localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: tok }));
-    for (const k of ["director", "sam", "vibe", "plane3d", "asr"]) localStorage.setItem(`wordblade.consent.${k}`, "yes");
+    for (const k of ["director", "sam", "vibe", "plane3d", "asr", "audio"]) localStorage.setItem(`wordblade.consent.${k}`, "yes");
+    // 匯出寫進 OPFS（不開存檔對話框），再從 OPFS 拿出來
+    localStorage.setItem("wordblade.exportToOpfs", "1");
   }, [gateway!, token!]);
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto("/");
@@ -59,6 +63,24 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
     writeFileSync("output/director-live-transcript.txt", (await page.getByTestId("transcript").innerText()).slice(0, 2000), "utf8");
     await openTab(page, "director");
     await page.screenshot({ path: "output/ui-shots/director-live-other.png" });
+    if (APPLY) {
+      // 套用勾選的建議 → 匯出整支 → 存成 output/director-live-export.mp4（人工看剪出來的樣子）
+      await page.getByTestId("director-apply-checked").click();
+      await expect(page.getByTestId("director-apply-checked")).toHaveCount(0, { timeout: 900_000 });
+      console.log(`套用：${await page.getByTestId("director-message").innerText()}`);
+      await openTab(page, "export");
+      await page.getByTestId("export-start").click();
+      await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 1_400_000 });
+      const b64 = await page.evaluate(async () => {
+        const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("exports");
+        const bytes = new Uint8Array(await (await (await dir.getFileHandle("wordblade-export.mp4")).getFile()).arrayBuffer());
+        let s = "";
+        for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+        return btoa(s);
+      });
+      writeFileSync("output/director-live-export.mp4", Buffer.from(b64, "base64"));
+      console.log("匯出：output/director-live-export.mp4");
+    }
     return;
   }
   const mask = await overlapping(rows, "mask", truth.apiKey.start, truth.apiKey.end);

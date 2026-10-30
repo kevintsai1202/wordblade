@@ -128,4 +128,17 @@ describe("joinWords（中文字之間不加空白）", () => {
     expect(cap.lines).toEqual(["我們接下來介紹 Spring MVC。"]);
     expect(cap.lineWords[0]).toEqual(["我", "們", "接", "下", "來", "介", "紹", "Spring", "MVC。"]);
   });
+
+  it("中文：全形句號／問號斷句；一行最多約 19 個中文字（中文字寬算 2.2 個英文字元）", () => {
+    let t = 0;
+    const text = "這是一個很長的句子用來測試中文字幕每一行最多可以放多少個字才不會太寬喔。好？";
+    const words = [...text].map((c, i) => {
+      const word = { id: `w${i}`, mediaId: "m1", text: c, start: t, end: t + 0.15 };
+      t += 0.17;
+      return word;
+    });
+    const caps = buildCaptions(projectWith(words));
+    expect(caps[caps.length - 1].lines.join("/")).toBe("好？");
+    for (const c of caps) for (const line of c.lines) expect([...line].length).toBeLessThanOrEqual(19);
+  });
 });

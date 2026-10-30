@@ -22,4 +22,9 @@ describe("toTraditional", () => {
     const tw = [w("e", "繁體", 0)];
     expect((await toTraditional(tw)).map((x) => x.text)).toEqual(["繁體"]);
   });
+
+  it("中文逐字稿的半形標點轉全形（，？！：；，句號只在漢字後面）；Node.js、1,000 不動", async () => {
+    const words = [w("a", "功能.", 0), w("b", "好,", 0.5), w("c", "那", 1), w("d", "MVC", 1.3), w("e", "?", 1.6), w("f", "Node.js", 2), w("g", "1,000", 2.5), w("h", "嗎?", 3)];
+    expect((await toTraditional(words)).map((x) => x.text)).toEqual(["功能。", "好，", "那", "MVC", "？", "Node.js", "1,000", "嗎？"]);
+  });
 });
