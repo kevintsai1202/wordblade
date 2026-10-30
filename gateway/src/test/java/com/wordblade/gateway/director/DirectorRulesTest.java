@@ -196,4 +196,16 @@ class DirectorRulesTest {
         assertThat(DirectorRules.allowedKinds("plain")).containsExactlyInAnyOrder("cut", "fix", "mask", "zoom", "captionStyle", "intro");
         assertThat(DirectorRules.allowedKinds("bogus")).isEqualTo(DirectorRules.allowedKinds("plain"));
     }
+
+    @Test
+    void 改字的詞部分重疊_後面那個退回_不同詞時間重疊沒關係() {
+        var r = DirectorRules.check(json.readTree("{" + CHAPTERS + """
+                ,"items":[
+                 {"id":"i1","kind":"fix","start":26.2,"end":30.2,"purpose":"p","wordIds":["m:w1","m:w2"],"text":"Spring MVC"},
+                 {"id":"i2","kind":"fix","start":26.8,"end":29.1,"purpose":"p","wordIds":["m:w2"],"text":"MVC"},
+                 {"id":"i3","kind":"fix","start":27,"end":28,"purpose":"p","wordIds":["m:w3"],"text":"Boot"}
+                ]}"""), 100, scenes, Set.of("m:w1", "m:w2", "m:w3"), activities);
+        assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1", "i3");
+        assertThat(r.errors()).hasSize(1).allMatch(e -> e.message().contains("same words"));
+    }
 }

@@ -21,7 +21,7 @@ import tools.jackson.databind.JsonNode;
  * - 放大至少 6 秒，兩次放大之間至少隔 5 秒（不要一句話放大一次）。
  * - 時間夾在片長內；各種類必填欄位（遮罩的名詞片語、轉場的場景、改字的詞 id、放大的活動區或框、吉祥物的目標框、字幕樣式、配樂描述、片頭標題）。
  * - 3D 轉場只能在章節交界（離某個章節起點 3 秒內）、長 2～6 秒、最多 3 個、彼此相隔 30 秒；特效每 20 秒最多 1 個、整支最多 5 個；吉祥物最多 1 次。
- * - 畫面類（放大、特效、轉場、吉祥物）彼此不重疊；剪的重疊取聯集；改字以詞為準。
+ * - 畫面類（放大、特效、轉場、吉祥物）彼此不重疊；剪的重疊取聯集；改字以詞為準（同一個詞只能被改一次）。
  * 舊名稱 camera 當作 transition。前端 src/director/suggestions.ts 的 clampSuggestions 再做一次簡化版檢查。
  */
 public final class DirectorRules {
@@ -322,7 +322,14 @@ public final class DirectorRules {
         for (Suggestion s : sorted) {
             String where = s.id() + " (" + s.kind() + ")";
             if (s.kind().equals("fix")) {
+                // 改字以詞為準：完全相同的去掉；部分重疊（同一個詞被改兩次）退回，免得套用時互相蓋掉
                 if (out.stream().anyMatch(o -> o.kind().equals("fix") && o.payload().get("wordIds").equals(s.payload().get("wordIds")))) continue;
+                Suggestion clash = out.stream().filter(o -> o.kind().equals("fix")
+                        && ((List<?>) o.payload().get("wordIds")).stream().anyMatch(((List<?>) s.payload().get("wordIds"))::contains)).findFirst().orElse(null);
+                if (clash != null) {
+                    errors.add(error(where + " changes some of the same words as " + clash.id() + "; merge them into one fix covering all the words."));
+                    continue;
+                }
             } else if (s.kind().equals("cut") || s.kind().equals("mask")) {
                 Suggestion prev = out.stream().filter(o -> o.kind().equals(s.kind()) && s.start() < o.end()).findFirst().orElse(null);
                 if (prev != null) {

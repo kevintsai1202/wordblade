@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { openTab } from "./helpers/tabs";
 
@@ -28,7 +28,7 @@ async function overlapping(rows: Locator, kind: string, a: number, b: number): P
 }
 
 test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({ page }) => {
-  test.setTimeout(420_000);
+  test.setTimeout(900_000);
   await page.addInitScript(([url, tok]) => {
     localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: tok }));
     for (const k of ["director", "sam", "vibe", "plane3d", "asr"]) localStorage.setItem(`wordblade.consent.${k}`, "yes");
@@ -45,12 +45,19 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
   await expect(page.getByTestId("director-ask")).toBeEnabled({ timeout: 120_000 });
   const t0 = Date.now();
   await page.getByTestId("director-ask").click();
-  await expect(page.getByTestId("director-message")).toBeVisible({ timeout: 300_000 });
+  await expect(page.getByTestId("director-message")).toBeVisible({ timeout: 600_000 });
   console.log(`導演實機：${((Date.now() - t0) / 1000).toFixed(1)} 秒；${await page.getByTestId("director-message").innerText()}`);
   const rows = page.getByTestId("director-list");
   for (const row of await page.getByTestId("director-row").all()) console.log(`  ${await row.getAttribute("data-kind")} ${await row.getAttribute("data-start")}–${await row.getAttribute("data-end")} ${(await row.innerText()).replace(/\s+/g, " ")}`);
+  // 導演構想（docs/plan-10-30-director3.md）：觀眾與觀眾會看不清的問題
+  for (const note of await page.getByTestId("director-treatment").locator("summary, li").allTextContents().catch(() => [] as string[])) console.log(`  構想：${note}`);
   if (OTHER) {
     await expect(page.getByTestId("director-row").first()).toBeVisible();
+    // 逐字稿開頭（中文要是繁體，src/asr/traditional.ts）；寫成 UTF-8 檔，免得主控台編碼亂掉
+    await openTab(page, "transcript");
+    mkdirSync("output", { recursive: true });
+    writeFileSync("output/director-live-transcript.txt", (await page.getByTestId("transcript").innerText()).slice(0, 2000), "utf8");
+    await openTab(page, "director");
     await page.screenshot({ path: "output/ui-shots/director-live-other.png" });
     return;
   }
