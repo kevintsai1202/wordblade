@@ -3,8 +3,6 @@
   "additionalProperties": false,
   "required": [
     "summary",
-    "chapters",
-    "retakes",
     "privacy",
     "highlights",
     "activities",
@@ -13,52 +11,6 @@
   "properties": {
     "summary": {
       "type": "string"
-    },
-    "chapters": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "title",
-          "start",
-          "quote"
-        ],
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "start": {
-            "type": "number"
-          },
-          "quote": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "retakes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "start",
-          "end",
-          "reason"
-        ],
-        "properties": {
-          "start": {
-            "type": "number"
-          },
-          "end": {
-            "type": "number"
-          },
-          "reason": {
-            "type": "string"
-          }
-        }
-      }
     },
     "privacy": {
       "type": "array",

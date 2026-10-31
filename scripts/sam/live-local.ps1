@@ -24,7 +24,7 @@ function Write-Log([string]$Message) {
 
 # .env 的金鑰與模型 ID 放進環境變數（只放有值的）
 foreach ($line in Get-Content (Join-Path $Root '.env')) {
-  if ($line -match '^\s*(META_API_KEY|WORDBLADE_MODEL_[A-Z]+)\s*=\s*(.+?)\s*$') { Set-Item "Env:$($Matches[1])" $Matches[2] }
+  if ($line -match '^\s*(META_API_KEY|TYPESAFE_API_KEY|WORDBLADE_MODEL_[A-Z]+)\s*=\s*(.+?)\s*$') { Set-Item "Env:$($Matches[1])" $Matches[2] }
 }
 if (-not $env:META_API_KEY) { throw '.env 沒有 META_API_KEY' }
 
@@ -71,7 +71,7 @@ try {
   $usage = docker exec $Db psql -U wordblade -d wordblade -t -c "SELECT route, COUNT(*), SUM(units) FROM usage_log GROUP BY route" | Out-String
   Write-Log "用量：$($usage.Trim())"
 } finally {
-  Remove-Item Env:WORDBLADE_DIRECTOR_SAMPLE, Env:WORDBLADE_LIVE_TOKEN, Env:WORDBLADE_LIVE_GATEWAY, Env:WORDBLADE_E2E_PORT, Env:META_API_KEY -ErrorAction SilentlyContinue
+  Remove-Item Env:WORDBLADE_DIRECTOR_SAMPLE, Env:WORDBLADE_LIVE_TOKEN, Env:WORDBLADE_LIVE_GATEWAY, Env:WORDBLADE_E2E_PORT, Env:META_API_KEY, Env:TYPESAFE_API_KEY -ErrorAction SilentlyContinue
   if ($gateway) { Stop-Process -Id $gateway.Id -ErrorAction SilentlyContinue }
   docker stop $Db *> $null
   Write-Log '已收掉閘道與臨時資料庫'

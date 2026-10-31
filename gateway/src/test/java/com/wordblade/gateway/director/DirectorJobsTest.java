@@ -77,7 +77,7 @@ class DirectorJobsTest {
             {"treatment":{"audience":"devs","problems":[{"id":"p1","start":98,"end":102,"what":"switch to the editor"},{"id":"p2","start":150,"end":154,"what":"result is easy to miss"}]},
              "chapters":[{"title":"Setup","start":0,"end":100},{"title":"Code","start":100,"end":200}],
              "items":[
-              {"id":"i1","kind":"cut","start":102,"end":104,"chapter":1,"purpose":"Remove the stumble","quote":"sorry"},
+              {"id":"i1","kind":"cut","reason":"silence","start":102,"end":104,"chapter":1,"purpose":"Remove the stumble","quote":"sorry"},
               {"id":"i2","kind":"transition","start":98,"end":102,"chapter":1,"problem":"p1","purpose":"Into the code part","quote":"Now let's write it","scene":"desk-reveal"},
               {"id":"i3","kind":"effect","start":150,"end":154,"chapter":1,"problem":"p2","purpose":"Celebrate","quote":"it works","description":"Confetti"}
              ]}""";
@@ -101,8 +101,8 @@ class DirectorJobsTest {
         assertThat(v.status()).isEqualTo("planned");
         assertThat(v.chapters()).extracting(DirectorRules.Chapter::title).containsExactly("Setup", "Code");
         assertThat(v.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i2", "i1", "i3");
-        // 規劃者收到的是素材時間：第二段的重講在 102～104 秒、活動區 a100 在 110～120 秒＋ Spark 確認的內容
-        assertThat(planner.received.get(0)).contains("\"start\":102").contains("desk-reveal").contains("\"id\":\"a100\"").contains("typing code in index.js");
+        // 規劃者收到的是素材時間：第二段的隱私在 105～108 秒、活動區 a100 在 110～120 秒＋ Spark 確認的內容
+        assertThat(planner.received.get(0)).contains("\"start\":105").contains("desk-reveal").contains("\"id\":\"a100\"").contains("typing code in index.js");
         // Spark 收到的逐字稿帶著這段的活動區（段內秒數）
         assertThat(spark.transcripts.get(1)).contains("m:w2").contains("a100").contains("[10.0–20.0]");
         assertThat(usage).containsExactly("7:fake-spark", "7:fake-spark", "7:fake-planner");
@@ -134,7 +134,7 @@ class DirectorJobsTest {
         planner.replies.add("""
                 {"chapters":[{"title":"Setup","start":0,"end":100},{"title":"Code","start":100,"end":200}],
                  "items":[
-                  {"id":"i1","kind":"cut","start":102,"end":104,"purpose":"Remove the stumble","quote":"sorry"},
+                  {"id":"i1","kind":"cut","reason":"silence","start":102,"end":104,"purpose":"Remove the stumble","quote":"sorry"},
                   {"id":"i2","kind":"transition","start":99,"end":103,"problem":"p1","purpose":"Into the code part","quote":"Now let's write it","scene":"desk-reveal"},
                   {"id":"i4","kind":"mask","start":5,"end":8,"purpose":"Hide the key","target":"API key"}
                  ]}""");
@@ -156,7 +156,7 @@ class DirectorJobsTest {
     @Test
     void 規劃不合格就帶錯誤重問一次_還沒規劃完不能審查() {
         planner.replies.add("{\"treatment\":{\"problems\":[{\"id\":\"p1\"}]},\"chapters\":[{\"title\":\"A\",\"start\":0,\"end\":200}],\"items\":[{\"id\":\"i1\",\"kind\":\"transition\",\"start\":1,\"end\":4,\"problem\":\"p1\",\"purpose\":\"p\",\"quote\":\"q\",\"scene\":\"moon\"}]}");
-        planner.replies.add("{\"chapters\":[{\"title\":\"A\",\"start\":0,\"end\":200}],\"items\":[{\"id\":\"i1\",\"kind\":\"cut\",\"start\":1,\"end\":4,\"purpose\":\"p\",\"quote\":\"q\"}]}");
+        planner.replies.add("{\"chapters\":[{\"title\":\"A\",\"start\":0,\"end\":200}],\"items\":[{\"id\":\"i1\",\"kind\":\"cut\",\"reason\":\"silence\",\"start\":1,\"end\":4,\"purpose\":\"p\",\"quote\":\"q\"}]}");
         String id = jobs.start(7, req);
         assertThatThrownBy(() -> jobs.review(7, id, null)).isInstanceOf(IllegalArgumentException.class);
         jobs.addSegment(7, id, 0, meta(0, 100, "m:w1"), new byte[3]);
@@ -217,6 +217,56 @@ class DirectorJobsTest {
         assertThat(planner.received.get(0)).contains("\"style\":\"plain\"").doesNotContain("desk-reveal");
         assertThat(planner.received.get(1)).contains("not allowed in the \"plain\" style").contains("treatment");
         assertThat(jobs.view(7, id).suggestions()).extracting(DirectorRules.Suggestion::kind).containsExactly("cut");
+    }
+
+    /** 一段的資訊：用給定的詞（RetakeFinderTest 的中文錄影） */
+    private static DirectorJobs.SegmentMeta metaWith(double start, double end, List<DirectorJobs.Word> words) {
+        return new DirectorJobs.SegmentMeta(start, end, words, List.of());
+    }
+
+    @Test
+    void 重講候選交給_Jev_確認_通過的才送規劃者_對上候選的換句話說重講也放行() {
+        // 假 Jev：19→23.5 是重講（0.9），其他不是（0.1）
+        List<String> asked = new java.util.ArrayList<>();
+        DirectorJobs.RetakeJudge judge = (earlier, later) -> {
+            asked.add(earlier);
+            return new DirectorJobs.RetakeVerdict(earlier.startsWith("好我們接下來這個章節") && later.startsWith("我們") ? 0.9 : 0.1, 0.9, 500, "fake-jev");
+        };
+        DirectorJobs withJudge = new DirectorJobs(spark, planner, reviewer, Runnable::run, (t, m, in, out) -> usage.add(t + ":" + m), judge);
+        List<DirectorJobs.Word> words = RetakeFinderTest.lecture();
+        planner.replies.add("""
+                {"treatment":{"problems":[]},"chapters":[{"title":"A","start":0,"end":100}],
+                 "items":[{"id":"i1","kind":"cut","reason":"retake","start":19,"end":23.5,"purpose":"p","quote":"好我們接下來這個章節","retakeCandidate":"r1"}]}""");
+        String id = withJudge.start(7, new DirectorJobs.StartRequest("talk.mp4", 100, 1, List.of(), "plain"));
+        withJudge.addSegment(7, id, 0, metaWith(0, 100, words), new byte[3]);
+        assertThat(asked).isNotEmpty();
+        String brief = planner.received.get(0);
+        assertThat(brief).contains("\"retakeCandidates\"").contains("\"retakeProbability\":0.9").doesNotContain("\"retakeProbability\":0.1");
+        assertThat(withJudge.view(7, id).suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1");
+        assertThat(usage).contains("7:fake-jev");
+    }
+
+    @Test
+    void 沒有_Jev_時候選照樣送但標成未確認() {
+        List<DirectorJobs.Word> words = RetakeFinderTest.lecture();
+        planner.replies.add("{\"treatment\":{\"problems\":[]},\"chapters\":[{\"title\":\"A\",\"start\":0,\"end\":100}],\"items\":[]}");
+        String id = jobs.start(7, new DirectorJobs.StartRequest("talk.mp4", 100, 1, List.of(), "plain"));
+        jobs.addSegment(7, id, 0, metaWith(0, 100, words), new byte[3]);
+        assertThat(planner.received.get(0)).contains("\"retakeCandidates\"").contains("\"verified\":false");
+    }
+
+    @Test
+    void 規則拿得到逐字稿的詞_審查者看得到剪完剩下的逐字稿() {
+        // 剪 0.5～1.5 秒當「沒講話」：範圍內有 m:w1（1 秒）一個詞，容許；審查資料的剩下逐字稿標出剪掉的地方
+        planner.replies.add("""
+                {"treatment":{"problems":[]},"chapters":[{"title":"A","start":0,"end":200}],
+                 "items":[{"id":"i1","kind":"cut","reason":"silence","start":0.5,"end":3,"purpose":"p"},
+                          {"id":"i2","kind":"cut","reason":"silence","start":100.5,"end":103,"purpose":"p"}]}""");
+        reviewer.replies.add("{\"verdicts\":[],\"missing\":[]}");
+        String id = twoSegments();
+        jobs.review(7, id, null);
+        assertThat(reviewer.received.get(0)).contains("\"remainingTranscript\"").contains("[cut 0.5–3.0]").contains("[cut 100.5–103.0]");
+        assertThat(jobs.view(7, id).suggestions()).hasSize(2);
     }
 
     @Test

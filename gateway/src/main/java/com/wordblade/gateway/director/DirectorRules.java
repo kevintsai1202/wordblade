@@ -19,6 +19,7 @@ import tools.jackson.databind.JsonNode;
  * - 畫面類（放大、特效、轉場、吉祥物）要用 problem 指名導演構想裡的一個問題（觀眾看不清、會分心的地方）；構想沒給就沿用上一輪的問題。
  * - 風格（plain／light／playful）決定能用哪些種類；plain 只有剪、改字、遮罩、放大、字幕樣式、片頭。
  * - 放大至少 6 秒，兩次放大之間至少隔 5 秒（不要一句話放大一次）。
+ * - 剪要標種類（retake／silence／head／tail），各有證據條件（重講要和後面的話相近或對上 Jev 確認的候選、沒講話的範圍不能有詞）；改字一項只改一個位置（≤ 1.5 秒、詞連續）。
  * - 時間夾在片長內；各種類必填欄位（遮罩的名詞片語、轉場的場景、改字的詞 id、放大的活動區或框、吉祥物的目標框、字幕樣式、配樂描述、片頭標題）。
  * - 3D 轉場只能在章節交界（離某個章節起點 3 秒內）、長 2～6 秒、最多 3 個、彼此相隔 30 秒；特效每 20 秒最多 1 個、整支最多 5 個；吉祥物最多 1 次。
  * - 畫面類（放大、特效、轉場、吉祥物）彼此不重疊；剪的重疊取聯集；改字以詞為準（同一個詞只能被改一次）。
@@ -58,7 +59,37 @@ public final class DirectorRules {
      * @param style            風格 plain／light／playful（null 或不認得當 plain）
      * @param fallbackProblems 上一輪構想的問題 id（格式修正或審查後重寫時，模型可能漏掉構想）
      */
-    public record Options(String style, Set<String> fallbackProblems) {}
+    public record Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words, List<double[]> confirmedRetakes) {
+        /** 沒有逐字稿的詞（只檢查格式，不做重講、無聲、改字連續的檢查） */
+        public Options(String style, Set<String> fallbackProblems) {
+            this(style, fallbackProblems, List.of(), List.of());
+        }
+
+        /** 沒有 Jev 確認過的重講候選 */
+        public Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words) {
+            this(style, fallbackProblems, words, List.of());
+        }
+    }
+
+    /** 重講的剪對上 Jev 確認的候選：起訖都在幾秒內 */
+    static final double CANDIDATE_TOLERANCE = 1.5;
+
+    /** 剪的種類：重講、沒講話、片頭空白、片尾空白 */
+    static final Set<String> CUT_REASONS = Set.of("retake", "silence", "head", "tail");
+    /** 重講的剪最長幾秒（第一次講到一半放棄、連同後面的空檔；實測 OBS 錄影約 44 秒） */
+    static final double RETAKE_MAX = 60;
+    /** 重講要在剪的結尾之後幾秒內出現 */
+    static final double RESTART_WINDOW = 60;
+    /** 剪掉的內容和後面重講的相似度門檻（字元兩兩一組的 Jaccard；中文單字太常見，用兩字組才分得出來） */
+    static final double RETAKE_SIMILARITY = 0.4;
+    /** 比對的詞數上限 */
+    static final int RETAKE_WORDS = 15;
+    /** 沒講話的剪最短幾秒 */
+    static final double SILENCE_MIN = 2;
+    /** 沒講話、片頭、片尾的範圍內最多容許幾個詞（片尾的一聲 Yeah） */
+    static final int SILENCE_WORDS = 1;
+    /** 改字一項最長幾秒（只改一個位置） */
+    static final double FIX_MAX = 1.5;
 
     /** 各風格能用的種類：plain 給螢幕教學片（預設），light 加 2D 特效與配樂，playful 再加 3D 轉場與吉祥物 */
     static final Map<String, Set<String>> STYLES = Map.of(
@@ -83,7 +114,7 @@ public final class DirectorRules {
     /** 全部最多幾項 */
     static final int TOTAL = 80;
     /** 要引用旁白的種類 */
-    private static final Set<String> NEEDS_QUOTE = Set.of("cut", "zoom", "effect", "transition", "mascot");
+    private static final Set<String> NEEDS_QUOTE = Set.of("zoom", "effect", "transition", "mascot");
     /** 畫面類（彼此不重疊） */
     private static final Set<String> VISUAL = Set.of("zoom", "effect", "transition", "mascot");
     /** 整體項目（時間由規則決定） */
@@ -191,6 +222,8 @@ public final class DirectorRules {
             }
             Map<String, Object> payload = new LinkedHashMap<>();
             String bad = fields(kind, s, payload, scenes, wordIds, activities, start, end, chapters);
+            if (bad == null && kind.equals("cut")) bad = cut(s, payload, quote, start, end, duration, options.words(), options.confirmedRetakes());
+            if (bad == null && kind.equals("fix")) bad = fixSpan(payload, start, end, options.words());
             if (bad != null) {
                 errors.add(error(where + ": " + bad));
                 continue;
@@ -218,7 +251,7 @@ public final class DirectorRules {
     private static String fields(String kind, JsonNode s, Map<String, Object> payload, Set<String> scenes, Set<String> wordIds,
                                  Set<String> activities, double start, double end, List<Chapter> chapters) {
         return switch (kind) {
-            case "cut" -> null;
+            case "cut" -> null; // 種類與證據在 cut() 檢查
             case "mask" -> {
                 String target = s.path("target").asString("").strip();
                 payload.put("target", target);
@@ -286,6 +319,98 @@ public final class DirectorRules {
             }
             default -> "unknown kind";
         };
+    }
+
+    /**
+     * 剪的框架：一定要標種類（reason），各種類有自己的證據條件（有逐字稿的詞才檢查）。
+     * - retake：要引用旁白；最長 60 秒；剪掉的內容要和結尾之後 60 秒內的話相近（重講）。
+     * - silence：至少 2 秒、範圍內最多 1 個詞。
+     * - head／tail：從 0 秒開始／剪到片尾，範圍內最多 1 個詞。
+     */
+    private static String cut(JsonNode s, Map<String, Object> payload, String quote, double start, double end, double duration,
+                              List<DirectorJobs.Word> words, List<double[]> confirmed) {
+        String reason = s.path("reason").asString("").strip();
+        if (!CUT_REASONS.contains(reason)) return "a cut needs \"reason\": one of retake, silence, head, tail. If none fits, do not cut.";
+        payload.put("reason", reason);
+        List<DirectorJobs.Word> inside = words.stream().filter(w -> w.t() >= start && w.t() < end).toList();
+        switch (reason) {
+            case "retake" -> {
+                if (quote.isEmpty()) return "a retake cut needs \"quote\": the abandoned sentence it removes.";
+                if (end - start > RETAKE_MAX) return "a retake cut lasts at most " + (int) RETAKE_MAX + " seconds.";
+                if (words.isEmpty()) return null;
+                if (inside.isEmpty()) return "this retake cut has no speech inside; use reason silence instead.";
+                // Jev 確認過的候選（看得懂換句話說的重講）：起訖對得上就放行
+                if (confirmed.stream().anyMatch(c -> Math.abs(c[0] - start) <= CANDIDATE_TOLERANCE && Math.abs(c[1] - end) <= CANDIDATE_TOLERANCE)) return null;
+                List<DirectorJobs.Word> after = words.stream().filter(w -> w.t() >= end && w.t() < end + RESTART_WINDOW).toList();
+                int k = Math.min(RETAKE_WORDS, inside.size());
+                if (after.isEmpty() || similarity(inside, after.subList(0, Math.min(k, after.size()))) < RETAKE_SIMILARITY)
+                    return "a retake cut must end where the speaker restarts the same thing: the speech right after "
+                            + String.format(java.util.Locale.ROOT, "%.1f", end) + " s does not repeat what is cut. Cut only what is said again later, or do not cut.";
+                return null;
+            }
+            case "silence" -> {
+                if (end - start < SILENCE_MIN) return "a silence cut lasts at least " + (int) SILENCE_MIN + " seconds.";
+            }
+            case "head" -> {
+                if (start > 0.1) return "a head cut starts at 0.";
+            }
+            case "tail" -> {
+                if (end < duration - 0.1) return "a tail cut ends at the end of the video (" + duration + ").";
+            }
+            default -> { }
+        }
+        return inside.size() > SILENCE_WORDS ? "this " + reason + " cut has speech inside (" + inside.size() + " words); never cut speech as " + reason + "." : null;
+    }
+
+    /** 剪掉的詞和後面的詞相不相近：後面的 k 個詞當樣本，在剪掉的詞裡滑動同樣長度的窗，取最高的兩字組 Jaccard */
+    static double similarity(List<DirectorJobs.Word> cut, List<DirectorJobs.Word> after) {
+        String sample = normalize(after);
+        int k = after.size();
+        if (cut.size() < k) return jaccard(normalize(cut), sample);
+        double best = 0;
+        for (int i = 0; i + k <= cut.size(); i++) best = Math.max(best, jaccard(normalize(cut.subList(i, i + k)), sample));
+        return best;
+    }
+
+    /** 詞接成比對用的字串：小寫、去標點；中文字直接相接，英文詞間一個空白 */
+    private static String normalize(List<DirectorJobs.Word> words) {
+        StringBuilder b = new StringBuilder();
+        for (DirectorJobs.Word w : words) {
+            String t = w.text().toLowerCase(java.util.Locale.ROOT).replaceAll("[\\p{P}\\p{S}]", "");
+            if (t.isEmpty()) continue;
+            if (b.length() > 0 && !t.codePoints().allMatch(Character::isIdeographic)) b.append(' ');
+            b.append(t);
+        }
+        return b.toString();
+    }
+
+    /** 兩字組的 Jaccard 相似度 */
+    private static double jaccard(String a, String b) {
+        Set<String> x = bigrams(a);
+        Set<String> y = bigrams(b);
+        long both = x.stream().filter(y::contains).count();
+        long any = x.size() + y.size() - both;
+        return any == 0 ? 0 : (double) both / any;
+    }
+
+    /** 字串的兩字組 */
+    private static Set<String> bigrams(String s) {
+        int[] cps = s.codePoints().toArray();
+        Set<String> out = new java.util.HashSet<>();
+        for (int i = 0; i + 1 < cps.length; i++) out.add(new String(cps, i, 2));
+        return out;
+    }
+
+    /** 改字只改一個位置：最長 1.5 秒；有逐字稿時，要改的詞必須連續 */
+    @SuppressWarnings("unchecked")
+    private static String fixSpan(Map<String, Object> payload, double start, double end, List<DirectorJobs.Word> words) {
+        if (end - start > FIX_MAX) return "a fix covers one place, at most " + FIX_MAX + " seconds. Give each misheard place its own fix.";
+        if (words.isEmpty()) return null;
+        List<String> ids = (List<String>) payload.get("wordIds");
+        List<String> order = words.stream().sorted(Comparator.comparingDouble(DirectorJobs.Word::t)).map(DirectorJobs.Word::id).toList();
+        List<Integer> idx = ids.stream().map(order::indexOf).sorted().toList();
+        for (int i = 1; i < idx.size(); i++) if (idx.get(i) != idx.get(i - 1) + 1) return "a fix changes consecutive words only (one place); split it.";
+        return null;
     }
 
     /** 框 x、y、w、h（0～1）；缺或不合理回 null */

@@ -32,9 +32,13 @@ public class DirectorConfig {
 
     /** 同時最多幾個模型呼叫（排隊最多 20 段，再多回 429：一段可達 20 MB，不讓失控的用戶端吃光記憶體） */
     static final int THREADS = 4;
+    /** 導演各模型呼叫的固定亂數種子 */
+    static final int SEED = 7;
 
     @Bean
     DirectorJobs directorJobs(@Value("${wordblade.meta.base-url}") String baseUrl, @Value("${wordblade.meta.api-key}") String apiKey,
+                              @Value("${wordblade.typesafe.base-url}") String typesafeUrl, @Value("${wordblade.typesafe.api-key:}") String typesafeKey,
+                              @Value("${wordblade.typesafe.model}") String jevModel,
                               ChatClient.Builder chat, GatewayProperties props, UsageService usage) throws IOException {
         JsonMapper json = JsonMapper.builder().build();
         var factory = new SimpleClientHttpRequestFactory();
@@ -46,16 +50,21 @@ public class DirectorConfig {
         var spark = new RestSparkVideoClient(rest, props.models().spark(), segmentPrompt, schema, json);
         String planPrompt = new ClassPathResource("director/plan-prompt.txt").getContentAsString(StandardCharsets.UTF_8);
         var memory = MessageWindowChatMemory.builder().chatMemoryRepository(new InMemoryChatMemoryRepository()).maxMessages(10).build();
-        AiModel planner = new SpringAiModel(chat.build(), memory, planPrompt, props.models().wonder(), "medium");
+        // temperature 0＋固定種子：同一支片兩次規劃的結果穩定（2026-10-31 開發者要求；probe-sampling.mjs 實測 Wonder 兩次回應相同）
+        AiModel planner = new SpringAiModel(chat.build(), memory, planPrompt, props.models().wonder(), "medium", 0.0, SEED);
         // 審查者：同一個模型、另一份系統提示詞與獨立的對話記憶（不看規劃者的對話）
         String reviewPrompt = new ClassPathResource("director/review-prompt.txt").getContentAsString(StandardCharsets.UTF_8);
         var reviewMemory = MessageWindowChatMemory.builder().chatMemoryRepository(new InMemoryChatMemoryRepository()).maxMessages(4).build();
-        AiModel reviewer = new SpringAiModel(chat.build(), reviewMemory, reviewPrompt, props.models().wonder(), "medium");
+        AiModel reviewer = new SpringAiModel(chat.build(), reviewMemory, reviewPrompt, props.models().wonder(), "medium", 0.0, SEED);
         ExecutorService pool = new ThreadPoolExecutor(THREADS, THREADS, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(20), r -> {
             Thread t = new Thread(r, "director");
             t.setDaemon(true);
             return t;
         });
-        return new DirectorJobs(spark, planner, reviewer, pool, (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/director", m, in, out, 0));
+        // 重講候選交給 TypeSafe Jev 判斷（沒設金鑰就不判斷）
+        DirectorJobs.RetakeJudge judge = typesafeKey.isBlank() ? null : new RestJevRetakeJudge(
+                RestClient.builder().baseUrl(typesafeUrl).defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + typesafeKey).requestFactory(factory).build(),
+                jevModel, json);
+        return new DirectorJobs(spark, planner, reviewer, pool, (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/director", m, in, out, 0), judge);
     }
 }

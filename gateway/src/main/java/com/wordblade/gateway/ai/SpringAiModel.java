@@ -27,6 +27,9 @@ public class SpringAiModel implements AiModel {
     private final String systemPrompt;
     private final String model;
     private final String reasoning;
+    /** 取樣溫度與種子（null＝用模型預設）；AI 導演用 0 與固定種子讓同一支片的結果穩定 */
+    private final Double temperature;
+    private final Integer seed;
 
     /**
      * @param chat         ChatClient（底層是 OpenAI 相容的 Muse API）
@@ -36,11 +39,21 @@ public class SpringAiModel implements AiModel {
      * @param reasoning    推理深度
      */
     public SpringAiModel(ChatClient chat, ChatMemory memory, String systemPrompt, String model, String reasoning) {
+        this(chat, memory, systemPrompt, model, reasoning, null, null);
+    }
+
+    /**
+     * @param temperature 取樣溫度（null＝模型預設）
+     * @param seed        亂數種子（null＝不指定）
+     */
+    public SpringAiModel(ChatClient chat, ChatMemory memory, String systemPrompt, String model, String reasoning, Double temperature, Integer seed) {
         this.chat = chat;
         this.memory = memory;
         this.systemPrompt = systemPrompt;
         this.model = model;
         this.reasoning = reasoning;
+        this.temperature = temperature;
+        this.seed = seed;
     }
 
     @Override
@@ -55,6 +68,8 @@ public class SpringAiModel implements AiModel {
                 .options(OpenAiChatOptions.builder()
                         .model(model)
                         .reasoningEffort(reasoning)
+                        .temperature(temperature)
+                        .seed(seed)
                         .responseFormat(OpenAiChatModel.ResponseFormat.builder().type(OpenAiChatModel.ResponseFormat.Type.JSON_OBJECT).build()))
                 .call()
                 .chatResponse();

@@ -78,6 +78,21 @@ public class DirectorJobs {
         AiModel.Reply analyze(byte[] mp4, double length, String transcript);
     }
 
+    /** Jev 對一個重講候選的判斷：重講的機率、重講那句講完整的機率 */
+    public record RetakeVerdict(double retake, double complete, long inputTokens, String model) {}
+
+    /** 判斷重講候選的模型（TypeSafe Jev；System One 回機率，同樣的輸入結果穩定） */
+    @FunctionalInterface
+    public interface RetakeJudge {
+        RetakeVerdict judge(String earlier, String later);
+    }
+
+    /** 重講候選與 Jev 的判斷（verdict 是 null：沒有 Jev 或判斷失敗，未確認） */
+    record JudgedRetake(RetakeFinder.Candidate candidate, RetakeVerdict verdict) {}
+
+    /** Jev 判斷是重講的門檻（2026-10-31 實測 7 題：正例 0.66～0.86、反例 ≤ 0.07） */
+    static final double RETAKE_THRESHOLD = 0.6;
+
     /** 記用量 */
     @FunctionalInterface
     public interface UsageRecorder {
@@ -115,6 +130,8 @@ public class DirectorJobs {
         volatile JsonNode treatment;
         /** 構想的問題 id（之後幾輪模型漏給構想時沿用） */
         volatile Set<String> problemIds = Set.of();
+        /** 送給規劃者的重講候選（Jev 確認過的；沒有 Jev 時是未確認的全部） */
+        volatile List<JudgedRetake> retakes = List.of();
 
         Job(long tokenId, StartRequest req) {
             this.tokenId = tokenId;
@@ -127,6 +144,8 @@ public class DirectorJobs {
     private final AiModel reviewer;
     private final Executor executor;
     private final UsageRecorder usage;
+    /** 判斷重講候選（沒設 TypeSafe 金鑰時是 null，候選標成未確認） */
+    private final RetakeJudge judge;
     private final JsonMapper json = JsonMapper.builder().build();
     private final Map<String, Job> jobs = new ConcurrentHashMap<>();
 
@@ -135,11 +154,17 @@ public class DirectorJobs {
      * @param reviewer 審查者（Muse Wonder，另一份系統提示詞 director/review-prompt.txt、獨立對話）
      */
     public DirectorJobs(SegmentModel spark, AiModel planner, AiModel reviewer, Executor executor, UsageRecorder usage) {
+        this(spark, planner, reviewer, executor, usage, null);
+    }
+
+    /** @param judge 判斷重講候選的 Jev（null：不判斷，候選標成未確認） */
+    public DirectorJobs(SegmentModel spark, AiModel planner, AiModel reviewer, Executor executor, UsageRecorder usage, RetakeJudge judge) {
         this.spark = spark;
         this.planner = planner;
         this.reviewer = reviewer;
         this.executor = executor;
         this.usage = usage;
+        this.judge = judge;
     }
 
     /** 建工作；回傳工作 id */
@@ -229,6 +254,7 @@ public class DirectorJobs {
             return;
         }
         try {
+            job.retakes = judgeRetakes(job);
             DirectorRules.Result result = askPlanner(job, brief(job));
             job.chapters = result.chapters();
             job.suggestions = result.suggestions();
@@ -254,7 +280,7 @@ public class DirectorJobs {
             AiModel.Reply r = planner.call(job.plannerConversation, message, sheet);
             usage.record(job.tokenId, r.model(), r.inputTokens(), r.outputTokens());
             result = DirectorRules.check(read(r.text()), job.req.duration(), s.scenes(), s.words(), s.activities(),
-                    new DirectorRules.Options(job.req.style(), job.problemIds));
+                    new DirectorRules.Options(job.req.style(), job.problemIds, allWords(job), confirmedRetakes(job)));
             if (result.treatment() != null) job.treatment = result.treatment();
             job.problemIds = result.problemIds();
             if (result.errors().isEmpty() || round == MAX_ROUNDS) break;
@@ -362,7 +388,7 @@ public class DirectorJobs {
             seg.put("start", round1(meta.start()));
             seg.put("end", round1(meta.end()));
             seg.put("summary", report.path("summary").asString(""));
-            for (String key : List.of("chapters", "retakes", "privacy", "highlights")) {
+            for (String key : List.of("privacy", "highlights")) {
                 ArrayNode list = seg.putArray(key);
                 report.path(key).forEach(item -> {
                     ObjectNode copy = ((ObjectNode) item).deepCopy();
@@ -399,6 +425,18 @@ public class DirectorJobs {
                 copy.put("end", round1(ts.stream().max(Double::compare).get() + 0.5));
                 misheard.add(copy);
             });
+        }
+        // 重講候選（本機找、Jev 判斷）：規劃者依這些決定 retake 的剪
+        ArrayNode retakes = root.putArray("retakeCandidates");
+        for (JudgedRetake r : job.retakes) {
+            ObjectNode o = retakes.addObject();
+            RetakeFinder.Candidate c = r.candidate();
+            o.put("id", c.id()).put("start", round1(c.start())).put("end", round1(c.end())).put("earlier", c.earlier()).put("later", c.later());
+            o.put("verified", r.verdict() != null);
+            if (r.verdict() != null) {
+                o.put("retakeProbability", round2(r.verdict().retake()));
+                o.put("laterCompleteProbability", round2(r.verdict().complete()));
+            }
         }
         return json.writeValueAsString(root);
     }
@@ -445,7 +483,59 @@ public class DirectorJobs {
             SegmentMeta meta = job.metas.get(i);
             if (meta != null) transcriptLines(meta.words()).forEach(transcript::add);
         }
+        // 剪完剩下的逐字稿：審查者檢查「剪完有沒有重複講、有沒有剪掉需要的內容」
+        List<double[]> cuts = job.suggestions.stream().filter(s -> s.kind().equals("cut")).map(s -> new double[] {s.start(), s.end()})
+                .sorted(java.util.Comparator.comparingDouble(c -> c[0])).toList();
+        List<Word> kept = allWords(job).stream().filter(w -> cuts.stream().noneMatch(c -> w.t() >= c[0] && w.t() < c[1])).toList();
+        ArrayNode remaining = root.putArray("remainingTranscript");
+        int k = 0;
+        List<Word> run = new ArrayList<>();
+        for (Word w : kept) {
+            while (k < cuts.size() && cuts.get(k)[0] <= w.t()) {
+                if (!run.isEmpty()) transcriptLines(run).forEach(remaining::add);
+                run = new ArrayList<>();
+                remaining.add(String.format(Locale.ROOT, "[cut %.1f–%.1f]", cuts.get(k)[0], cuts.get(k)[1]));
+                k++;
+            }
+            run.add(w);
+        }
+        if (!run.isEmpty()) transcriptLines(run).forEach(remaining::add);
+        for (; k < cuts.size(); k++) remaining.add(String.format(Locale.ROOT, "[cut %.1f–%.1f]", cuts.get(k)[0], cuts.get(k)[1]));
         return json.writeValueAsString(root);
+    }
+
+    /**
+     * 重講候選：本機找（RetakeFinder），有 Jev 就逐一判斷，只留重講機率 ≥ 0.6 的；沒有 Jev 或判斷失敗，候選標成未確認照樣送。
+     */
+    private List<JudgedRetake> judgeRetakes(Job job) {
+        List<JudgedRetake> out = new ArrayList<>();
+        for (RetakeFinder.Candidate c : RetakeFinder.find(allWords(job))) {
+            if (job.cancelled) break;
+            RetakeVerdict v = null;
+            if (judge != null) {
+                try {
+                    v = judge.judge(c.earlier(), c.later());
+                    usage.record(job.tokenId, v.model(), v.inputTokens(), 0);
+                } catch (RuntimeException e) {
+                    log.warn("retake judge failed: {}", e.getMessage());
+                }
+            }
+            if (v == null || v.retake() >= RETAKE_THRESHOLD) out.add(new JudgedRetake(c, v));
+        }
+        return out;
+    }
+
+    /** Jev 確認過的重講範圍（規則用來放行換句話說的重講） */
+    private static List<double[]> confirmedRetakes(Job job) {
+        return job.retakes.stream().filter(r -> r.verdict() != null).map(r -> new double[] {r.candidate().start(), r.candidate().end()}).toList();
+    }
+
+    /** 全部段落的詞（素材時間、依時間排序）：規則檢查重講與無聲、審查看剪完剩下的 */
+    private static List<Word> allWords(Job job) {
+        List<Word> out = new ArrayList<>();
+        job.metas.values().forEach(m -> out.addAll(m.words()));
+        out.sort(java.util.Comparator.comparingDouble(Word::t));
+        return out;
     }
 
     /** 交回規劃者的審查意見 */

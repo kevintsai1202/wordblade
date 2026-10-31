@@ -33,7 +33,7 @@ class DirectorRulesTest {
     void 合格的腳本_章節與各種項目_依時間排序_目的與引用帶回() {
         var r = check("{" + CHAPTERS + """
                 ,"items":[
-                 {"id":"i1","kind":"cut","start":10,"end":14,"chapter":0,"purpose":"Remove the retake","quote":"sorry, let me say that again"},
+                 {"id":"i1","kind":"cut","reason":"retake","start":10,"end":14,"chapter":0,"purpose":"Remove the retake","quote":"sorry, let me say that again"},
                  {"id":"i2","kind":"mask","start":30,"end":38,"chapter":0,"purpose":"Hide the API key","target":"API key","x":0.28,"y":0.07,"w":0.25,"h":0.03},
                  {"id":"i3","kind":"transition","start":39,"end":43,"chapter":1,"problem":"p3","purpose":"Move from setup to writing code","quote":"Now let's write the main script.","scene":"desk-reveal","fromChapter":0,"toChapter":1},
                  {"id":"i4","kind":"zoom","start":44,"end":58,"chapter":1,"problem":"p1","purpose":"Show the code being typed","quote":"We load the key with dotenv","activity":"a1"},
@@ -122,8 +122,8 @@ class DirectorRulesTest {
     void 改字以詞為準_剪的重疊取聯集_遮罩的框選填() {
         var r = check("{" + CHAPTERS + """
                 ,"items":[
-                 {"id":"i1","kind":"cut","start":10,"end":14,"purpose":"p","quote":"q"},
-                 {"id":"i2","kind":"cut","start":13,"end":16,"purpose":"p","quote":"q"},
+                 {"id":"i1","kind":"cut","reason":"retake","start":10,"end":14,"purpose":"p","quote":"q"},
+                 {"id":"i2","kind":"cut","reason":"retake","start":13,"end":16,"purpose":"p","quote":"q"},
                  {"id":"i3","kind":"fix","start":1,"end":2,"purpose":"p","wordIds":["m:w1"],"text":"Java"},
                  {"id":"i4","kind":"fix","start":1.5,"end":2.5,"purpose":"p","wordIds":["m:w2"],"text":"Maven"},
                  {"id":"i5","kind":"fix","start":3,"end":4,"purpose":"p","wordIds":["zz"],"text":"x"},
@@ -142,7 +142,7 @@ class DirectorRulesTest {
                 ,"items":[
                  {"id":"i1","kind":"zoom","start":44,"end":52,"purpose":"p","quote":"q","activity":"a1"},
                  {"id":"i2","kind":"effect","start":80,"end":84,"problem":"p9","purpose":"p","quote":"q","description":"d"},
-                 {"id":"i3","kind":"cut","start":10,"end":14,"purpose":"p","quote":"q"},
+                 {"id":"i3","kind":"cut","reason":"retake","start":10,"end":14,"purpose":"p","quote":"q"},
                  {"id":"i4","kind":"zoom","start":60,"end":68,"problem":"p1","purpose":"p","quote":"q","activity":"a2"}
                 ]}""");
         assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i3", "i4");
@@ -201,11 +201,106 @@ class DirectorRulesTest {
     void 改字的詞部分重疊_後面那個退回_不同詞時間重疊沒關係() {
         var r = DirectorRules.check(json.readTree("{" + CHAPTERS + """
                 ,"items":[
-                 {"id":"i1","kind":"fix","start":26.2,"end":30.2,"purpose":"p","wordIds":["m:w1","m:w2"],"text":"Spring MVC"},
-                 {"id":"i2","kind":"fix","start":26.8,"end":29.1,"purpose":"p","wordIds":["m:w2"],"text":"MVC"},
+                 {"id":"i1","kind":"fix","start":26.2,"end":27.4,"purpose":"p","wordIds":["m:w1","m:w2"],"text":"Spring MVC"},
+                 {"id":"i2","kind":"fix","start":26.8,"end":27.3,"purpose":"p","wordIds":["m:w2"],"text":"MVC"},
                  {"id":"i3","kind":"fix","start":27,"end":28,"purpose":"p","wordIds":["m:w3"],"text":"Boot"}
                 ]}"""), 100, scenes, Set.of("m:w1", "m:w2", "m:w3"), activities);
         assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1", "i3");
         assertThat(r.errors()).hasSize(1).allMatch(e -> e.message().contains("same words"));
+    }
+
+    /** 詞（素材時間）：中文逐字，每字 0.25 秒；英文逐詞 0.4 秒 */
+    private static List<DirectorJobs.Word> zhWords(double start, String text, String prefix) {
+        List<DirectorJobs.Word> out = new java.util.ArrayList<>();
+        int i = 0;
+        for (int cp : text.codePoints().toArray()) out.add(new DirectorJobs.Word(prefix + (i++), start + i * 0.25, new String(Character.toChars(cp))));
+        return out;
+    }
+
+    /** 中文錄影：19 秒講一半、23.5～40 第一次開場、66 秒重錄、片尾 127 秒一聲 Hello */
+    private static List<DirectorJobs.Word> lecture() {
+        List<DirectorJobs.Word> w = new java.util.ArrayList<>();
+        w.addAll(zhWords(19, "好我們接下來這個章節", "a"));
+        w.addAll(zhWords(23.5, "我們接下來這個章節主要介紹框架它是很核心的功能那以前為什麼會叫做這個名字我們後面會講", "b"));
+        w.addAll(zhWords(66, "好我們接下來這個章節會介紹一個很核心的套件叫做框架", "c"));
+        w.add(new DirectorJobs.Word("z0", 127, "Hello"));
+        return w;
+    }
+
+    private DirectorRules.Result checkWith(String items, List<DirectorJobs.Word> words, double duration) {
+        Set<String> ids = new java.util.HashSet<>();
+        words.forEach(x -> ids.add(x.id()));
+        return DirectorRules.check(json.readTree("{\"chapters\":[{\"title\":\"All\",\"start\":0,\"end\":" + duration + "}],\"items\":[" + items + "]}"),
+                duration, scenes, ids, activities, new DirectorRules.Options("plain", Set.of(), words));
+    }
+
+    @Test
+    void 剪要標明種類_沒標或不認得的退回() {
+        var r = checkWith("""
+                {"id":"i1","kind":"cut","start":2,"end":10,"purpose":"p"},
+                {"id":"i2","kind":"cut","start":2,"end":10,"purpose":"p","reason":"boring"}""", lecture(), 128.5);
+        assertThat(r.suggestions()).isEmpty();
+        assertThat(r.errors()).hasSize(2).allMatch(e -> e.message().contains("retake, silence, head, tail"));
+    }
+
+    @Test
+    void 重講_後面六十秒內要有相近的重講_第一次開場加後面的空檔可以一起剪() {
+        var r = checkWith("""
+                {"id":"i1","kind":"cut","start":19,"end":23.5,"purpose":"p","reason":"retake","quote":"好我們接下來這個章節"},
+                {"id":"i2","kind":"cut","start":23.5,"end":66,"purpose":"p","reason":"retake","quote":"我們接下來這個章節主要介紹"}""", lecture(), 128.5);
+        assertThat(r.errors()).isEmpty();
+        assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1", "i2");
+    }
+
+    @Test
+    void 重講_後面沒有相近的句子就退回_超過六十秒退回_沒有引用退回() {
+        List<DirectorJobs.Word> w = new java.util.ArrayList<>(zhWords(10, "今天天氣很好我們去公園散步", "x"));
+        w.addAll(zhWords(20, "下一個主題是資料庫的索引設計", "y"));
+        var r = checkWith("""
+                {"id":"i1","kind":"cut","start":9.5,"end":14,"purpose":"p","reason":"retake","quote":"今天天氣很好"},
+                {"id":"i2","kind":"cut","start":0,"end":70,"purpose":"p","reason":"retake","quote":"今天"},
+                {"id":"i3","kind":"cut","start":9.5,"end":14,"purpose":"p","reason":"retake"}""", w, 100);
+        assertThat(r.suggestions()).isEmpty();
+        assertThat(r.errors()).extracting(e -> e.message())
+                .anyMatch(m -> m.contains("restart")).anyMatch(m -> m.contains("60 seconds")).anyMatch(m -> m.contains("quote"));
+    }
+
+    @Test
+    void 沒講話_片頭_片尾_範圍內最多一個詞_片頭要從零開始_片尾要剪到最後() {
+        var r = checkWith("""
+                {"id":"i1","kind":"cut","start":0,"end":19,"purpose":"p","reason":"head"},
+                {"id":"i2","kind":"cut","start":80,"end":128.5,"purpose":"p","reason":"tail"},
+                {"id":"i3","kind":"cut","start":40,"end":60,"purpose":"p","reason":"silence"},
+                {"id":"i4","kind":"cut","start":5,"end":19,"purpose":"p","reason":"head"},
+                {"id":"i5","kind":"cut","start":23,"end":30,"purpose":"p","reason":"silence"},
+                {"id":"i6","kind":"cut","start":100,"end":101,"purpose":"p","reason":"silence"}""", lecture(), 128.5);
+        assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1", "i3", "i2");
+        assertThat(r.errors()).hasSize(3);
+    }
+
+    @Test
+    void 改字_一項只改一個位置_最長一點五秒_詞要連續() {
+        var r = checkWith("""
+                {"id":"i1","kind":"fix","start":24,"end":24.6,"purpose":"p","wordIds":["b1","b2"],"text":"大家"},
+                {"id":"i2","kind":"fix","start":24,"end":40,"purpose":"p","wordIds":["b5"],"text":"x"},
+                {"id":"i3","kind":"fix","start":24,"end":25,"purpose":"p","wordIds":["b7","b9"],"text":"x"}""", lecture(), 128.5);
+        assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1");
+        assertThat(r.errors()).extracting(e -> e.message()).anyMatch(m -> m.contains("1.5 seconds")).anyMatch(m -> m.contains("consecutive"));
+    }
+
+    @Test
+    void 換句話說的重講_字面不像但對上_Jev_確認的候選就放行() {
+        List<DirectorJobs.Word> w = new java.util.ArrayList<>(zhWords(10, "我們打開設定檔然後呃等一下", "x"));
+        w.addAll(zhWords(20, "好來看一下這個專案的組態內容", "y"));
+        String item = """
+                {"id":"i1","kind":"cut","start":10,"end":20,"purpose":"p","reason":"retake","quote":"我們打開設定檔"}""";
+        Set<String> ids = new java.util.HashSet<>();
+        w.forEach(x -> ids.add(x.id()));
+        var root = json.readTree("{\"chapters\":[{\"title\":\"All\",\"start\":0,\"end\":60}],\"items\":[" + item + "]}");
+        var without = DirectorRules.check(root, 60, scenes, ids, activities, new DirectorRules.Options("plain", Set.of(), w));
+        assertThat(without.suggestions()).isEmpty();
+        var with = DirectorRules.check(root, 60, scenes, ids, activities, new DirectorRules.Options("plain", Set.of(), w, List.of(new double[] {10, 20.2})));
+        assertThat(with.errors()).isEmpty();
+        assertThat(with.suggestions()).hasSize(1);
     }
 }
