@@ -42,4 +42,5 @@ wordblade:
   typesafe:
     base-url: ${WORDBLADE_TYPESAFE_BASE_URL:https://api.typesafe.ai}
     api-key: ${TYPESAFE_API_KEY:}
-    model: ${WORDBLADE_MODEL_JEV:jev-latest}
+    # 固定版本（2026-10-31 開發者決定）：jev-latest 換版時行為不會突然改變；升級時改這裡並重跑 scripts/director/probe-jev-*.mjs
+    model: ${WORDBLADE_MODEL_JEV:jev-1.14.0}

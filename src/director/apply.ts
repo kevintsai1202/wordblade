@@ -37,7 +37,7 @@ export interface ApplyResult {
 
 /** 各種類屬於第幾階段 */
 const PHASE: Record<Suggestion["kind"], number> = {
-  cut: 0, fix: 0, mask: 0, zoom: 0,
+  cut: 0, fix: 0, mask: 0, zoom: 0, note: 0,
   effect: 1, transition: 1, camera: 1, mascot: 1,
   captionStyle: 2, music: 2,
   intro: 3,
@@ -89,6 +89,9 @@ async function editsFor(p: Project, s: Suggestion, deps: ApplyDeps): Promise<Edi
       if (!intro) throw new Error("Couldn't make the intro.");
       return [{ kind: "insertIntro", intro }, applied(s)];
     }
+    case "note":
+      // 提醒只給人看，沒有編輯
+      return [];
     default:
       throw new Error(`Unknown kind ${String(s.kind)}`);
   }

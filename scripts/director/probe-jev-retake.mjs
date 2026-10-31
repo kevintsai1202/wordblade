@@ -24,7 +24,7 @@ async function ask(c) {
     method: "POST",
     headers: { authorization: `Bearer ${env.TYPESAFE_API_KEY}`, "content-type": "application/json" },
     body: JSON.stringify({
-      model: "jev-latest",
+      model: "jev-1.14.0",
       state: { context: "Transcript of a screen-recorded tutorial. `earlier` is said first, `later` is said right after it.", earlier: c.cut, later: c.restart },
       questions: {
         retake: {

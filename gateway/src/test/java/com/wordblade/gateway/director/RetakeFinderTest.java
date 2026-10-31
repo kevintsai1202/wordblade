@@ -59,4 +59,25 @@ class RetakeFinderTest {
         }
         assertThat(RetakeFinder.find(w)).isEmpty();
     }
+
+    @Test
+    void 不完整的句子不看字面相似_和後面三句內配成候選() {
+        List<DirectorJobs.Word> w = new ArrayList<>(zh(10, "那其實", "a"));
+        w.addAll(zh(14, "我們要", "b"));
+        w.addAll(zh(18, "好這個章節會介紹一個核心的套件。", "c"));
+        w.addAll(zh(30, "首先打開資料夾。", "d"));
+        assertThat(RetakeFinder.find(w)).isEmpty();
+        List<RetakeFinder.Utterance> us = RetakeFinder.utterances(w);
+        assertThat(us).hasSize(4);
+        // 第 0、1 句不完整
+        List<RetakeFinder.Candidate> c = RetakeFinder.find(w, java.util.Set.of(0, 1));
+        assertThat(c).anySatisfy(x -> {
+            assertThat(x.start()).isEqualTo(10.0);
+            assertThat(x.end()).isEqualTo(14.0);
+        }).anySatisfy(x -> {
+            assertThat(x.start()).isEqualTo(14.0);
+            assertThat(x.end()).isEqualTo(18.0);
+        });
+        assertThat(c).noneMatch(x -> x.start() == 18.0);
+    }
 }

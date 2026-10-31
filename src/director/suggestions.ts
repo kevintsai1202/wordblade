@@ -100,6 +100,7 @@ function validPayload(s: Suggestion, scenes: Set<string>, wordIds: Set<string>):
     case "captionStyle": return ["off", "fill", "scale", "box"].includes(String(p.karaoke));
     case "music": return str(p.description);
     case "intro": return str(p.title);
+    case "note": return true;
     default: return false;
   }
 }

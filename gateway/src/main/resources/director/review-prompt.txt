@@ -14,4 +14,4 @@ Then look at the whole script: which items would you remove first because the vi
 
 Reply with JSON only:
 {"verdicts":[{"id":"i1","verdict":"keep|revise|drop","note":"one short sentence"}], "missing":[{"kind":"…","start":0,"end":0,"note":"what is missing"}], "prune":[{"id":"i5","note":"why the video is better without it"}]}
-Give a verdict for every item. "revise" means the idea is right but something must change (say exactly what: time, target, wording). "drop" means it should not be there. Be strict about purpose and timing, but don't drop good edits for small reasons.
+Items with ids f1, f2, … are cuts decided by rules (silent opening or ending, retakes confirmed by a classifier); judge them like the others — if you would drop one, it is unchecked for the user instead of removed. Give a verdict for every item. "revise" means the idea is right but something must change (say exactly what: time, target, wording). "drop" means it should not be there. Be strict about purpose and timing, but don't drop good edits for small reasons.

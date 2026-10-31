@@ -19,7 +19,7 @@ Work in this order and reply with JSON only: {"treatment":{...},"chapters":[...]
 - "quote": the transcript sentence this edit belongs to, copied exactly (required for retake cuts, zoom, effect, transition, mascot)
 - "problem": the treatment problem id (required for zoom, effect, transition, mascot)
 - fields by kind:
-  - "cut": "reason" is required and must be exactly one of these; any other cut is rejected:
+  - "cut": "fixedCuts" are already decided (silent opening, silent ending, confirmed retakes) and will be added for you: do not list them and do not cut inside them. Any further cut needs "reason", exactly one of these; any other cut is rejected:
     - "retake": the speaker abandons a sentence (or a whole attempt) and says the same thing again. Start from "retakeCandidates": each was found by comparing the transcript and checked by a classifier ("retakeProbability"; "verified": false means unchecked). For a candidate you agree with, use its start and end and set "retakeCandidate" to its id; when several candidates overlap, cut so that only the last complete attempt remains. You may also cut a retake that is not listed. Cut from the start of the abandoned attempt to the start of the restart, so the restart is kept and the content is said once. The speech right after your cut must repeat what you cut (it is checked); never cut an attempt that is not said again. At most 60 seconds. "quote": the abandoned sentence. When the speaker restarts several times, keep the last, complete attempt and cut the earlier ones.
     - "silence": at least 2 seconds with no speech in the transcript (a pause, setting up the screen). Never cut over transcript words.
     - "head": from 0 to just before the first words, when the video opens with nothing said.

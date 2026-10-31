@@ -29,7 +29,7 @@ const RELATED_CONSENTS = ["wordblade.consent.asr", "wordblade.consent.sam", "wor
 /** 各種項目的標籤 */
 const KIND_LABEL: Record<Suggestion["kind"], string> = {
   cut: "✂ Cut", mask: "🛡 Mask", effect: "✨ Effect", camera: "🎬 Transition", transition: "🎬 Transition", mascot: "🧸 Mascot",
-  fix: "✎ Fix", zoom: "🔍 Zoom", captionStyle: "💬 Captions", music: "🎵 Music", intro: "🎞 Intro",
+  fix: "✎ Fix", zoom: "🔍 Zoom", captionStyle: "💬 Captions", music: "🎵 Music", intro: "🎞 Intro", note: "📝 Note",
 };
 
 /** 整支片的項目（不屬於某個章節） */
@@ -112,7 +112,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
   /** 可以開始：有逐字稿，或音量包絡已經好了（自動轉錄要用） */
   const ready = !!media && (hasWords || envelopes.has(media.id));
   /** 預設勾選：還沒處理、審查沒刪掉的 */
-  const checked = suggestions.filter((s) => s.status === "pending" && !unchecked.has(s.id));
+  const checked = suggestions.filter((s) => s.status === "pending" && s.kind !== "note" && !unchecked.has(s.id));
 
   /** 按下 Ask：先問同意 */
   const onAsk = () => {
@@ -293,7 +293,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
     return (
       <li key={s.id} data-testid="director-row" data-kind={s.kind} data-status={s.status} data-review={s.review?.verdict ?? ""} data-start={s.start.toFixed(2)} data-end={s.end.toFixed(2)}
         className={`${s.id === selected ? "selected " : ""}${s.status}`} onClick={() => select(s)}>
-        {pending
+        {pending && s.kind !== "note"
           ? <input type="checkbox" data-testid="director-check" checked={!unchecked.has(s.id)} onClick={(e) => e.stopPropagation()} onChange={() => toggle(s.id)} />
           : <span className="director-check-spacer" />}
         <span className="director-kind">{KIND_LABEL[s.kind]}</span>
@@ -305,8 +305,9 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
         </span>
         {pending ? (
           <span className="director-actions">
-            <button type="button" data-testid="director-adopt" disabled={adopting !== null} onClick={(e) => { e.stopPropagation(); void adopt(s); }}>{adopting === s.id ? "…" : "Apply"}</button>
-            <button type="button" data-testid="director-skip" disabled={adopting !== null} onClick={(e) => { e.stopPropagation(); skip(s); }}>Skip</button>
+            {/* 提醒只給人看：沒有 Apply，Skip 叫 Dismiss */}
+            {s.kind !== "note" && <button type="button" data-testid="director-adopt" disabled={adopting !== null} onClick={(e) => { e.stopPropagation(); void adopt(s); }}>{adopting === s.id ? "…" : "Apply"}</button>}
+            <button type="button" data-testid="director-skip" disabled={adopting !== null} onClick={(e) => { e.stopPropagation(); skip(s); }}>{s.kind === "note" ? "Dismiss" : "Skip"}</button>
           </span>
         ) : <span className="muted director-status">{s.status === "applied" ? "Applied" : "Skipped"}</span>}
       </li>

@@ -178,8 +178,8 @@ export interface Anchor {
 export interface Suggestion {
   id: string;
   mediaId: string;
-  /** camera 是舊名稱（等同 transition）；captionStyle、music、intro 是整體項目（docs/plan-10-29-director2.md） */
-  kind: "cut" | "mask" | "effect" | "camera" | "transition" | "mascot" | "fix" | "zoom" | "captionStyle" | "music" | "intro";
+  /** camera 是舊名稱（等同 transition）；captionStyle、music、intro 是整體項目（docs/plan-10-29-director2.md）；note 是只給人看的提醒（後面補充前面漏講的，docs/plan-10-31-director4.md） */
+  kind: "cut" | "mask" | "effect" | "camera" | "transition" | "mascot" | "fix" | "zoom" | "captionStyle" | "music" | "intro" | "note";
   start: Seconds;
   end: Seconds;
   payload: Record<string, unknown>;

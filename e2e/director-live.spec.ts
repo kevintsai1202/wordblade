@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { openTab } from "./helpers/tabs";
 
@@ -10,6 +10,10 @@ const gateway = process.env.WORDBLADE_LIVE_GATEWAY;
 const token = process.env.WORDBLADE_LIVE_TOKEN;
 /** 換素材（例如 samples/lecture-a.en.mp4）時只看能不能跑完、印出建議，不比對正確答案、不採用 */
 const OTHER = process.env.WORDBLADE_DIRECTOR_SAMPLE;
+/** 沿用上一次存下的逐字稿（$env:WORDBLADE_DIRECTOR_REUSE_WORDS="1"）：只重跑導演，比較兩次導演的結果時排除轉錄的差異 */
+const REUSE_WORDS = process.env.WORDBLADE_DIRECTOR_REUSE_WORDS === "1";
+/** 換素材時，逐字稿存在這裡（下一次沿用） */
+const WORDS_FILE = "output/director-live-words.json";
 /** 換素材時套用勾選的建議並匯出（$env:WORDBLADE_DIRECTOR_APPLY="1"） */
 const APPLY = process.env.WORDBLADE_DIRECTOR_APPLY === "1";
 const SAMPLE = OTHER ? path.resolve(OTHER) : path.join(import.meta.dirname, "..", "samples", "demo-2min.mp4");
@@ -36,6 +40,8 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
     for (const k of ["director", "sam", "vibe", "plane3d", "asr", "audio"]) localStorage.setItem(`wordblade.consent.${k}`, "yes");
     // 匯出寫進 OPFS（不開存檔對話框），再從 OPFS 拿出來
     localStorage.setItem("wordblade.exportToOpfs", "1");
+    // 開發用鉤子（讀寫專案的逐字稿）
+    localStorage.setItem("wordblade.dev", "1");
   }, [gateway!, token!]);
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto("/");
@@ -44,6 +50,16 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
   await (await chooser).setFiles(SAMPLE);
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 60_000 });
   await page.locator(".media-item", { hasText: path.basename(SAMPLE) }).dblclick();
+  // 沿用上一次的逐字稿：素材 id 換成這次匯入的
+  if (OTHER && REUSE_WORDS && existsSync(WORDS_FILE)) {
+    const saved = JSON.parse(readFileSync(WORDS_FILE, "utf8")) as { text: string; start: number; end: number; id: string }[];
+    await page.evaluate((list) => {
+      const hook = (window as unknown as { __wordblade: { project: () => { media: { id: string }[] }; dispatch: (a: unknown) => void } }).__wordblade;
+      const mediaId = hook.project().media[0].id;
+      hook.dispatch({ type: "commit", edits: [{ kind: "setWords", mediaId, words: list.map((w) => ({ ...w, id: `${mediaId}:${w.id.split(":").pop()}`, mediaId })) }] });
+    }, saved);
+    console.log(`沿用逐字稿：${saved.length} 個詞`);
+  }
 
   await openTab(page, "director");
   await expect(page.getByTestId("director-ask")).toBeEnabled({ timeout: 120_000 });
@@ -61,6 +77,9 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
     await openTab(page, "transcript");
     mkdirSync("output", { recursive: true });
     writeFileSync("output/director-live-transcript.txt", (await page.getByTestId("transcript").innerText()).slice(0, 2000), "utf8");
+    // 逐字稿的詞存下來，下一次可以沿用（WORDBLADE_DIRECTOR_REUSE_WORDS）
+    const words = await page.evaluate(() => (window as unknown as { __wordblade: { project: () => { words: unknown[] } } }).__wordblade.project().words);
+    writeFileSync(WORDS_FILE, JSON.stringify(words), "utf8");
     await openTab(page, "director");
     await page.screenshot({ path: "output/ui-shots/director-live-other.png" });
     if (APPLY) {

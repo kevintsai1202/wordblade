@@ -70,6 +70,7 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
         it("i4", "mask", 1, 2, 0, "Person on screen", { target: "person" }),
         it("i5", "effect", 1.2, 2, 0, "Key point", { description: "A pop of confetti" }),
         it("i6", "cut", 2.4, 4, 1, "Retake", {}, "prune"),
+        it("n1", "note", 3, 4, 1, "At 3.0 s the speaker adds something left out at 0.5 s; both are kept.", { relation: "supplement", earlierStart: 0.5 }),
       ];
       const chapters = [{ title: "Greeting", start: 0, end: 2.4 }, { title: "Again", start: 2.4, end: 4 }];
       const treatment = { audience: "beginners", problems: [{ id: "p1", start: 0.5, end: 2, what: "Small text on the slide" }] };
@@ -96,7 +97,7 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
   await expect(page.getByTestId("director-estimate")).toContainText("k tokens");
   await page.getByTestId("director-ask").click();
   const rows = page.getByTestId("director-row");
-  await expect(rows).toHaveCount(7, { timeout: 60_000 });
+  await expect(rows).toHaveCount(8, { timeout: 60_000 });
   expect(uploads).toBe(1);
   // 送了縮圖總表給審查者；依章節分組、審查刪掉的吉祥物灰色列在最後（略過狀態）、改過的有標記
   expect(sheetSent).toBe(true);
@@ -106,6 +107,12 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
   await expect(page.locator('[data-kind="cut"] [data-testid="director-check"]')).not.toBeChecked();
   await expect(page.locator('[data-kind="cut"]')).toContainText("could go");
   await expect(page.getByTestId("director-treatment")).toContainText("beginners");
+  // 補充的提醒（docs/plan-10-31-director4.md）：只顯示，沒有勾選框與 Apply；Dismiss 標成略過
+  const note = page.locator('[data-kind="note"]');
+  await expect(note).toContainText("left out at 0.5 s");
+  await expect(note.getByTestId("director-check")).toHaveCount(0);
+  await expect(note.getByTestId("director-adopt")).toHaveCount(0);
+  await expect(page.getByTestId("director-apply-checked")).toContainText("Apply 5 checked");
   await expect(page.getByTestId("director-chapter")).toHaveCount(3);
   await expect(page.locator('[data-kind="mascot"]')).toHaveAttribute("data-status", "skipped");
   await expect(page.locator('[data-kind="zoom"]')).toContainText("revised by review");

@@ -3,6 +3,7 @@ package com.wordblade.gateway.director;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 重講候選（docs/plan-10-31-director4.md）：不靠模型、同樣的逐字稿每次結果一樣。
@@ -23,8 +24,11 @@ public final class RetakeFinder {
      */
     public record Candidate(String id, double start, double end, String earlier, String later, double similarity) {}
 
-    /** 語句：開始時間、詞 */
-    private record Utterance(double start, double end, List<DirectorJobs.Word> words) {}
+    /** 語句：開始時間、最後一個詞的時間、詞 */
+    public record Utterance(double start, double end, List<DirectorJobs.Word> words) {}
+
+    /** 不完整的句子往後配幾句 */
+    static final int INCOMPLETE_PAIRS = 3;
 
     /** 兩個詞相隔幾秒以上算換一句 */
     static final double PAUSE = 0.8;
@@ -37,8 +41,17 @@ public final class RetakeFinder {
 
     private RetakeFinder() {}
 
-    /** 找候選（詞依時間排序；中文一字一詞、英文一詞一詞都可以） */
+    /** 找候選（只看字面相似） */
     public static List<Candidate> find(List<DirectorJobs.Word> words) {
+        return find(words, Set.of());
+    }
+
+    /**
+     * 找候選（詞依時間排序；中文一字一詞、英文一詞一詞都可以）。
+     *
+     * @param incomplete 講不完整的語句（utterances 的序號）：不看字面，和後面 3 句內（60 秒內）都配成候選
+     */
+    public static List<Candidate> find(List<DirectorJobs.Word> words, Set<Integer> incomplete) {
         List<Utterance> us = utterances(words);
         List<Candidate> out = new ArrayList<>();
         for (int i = 0; i < us.size(); i++) {
@@ -49,14 +62,15 @@ public final class RetakeFinder {
                 if (b.start() - a.start() > DirectorRules.RETAKE_MAX) break;
                 int k = Math.min(DirectorRules.RETAKE_WORDS, Math.max(a.words().size(), 1));
                 double sim = DirectorRules.similarity(a.words(), b.words().subList(0, Math.min(k, b.words().size())));
-                if (sim < MIN_SIMILARITY) continue;
+                boolean fragment = incomplete.contains(i) && j - i <= INCOMPLETE_PAIRS;
+                if (sim < MIN_SIMILARITY && !fragment) continue;
                 List<DirectorJobs.Word> cut = words.stream().filter(w -> w.t() >= a.start() && w.t() < b.start()).toList();
                 List<DirectorJobs.Word> later = new ArrayList<>(b.words());
                 if (j + 1 < us.size()) later.addAll(us.get(j + 1).words());
                 out.add(new Candidate("", a.start(), b.start(), text(cut), text(later), sim));
             }
         }
-        // 相似度高的優先，最多 MAX 個，再依時間排、編號
+        // 相似度高的優先（不完整句子配出來的排在後面），最多 MAX 個，再依時間排、編號
         List<Candidate> top = out.stream().sorted(Comparator.comparingDouble(Candidate::similarity).reversed()).limit(MAX)
                 .sorted(Comparator.comparingDouble(Candidate::start).thenComparingDouble(Candidate::end)).toList();
         List<Candidate> numbered = new ArrayList<>();
@@ -68,7 +82,7 @@ public final class RetakeFinder {
     }
 
     /** 詞分成語句：停頓 ≥ 0.8 秒或句尾標點（含全形）換句 */
-    private static List<Utterance> utterances(List<DirectorJobs.Word> words) {
+    public static List<Utterance> utterances(List<DirectorJobs.Word> words) {
         List<DirectorJobs.Word> sorted = words.stream().sorted(Comparator.comparingDouble(DirectorJobs.Word::t)).toList();
         List<Utterance> out = new ArrayList<>();
         List<DirectorJobs.Word> cur = new ArrayList<>();

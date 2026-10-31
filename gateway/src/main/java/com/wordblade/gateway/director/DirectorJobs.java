@@ -78,20 +78,77 @@ public class DirectorJobs {
         AiModel.Reply analyze(byte[] mp4, double length, String transcript);
     }
 
-    /** Jev 對一個重講候選的判斷：重講的機率、重講那句講完整的機率 */
-    public record RetakeVerdict(double retake, double complete, long inputTokens, String model) {}
+    /**
+     * Jev 對一對句子的判斷（機率 0～1）。
+     *
+     * @param retake     後面重講同樣的內容（剪前面）
+     * @param falseStart 前面是放棄的碎片，後面重新開始（剪前面）
+     * @param supplement 後面補充前面漏講的（兩段都留，列成提醒）
+     * @param complete   後面那次講完整
+     */
+    public record RetakeVerdict(double retake, double falseStart, double supplement, double complete, long inputTokens, String model) {
+        /** 前面該剪：重講或放棄的碎片 */
+        public boolean isRetake() {
+            return retake >= RETAKE_THRESHOLD || falseStart >= RETAKE_THRESHOLD;
+        }
+
+        /** 後面是補充（不是重講） */
+        public boolean isSupplement() {
+            return !isRetake() && supplement >= RETAKE_THRESHOLD;
+        }
+    }
+
+    /** 每一句講完整的機率（和送出的句子一一對應） */
+    public record Completeness(List<Double> probabilities, long inputTokens, String model) {}
 
     /** 判斷重講候選的模型（TypeSafe Jev；System One 回機率，同樣的輸入結果穩定） */
     @FunctionalInterface
     public interface RetakeJudge {
         RetakeVerdict judge(String earlier, String later);
+
+        /** 每一句講完整了沒有（不支援回 null：不找「不完整的句子」的候選） */
+        default Completeness completeness(List<String> sentences) {
+            return null;
+        }
     }
 
-    /** 重講候選與 Jev 的判斷（verdict 是 null：沒有 Jev 或判斷失敗，未確認） */
-    record JudgedRetake(RetakeFinder.Candidate candidate, RetakeVerdict verdict) {}
+    /**
+     * 重講候選與 Jev 的判斷。
+     *
+     * @param verdict         null：沒有 Jev 或判斷失敗，未確認
+     * @param earlierComplete 前面那句自己講完整的機率（NaN：不知道）
+     */
+    public record JudgedRetake(RetakeFinder.Candidate candidate, RetakeVerdict verdict, double earlierComplete) {
+        public JudgedRetake(RetakeFinder.Candidate candidate, RetakeVerdict verdict) {
+            this(candidate, verdict, Double.NaN);
+        }
 
-    /** Jev 判斷是重講的門檻（2026-10-31 實測 7 題：正例 0.66～0.86、反例 ≤ 0.07） */
+        /**
+         * 該剪：Jev 判斷重講或放棄的碎片；前面那句不完整、後面那句又明顯比它完整（多 0.15 以上）時，碎片的門檻放寬到 0.5
+         * （實測「我們要」碎片 0.55、完整度 0.06 → 後面 0.31；片尾「實是 Hello?」0.57、0.15 → 0.19 不算）。
+         */
+        public boolean isRetake() {
+            if (verdict == null) return false;
+            if (verdict.isRetake()) return true;
+            return earlierComplete < INCOMPLETE && verdict.falseStart() >= FRAGMENT_THRESHOLD && verdict.complete() - earlierComplete >= FRAGMENT_MARGIN;
+        }
+
+        /** 後面是補充 */
+        public boolean isSupplement() {
+            return verdict != null && !isRetake() && verdict.supplement() >= RETAKE_THRESHOLD;
+        }
+    }
+
+    /** Jev 判斷是重講／放棄的碎片／補充的門檻（2026-10-31 實測 probe-jev-relation.mjs 16 題全對） */
     static final double RETAKE_THRESHOLD = 0.6;
+    /** 句子講完整的機率低於這個就算不完整（不完整的句子不看字面，和後面幾句配成候選） */
+    static final double INCOMPLETE = 0.5;
+    /** 前面那句不完整時，放棄碎片的門檻 */
+    static final double FRAGMENT_THRESHOLD = 0.5;
+    /** 放寬碎片門檻時，後面那句至少要比碎片完整多少 */
+    static final double FRAGMENT_MARGIN = 0.15;
+    /** 很確定是重講：不再看保留的那次講完整沒有（真人講課常講到一半接下一句，實測重錄那次完整度只有 0.22～0.27） */
+    static final double SURE_RETAKE = 0.75;
 
     /** 記用量 */
     @FunctionalInterface
@@ -132,6 +189,8 @@ public class DirectorJobs {
         volatile Set<String> problemIds = Set.of();
         /** 送給規劃者的重講候選（Jev 確認過的；沒有 Jev 時是未確認的全部） */
         volatile List<JudgedRetake> retakes = List.of();
+        /** 程式決定的剪（片頭、片尾空白、確認的重講；FixedCuts）與補充的提醒 */
+        volatile List<DirectorRules.Suggestion> fixed = List.of();
 
         Job(long tokenId, StartRequest req) {
             this.tokenId = tokenId;
@@ -255,6 +314,9 @@ public class DirectorJobs {
         }
         try {
             job.retakes = judgeRetakes(job);
+            List<DirectorRules.Suggestion> fixed = new ArrayList<>(FixedCuts.build(allWords(job), job.req.duration(), job.retakes));
+            fixed.addAll(FixedCuts.notes(job.retakes));
+            job.fixed = fixed;
             DirectorRules.Result result = askPlanner(job, brief(job));
             job.chapters = result.chapters();
             job.suggestions = result.suggestions();
@@ -281,6 +343,8 @@ public class DirectorJobs {
             usage.record(job.tokenId, r.model(), r.inputTokens(), r.outputTokens());
             result = DirectorRules.check(read(r.text()), job.req.duration(), s.scenes(), s.words(), s.activities(),
                     new DirectorRules.Options(job.req.style(), job.problemIds, allWords(job), confirmedRetakes(job)));
+            // 程式決定的剪加回去（規劃者不必列、也刪不掉）
+            result = new DirectorRules.Result(result.chapters(), FixedCuts.merge(job.fixed, result.suggestions()), result.errors(), result.treatment(), result.problemIds());
             if (result.treatment() != null) job.treatment = result.treatment();
             job.problemIds = result.problemIds();
             if (result.errors().isEmpty() || round == MAX_ROUNDS) break;
@@ -329,6 +393,13 @@ public class DirectorJobs {
             List<String> missing = new ArrayList<>();
             if (root != null) root.path("missing").forEach(m -> missing.add(String.format(Locale.ROOT, "%s at %.1f–%.1f s: %s",
                     m.path("kind").asString("item"), m.path("start").asDouble(0), m.path("end").asDouble(0), m.path("note").asString(""))));
+            // 程式決定的剪（f 開頭）不交回規劃者：審查者要改或刪就改成 prune（預設不勾），讓使用者決定
+            for (Map.Entry<String, DirectorRules.Review> e : List.copyOf(verdicts.entrySet())) {
+                if (isFixed(e.getKey()) && !e.getValue().verdict().equals("keep")) {
+                    verdicts.remove(e.getKey());
+                    prune.put(e.getKey(), e.getValue().note());
+                }
+            }
             boolean changes = !missing.isEmpty() || verdicts.values().stream().anyMatch(v -> !v.verdict().equals("keep"));
             List<DirectorRules.Suggestion> before = job.suggestions;
             List<DirectorRules.Suggestion> after = before;
@@ -426,15 +497,20 @@ public class DirectorJobs {
                 misheard.add(copy);
             });
         }
+        // 程式決定的剪：規劃者不必再列，也不要剪在它們範圍內
+        ArrayNode fixedCuts = root.putArray("fixedCuts");
+        job.fixed.stream().filter(f -> f.kind().equals("cut")).forEach(f -> fixedCuts.addObject().put("id", f.id()).put("reason", String.valueOf(f.payload().get("reason")))
+                .put("start", round1(f.start())).put("end", round1(f.end())));
         // 重講候選（本機找、Jev 判斷）：規劃者依這些決定 retake 的剪
         ArrayNode retakes = root.putArray("retakeCandidates");
         for (JudgedRetake r : job.retakes) {
+            if (r.verdict() != null && !r.isRetake()) continue;
             ObjectNode o = retakes.addObject();
             RetakeFinder.Candidate c = r.candidate();
             o.put("id", c.id()).put("start", round1(c.start())).put("end", round1(c.end())).put("earlier", c.earlier()).put("later", c.later());
             o.put("verified", r.verdict() != null);
             if (r.verdict() != null) {
-                o.put("retakeProbability", round2(r.verdict().retake()));
+                o.put("retakeProbability", round2(Math.max(r.verdict().retake(), r.verdict().falseStart())));
                 o.put("laterCompleteProbability", round2(r.verdict().complete()));
             }
         }
@@ -505,29 +581,59 @@ public class DirectorJobs {
     }
 
     /**
-     * 重講候選：本機找（RetakeFinder），有 Jev 就逐一判斷，只留重講機率 ≥ 0.6 的；沒有 Jev 或判斷失敗，候選標成未確認照樣送。
+     * 重講候選：先問 Jev 每一句講完整沒有（不完整的句子不看字面、和後面幾句配成候選），本機找候選（RetakeFinder），
+     * 有 Jev 就逐一判斷，留下重講／放棄的碎片（剪）與補充（提醒）；沒有 Jev 或判斷失敗，候選標成未確認照樣送。
+     * 每個候選與機率記 log，實測時查得出哪一步不穩。
      */
     private List<JudgedRetake> judgeRetakes(Job job) {
+        List<Word> words = allWords(job);
+        Set<Integer> incomplete = new HashSet<>();
+        /** 每一句（依開始時間）講完整的機率 */
+        Map<Double, Double> sentenceComplete = new java.util.HashMap<>();
+        if (judge != null) {
+            List<RetakeFinder.Utterance> us = RetakeFinder.utterances(words);
+            try {
+                Completeness c = us.isEmpty() ? null : judge.completeness(us.stream().map(u -> RetakeFinder.text(u.words())).toList());
+                if (c != null) {
+                    usage.record(job.tokenId, c.model(), c.inputTokens(), 0);
+                    for (int i = 0; i < us.size() && i < c.probabilities().size(); i++) {
+                        if (c.probabilities().get(i) < INCOMPLETE) incomplete.add(i);
+                        sentenceComplete.put(us.get(i).start(), c.probabilities().get(i));
+                        log.info("director sentence {} at {}s complete={}", i, round1(us.get(i).start()), round2(c.probabilities().get(i)));
+                    }
+                }
+            } catch (RuntimeException e) {
+                log.warn("completeness judge failed: {}", e.getMessage());
+            }
+        }
         List<JudgedRetake> out = new ArrayList<>();
-        for (RetakeFinder.Candidate c : RetakeFinder.find(allWords(job))) {
+        for (RetakeFinder.Candidate c : RetakeFinder.find(words, incomplete)) {
             if (job.cancelled) break;
             RetakeVerdict v = null;
             if (judge != null) {
                 try {
                     v = judge.judge(c.earlier(), c.later());
                     usage.record(job.tokenId, v.model(), v.inputTokens(), 0);
+                    log.info("director candidate {}–{}s sim={} retake={} falseStart={} supplement={} complete={} model={}", round1(c.start()), round1(c.end()),
+                            c.similarity(), round2(v.retake()), round2(v.falseStart()), round2(v.supplement()), round2(v.complete()), v.model());
                 } catch (RuntimeException e) {
                     log.warn("retake judge failed: {}", e.getMessage());
                 }
             }
-            if (v == null || v.retake() >= RETAKE_THRESHOLD) out.add(new JudgedRetake(c, v));
+            JudgedRetake j = new JudgedRetake(c, v, sentenceComplete.getOrDefault(c.start(), Double.NaN));
+            if (v == null || j.isRetake() || j.isSupplement()) out.add(j);
         }
         return out;
     }
 
+    /** 程式決定的剪（id f1、f2…） */
+    private static boolean isFixed(String id) {
+        return id.matches("[fn]\\d+");
+    }
+
     /** Jev 確認過的重講範圍（規則用來放行換句話說的重講） */
     private static List<double[]> confirmedRetakes(Job job) {
-        return job.retakes.stream().filter(r -> r.verdict() != null).map(r -> new double[] {r.candidate().start(), r.candidate().end()}).toList();
+        return job.retakes.stream().filter(JudgedRetake::isRetake).map(r -> new double[] {r.candidate().start(), r.candidate().end()}).toList();
     }
 
     /** 全部段落的詞（素材時間、依時間排序）：規則檢查重講與無聲、審查看剪完剩下的 */

@@ -230,7 +230,7 @@ class DirectorJobsTest {
         List<String> asked = new java.util.ArrayList<>();
         DirectorJobs.RetakeJudge judge = (earlier, later) -> {
             asked.add(earlier);
-            return new DirectorJobs.RetakeVerdict(earlier.startsWith("好我們接下來這個章節") && later.startsWith("我們") ? 0.9 : 0.1, 0.9, 500, "fake-jev");
+            return new DirectorJobs.RetakeVerdict(earlier.startsWith("好我們接下來這個章節") && later.startsWith("我們") ? 0.9 : 0.1, 0, 0, 0.9, 500, "fake-jev");
         };
         DirectorJobs withJudge = new DirectorJobs(spark, planner, reviewer, Runnable::run, (t, m, in, out) -> usage.add(t + ":" + m), judge);
         List<DirectorJobs.Word> words = RetakeFinderTest.lecture();
@@ -242,8 +242,21 @@ class DirectorJobsTest {
         assertThat(asked).isNotEmpty();
         String brief = planner.received.get(0);
         assertThat(brief).contains("\"retakeCandidates\"").contains("\"retakeProbability\":0.9").doesNotContain("\"retakeProbability\":0.1");
-        assertThat(withJudge.view(7, id).suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1");
+        // 程式決定的剪：片頭空白、確認的重講（規劃者同一段的 i1 併進去）、片尾空白
+        assertThat(brief).contains("\"fixedCuts\"");
+        var v = withJudge.view(7, id).suggestions();
+        assertThat(v).extracting(DirectorRules.Suggestion::id).containsExactly("f1", "f2", "f3");
+        assertThat(v.get(1).start()).isEqualTo(19.0);
+        assertThat(v.get(1).end()).isEqualTo(23.5);
         assertThat(usage).contains("7:fake-jev");
+        // 審查者要刪程式的剪：改成 prune（預設不勾），不交回規劃者
+        reviewer.replies.add("{\"verdicts\":[{\"id\":\"f3\",\"verdict\":\"drop\",\"note\":\"keep the ending\"}],\"missing\":[]}");
+        withJudge.review(7, id, null);
+        var after = withJudge.view(7, id);
+        assertThat(after.removed()).isEmpty();
+        assertThat(after.suggestions().stream().filter(x -> x.id().equals("f3")).findFirst().orElseThrow().review())
+                .isEqualTo(new DirectorRules.Review("prune", "keep the ending"));
+        assertThat(planner.received).hasSize(1);
     }
 
     @Test
