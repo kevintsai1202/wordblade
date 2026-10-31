@@ -34,6 +34,8 @@ public class DirectorConfig {
     static final int THREADS = 4;
     /** 導演各模型呼叫的固定亂數種子 */
     static final int SEED = 7;
+    /** Jev 每題問幾次取平均 */
+    static final int JEV_TIMES = 3;
 
     @Bean
     DirectorJobs directorJobs(@Value("${wordblade.meta.base-url}") String baseUrl, @Value("${wordblade.meta.api-key}") String apiKey,
@@ -62,9 +64,10 @@ public class DirectorConfig {
             return t;
         });
         // 重講候選交給 TypeSafe Jev 判斷（沒設金鑰就不判斷）
-        DirectorJobs.RetakeJudge judge = typesafeKey.isBlank() ? null : new RestJevRetakeJudge(
+        // 每題問 3 次取平均（Jev 沒有溫度可調，同一請求有 ±0.03 的差異）
+        DirectorJobs.RetakeJudge judge = typesafeKey.isBlank() ? null : new AveragingRetakeJudge(new RestJevRetakeJudge(
                 RestClient.builder().baseUrl(typesafeUrl).defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + typesafeKey).requestFactory(factory).build(),
-                jevModel, json);
+                jevModel, json), JEV_TIMES);
         return new DirectorJobs(spark, planner, reviewer, pool, (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/director", m, in, out, 0), judge);
     }
 }
