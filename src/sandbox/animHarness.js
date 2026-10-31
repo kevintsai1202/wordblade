@@ -82,6 +82,10 @@
         const bitmap = c.transferToImageBitmap();
         return [bitmap, [bitmap]];
       }
+      case 'sounds': {
+        // 特效的音效事件（soundClips）：只回資料，聲音在主程式算（Worker 沒有 OfflineAudioContext）
+        return [RT.soundClips(d.instance, components, { duration: d.duration }), []];
+      }
       case 'vet': {
         if (!vetCanvas) vetCanvas = new OffscreenCanvas(1920, 1080);
         const plugin = RT.vetComponent(vetCanvas.getContext('2d'), d.component, { lintPaths: !!d.lintPaths });

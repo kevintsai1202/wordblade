@@ -14,13 +14,12 @@ export class PluginService {
   readonly three = new ThreeHost();
   private builtinsPromise: Promise<BuiltinPlugins> | null = null;
 
-  /** 內建視覺元件送進沙盒（只做一次）；音效元件今天先不用（§5.15 另做） */
+  /** 內建元件（視覺＋音效）送進沙盒（只做一次）；範本的音效跟著特效走（§5.15） */
   builtins(): Promise<BuiltinPlugins> {
     if (!this.builtinsPromise) {
-      const visual = COMPONENTS.filter((c) => c.kind === "visual");
-      this.builtinsPromise = this.host.setComponents(visual).then((hashes) => {
+      this.builtinsPromise = this.host.setComponents(COMPONENTS).then((hashes) => {
         const map: BuiltinPlugins = new Map();
-        visual.forEach((c, i) => map.set(c.id, { hash: hashes[i], kind: "2d", source: "builtin", component: c }));
+        COMPONENTS.forEach((c, i) => map.set(c.id, { hash: hashes[i], kind: "2d", source: "builtin", component: c }));
         return map;
       });
     }

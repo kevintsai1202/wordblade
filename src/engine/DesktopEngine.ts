@@ -40,7 +40,8 @@ function baseName(path: string): string {
 /** Windows 桌面版：重運算交給 Rust 指令層（ffmpeg sidecar、onnxruntime） */
 export class DesktopEngine implements Engine {
   readonly kind = "desktop" as const;
-  readonly capabilities = { vocalSeparation: true, anyFormatImport: true };
+  /** 聲音分離（P1-10）還沒實作：旗標維持 false，等 separateVocals 做好再打開 */
+  readonly capabilities = { vocalSeparation: false, anyFormatImport: true };
   /** 本機檔案經 Tauri 的 asset 協定給 WebView 讀；有代理檔就用代理檔（§5.21） */
   mediaUrl(media: Media): string {
     const path = media.proxyPath ?? media.path ?? "";

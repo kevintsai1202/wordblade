@@ -69,9 +69,9 @@ test('schema 2：每個插件都有 schema、category；視覺插件有 preview�
     else assert.strictEqual(c.category, 'sound');
   }
 });
-test('元件 id 不重複，視覺 14 個、音效 8 個', () => {
+test('元件 id 不重複，視覺 16 個、音效 8 個', () => {
   assert.strictEqual(new Set(components.map(c => c.id)).size, components.length);
-  assert.strictEqual(components.filter(c => c.kind === 'visual').length, 14);
+  assert.strictEqual(components.filter(c => c.kind === 'visual').length, 16);
   assert.strictEqual(components.filter(c => c.kind === 'sound').length, 8);
 });
 for (const comp of components) {
@@ -106,9 +106,9 @@ for (const comp of components) {
 
 console.log('— 範本');
 const byId = Object.fromEntries(components.map(c => [c.id, c]));
-test('範本 10 個、id 不重複', () => {
-  assert.strictEqual(LIBRARY.templates.length, 10);
-  assert.strictEqual(new Set(LIBRARY.templates.map(t => t.id)).size, 10);
+test('範本 12 個、id 不重複', () => {
+  assert.strictEqual(LIBRARY.templates.length, 12);
+  assert.strictEqual(new Set(LIBRARY.templates.map(t => t.id)).size, 12);
 });
 for (const tpl of LIBRARY.templates) {
   test(`範本「${tpl.name}」引用的元件與參數都對`, () => {

@@ -5,6 +5,7 @@
 import type { Effect, Plugin, Project } from "../core/model";
 import { PluginError, type SandboxHost } from "../sandbox/sandboxHost";
 import type { ThreeHost } from "../sandbox/threeHost";
+import { hasSound, renderSound, soundGain, soundKey, wavBlob, type EffectSound, type SoundClip } from "./effectSound";
 
 /** 依素材 id 取得解碼好的圖片（3D 插件的 env.images；一鍵片頭的封面） */
 export type ImageSource = (ids: string[]) => Promise<ImageBitmap[]>;
@@ -41,11 +42,32 @@ export function instanceOf(effect: Effect): Record<string, unknown> {
 
 /** 2D 特效畫格管理 */
 export class EffectRenderer {
+  /**
+   * 特效的音效（2D 範本帶的 ding、whoosh…）：沙盒算事件 → 主程式算成聲音；同樣的音效、長度、音量只算一次。
+   * 沒有音效、音量 0、或算失敗回 null（失敗不擋畫面與匯出）。
+   */
+  sound(effect: Effect): Promise<EffectSound | null> {
+    if (!hasSound(effect)) return Promise.resolve(null);
+    const key = soundKey(effect);
+    let hit = this.soundCache.get(key);
+    if (!hit) {
+      hit = this.host.request<SoundClip[]>("sounds", { instance: instanceOf(effect), duration: effect.end - effect.start })
+        .then((clips) => renderSound(clips, soundGain(effect), effect.end - effect.start))
+        .then((buffer) => (buffer ? { buffer, url: URL.createObjectURL(wavBlob(buffer)) } : null))
+        .catch(() => null);
+      this.soundCache.set(key, hit);
+    }
+    return hit;
+  }
+
   private readonly slots = new Map<string, Slot>();
   /** 已送進沙盒的元件雜湊 */
   private readonly sent = new Set<string>();
   /** 特效有沒有圖層讀下層畫面（依參數快取） */
   private readonly bgCache = new Map<string, boolean | undefined>();
+
+  /** 算好的特效音效：soundKey → 聲音（算不出來是 null） */
+  private readonly soundCache = new Map<string, Promise<EffectSound | null>>();
 
   /** 3D 插件的程式：插件雜湊 → 程式碼 */
   private readonly code3D = new Map<string, string>();

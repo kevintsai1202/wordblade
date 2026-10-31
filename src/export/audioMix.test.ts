@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeClip, makeProject } from "../core/fixtures";
-import { mixSpan, resampleLinear, stretch, voicesIn } from "./audioMix";
+import { mixExtra, mixSpan, resampleLinear, stretch, voicesIn } from "./audioMix";
 
 /** 正弦波 */
 function sine(freq: number, rate: number, seconds: number): Float32Array {
@@ -111,5 +111,21 @@ describe("mixSpan", () => {
     mixSpan(out, 10, 100, p, span, [ones, ones], null);
     expect(out[0][0]).toBeCloseTo(1);
     expect(out[0][99]).toBeCloseTo(1);
+  });
+});
+
+describe("特效音效疊進輸出區塊（mixExtra）", () => {
+  it("從時間軸 t 秒開始疊上；跨區塊時只疊區塊裡的那段", () => {
+    const rate = 10;
+    const extra = { t: 1.5, channels: [new Float32Array([1, 1, 1, 1, 1]), new Float32Array([2, 2, 2, 2, 2])] as [Float32Array, Float32Array] };
+    // 區塊 0～2 秒：1.5～2 秒疊前 5 格中的 5 格
+    const a: [Float32Array, Float32Array] = [new Float32Array(20), new Float32Array(20)];
+    mixExtra(a, 0, rate, extra);
+    expect(Array.from(a[0].subarray(14, 20))).toEqual([0, 1, 1, 1, 1, 1]);
+    expect(a[1][19]).toBe(2);
+    // 區塊 1.7～2.7 秒：從音效第 2 格開始
+    const b: [Float32Array, Float32Array] = [new Float32Array(10), new Float32Array(10)];
+    mixExtra(b, 1.7, rate, extra);
+    expect(Array.from(b[0].subarray(0, 4))).toEqual([1, 1, 1, 0]);
   });
 });

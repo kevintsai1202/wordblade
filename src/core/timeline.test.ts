@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { produce } from "immer";
 import { makeClip, makeProject } from "./fixtures";
 import type { Project } from "./model";
 import {
@@ -7,6 +8,7 @@ import {
   layoutV1,
   moveClip,
   rippleDelete,
+  rippleInsertDraft,
   sourceToTimeline,
   splitClip,
   timelineToSource,
@@ -216,5 +218,37 @@ describe("moveClip", () => {
   it("V1：依新位置重新排序，仍首尾相接", () => {
     const out = moveClip(makeProject(), "v1c", 0);
     expect(track(out, "V1").map((c) => [c.id, c.start])).toEqual([["v1c", 0], ["v1a", 10], ["v1b", 20]]);
+  });
+});
+
+describe("漣漪剪輯時 2D 特效內部的時間（圖層起訖、音效時間點）", () => {
+  /** 8～12 秒的 2D 特效：三個圖層、兩個音效（特效內的秒數） */
+  function withAnim(): Project {
+    const p = makeProject();
+    p.effects = [{
+      id: "a1", kind: "anim2d", start: 8, end: 12, pluginId: "box", anchorIds: [],
+      params: {
+        layers: [{ component: "box", params: {}, start: 0, end: 1.5 }, { component: "arrow", params: {}, start: 1.5, end: 4 }, { component: "check", params: {}, start: 1.2, end: null }],
+        sounds: [{ component: "ding", params: {}, at: 0.5 }, { component: "pop", params: {}, at: 3.5 }],
+      },
+    }];
+    return p;
+  }
+
+  it("刪除 9～11 秒：剪點之前不動、之後左移 2 秒、落在範圍內的收到剪點", () => {
+    const e = rippleDelete(withAnim(), 9, 11).effects[0];
+    expect([e.start, e.end]).toEqual([8, 10]);
+    const layers = e.params.layers as { start: number; end: number | null }[];
+    expect(layers.map((l) => [l.start, l.end])).toEqual([[0, 1], [1, 2], [1, null]]);
+    expect((e.params.sounds as { at: number }[]).map((s) => s.at)).toEqual([0.5, 1.5]);
+  });
+
+  it("在 10 秒插入 2 秒：之後的圖層與音效右移", () => {
+    const p = withAnim();
+    const out = produce(p, (d) => { rippleInsertDraft(d, 10, 2); });
+    const e = out.effects[0];
+    expect([e.start, e.end]).toEqual([8, 14]);
+    expect((e.params.layers as { end: number | null }[]).map((l) => l.end)).toEqual([1.5, 6, null]);
+    expect((e.params.sounds as { at: number }[]).map((s) => s.at)).toEqual([0.5, 5.5]);
   });
 });

@@ -183,6 +183,42 @@
         }
       }
     },
+    "counter": {
+      "description": "Counts a number up from a start value to the target at the box center, with optional prefix, suffix and decimals, then gives a small bounce; for stats and scores",
+      "name": "Number count-up",
+      "params": {
+        "color": {
+          "label": "Color"
+        },
+        "decimals": {
+          "label": "Decimals"
+        },
+        "font": {
+          "label": "Font"
+        },
+        "from": {
+          "label": "Start value"
+        },
+        "inDur": {
+          "label": "Count time (sec)"
+        },
+        "outline": {
+          "label": "Outline"
+        },
+        "prefix": {
+          "label": "Prefix"
+        },
+        "size": {
+          "label": "Size"
+        },
+        "suffix": {
+          "label": "Suffix"
+        },
+        "to": {
+          "label": "Target value"
+        }
+      }
+    },
     "cross": {
       "_src": "20664bb635",
       "description": "Draws two strokes one after the other at the center of the box to form a cross, optionally with an outer ring",
@@ -297,6 +333,30 @@
         },
         "zoom": {
           "label": "Magnification"
+        }
+      }
+    },
+    "particles": {
+      "description": "Bursts a ring of colored confetti out of the box center; the pieces fly outward, fall with gravity and fade, for done or celebration moments",
+      "name": "Particle burst",
+      "params": {
+        "accent": {
+          "label": "Second color"
+        },
+        "color": {
+          "label": "Main color"
+        },
+        "count": {
+          "label": "Count"
+        },
+        "gravity": {
+          "label": "Gravity"
+        },
+        "life": {
+          "label": "Piece life (sec)"
+        },
+        "spread": {
+          "label": "Spread"
         }
       }
     },
@@ -507,6 +567,14 @@
       "_src": "db5ae48935",
       "name": "Circle highlight + pop",
       "title": "Circle"
+    },
+    "confetti-burst": {
+      "name": "Confetti burst + sparkle",
+      "title": "Celebrate"
+    },
+    "count-up": {
+      "name": "Number count-up + rise",
+      "title": "Number"
     },
     "highlighter": {
       "_src": "cd5e23bc1f",

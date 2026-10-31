@@ -9,7 +9,7 @@ import type { Envelope } from "../audio/envelope";
 import { timelineWords, type Caption } from "../core/captions";
 import type { Project } from "../core/model";
 import type { Engine } from "../engine/Engine";
-import { mixAudio } from "../export/audioMix";
+import { mixAudio, SAMPLE_RATE, type ExtraSound } from "../export/audioMix";
 import { ExportCancelled, runExport } from "../export/exporter";
 import { exportPlan, type ExportPreset } from "../export/exportPlan";
 import { toSrt } from "../export/srt";
@@ -63,12 +63,18 @@ export function ExportTab({ project, captions, engine, plugins, envelopes, sugge
     const effects = new EffectRenderer(plugins.host, plugins.three, () => undefined, images);
     try {
       await effects.syncPlugins(project.plugins);
+      // 2D 特效的音效（跟著特效走）：算好後從特效起點疊進音軌；聲音和輸出同為 48 kHz
+      const extras: ExtraSound[] = [];
+      for (const e of project.effects) {
+        const sound = await effects.sound(e);
+        if (sound && sound.buffer.sampleRate === SAMPLE_RATE) extras.push({ t: e.start, channels: [sound.buffer.getChannelData(0), sound.buffer.getChannelData(1)] });
+      }
       const { canEncodeAudio } = await import("mediabunny");
       const audioCodec = (await canEncodeAudio("aac")) ? "aac" : "opus";
       const result = await runExport({
         project, plan, target, effects, audioCodec,
         source: (m) => engine.exportSource(m),
-        audio: (audioSource, signal) => mixAudio({ project, duration: plan.duration, source: (m) => engine.exportSource(m), audioSource, duck, signal }),
+        audio: (audioSource, signal) => mixAudio({ project, duration: plan.duration, source: (m) => engine.exportSource(m), audioSource, duck, extras, signal }),
         captions: { captions, words: timelineWords(project) },
         onProgress: (p) => setStatus({ kind: "running", frame: p.frame, total: p.total, startedAt }),
         signal: abort.signal,

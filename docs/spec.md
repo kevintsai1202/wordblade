@@ -557,7 +557,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 
 **AI 音效（P1-8）**
 
-- 一句描述（例如「whoosh」「keyboard typing」「pop」）＋長度 → 閘道 `/v1/ai/sound` 請 Muse Spark 回音效 spec → 解讀器算成 WAV → 進素材庫，可以直接放到 A3 音效軌；2D 插件引用音效（§5.7）要等 `Synth` 紀錄補上。
+- 一句描述（例如「whoosh」「keyboard typing」「pop」）＋長度 → 閘道 `/v1/ai/sound` 請 Muse Spark 回音效 spec → 解讀器算成 WAV → 進素材庫，可以直接放到 A3 音效軌。2D 範本的音效（§5.7，11/1）跟著特效走：存在特效參數 `sounds`（元件雜湊＋參數＋at）與 `soundGain`（0～1，0＝關掉），沙盒算事件、主程式算成聲音，預覽當一個跟著特效的聲音播、匯出混進音軌（`src/anim/effectSound.ts`）。
 - 內建 10 個範本 spec（whoosh、pop、ding、打字、上升音、下降音、點擊、轉場掃頻、撞擊、閃亮），不用 AI 也能用，同時是模型的例子。
 
 **AI 音樂（P1-11，WebAudio 版）**
