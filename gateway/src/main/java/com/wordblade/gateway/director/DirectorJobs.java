@@ -47,8 +47,27 @@ public class DirectorJobs {
     /** 3D 場景（規劃者選轉場用） */
     public record Scene(String id, String name) {}
 
-    /** 建工作；style 是風格 plain／light／playful（舊版桌面沒有，當 plain） */
-    public record StartRequest(String mediaName, double duration, int segments, List<Scene> scenes, String style) {}
+    /**
+     * 建工作；style 是風格 plain／light／playful（舊版桌面沒有，當 plain）；
+     * directives 是使用者的導演指示（一條一句，依序是 d1、d2…；舊版桌面沒有）。
+     */
+    public record StartRequest(String mediaName, double duration, int segments, List<Scene> scenes, String style, List<String> directives) {
+        /** 沒有導演指示 */
+        public StartRequest(String mediaName, double duration, int segments, List<Scene> scenes, String style) {
+            this(mediaName, duration, segments, scenes, style, List.of());
+        }
+
+        /** 導演指示：去掉空白的，最多 MAX_DIRECTIVES 條、每條最多 MAX_DIRECTIVE_LENGTH 字 */
+        public List<String> directiveList() {
+            if (directives == null) return List.of();
+            return directives.stream().filter(d -> d != null && !d.isBlank()).map(String::strip)
+                    .map(d -> d.length() > MAX_DIRECTIVE_LENGTH ? d.substring(0, MAX_DIRECTIVE_LENGTH) : d).limit(MAX_DIRECTIVES).toList();
+        }
+    }
+
+    /** 導演指示最多幾條、每條最多幾個字 */
+    static final int MAX_DIRECTIVES = 10;
+    static final int MAX_DIRECTIVE_LENGTH = 300;
 
     /** 一個詞（素材時間） */
     public record Word(String id, double t, String text) {}
@@ -185,6 +204,8 @@ public class DirectorJobs {
         volatile AiModel.Image planSheet;
         /** 導演構想（觀眾、每章帶走的事、問題清單）；最近一輪有給的 */
         volatile JsonNode treatment;
+        /** 上一輪的指示對帳清單（規劃者漏給時沿用） */
+        volatile JsonNode ledger;
         /** 構想的問題 id（之後幾輪模型漏給構想時沿用） */
         volatile Set<String> problemIds = Set.of();
         /** 送給規劃者的重講候選（Jev 確認過的；沒有 Jev 時是未確認的全部） */
@@ -259,6 +280,14 @@ public class DirectorJobs {
     private void analyze(Job job, int index, SegmentMeta meta, byte[] mp4) {
         if (job.cancelled) return;
         StringBuilder text = new StringBuilder();
+        // 導演指示：請 Spark 特別留意指示提到的畫面（在摘要、重點與活動區寫清楚它在哪裡、何時出現）
+        List<String> directives = job.req.directiveList();
+        if (!directives.isEmpty()) {
+            text.append("The editor's instructions for the whole video (they may or may not concern this part). If something they mention appears in this part, "
+                    + "describe where and when it is on screen in the summary and as a highlight with its box:\n");
+            for (int d = 0; d < directives.size(); d++) text.append(DirectorRules.directiveId(d)).append(": ").append(directives.get(d)).append('\n');
+            text.append('\n');
+        }
         if (!meta.activityList().isEmpty()) {
             text.append("Screen activity found by comparing frames (seconds into this video; box as fractions of the frame):\n");
             for (Activity a : meta.activityList()) {
@@ -342,10 +371,12 @@ public class DirectorJobs {
             AiModel.Reply r = planner.call(job.plannerConversation, message, sheet);
             usage.record(job.tokenId, r.model(), r.inputTokens(), r.outputTokens());
             result = DirectorRules.check(read(r.text()), job.req.duration(), s.scenes(), s.words(), s.activities(),
-                    new DirectorRules.Options(job.req.style(), job.problemIds, allWords(job), confirmedRetakes(job)));
+                    new DirectorRules.Options(job.req.style(), job.problemIds, allWords(job), confirmedRetakes(job), job.req.directiveList(), job.ledger,
+                            job.fixed.stream().filter(f -> f.kind().equals("cut")).map(f -> new double[] {f.start(), f.end()}).toList()));
             // 程式決定的剪加回去（規劃者不必列、也刪不掉）
             result = new DirectorRules.Result(result.chapters(), FixedCuts.merge(job.fixed, result.suggestions()), result.errors(), result.treatment(), result.problemIds());
             if (result.treatment() != null) job.treatment = result.treatment();
+            if (result.treatment() != null && result.treatment().has("directives")) job.ledger = result.treatment().path("directives");
             job.problemIds = result.problemIds();
             if (result.errors().isEmpty() || round == MAX_ROUNDS) break;
             message = feedback(result.errors());
@@ -393,6 +424,14 @@ public class DirectorJobs {
             List<String> missing = new ArrayList<>();
             if (root != null) root.path("missing").forEach(m -> missing.add(String.format(Locale.ROOT, "%s at %.1f–%.1f s: %s",
                     m.path("kind").asString("item"), m.path("start").asDouble(0), m.path("end").asDouble(0), m.path("note").asString(""))));
+            // 照使用者指示做的項目：不能標成可有可無；要刪改成修改交回規劃者（規劃者改不了就在對帳清單寫理由）
+            Set<String> directed = job.suggestions.stream().filter(x -> x.payload().containsKey("directive")).map(DirectorRules.Suggestion::id).collect(Collectors.toSet());
+            prune.keySet().removeAll(directed);
+            for (Map.Entry<String, DirectorRules.Review> e : List.copyOf(verdicts.entrySet())) {
+                if (directed.contains(e.getKey()) && e.getValue().verdict().equals("drop"))
+                    verdicts.put(e.getKey(), new DirectorRules.Review("revise", e.getValue().note()
+                            + " (The user asked for this edit: keep it and fix the problem, or remove it only with a notAdopted reason in treatment.directives.)"));
+            }
             // 程式決定的剪（f 開頭）不交回規劃者：審查者要改或刪就改成 prune（預設不勾），讓使用者決定
             for (Map.Entry<String, DirectorRules.Review> e : List.copyOf(verdicts.entrySet())) {
                 if (isFixed(e.getKey()) && !e.getValue().verdict().equals("keep")) {
@@ -444,12 +483,13 @@ public class DirectorJobs {
         root.put("video", job.req.mediaName());
         root.put("duration", round1(job.req.duration()));
         putStyle(root, job);
+        putDirectives(root, job);
         root.put("frames", job.planSheet != null
                 ? "Attached: a contact sheet with one frame per screen activity region (labelled with its id) and frames every few seconds (labelled with the time)."
                 : "No frames attached.");
         // 3D 場景只在能用轉場、吉祥物的風格才送（不送就不會被拿來裝飾）
         ArrayNode scenes = root.putArray("scenes");
-        if (job.req.scenes() != null && DirectorRules.allowedKinds(job.req.style()).contains("transition")) job.req.scenes().forEach(s -> scenes.addObject().put("id", s.id()).put("name", s.name()));
+        if (job.req.scenes() != null && (DirectorRules.allowedKinds(job.req.style()).contains("transition") || !job.req.directiveList().isEmpty())) job.req.scenes().forEach(s -> scenes.addObject().put("id", s.id()).put("name", s.name()));
         ArrayNode segments = root.putArray("segments");
         for (int i = 0; i < job.req.segments(); i++) {
             SegmentMeta meta = job.metas.get(i);
@@ -543,6 +583,7 @@ public class DirectorJobs {
         root.put("duration", round1(job.req.duration()));
         root.put("contactSheet", hasSheet ? "Attached: one frame per item at its start time, labelled with the item id." : "No frames attached.");
         putStyle(root, job);
+        putDirectives(root, job);
         if (job.treatment != null) root.set("treatment", job.treatment);
         ArrayNode chapters = root.putArray("chapters");
         job.chapters.forEach(c -> chapters.addObject().put("title", c.title()).put("start", round1(c.start())).put("end", round1(c.end())));
@@ -661,6 +702,14 @@ public class DirectorJobs {
         root.put("style", DirectorRules.style(job.req.style()));
         ArrayNode kinds = root.putArray("allowedKinds");
         new java.util.TreeSet<>(DirectorRules.allowedKinds(job.req.style())).forEach(kinds::add);
+    }
+
+    /** 資料裡寫上使用者的導演指示 [{id, text}]（沒有就不寫） */
+    private static void putDirectives(ObjectNode root, Job job) {
+        List<String> directives = job.req.directiveList();
+        if (directives.isEmpty()) return;
+        ArrayNode list = root.putArray("directives");
+        for (int d = 0; d < directives.size(); d++) list.addObject().put("id", DirectorRules.directiveId(d)).put("text", directives.get(d));
     }
 
     private static double round1(double v) {

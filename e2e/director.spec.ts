@@ -37,11 +37,14 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
   let sheetSent = false;
   /** 建工作時送的風格、規劃前有沒有送畫面總表（docs/plan-10-30-director3.md） */
   let style = "";
+  /** 送出的導演指示 */
+  let directives: string[] = [];
   let framesSent = false;
   await page.route(`${GATEWAY}/v1/ai/director**`, async (route) => {
     const req = route.request();
     if (req.method() === "POST" && req.url().endsWith("/v1/ai/director")) {
       style = JSON.parse(req.postData() ?? "{}").style;
+      directives = JSON.parse(req.postData() ?? "{}").directives ?? [];
       return reply(route, 202, { jobId: "d1" });
     }
     if (req.method() === "POST" && req.url().endsWith("/frames")) {
@@ -68,12 +71,14 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
         it("i2", "transition", 0.2, 1.5, 0, "Open the video", { scene: "board-float" }),
         it("i3", "zoom", 0.5, 2, 0, "Small text", { cx: 0.3, cy: 0.3, w: 0.5 }, "revised"),
         it("i4", "mask", 1, 2, 0, "Person on screen", { target: "person" }),
-        it("i5", "effect", 1.2, 2, 0, "Key point", { description: "A pop of confetti" }),
+        it("i5", "effect", 1.2, 2, 0, "Key point", { description: "A pop of confetti", directive: "d1" }),
         it("i6", "cut", 2.4, 4, 1, "Retake", {}, "prune"),
         it("n1", "note", 3, 4, 1, "At 3.0 s the speaker adds something left out at 0.5 s; both are kept.", { relation: "supplement", earlierStart: 0.5 }),
       ];
       const chapters = [{ title: "Greeting", start: 0, end: 2.4 }, { title: "Again", start: 2.4, end: 4 }];
-      const treatment = { audience: "beginners", problems: [{ id: "p1", start: 0.5, end: 2, what: "Small text on the slide" }] };
+      // 導演指示的對帳（docs/plan-11-01-directives.md）：d1 做到了（i5）、d2 沒做並說明原因
+      const treatment = { audience: "beginners", problems: [{ id: "p1", start: 0.5, end: 2, what: "Small text on the slide" }],
+        directives: [{ id: "d1", text: "Confetti on the key point", items: ["i5"] }, { id: "d2", text: "Make the intro 3D", items: [], notAdopted: "There is no 3D intro kind." }] };
       if (!reviewed) return reply(route, 200, { status: "planned", segmentsDone: 1, segmentsTotal: 1, segmentsFailed: 0, error: null, chapters, suggestions: items, removed: [] });
       return reply(route, 200, {
         status: "done", segmentsDone: 1, segmentsTotal: 1, segmentsFailed: 0, error: null, chapters, suggestions: items, treatment,
@@ -95,6 +100,7 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
 
   await openTab(page, "director");
   await expect(page.getByTestId("director-estimate")).toContainText("k tokens");
+  await page.getByTestId("director-directives").fill("Confetti on the key point\n\nMake the intro 3D");
   await page.getByTestId("director-ask").click();
   const rows = page.getByTestId("director-row");
   await expect(rows).toHaveCount(8, { timeout: 60_000 });
@@ -107,6 +113,11 @@ test("AI 導演：建議清單 → 採用改字、放大、遮罩，Esc 略過�
   await expect(page.locator('[data-kind="cut"] [data-testid="director-check"]')).not.toBeChecked();
   await expect(page.locator('[data-kind="cut"]')).toContainText("could go");
   await expect(page.getByTestId("director-treatment")).toContainText("beginners");
+  // 導演指示：空行不送；逐條列出做到的與沒做的原因；照指示做的項目有標記
+  expect(directives).toEqual(["Confetti on the key point", "Make the intro 3D"]);
+  await expect(page.getByTestId("director-directive")).toHaveCount(2);
+  await expect(page.locator('[data-testid="director-directive"][data-adopted="no"]')).toContainText("no 3D intro kind");
+  await expect(page.locator('[data-kind="effect"] [data-testid="director-directed"]')).toBeVisible();
   // 補充的提醒（docs/plan-10-31-director4.md）：只顯示，沒有勾選框與 Apply；Dismiss 標成略過
   const note = page.locator('[data-kind="note"]');
   await expect(note).toContainText("left out at 0.5 s");

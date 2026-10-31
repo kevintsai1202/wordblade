@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * AI 導演剪輯腳本的檢查（spec §5.11；docs/plan-10-29-director2.md、docs/plan-10-30-director3.md）：
@@ -23,6 +26,8 @@ import tools.jackson.databind.JsonNode;
  * - 時間夾在片長內；各種類必填欄位（遮罩的名詞片語、轉場的場景、改字的詞 id、放大的活動區或框、吉祥物的目標框、字幕樣式、配樂描述、片頭標題）。
  * - 3D 轉場只能在章節交界（離某個章節起點 3 秒內）、長 2～6 秒、最多 3 個、彼此相隔 30 秒；特效每 20 秒最多 1 個、整支最多 5 個；吉祥物最多 1 次。
  * - 畫面類（放大、特效、轉場、吉祥物）彼此不重疊；剪的重疊取聯集；改字以詞為準（同一個詞只能被改一次）。
+ * - 導演指示（docs/plan-11-01-directives.md）：使用者的指示 d1、d2…；照指示做的項目（"directive"）不受風格、次數上限、特效密度、problem、quote 限制，
+ *   時間長度、重疊、必填欄位照樣檢查；treatment.directives 逐條交代用哪些項目做到或為什麼不採用，漏交代退回；被規則擋下又沒理由時，規則的錯誤當理由。
  * 舊名稱 camera 當作 transition。前端 src/director/suggestions.ts 的 clampSuggestions 再做一次簡化版檢查。
  */
 public final class DirectorRules {
@@ -58,8 +63,12 @@ public final class DirectorRules {
      *
      * @param style            風格 plain／light／playful（null 或不認得當 plain）
      * @param fallbackProblems 上一輪構想的問題 id（格式修正或審查後重寫時，模型可能漏掉構想）
+     * @param directives       使用者的導演指示（依序是 d1、d2…）；沒有是空的
+     * @param fallbackLedger   上一輪的指示對帳清單（這一輪漏給時沿用）；沒有是 null
+     * @param fixedCuts        程式決定的剪 [start, end]（照指示做的項目整段落在裡面就看不到）
      */
-    public record Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words, List<double[]> confirmedRetakes) {
+    public record Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words, List<double[]> confirmedRetakes,
+                          List<String> directives, JsonNode fallbackLedger, List<double[]> fixedCuts) {
         /** 沒有逐字稿的詞（只檢查格式，不做重講、無聲、改字連續的檢查） */
         public Options(String style, Set<String> fallbackProblems) {
             this(style, fallbackProblems, List.of(), List.of());
@@ -69,6 +78,25 @@ public final class DirectorRules {
         public Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words) {
             this(style, fallbackProblems, words, List.of());
         }
+
+        /** 沒有導演指示 */
+        public Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words, List<double[]> confirmedRetakes) {
+            this(style, fallbackProblems, words, confirmedRetakes, List.of(), null);
+        }
+
+        /** 沒有程式決定的剪 */
+        public Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words, List<double[]> confirmedRetakes,
+                       List<String> directives, JsonNode fallbackLedger) {
+            this(style, fallbackProblems, words, confirmedRetakes, directives, fallbackLedger, List.of());
+        }
+    }
+
+    /** 吉祥物最短幾秒（走進來再指或走到目標，太短看不清） */
+    static final double MASCOT_MIN = 3;
+
+    /** 第 i 條指示的 id（d1 起算） */
+    public static String directiveId(int i) {
+        return "d" + (i + 1);
     }
 
     /** 重講的剪對上 Jev 確認的候選：起訖都在幾秒內 */
@@ -168,6 +196,11 @@ public final class DirectorRules {
         if (problems.isEmpty()) problems.addAll(options.fallbackProblems());
         String style = style(options.style());
         Set<String> allowed = allowedKinds(style);
+        List<String> directives = options.directives() == null ? List.of() : options.directives();
+        Set<String> directiveIds = new TreeSet<>();
+        for (int d = 0; d < directives.size(); d++) directiveIds.add(directiveId(d));
+        /** 照指示做的項目（項目 id → 指示 id），被擋下時找得到理由 */
+        Map<String, String> directed = new LinkedHashMap<>();
 
         List<Suggestion> ok = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
@@ -181,7 +214,16 @@ public final class DirectorRules {
                 errors.add(error(where + ": unknown kind \"" + kind + "\" (use " + String.join(", ", new TreeSet<>(allowed)) + ")."));
                 continue;
             }
-            if (!allowed.contains(kind)) {
+            // 照指示做的項目：指示 id 要對得上；風格、引用、problem、次數上限放寬
+            String directive = s.path("directive").asString("").strip();
+            if (directive.isEmpty()) directive = null;
+            if (directive != null && !directiveIds.contains(directive)) {
+                errors.add(error(where + ": \"directive\" \"" + directive + "\" is not one of the user's directives ("
+                        + (directiveIds.isEmpty() ? "there are none" : String.join(", ", directiveIds)) + ")."));
+                continue;
+            }
+            if (directive != null) directed.put(id, directive);
+            if (directive == null && !allowed.contains(kind)) {
                 errors.add(error(where + ": " + kind + " is not allowed in the \"" + style + "\" style — drop it."));
                 continue;
             }
@@ -191,13 +233,17 @@ public final class DirectorRules {
                 errors.add(error(where + ": every item needs a \"purpose\" — say why the edit helps the viewer; drop it if you can't."));
                 continue;
             }
-            if (NEEDS_QUOTE.contains(kind) && quote.isEmpty()) {
+            if (directive == null && NEEDS_QUOTE.contains(kind) && quote.isEmpty()) {
                 errors.add(error(where + ": " + kind + " needs \"quote\" — the transcript sentence it belongs to."));
                 continue;
             }
             // 畫面類要說它解決構想裡的哪個問題；剪、改字、遮罩本身就有理由，不用
             String problem = null;
-            if (VISUAL.contains(kind)) {
+            if (VISUAL.contains(kind) && directive != null) {
+                // 指示本身就是理由；有指名構想裡的問題就帶上
+                String p = s.path("problem").asString("").strip();
+                problem = problems.contains(p) ? p : null;
+            } else if (VISUAL.contains(kind)) {
                 problem = s.path("problem").asString("").strip();
                 if (problems.isEmpty()) {
                     errors.add(error(where + ": " + kind + " needs \"problem\", but there is no \"treatment\" with problems — write the treatment first."));
@@ -228,10 +274,53 @@ public final class DirectorRules {
                 errors.add(error(where + ": " + bad));
                 continue;
             }
+            if (directive != null) payload.put("directive", directive);
             int chapter = s.path("chapter").asInt(-1);
             ok.add(new Suggestion(id, kind, start, end, purpose, payload, purpose, quote, chapter, null, problem));
         }
-        return new Result(chapters, merge(ok, errors), errors, treatment, Set.copyOf(problems));
+        List<Suggestion> merged = merge(ok, errors);
+        merged = hiddenByCuts(merged, options.fixedCuts() == null ? List.of() : options.fixedCuts(), errors);
+        if (!directives.isEmpty()) treatment = ledger(treatment, directives, merged, directed, errors, options.fallbackLedger());
+        return new Result(chapters, merged, errors, treatment, Set.copyOf(problems));
+    }
+
+    /**
+     * 指示對帳清單：每條指示 {id, text, items（留下來的項目 id）, notAdopted（不採用的理由）}，寫回 treatment.directives。
+     * 規劃者的清單這一輪沒給就用上一輪的；沒交代的退回（理由先寫「沒交代」）；項目全被規則擋下又沒理由時，規則的錯誤當理由。
+     */
+    private static JsonNode ledger(JsonNode treatment, List<String> directives, List<Suggestion> kept, Map<String, String> directed,
+                                   List<AiError> errors, JsonNode fallback) {
+        JsonNode given = treatment != null && treatment.path("directives").isArray() ? treatment.path("directives") : fallback;
+        /** 規劃者寫的不採用理由（指示 id → 理由） */
+        Map<String, String> reasons = new LinkedHashMap<>();
+        if (given != null) given.forEach(d -> reasons.put(d.path("id").asString("").strip(), d.path("notAdopted").asString("").strip()));
+        ObjectNode out = treatment instanceof ObjectNode o ? o.deepCopy() : JsonNodeFactory.instance.objectNode();
+        ArrayNode list = out.putArray("directives");
+        List<AiError> missing = new ArrayList<>();
+        for (int d = 0; d < directives.size(); d++) {
+            String did = directiveId(d);
+            ObjectNode entry = list.addObject();
+            entry.put("id", did).put("text", directives.get(d));
+            ArrayNode items = entry.putArray("items");
+            kept.stream().filter(s -> did.equals(s.payload().get("directive"))).forEach(s -> items.add(s.id()));
+            String reason = reasons.getOrDefault(did, "");
+            if (items.isEmpty() && reason.isEmpty()) {
+                // 照這條指示做的項目被規則擋下：把擋下的原因當理由
+                List<String> rejected = directed.entrySet().stream().filter(e -> e.getValue().equals(did)).map(Map.Entry::getKey).toList();
+                List<String> why = errors.stream().map(AiError::message)
+                        .filter(m -> rejected.stream().anyMatch(id -> m.contains("(" + id + ")") || m.startsWith(id + " ("))).toList();
+                if (!why.isEmpty()) {
+                    reason = "Rejected by the edit rules: " + String.join(" ", why);
+                } else {
+                    reason = "Not addressed by the director.";
+                    missing.add(error("treatment.directives: " + did + " (\"" + directives.get(d) + "\") is not addressed. Add items with \"directive\":\"" + did
+                            + "\" that carry it out, or give \"notAdopted\" with the reason it can't or shouldn't be done."));
+                }
+            }
+            if (!reason.isEmpty()) entry.put("notAdopted", reason);
+        }
+        errors.addAll(missing);
+        return out;
     }
 
     /** 章節：夾在片長內、依起點排序、去掉空的 */
@@ -300,8 +389,12 @@ public final class DirectorRules {
             case "mascot" -> {
                 double[] box = box(s);
                 String action = s.path("action").asString("point");
-                payload.put("action", action.equals("wave") ? "wave" : "point");
+                payload.put("action", Set.of("wave", "walk").contains(action) ? action : "point");
+                // 從哪一邊走進來（walk 一路走到目標框）
+                String from = s.path("from").asString("");
+                if (from.equals("left") || from.equals("right")) payload.put("from", from);
                 if (box == null) yield "a mascot needs the target box x, y, w, h (fractions of the frame) it points at.";
+                if (end - start < MASCOT_MIN) yield "a mascot lasts at least " + (int) MASCOT_MIN + " seconds.";
                 putBox(payload, box);
                 yield null;
             }
@@ -468,7 +561,7 @@ public final class DirectorRules {
                     errors.add(error(where + " overlaps " + clash.id() + " (" + clash.kind() + "); zooms, effects, transitions and the mascot must not overlap."));
                     continue;
                 }
-                if (s.kind().equals("effect") && out.stream().anyMatch(o -> o.kind().equals("effect") && s.start() - o.start() < EFFECT_WINDOW)) {
+                if (s.kind().equals("effect") && !directed(s) && out.stream().anyMatch(o -> o.kind().equals("effect") && s.start() - o.start() < EFFECT_WINDOW)) {
                     errors.add(error(where + ": at most one effect per " + (int) EFFECT_WINDOW + " seconds."));
                     continue;
                 }
@@ -481,7 +574,7 @@ public final class DirectorRules {
                     continue;
                 }
             }
-            if (count.getOrDefault(s.kind(), 0) >= CAPS.get(s.kind()) || out.size() >= TOTAL) {
+            if ((!directed(s) && count.getOrDefault(s.kind(), 0) >= CAPS.get(s.kind())) || out.size() >= TOTAL) {
                 errors.add(error(where + ": too many " + s.kind() + " items (at most " + CAPS.get(s.kind()) + ")."));
                 continue;
             }
@@ -489,6 +582,31 @@ public final class DirectorRules {
             out.add(s);
         }
         return out;
+    }
+
+    /**
+     * 照指示做的項目整段落在剪掉的範圍（規劃者的剪或程式決定的剪）裡，觀眾永遠看不到：擋下並回錯誤（指示對帳時當成不採用的理由）。
+     */
+    private static List<Suggestion> hiddenByCuts(List<Suggestion> list, List<double[]> fixedCuts, List<AiError> errors) {
+        List<double[]> cuts = new ArrayList<>(fixedCuts);
+        list.stream().filter(s -> s.kind().equals("cut")).forEach(s -> cuts.add(new double[] {s.start(), s.end()}));
+        List<Suggestion> out = new ArrayList<>();
+        for (Suggestion s : list) {
+            double[] hit = !directed(s) || s.kind().equals("cut") || GLOBAL.contains(s.kind()) ? null
+                    : cuts.stream().filter(c -> c[0] <= s.start() + 1e-6 && s.end() <= c[1] + 1e-6).findFirst().orElse(null);
+            if (hit == null) {
+                out.add(s);
+                continue;
+            }
+            errors.add(error(String.format(java.util.Locale.ROOT, "%s (%s) lies entirely inside the cut %.1f–%.1f s, so the viewer would never see it; "
+                    + "move it to footage that is kept, or give notAdopted.", s.id(), s.kind(), hit[0], hit[1])));
+        }
+        return out;
+    }
+
+    /** 照使用者指示做的項目（次數上限與特效密度不算它） */
+    private static boolean directed(Suggestion s) {
+        return s.payload().containsKey("directive");
     }
 
     private static AiError error(String message) {

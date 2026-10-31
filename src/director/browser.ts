@@ -128,13 +128,15 @@ export function makeApplyDeps(o: {
       return { effect: outcome.effect, plugins: outcome.plugins };
     },
     async scene(s, span) {
-      const id = s.kind === "mascot" ? (s.payload.action === "wave" ? "mascot-wave" : "mascot-point") : String(s.payload.scene);
+      const id = s.kind === "mascot" ? ({ wave: "mascot-wave", walk: "mascot-walk" } as Record<string, string>)[String(s.payload.action)] ?? "mascot-point" : String(s.payload.scene);
       const template = TEMPLATES_3D.find((t) => t.id === id);
       if (!template) throw new Error("Unknown 3D scene.");
       const plugin = (await builtinPlugins3D()).get(template.componentId)!;
       const effect = template3DEffect(template, plugin, `fx-${crypto.randomUUID().slice(0, 8)}`, span.start, span.end - span.start);
       const box = s.kind === "mascot" ? boxOf(s) : null;
       if (box) effect.params = { ...effect.params, box };
+      // 導演指定從哪一邊走進來
+      if (s.kind === "mascot" && (s.payload.from === "left" || s.payload.from === "right")) effect.params = { ...effect.params, from: s.payload.from };
       return { effect, plugins: [plugin] };
     },
     async music(s) {

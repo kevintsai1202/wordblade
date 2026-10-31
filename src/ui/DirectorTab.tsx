@@ -97,6 +97,8 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set());
   /** 風格與這次的導演構想（構想只在這次執行後顯示，不存進專案） */
   const [style, setStyle] = useState<DirectorStyle>("plain");
+  /** 導演指示（一行一條；導演會把它們排進整份規劃） */
+  const [directives, setDirectives] = useState("");
   const [treatment, setTreatment] = useState<DirectorTreatment | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -159,7 +161,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
       const src = await frameSource(engine, media);
       setProgress({ stage: "converting", done: 0, total: 1 });
       const result = await runDirector({
-        media, words, scenes: TEMPLATES_3D.map((t) => ({ id: t.id, name: t.name })), api: new DirectorApi(settings), signal: abort.signal, onProgress: setProgress, style,
+        media, words, scenes: TEMPLATES_3D.map((t) => ({ id: t.id, name: t.name })), api: new DirectorApi(settings), signal: abort.signal, onProgress: setProgress, style, directives: directives.split(/\r?\n/),
         makeClip: async (s, e) => (await makeSamClip(src, s, e, { fps: 2, maxWidth: Infinity, maxHeight: 480, bitrate: 250_000, scan: false, videoW: media.width ?? 1920, videoH: media.height ?? 1080, signal: abort.signal })).bytes,
         activities: async (s, e) => {
           const times: number[] = [];
@@ -301,6 +303,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
         <span className="director-reason">
           {s.purpose ?? s.reason}{detail(s) && <span className="muted"> · {detail(s)}</span>}
           {s.quote && <span className="director-quote">“{s.quote}”</span>}
+          {typeof s.payload.directive === "string" && <span className="director-review added" data-testid="director-directed">Your direction</span>}
           {s.review && <span className={`director-review ${s.review.verdict}`} title={s.review.note}>{reviewBadge(s)}{s.review.note && s.review.verdict !== "keep" ? `: ${s.review.note}` : ""}</span>}
         </span>
         {pending ? (
@@ -331,6 +334,9 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
               ? <button type="button" data-testid="director-cancel" onClick={() => abortRef.current?.abort()}>Cancel</button>
               : <button type="button" data-testid="director-ask" disabled={!ready || busy} title={ready ? undefined : "Still preparing this video (audio levels for transcription)"} onClick={onAsk}>{suggestions.length ? "Ask again" : "Ask the director"}</button>}
           </div>
+          <textarea data-testid="director-directives" className="director-directives" rows={3} value={directives} disabled={busy}
+            placeholder={"Directions for the director, one per line (optional)\ne.g. At 1:08 let the mascot walk from the left to the Spring MVC title"}
+            onChange={(e) => setDirectives(e.target.value)} />
           {media && <p className="muted" data-testid="director-estimate">{formatTimecode(media.duration).slice(3)} · about {Math.round(estimateTokens(media.duration) / 1000)}k tokens{hasWords ? "" : " · will transcribe first"}</p>}
         </>
       )}
@@ -342,6 +348,18 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
         </div>
       )}
       {message && <p className={message.kind === "error" ? "error" : "muted"} data-testid="director-message">{message.text}</p>}
+      {treatment?.directives?.length ? (
+        <div className="director-directive-log" data-testid="director-directive-log">
+          <div className="director-group-title">Your directions</div>
+          <ul>{treatment.directives.map((d) => (
+            <li key={d.id} data-testid="director-directive" data-adopted={d.items.length > 0 ? "yes" : "no"}>
+              <span>{d.items.length ? "✓" : "✗"} {d.text}</span>
+              {d.plan && d.items.length > 0 && <span className="muted"> · {d.plan}</span>}
+              {d.notAdopted && <span className="director-review drop"> — {d.items.length ? "Partly: " : "Not done: "}{d.notAdopted}</span>}
+            </li>
+          ))}</ul>
+        </div>
+      ) : null}
       {treatment?.problems?.length ? (
         <details className="director-treatment" data-testid="director-treatment">
           <summary>Director's notes{treatment.audience ? ` — for ${treatment.audience}` : ""}</summary>

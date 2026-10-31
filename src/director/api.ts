@@ -29,6 +29,22 @@ export interface DirectorTreatment {
   audience?: string;
   takeaways?: string[];
   problems?: { id: string; start: number; end: number; what: string }[];
+  /** 使用者的導演指示逐條交代：用哪些項目做到（items），或為什麼不採用（notAdopted） */
+  directives?: DirectorDirectiveEntry[];
+}
+
+/** 一條導演指示的處理結果（閘道整理過：每條都有，項目全被規則擋下時 notAdopted 是規則的原因） */
+export interface DirectorDirectiveEntry {
+  /** d1、d2…（依使用者寫的順序） */
+  id: string;
+  /** 使用者寫的指示 */
+  text: string;
+  /** 規劃者怎麼圍繞它安排（選填） */
+  plan?: string;
+  /** 照這條指示做的項目 id（閘道的 id） */
+  items: string[];
+  /** 沒做或沒全做的原因 */
+  notAdopted?: string;
 }
 
 /** 閘道回的章節（素材時間） */

@@ -16,6 +16,10 @@ const REUSE_WORDS = process.env.WORDBLADE_DIRECTOR_REUSE_WORDS === "1";
 const WORDS_FILE = "output/director-live-words.json";
 /** 換素材時套用勾選的建議並匯出（$env:WORDBLADE_DIRECTOR_APPLY="1"） */
 const APPLY = process.env.WORDBLADE_DIRECTOR_APPLY === "1";
+/** 導演指示（$env:WORDBLADE_DIRECTOR_DIRECTIVES="指示一|指示二"，用 | 分隔；docs/plan-11-01-directives.md） */
+const DIRECTIVES = (process.env.WORDBLADE_DIRECTOR_DIRECTIVES ?? "").split("|").map((d) => d.trim()).filter(Boolean);
+/** 風格（$env:WORDBLADE_DIRECTOR_STYLE；預設 plain） */
+const STYLE = process.env.WORDBLADE_DIRECTOR_STYLE;
 const SAMPLE = OTHER ? path.resolve(OTHER) : path.join(import.meta.dirname, "..", "samples", "demo-2min.mp4");
 const truth = JSON.parse(readFileSync(path.join(import.meta.dirname, "..", "samples", "demo-2min.truth.json"), "utf8"));
 
@@ -63,6 +67,8 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
 
   await openTab(page, "director");
   await expect(page.getByTestId("director-ask")).toBeEnabled({ timeout: 120_000 });
+  if (DIRECTIVES.length) await page.getByTestId("director-directives").fill(DIRECTIVES.join("\n"));
+  if (STYLE) await page.getByTestId("director-style").selectOption(STYLE);
   const t0 = Date.now();
   await page.getByTestId("director-ask").click();
   await expect(page.getByTestId("director-message")).toBeVisible({ timeout: 600_000 });
@@ -70,6 +76,8 @@ test("實機：AI 導演找到假金鑰與重講，採用遮罩與剪", async ({
   const rows = page.getByTestId("director-list");
   for (const row of await page.getByTestId("director-row").all()) console.log(`  ${await row.getAttribute("data-kind")} ${await row.getAttribute("data-start")}–${await row.getAttribute("data-end")} ${(await row.innerText()).replace(/\s+/g, " ")}`);
   // 導演構想（docs/plan-10-30-director3.md）：觀眾與觀眾會看不清的問題
+  // 導演指示逐條：做到的項目或沒做的原因
+  for (const d of await page.getByTestId("director-directive").allInnerTexts()) console.log(`  指示：${d.replace(/\s+/g, " ")}`);
   for (const note of await page.getByTestId("director-treatment").locator("summary, li").allTextContents().catch(() => [] as string[])) console.log(`  構想：${note}`);
   if (OTHER) {
     await expect(page.getByTestId("director-row").first()).toBeVisible();

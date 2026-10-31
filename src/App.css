@@ -266,6 +266,9 @@ button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor
 .director-review.drop { color: #d07070; }
 .director-review.prune { color: #c0a060; }
 .director-treatment { margin: 4px 0 8px; font-size: 12px; }
+.director-directives { width: 100%; box-sizing: border-box; margin: 4px 0; font: inherit; font-size: 12px; resize: vertical; }
+.director-directive-log { margin: 4px 0 8px; font-size: 12px; }
+.director-directive-log ul { margin: 4px 0 0; padding-left: 16px; }
 .director-treatment ul { margin: 4px 0 0; padding-left: 16px; }
 .director-check-spacer { display: inline-block; width: 13px; }
 .director-empty { font-size: 11px; }

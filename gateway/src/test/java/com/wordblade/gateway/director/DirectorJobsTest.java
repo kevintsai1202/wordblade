@@ -296,4 +296,46 @@ class DirectorJobsTest {
                 .isEqualTo(new DirectorRules.Review("prune", "The result is already obvious"));
         assertThat(reviewer.received.get(0)).contains("\"style\":\"playful\"");
     }
+
+    /** 導演指示：plain 風格、指示 d1 要玩偶 */
+    private final DirectorJobs.StartRequest directed = new DirectorJobs.StartRequest("talk.mp4", 200, 2, List.of(new DirectorJobs.Scene("desk-reveal", "Desk")), "plain",
+            List.of("在 150 秒讓玩偶從左邊走到結果那裡"));
+
+    /** 照指示做的腳本：玩偶 i1 是 d1 */
+    private static final String DIRECTED = """
+            {"treatment":{"problems":[],"directives":[{"id":"d1","items":["i1"]}]},
+             "chapters":[{"title":"A","start":0,"end":200}],
+             "items":[{"id":"i1","kind":"mascot","start":150,"end":156,"directive":"d1","purpose":"Walk to the result as asked","x":0.5,"y":0.5,"w":0.2,"h":0.1,"action":"walk","from":"left"}]}""";
+
+    @Test
+    void 指示送到_Spark_規劃者與審查者_plain_也送3D場景_對帳清單帶回() {
+        planner.replies.add(DIRECTED);
+        reviewer.replies.add("{\"verdicts\":[{\"id\":\"i1\",\"verdict\":\"keep\",\"note\":\"ok\"}],\"missing\":[]}");
+        String id = jobs.start(7, directed);
+        jobs.addSegment(7, id, 0, meta(0, 100, "m:w1"), new byte[3]);
+        jobs.addSegment(7, id, 1, meta(100, 200, "m:w2"), new byte[3]);
+        assertThat(spark.transcripts).allMatch(t -> t.contains("走到結果那裡"));
+        assertThat(planner.received.get(0)).contains("\"directives\"").contains("\"id\":\"d1\"").contains("走到結果那裡").contains("desk-reveal");
+        DirectorJobs.View v = jobs.view(7, id);
+        assertThat(v.suggestions()).singleElement().satisfies(s -> assertThat(s.payload()).containsEntry("directive", "d1"));
+        assertThat(v.treatment().path("directives").get(0).path("items").get(0).asString()).isEqualTo("i1");
+        jobs.review(7, id, null);
+        assertThat(reviewer.received.get(0)).contains("走到結果那裡").contains("\"directives\"");
+    }
+
+    @Test
+    void 審查員要刪照指示做的項目_改成修改交回規劃者_不能標成_prune() {
+        planner.replies.add(DIRECTED);
+        reviewer.replies.add("""
+                {"verdicts":[{"id":"i1","verdict":"drop","note":"Nothing to point at"}],"missing":[],"prune":[{"id":"i1","note":"dispensable"}]}""");
+        planner.replies.add(DIRECTED);
+        String id = jobs.start(7, directed);
+        jobs.addSegment(7, id, 0, meta(0, 100, "m:w1"), new byte[3]);
+        jobs.addSegment(7, id, 1, meta(100, 200, "m:w2"), new byte[3]);
+        jobs.review(7, id, null);
+        DirectorJobs.View v = jobs.view(7, id);
+        assertThat(planner.received.get(1)).contains("i1").contains("revise").contains("Nothing to point at").contains("user asked");
+        assertThat(v.removed()).isEmpty();
+        assertThat(v.suggestions()).singleElement().satisfies(s -> assertThat(s.review().verdict()).isEqualTo("revised"));
+    }
 }

@@ -50,8 +50,10 @@ export interface DirectorRunOptions {
   planSheet?: (cells: FrameCell[]) => Promise<Blob | null>;
   /** 風格（決定導演能用哪些種類；預設 plain） */
   style?: DirectorStyle;
+  /** 使用者的導演指示（一條一句；空的不送） */
+  directives?: string[];
   api: {
-    start(body: { mediaName: string; duration: number; segments: number; scenes: { id: string; name: string }[]; style?: DirectorStyle }): Promise<string>;
+    start(body: { mediaName: string; duration: number; segments: number; scenes: { id: string; name: string }[]; style?: DirectorStyle; directives?: string[] }): Promise<string>;
     frames(jobId: string, sheet: Blob): Promise<void>;
     upload(jobId: string, index: number, meta: SegmentMeta, video: Uint8Array): Promise<void>;
     review(jobId: string, sheet: Blob | null): Promise<void>;
@@ -102,7 +104,7 @@ export async function runDirector(opts: DirectorRunOptions): Promise<DirectorRes
   const { media } = opts;
   const words = opts.words.filter((w) => w.mediaId === media.id).sort((a, b) => a.start - b.start);
   const segments = planSegments(words, media.duration);
-  const jobId = await opts.api.start({ mediaName: media.name ?? media.id, duration: media.duration, segments: segments.length, scenes: opts.scenes, style: opts.style ?? "plain" });
+  const jobId = await opts.api.start({ mediaName: media.name ?? media.id, duration: media.duration, segments: segments.length, scenes: opts.scenes, style: opts.style ?? "plain", directives: (opts.directives ?? []).map((d) => d.trim()).filter(Boolean) });
   const stop = async () => {
     await opts.api.cancel(jobId).catch(() => undefined);
     throw aborted();
