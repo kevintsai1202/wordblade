@@ -9,6 +9,7 @@ import { setCaptionStyle, setMediaWords } from "./media";
 import { editWords } from "./transcriptEdit";
 import { addZoom, deleteZoom, setZoom } from "./zoom";
 import { setClipSpeed } from "./speed";
+import { addVoiceover, deleteVoiceover, setVoiceoverActive, type NewVoiceover } from "./voiceover";
 import { insertIntro, type IntroInsert } from "../intro/insert";
 import type { CaptionStyle } from "../captions/captionLayout";
 import { cutByWords, cutSourceRanges, deleteClip, layoutV1, moveClip, placeLoop, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
@@ -47,7 +48,10 @@ export type Edit =
   | { kind: "deleteMasks"; ids: string[] }
   | { kind: "setSuggestions"; mediaId: string; suggestions: Suggestion[]; chapters?: DirectorChapter[] }
   | { kind: "setSuggestionStatus"; id: string; status: Suggestion["status"] }
-  | { kind: "insertIntro"; intro: IntroInsert };
+  | { kind: "insertIntro"; intro: IntroInsert }
+  | { kind: "addVoiceover"; voiceover: NewVoiceover; speed?: number }
+  | { kind: "setVoiceoverActive"; id: string; active: boolean }
+  | { kind: "deleteVoiceover"; id: string };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -85,6 +89,9 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "setSuggestions": return setSuggestions(project, edit.mediaId, edit.suggestions, edit.chapters);
     case "setSuggestionStatus": return setSuggestionStatus(project, edit.id, edit.status);
     case "setSpeed": return setClipSpeed(project, edit.clipId, edit.speed);
+    case "addVoiceover": return addVoiceover(project, edit.voiceover, edit.speed ?? 1);
+    case "setVoiceoverActive": return setVoiceoverActive(project, edit.id, edit.active);
+    case "deleteVoiceover": return deleteVoiceover(project, edit.id);
   }
 }
 

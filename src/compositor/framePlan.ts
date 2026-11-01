@@ -3,6 +3,7 @@
 import type { Clip, Project, Rect, Seconds } from "../core/model";
 import { clipDuration, clipEnd, timelineToSource } from "../core/timeline";
 import { zoomCrop, zoomState } from "../core/zoom";
+import { isMutedAt, mutedRangesFor } from "../core/voiceover";
 
 /** 全畫面的框 */
 const FULL: Rect = { x: 0, y: 0, w: 1, h: 1 };
@@ -70,7 +71,7 @@ export function framePlan(project: Project, t: Seconds): VideoLayer[] {
   return layers;
 }
 
-/** 時間軸時間 t 正在發聲的音訊片段（軌道靜音的不算） */
+/** 時間軸時間 t 正在發聲的音訊片段（軌道靜音的不算）；重配音（§5.6）生效範圍內的對白、聽原音時的 AI 片段仍在清單裡但增益是 0（元素照常同步，離開範圍就接得上） */
 export function audioPlan(project: Project, t: Seconds): AudioVoice[] {
   const voices: AudioVoice[] = [];
   for (const track of project.tracks) {
@@ -81,7 +82,7 @@ export function audioPlan(project: Project, t: Seconds): AudioVoice[] {
         clipId: clip.id,
         mediaId: clip.mediaId,
         srcTime: timelineToSource(clip, t),
-        gain: clip.volume * track.volume * fadeFactor(clip, t),
+        gain: isMutedAt(mutedRangesFor(project, clip, track), t) ? 0 : clip.volume * track.volume * fadeFactor(clip, t),
         speed: clip.speed,
       });
     }

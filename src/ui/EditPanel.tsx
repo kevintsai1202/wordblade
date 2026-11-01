@@ -22,7 +22,7 @@ export const TAB_GROUPS: Group[] = [
   { id: "transcript", label: "Transcript", leaves: [{ id: "transcript", label: "Transcript" }, { id: "style", label: "Caption Style" }] },
   {
     id: "effects", label: "Effects",
-    leaves: [{ id: "vibe", label: "2D" }, { id: "vibe3d", label: "3D" }, { id: "zoom", label: "Zoom" }, { id: "mask", label: "Mask" }, { id: "textures", label: "Textures" }, { id: "audio", label: "Sound" }, { id: "intro", label: "Intro" }],
+    leaves: [{ id: "vibe", label: "2D" }, { id: "vibe3d", label: "3D" }, { id: "zoom", label: "Zoom" }, { id: "mask", label: "Mask" }, { id: "textures", label: "Textures" }, { id: "audio", label: "Sound" }, { id: "intro", label: "Intro" }, { id: "revoice", label: "Re-voice" }],
   },
   { id: "inspector", label: "Inspector", leaves: [{ id: "inspector", label: "Inspector" }] },
   { id: "director", label: "AI Director", leaves: [{ id: "director", label: "AI Director" }] },

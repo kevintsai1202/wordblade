@@ -7,6 +7,7 @@ import { gainAt, type DuckCurve } from "../audio/ducking";
 import { fadeFactor } from "../compositor/framePlan";
 import type { Media, Project, Seconds } from "../core/model";
 import { clipEnd, timelineToSource } from "../core/timeline";
+import { MUTE_FADE, mutedRangesFor, muteFactor } from "../core/voiceover";
 
 /** 輸出取樣率 */
 export const SAMPLE_RATE = 48000;
@@ -102,9 +103,12 @@ export function mixSpan(out: [Float32Array, Float32Array], chunkStart: Seconds, 
   const base = clip.volume * track.volume;
   const offset = Math.round((span.from - chunkStart) * rate);
   const count = Math.min(pcm[0].length, Math.round((span.to - span.from) * rate), out[0].length - offset);
+  // 重配音（§5.6）要靜音的範圍：只留跟這個片段段落有交集的（含邊緣淡出的 10 ms），沒有就不用逐樣本算
+  const muted = mutedRangesFor(project, clip, track).filter((r) => r.to + MUTE_FADE > span.from && r.from - MUTE_FADE < span.to);
   for (let k = 0; k < count; k++) {
     const t = span.from + k / rate;
     let g = base * fadeFactor(clip, t);
+    if (muted.length) g *= muteFactor(muted, t);
     if (span.music && duck) g *= gainAt(duck, t);
     out[0][offset + k] += pcm[0][k] * g;
     out[1][offset + k] += pcm[1][k] * g;

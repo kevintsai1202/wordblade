@@ -78,6 +78,18 @@ export function saveSettings(settings: GatewaySettings) {
   }
 }
 
+/** 位元組 → base64（分段轉，避免大檔一次展開參數爆掉堆疊） */
+export function bytesToBase64(bytes: Uint8Array): string {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+/** base64 → 位元組 */
+export function base64ToBytes(b64: string): Uint8Array {
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+}
+
 /** 等一下 */
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -207,6 +219,18 @@ export class GatewayClient {
     const view = await this.pollView<{ status: string; kit: GatewayKit | null; error: string | null }>(`/v1/ai/publish/${encodeURIComponent(jobId)}`, 180);
     if (view.status !== "done" || !view.kit) throw new GatewayError("The AI couldn't write the publish kit. Try again.", 0);
     return view.kit;
+  }
+
+  /**
+   * AI 重配音（§5.6）：文字＋講者的聲音樣本（seed，WAV）與樣本的逐字稿 → Fish Audio 用那個聲音念出來。
+   * 走 POST /v1/tts → 輪詢 GET /v1/tts/{jobId}；免費模型的延遲不一，最多等 180 秒。speed 是語速（1 為原速）。
+   * 回傳 WAV 位元組與長度（秒）；失敗丟 GatewayError。
+   */
+  async speak(body: { text: string; seed: Uint8Array; seedText: string; speed: number }): Promise<{ audio: Uint8Array; seconds: number }> {
+    const { jobId } = await this.call<{ jobId: string }>("/v1/tts", { method: "POST", body: JSON.stringify({ text: body.text, seed: bytesToBase64(body.seed), seedText: body.seedText, speed: body.speed }) });
+    const view = await this.pollView<{ status: string; audio: string | null; seconds: number | null; error: string | null }>(`/v1/tts/${encodeURIComponent(jobId)}`, 180);
+    if (view.status !== "done" || !view.audio) throw new GatewayError(view.error ? `The AI couldn't make the voice: ${view.error}` : "The AI couldn't make the voice. Try again.", 0);
+    return { audio: base64ToBytes(view.audio), seconds: view.seconds ?? 0 };
   }
 
   /** 縮圖底圖（§5.12）：一格畫面（PNG／JPEG）＋風格描述 → Muse Image 改過的圖（不含字）；約 30 秒 */

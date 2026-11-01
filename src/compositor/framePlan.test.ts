@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeClip, makeProject } from "../core/fixtures";
+import { addVoiceover, setVoiceoverActive } from "../core/voiceover";
 import { audioPlan, framePlan } from "./framePlan";
 
 describe("framePlan（§5.10 疊放順序）", () => {
@@ -46,5 +47,28 @@ describe("audioPlan", () => {
     const p = makeProject();
     p.tracks.find((t) => t.id === "A2")!.muted = true;
     expect(audioPlan(p, 13).map((a) => [a.clipId, a.srcTime])).toEqual([["a1b", 23]]);
+  });
+});
+
+describe("audioPlan 與重配音（§5.6）", () => {
+  const withVo = () => {
+    const p = makeProject();
+    p.media.push({ id: "vo1", kind: "audio", duration: 5 });
+    return addVoiceover(p, { id: "vo-a", start: 2, end: 7, text: "x", mediaId: "vo1" });
+  };
+  const gains = (p: ReturnType<typeof withVo>, t: number) => Object.fromEntries(audioPlan(p, t).map((a) => [a.clipId, a.gain]));
+
+  it("生效：範圍內對白增益 0、AI 片段有聲；範圍外對白照常", () => {
+    const p = withVo();
+    const vc = p.voiceovers![0].clipId;
+    expect(gains(p, 4)).toMatchObject({ a1a: 0, [vc]: 1, a2: 1 });
+    expect(gains(p, 8).a1a).toBe(1);
+    expect(gains(p, 1).a1a).toBe(1);
+  });
+
+  it("切回原音：對白有聲、AI 片段增益 0", () => {
+    const p = setVoiceoverActive(withVo(), "vo-a", false);
+    const vc = p.voiceovers![0].clipId;
+    expect(gains(p, 4)).toMatchObject({ a1a: 1, [vc]: 0 });
   });
 });

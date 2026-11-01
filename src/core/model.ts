@@ -37,7 +37,7 @@ export interface Track {
   id: string;
   kind: "video" | "audio";
   /** 音軌的角色：配樂壓低看它（music 被 dialogue 壓） */
-  role?: "dialogue" | "music" | "sfx";
+  role?: "dialogue" | "music" | "sfx" | "voice";
   /** 同種軌道裡的順序；video 的 index 0 就是 V1 */
   index: number;
   muted: boolean;
@@ -239,6 +239,25 @@ export interface Synth {
   prompt?: string;
 }
 
+/**
+ * AI 重配音（§5.6）：時間軸 [start, end] 這段對白換成 AI 用講者自己的聲音念 text。
+ * AI 的聲音是 clipId 這個片段（放在 role="voice" 的音軌）；active 為 true 時這段時間內原本的對白靜音，false 就聽原音（AI 片段靜音）。
+ */
+export interface Voiceover {
+  id: string;
+  /** 時間軸時間 */
+  start: Seconds;
+  end: Seconds;
+  /** 念的文字 */
+  text: string;
+  /** AI 聲音的素材（素材庫裡的 WAV） */
+  mediaId: string;
+  /** AI 聲音在時間軸上的片段 */
+  clipId: string;
+  /** true＝播 AI 的聲音（原音在這段靜音）；false＝播原音 */
+  active: boolean;
+}
+
 /** 聲音分離的結果 */
 export interface Stem {
   mediaId: string;
@@ -282,6 +301,8 @@ export interface Project {
   stems: Stem[];
   /** 材質庫（§5.12，P1-14；舊專案沒有這個欄位） */
   textures?: TextureAsset[];
+  /** AI 重配音（§5.6；舊專案沒有這個欄位） */
+  voiceovers?: Voiceover[];
   /** 局部放大（§5.19；舊專案沒有這個欄位） */
   zooms?: ZoomRegion[];
   /** 燒進畫面的字幕樣式（§5.4、§5.18；沒設就用預設：白字黑描邊） */
