@@ -327,7 +327,14 @@
 - **沙盒**（Q6）：插件在 `sandbox="allow-scripts"`（不給 same-origin）的 iframe 裡的 Worker 執行（3D 用 OffscreenCanvas 的 WebGL2）；只能用我們給的 API 與 three.js；每格限時（2D 30 ms、3D 100 ms），單段最長 60 秒；逾時直接終止 Worker。存檔前先試跑一次。
   - **10/27 實測：Worker 路線可行**（`spikes/sandbox/RESULT.md`，Chromium／Edge 156）：blob URL 建 Worker、Worker 裡 OffscreenCanvas WebGL2、本機打包的 three.js 都能跑；ImageBitmap 雙向轉移 300 格畫素全對；25 項連網檢查全被擋；無窮迴圈在預算內偵測到，`terminate()` 確實殺掉 Worker 並能重建。
   - **CSP**（srcdoc iframe 會繼承父頁 CSP，兩份取交集；Tauri 的 `app.security.csp` 是靜態的，寫不出每次換的 nonce，所以用啟動腳本的 sha256，建置時算）：
-    - 父頁：`default-src 'none'; script-src 'self' 'sha256-<HASH>'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; worker-src blob:; frame-src 'none'; base-uri 'none'; form-action 'none'`。`frame-src 'none'` 擋 iframe 自我導航外洩（iframe 自己的 CSP 擋不了）；`script-src` 不加 `blob:`。實際的 `connect-src` 要再加閘道網址。
+    - 父頁：`default-src 'none'; script-src 'self' 'sha256-<HASH>'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; worker-src blob:; frame-src 'none'; base-uri 'none'; form-action 'none'`。`frame-src 'none'` 擋 iframe 自我導航外洩（iframe 自己的 CSP 擋不了）；`script-src` 不加 `blob:`。實際的 `connect-src` 要再加閘道網址。**11/1 已套用**，唯一來源是 `deploy/csp.mjs`：
+      - 雜湊在建置時從 `iframeRuntime.js` 算（換行轉成 LF）。
+      - 比上面那份多了幾項：`media-src`、`font-src`、`object-src 'none'`。
+      - `connect-src` 放行 `'self' https: blob: data:` 和本機 http（因為閘道網址可以在設定裡改，開發者決定）。
+      - Windows 版的 img、media、connect 另外加上 `http://asset.localhost asset:`。
+      - 套用在三個地方：nginx 由 `web-zeabur.ps1` 填入 `__CSP__`；`vite preview` 用在 e2e；`tauri.conf.json` 的 `devCsp` 另給一份開發用的（`--desktop --dev`：script-src 用 'unsafe-inline'、加 HMR 的 ws）；設成 null 會被當成沒設，開發時就套用正式 CSP，而開發伺服器有 React 的行內前置腳本。
+      - 主程式不能再用 `new Function` 執行字串：`plane3d_math.js` 改用 Vite 外掛 `?global=PLANE3D` 當模組載入。
+      - `src/sandbox/csp.test.ts` 檢查雜湊和 Tauri 設定一致，`e2e/csp.spec.ts` 檢查完整流程沒有違規。
     - iframe（srcdoc 開頭的 `<meta http-equiv>`）：`default-src 'none'; script-src blob: 'sha256-<HASH>'; worker-src blob:; connect-src 'none'; img-src blob: data:`。
     - 啟動腳本不能用 blob URL（沒有 same-origin 的 iframe 載不到父頁建的 blob）；srcdoc 裡的腳本要和算雜湊的原文逐位元組相同（換行用 LF）。
   - CSP 擋不住 WebRTC（實測 STUN 送出 3 個 UDP 封包）：載入插件前刪掉 `RTCPeerConnection` 等建構子。
@@ -552,7 +559,10 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 配樂 spec：`{bpm 60～180, beatsPerBar? 2|3|4, bars 1～32, chords: 每小節一個（Am、Fmaj7、G7…，不夠就循環）, gain?, seed?, parts: 1～6 個}`；聲部 `{role: bass|pad|arp|lead|drums, voice?（drums 以外必填）, gain?, loopBars?, notes}`；音符 `{at, len（拍）, pitch?（MIDI）| chord?（和弦第幾個音）+ octave? | drum?（kick、snare、hat、openhat、clap）, vel?}`。長度＝bars × beatsPerBar × 60 ÷ bpm，上限 120 秒、展開後最多 3000 個音。
 - 解讀器（`render.ts`）：每群音（同音色）共用一條效果鏈；雜訊與殘響脈衝響應用固定種子，同一份 spec 每次算出的 WAV 位元組相同。配樂多算一段尾巴再疊回開頭，長度剛好整數小節、首尾無縫；峰值超過 0.89 整體縮小；輸出 48 kHz 單聲道 16-bit WAV。
 - 閘道：`POST /v1/ai/sound`（description、length、previous?）、`POST /v1/ai/music`（description、bars、previous?）→ 202 `{jobId}`，`GET …/{jobId}` 輪詢（同 plane3d 的 AiJobs）。模型 Muse Spark（`wordblade.models.spark`，推理 low），只回 JSON；音效 length、配樂 bars 要等於請求的值；不合格自動帶錯誤重問一次（最多 2 輪），拒答只有 `off-topic`。用量記在 `/v1/ai/sound`、`/v1/ai/music`。前端拿到 spec 再驗證一次。
-- 產生的 WAV 經 `Engine.importGenerated` 變成一般素材：Windows 版 Rust `write_generated` 寫進 app 資料夾的 `generated/`（檔名淨化、不覆寫、放行 asset 協定），網頁版包成 File；再走 `importSources`。目前沒有另存 `Synth`（spec 不進專案）。
+- 產生的 WAV 經 `Engine.importGenerated` 變成一般素材：Windows 版 Rust `write_generated` 寫進 app 資料夾的 `generated/`（檔名淨化、不覆寫、放行 asset 協定），網頁版包成 File；再走 `importSources`。**11/1**：
+  - 開著專案資料夾時，產生的檔案改寫進 `.data\generated\`；Windows 版用標頭 `x-project-dir` 告訴 Rust 寫到哪個專案。
+  - 進素材庫時同時存一筆 `Synth`（spec、label、prompt、renderedMediaId；編輯 `addSynth`，可以復原）。音效頁籤的「In this project」會列出來，點了重新算樣本，素材還在就沿用，重開專案後還能 Play、Modify、Regenerate。
+  - 配樂放進比一圈長的範圍時，接著重複放滿，最後一段剪到範圍結束（編輯 `placeLoop`）。
 - 介面：特效 → 音效（Sound）子頁籤。上半音效：10 個範本（whoosh、pop、ding、typing、rise、fall、click、sweep、impact、sparkle）點了直接算、不送任何資料；或描述＋長度按 Generate。下半配樂：描述＋小節數（4／8／16）、Generate、Regenerate（同描述再來一次）、Modify（修改指示＋前一版 spec）。都有 Play（共用 AudioContext 預覽）、Save to media、Add to timeline（音效 → 音效軌 A3、配樂 → 配樂軌 A2；有選範圍放在範圍起點，否則放在播放頭；一次復原）。第一次用 AI 顯示同意說明（送到 Muse Spark，Contributor 版的內容可能被 Meta 用於訓練，D32）。
 
 **AI 音效（P1-8）**
@@ -618,6 +628,17 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 提詞器的字可以先改（例如改掉講錯的字），高亮時間照原本的詞時間按字數比例分配。
 - 麥克風：WebView2 的 `getUserMedia`。10/27 實測（`spikes/tauri-env/`）：WebView2 會跳權限詢問，沒人按就一直等。做法：Rust 端處理 WebView2 的 `PermissionRequested`，自動允許麥克風（不跳詢問）。**10/27 已做**：Tauri 2.12 的 `Builder::on_permission_request` 只放行 `PermissionKind::Microphone`、其他照平台預設（不必自己接 COM）；實測不再逾時，權限放行後在作者公司電腦回 `NotReadableError`，同機的 Edge 也一樣（`scripts/desktop-selftest/mic-edge-check.mjs`），是裝置層被擋（下句的 Kaspersky），實際錄音要換電腦驗。作者的公司電腦上 Kaspersky 依程式信任等級擋錄音（原專案 2026-10-18：所有 WASAPI 初始化都回 `0x80070057`，Rust／ffmpeg 一樣被擋，只有微軟簽章的程式能錄），所以「改由 Rust 錄音」不是有效備案。**退路（開發者 2026-10-27 決定，P1-9 實作）**：預設用 `getUserMedia`＋`MediaRecorder`；Windows 版遇到 `NotReadableError`、`NotAllowedError` 或 8 秒逾時，自動改用原專案（字導字演）的做法——Rust 以內嵌的 ASCII PowerShell 腳本（`powershell.exe` 5.1）從 `shell:AppsFolder` 喚起 Windows 內建錄音機（`Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe`，微軟簽章、不是本程式的子程序），用 UI Automation 按 `RecordButton`／`StopRecordingButton`、把視窗縮到最小尺寸停在右下角；起訖時間讀 `HKCU\...\CapabilityAccessManager\ConsentStore\microphone\<套件>` 的 `LastUsedTimeStart`／`Stop`（FILETIME，毫秒級）；停止後在「文件」底下找修改時間最接近停止時刻的 `.m4a`，搬進 app 資料夾再匯入（原專案 `backend/narration.py`，2026-10-19 在 Kaspersky 機器實測可錄）。`NotFoundError`（沒有麥克風）不退，直接提示；網頁版沒有退路，只提示。提詞器顯示這次用了哪種方式。錄前先試開麥克風、錄後檢查峰值，削峰時提示（原專案的爆音主因是錄音裝置增益 96%，`adeclip` 可後製去削峰）。
 - 和 AI 重生語音（§5.6，P2）是兩種選擇：自己念，或讓 AI 用你的聲音念。
+
+
+**錄音（11/1，卡拉 OK 重配錄音本身還沒做）**：音效頁籤的「Voice recording」可以錄一段，放進素材庫或放上對白軌。
+- 預設用 `getUserMedia` 加 `MediaRecorder` 錄音，再解碼成 48 kHz 單聲道 WAV（`src/audio/micRecorder.ts`）。
+- 退路照上面的決定：Windows 版遇到 NotReadableError、NotAllowedError 或 8 秒逾時時，改用 Rust 的 `recorder_start`、`recorder_stop`，執行內嵌的 `scripts/recorder/sound-recorder.ps1`（從原專案 narration.py 移植，純 ASCII）。停止後把 m4a 複製進專案的 `.data\generated\`，再走一般匯入。
+- NotFoundError（沒有麥克風）不走退路，直接提示；網頁版沒有退路。
+- 錄完峰值達 0.99 會提示削峰。
+- 驗證狀況：
+  - `e2e/recording.spec.ts` 用 Chromium 的假麥克風測過。
+  - 退路腳本在作者的電腦（有 Kaspersky）上手動跑過一次 start／stop，拿到 m4a。
+  - 從 Windows 版介面觸發退路還沒有人工點過。
 
 ### 5.19 局部放大（P1-2，D20、D38）
 

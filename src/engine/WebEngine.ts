@@ -6,6 +6,33 @@ import { IMAGE_DURATION } from "../core/media";
 import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation } from "./Engine";
 import { classifyFile, webSupport } from "./webFormats";
 import { downsample, encodeWav } from "../asr/wav";
+import { ensurePermission, getHandle, putHandle } from "./handleStore";
+
+/** File System Access 的選取器（DOM 型別還沒有） */
+interface Pickers {
+  showDirectoryPicker?: (o?: { mode?: "read" | "readwrite"; id?: string }) => Promise<FileSystemDirectoryHandle>;
+  showOpenFilePicker?: (o?: { multiple?: boolean; types?: { description: string; accept: Record<string, string[]> }[] }) => Promise<FileSystemFileHandle[]>;
+}
+const pickers = (): Pickers => (typeof window === "undefined" ? {} : (window as unknown as Pickers));
+
+/** 專案資料夾的副檔名與裡面的檔案（D41） */
+const PROJECT_EXT = ".wordblade";
+const PROJECT_FILE = "project.json";
+const DATA_DIR = ".data";
+
+/** 專案名稱：資料夾名去掉 .wordblade */
+function projectName(dirName: string): string {
+  return dirName.endsWith(PROJECT_EXT) ? dirName.slice(0, -PROJECT_EXT.length) : dirName;
+}
+
+/** 讀專案資料夾裡的 project.json；沒有回 null */
+async function readProjectFile(dir: FileSystemDirectoryHandle): Promise<string | null> {
+  try {
+    return await (await (await dir.getFileHandle(PROJECT_FILE)).getFile()).text();
+  } catch {
+    return null;
+  }
+}
 
 /** 選檔對話框接受的類型 */
 const ACCEPT = "video/*,image/*,audio/*,.mov,.m4a";
@@ -54,8 +81,10 @@ async function exists(dir: FileSystemDirectoryHandle, name: string): Promise<boo
 export class WebEngine implements Engine {
   readonly kind = "web" as const;
   readonly capabilities = { vocalSeparation: false, anyFormatImport: false };
-  /** 匯入的檔案：handleKey → File 與預覽用的 blob 網址（重新整理後就沒有；存開專案做好後改存 FileSystemHandle） */
+  /** 匯入的檔案：handleKey → File 與預覽用的 blob 網址（重新整理後就沒有；開著專案資料夾時另把 handle 存進 IndexedDB） */
   private readonly files = new Map<string, { file: File; url: string }>();
+  /** 開著專案資料夾（選檔改用 showOpenFilePicker，才拿得到能記住的 handle） */
+  private folderOpen = false;
 
   /** 匯入的檔案用 blob 網址；專案內的相對路徑（開發伺服器以 /samples/ 提供）照舊 */
   mediaUrl(media: Media): string {
@@ -64,8 +93,21 @@ export class WebEngine implements Engine {
     return path.startsWith("/") || /^[a-z]+:/i.test(path) ? path : `/${path}`;
   }
 
-  /** 用隱藏的 <input type=file> 選檔 */
-  pickFiles(): Promise<ImportSource[]> {
+  /**
+   * 選檔。開著專案資料夾時用 showOpenFilePicker（拿得到 handle，重開專案時找得回素材）；
+   * 其他情況用隱藏的 <input type=file>（e2e 的 filechooser 也走這條）。
+   */
+  async pickFiles(): Promise<ImportSource[]> {
+    const picker = pickers().showOpenFilePicker;
+    if (this.folderOpen && picker) {
+      try {
+        const handles = await picker({ multiple: true, types: [{ description: "Video, image or audio", accept: { "video/*": [".mp4", ".mov", ".webm"], "image/*": [], "audio/*": [".m4a", ".mp3", ".wav"] } }] });
+        return Promise.all(handles.map(async (handle) => ({ kind: "file" as const, file: await handle.getFile(), name: handle.name, handle })));
+      } catch (e) {
+        if ((e as DOMException).name === "AbortError") return [];
+        throw e;
+      }
+    }
     return new Promise((resolve) => {
       const input = document.createElement("input");
       input.type = "file";
@@ -85,7 +127,14 @@ export class WebEngine implements Engine {
     const drop = (e: DragEvent) => {
       if (!e.dataTransfer?.files.length) return;
       e.preventDefault();
-      handler(Array.from(e.dataTransfer.files, (file) => ({ kind: "file" as const, file, name: file.name })));
+      // 有 getAsFileSystemHandle（Chrome／Edge）就順便拿 handle，重開專案時找得回素材；要在事件當下呼叫
+      const items = Array.from(e.dataTransfer.items).filter((i) => i.kind === "file");
+      const files = Array.from(e.dataTransfer.files);
+      const handles = items.map((i) => (i as unknown as { getAsFileSystemHandle?: () => Promise<FileSystemHandle | null> }).getAsFileSystemHandle?.());
+      void Promise.all(handles.map((h) => h?.catch(() => null) ?? null)).then((hs) => handler(files.map((file, k) => {
+        const h = hs[k];
+        return { kind: "file" as const, file, name: file.name, ...(h?.kind === "file" ? { handle: h as FileSystemFileHandle } : {}) };
+      })));
     };
     window.addEventListener("dragover", over);
     window.addEventListener("drop", drop);
@@ -131,6 +180,8 @@ export class WebEngine implements Engine {
       }
     }
     this.files.set(id, { file, url: URL.createObjectURL(file) });
+    // 有 handle 就記住（鍵＝handleKey），重開專案時 locateMedia 拿得回來
+    if (source.handle) await putHandle(id, source.handle).catch(() => undefined);
     return media;
   }
 
@@ -301,25 +352,137 @@ export class WebEngine implements Engine {
   }
 
   /** 網頁版不做聲音分離（D28），介面應先依 capabilities 擋掉；直接呼叫時明確拒絕 */
-  /** 專案資料夾：網頁版之後用 File System Access 做（P3）；目前退回瀏覽器裡的自動存檔 */
-  readonly projectFolders = false;
-  async createProject(): Promise<ProjectLocation | null> {
-    return null;
+  /**
+   * 專案資料夾（D41）：有 File System Access 的瀏覽器（Chrome／Edge）可用。
+   * 資料夾的 handle 存進 IndexedDB，ProjectLocation.dir 是它的鍵；沒有 FS Access 時退回瀏覽器裡的自動存檔。
+   */
+  readonly projectFolders = typeof pickers().showDirectoryPicker === "function";
+
+  /** 選資料夾；取消回 null */
+  private async pickDirectory(): Promise<FileSystemDirectoryHandle | null> {
+    try {
+      return await pickers().showDirectoryPicker!({ mode: "readwrite", id: "wordblade-project" });
+    } catch (e) {
+      if ((e as DOMException).name === "AbortError") return null;
+      throw e;
+    }
   }
+
+  /**
+   * 記住開著的專案資料夾，回傳位置。鍵用資料夾名：同一個專案再開不會在「最近開啟」多一筆；
+   * 不同位置的同名專案會共用鍵（以最近開的為準），瀏覽器看不到完整路徑，只能這樣取捨。
+   */
+  private async remember(dir: FileSystemDirectoryHandle): Promise<ProjectLocation> {
+    const key = `project:${dir.name}`;
+    await putHandle(key, dir);
+    this.folderOpen = true;
+    return { name: projectName(dir.name), dir: key };
+  }
+
+  /** 新專案：選放在哪裡，建 <名稱>.wordblade（含 .data） */
+  async createProject(name: string): Promise<ProjectLocation | null> {
+    const parent = await this.pickDirectory();
+    if (!parent) return null;
+    const dir = await parent.getDirectoryHandle(`${name}${PROJECT_EXT}`, { create: true });
+    await dir.getDirectoryHandle(DATA_DIR, { create: true });
+    return this.remember(dir);
+  }
+
+  /** 開舊專案：選 .wordblade 資料夾（裡面要有 project.json） */
   async openProject(): Promise<{ location: ProjectLocation; text: string } | null> {
-    return null;
+    const dir = await this.pickDirectory();
+    if (!dir) return null;
+    const text = await readProjectFile(dir);
+    if (text === null) throw new Error(`${dir.name} has no ${PROJECT_FILE} — pick a .wordblade project folder.`);
+    return { location: await this.remember(dir), text };
   }
-  async reopenProject(): Promise<{ location: ProjectLocation; text: string } | null> {
-    return null;
+
+  /** 最近開啟：從 IndexedDB 拿資料夾、確認權限（要在使用者手勢裡）；找不到或沒權限回 null */
+  async reopenProject(location: ProjectLocation): Promise<{ location: ProjectLocation; text: string } | null> {
+    const dir = await getHandle<FileSystemDirectoryHandle>(location.dir).catch(() => undefined);
+    if (!dir || !(await ensurePermission(dir, "readwrite"))) return null;
+    const text = await readProjectFile(dir);
+    if (text === null) return null;
+    this.folderOpen = true;
+    return { location: { name: projectName(dir.name), dir: location.dir }, text };
   }
-  async writeProject(): Promise<void> {
-    throw new NotImplementedError("writeProject");
+
+  /** 寫 project.json（createWritable 先寫暫存、close 時才換掉，不會寫壞） */
+  async writeProject(location: ProjectLocation, text: string): Promise<void> {
+    const dir = await getHandle<FileSystemDirectoryHandle>(location.dir);
+    if (!dir) throw new NotImplementedError("writeProject (the project folder is no longer available)");
+    const w = await (await dir.getFileHandle(PROJECT_FILE, { create: true })).createWritable();
+    await w.write(text);
+    await w.close();
   }
+
+  /** 網頁版不算指紋（找素材靠記住的 handle） */
   async mediaFingerprint(): Promise<string | undefined> {
     return undefined;
   }
+
+  /** 網頁版沒有錄音退路（被擋就提示） */
+  readonly recorderFallback = null;
+
+  /** 開著的專案資料夾（產生的檔案寫進它的 .data/generated/） */
+  private project: ProjectLocation | null = null;
+
+  setProjectLocation(location: ProjectLocation | null): void {
+    this.project = location;
+    this.folderOpen = location !== null;
+  }
+
+  /** 專案 .data 裡 rel 的上一層資料夾與檔名（create：沒有就建） */
+  private async dataFile(location: ProjectLocation, rel: string, create: boolean): Promise<{ dir: FileSystemDirectoryHandle; name: string }> {
+    let dir = await getHandle<FileSystemDirectoryHandle>(location.dir);
+    if (!dir) throw new Error("The project folder is no longer available");
+    const segs = [DATA_DIR, ...rel.split("/")];
+    if (segs.some((s) => !s || s === "." || s === "..")) throw new Error(`bad data path: ${rel}`);
+    for (const seg of segs.slice(0, -1)) dir = await dir.getDirectoryHandle(seg, { create });
+    return { dir, name: segs[segs.length - 1] };
+  }
+
+  /** 寫 .data 裡的文字檔 */
+  async writeData(location: ProjectLocation, rel: string, text: string): Promise<void> {
+    const { dir, name } = await this.dataFile(location, rel, true);
+    const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+    await w.write(text);
+    await w.close();
+  }
+
+  /** 讀 .data 裡的文字檔；沒有回 null */
+  async readData(location: ProjectLocation, rel: string): Promise<string | null> {
+    try {
+      const { dir, name } = await this.dataFile(location, rel, false);
+      return await (await (await dir.getFileHandle(name)).getFile()).text();
+    } catch {
+      return null;
+    }
+  }
+
+  /** 重新連結：使用者替找不到的素材選了檔案，換掉記住的 handle 與記憶體裡的檔案 */
+  async adoptFile(media: Media, source: ImportSource): Promise<boolean> {
+    if (source.kind !== "file" || !media.handleKey) return false;
+    const old = this.files.get(media.handleKey);
+    if (old) URL.revokeObjectURL(old.url);
+    this.files.set(media.handleKey, { file: source.file, url: URL.createObjectURL(source.file) });
+    if (source.handle) await putHandle(media.handleKey, source.handle).catch(() => undefined);
+    return true;
+  }
+
+  /** 找回素材：記憶體裡有就用；否則從 IndexedDB 拿記住的 handle（要有讀取權限） */
   async locateMedia(media: Media): Promise<Media | null> {
-    return media.handleKey && this.files.has(media.handleKey) ? media : null;
+    if (!media.handleKey) return null;
+    if (this.files.has(media.handleKey)) return media;
+    const handle = await getHandle<FileSystemFileHandle>(media.handleKey).catch(() => undefined);
+    if (!handle || !(await ensurePermission(handle, "read"))) return null;
+    try {
+      const file = await handle.getFile();
+      this.files.set(media.handleKey, { file, url: URL.createObjectURL(file) });
+      return media;
+    } catch {
+      return null;
+    }
   }
 
   /** 縮圖快取的鍵：匯入的檔案用「檔名＋大小＋修改時間」，示範素材用路徑；都沒有回 null */
@@ -400,8 +563,27 @@ export class WebEngine implements Engine {
     throw new Error("Vocal separation is available in the Windows app");
   }
 
-  /** 產生的 WAV 包成 File，接著走一般匯入（和使用者選的檔案一樣存在記憶體，重新整理後就沒有） */
+  /**
+   * 產生的 WAV：開著專案資料夾時寫進 .data/generated/（帶 handle，重開專案找得回來）；
+   * 沒開時包成 File（存在記憶體，重新整理後就沒有）。
+   */
   async importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource> {
+    const loc = this.project;
+    if (loc) {
+      try {
+        const { dir } = await this.dataFile(loc, "generated/x", true);
+        const stem = name.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9_-]/g, "-") || "generated";
+        let fileName = `${stem}.wav`;
+        for (let n = 2; await dir.getFileHandle(fileName).then(() => true, () => false); n++) fileName = `${stem}-${n}.wav`;
+        const handle = await dir.getFileHandle(fileName, { create: true });
+        const w = await handle.createWritable();
+        await w.write(bytes as Uint8Array<ArrayBuffer>);
+        await w.close();
+        return { kind: "file", file: await handle.getFile(), name: fileName, handle };
+      } catch {
+        /* 寫不進專案資料夾：退回記憶體 */
+      }
+    }
     const file = new File([bytes as Uint8Array<ArrayBuffer>], name, { type: "audio/wav" });
     return { kind: "file", file, name };
   }

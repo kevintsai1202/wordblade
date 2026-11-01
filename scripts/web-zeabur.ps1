@@ -38,7 +38,12 @@ function New-Stage {
   if ((Split-Path $Stage -Leaf) -ne 'wordblade-web-zeabur') { throw "部署目錄路徑異常：$Stage" }
   if (Test-Path $Stage) { Remove-Item $Stage -Recurse -Force }
   New-Item -ItemType Directory -Force $Stage | Out-Null
-  Copy-Item (Join-Path $Root 'deploy/web/Dockerfile'), (Join-Path $Root 'deploy/web/nginx.conf') $Stage
+  Copy-Item (Join-Path $Root 'deploy/web/Dockerfile') $Stage
+  # 父頁 CSP 由 deploy/csp.mjs 算（含沙盒啟動腳本的 sha256），填進 nginx.conf 的 __CSP__
+  $csp = node (Join-Path $Root 'deploy/csp.mjs')
+  if ($LASTEXITCODE -ne 0 -or -not $csp) { throw '算父頁 CSP 失敗（deploy/csp.mjs）' }
+  $nginx = (Get-Content (Join-Path $Root 'deploy/web/nginx.conf') -Raw).Replace('__CSP__', $csp)
+  [IO.File]::WriteAllText((Join-Path $Stage 'nginx.conf'), ($nginx -replace "`r`n", "`n"))
   Copy-Item (Join-Path $Root 'dist') (Join-Path $Stage 'dist') -Recurse
   $mb = [math]::Round(((Get-ChildItem $Stage -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), 2)
   Write-Log "部署目錄：$Stage（${mb} MB）"
@@ -50,7 +55,7 @@ function Set-WebVariables([string]$Sid) {
   Write-Log '環境變數已同步：ZBPACK_DOCKERFILE_PATH、PORT'
 }
 
-<# 線上驗證：首頁 200、有 COOP／COEP 標頭、內容是 WordBlade 的 index.html，且引用的 JS 拿得到。 #>
+<# 線上驗證：首頁 200、有 COOP／COEP 與父頁 CSP 標頭、內容是 WordBlade 的 index.html，且引用的 JS 拿得到。 #>
 function Test-Live([string]$DomainHost) {
   $url = "https://$DomainHost"
   Write-Log "憑證簽發者：$(Get-CertIssuer $DomainHost)"
@@ -58,6 +63,10 @@ function Test-Live([string]$DomainHost) {
   $coop = "$($page.Headers['Cross-Origin-Opener-Policy'])"
   $coep = "$($page.Headers['Cross-Origin-Embedder-Policy'])"
   Write-Log "GET /：$($page.StatusCode)；COOP=$coop；COEP=$coep"
+  $csp = "$($page.Headers['Content-Security-Policy'])"
+  $expected = node (Join-Path $Root 'deploy/csp.mjs')
+  Write-Log "CSP 與 deploy/csp.mjs 一致：$($csp -eq $expected)"
+  if ($csp -ne $expected) { throw '線上驗證未通過：父頁 CSP 不對' }
   if ($page.StatusCode -ne 200 -or $page.Content -notmatch '<title>WordBlade</title>' -or $coop -ne 'same-origin' -or $coep -ne 'require-corp') { throw '線上驗證未通過：首頁或標頭不對' }
   $js = [regex]::Match($page.Content, 'src="(/assets/[^"]+\.js)"').Groups[1].Value
   $asset = Invoke-WebRequest "$url$js" -SkipHttpErrorCheck -SkipCertificateCheck -UseBasicParsing

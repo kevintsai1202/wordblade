@@ -129,6 +129,8 @@ export interface MaskObject {
   label: string;
   /** 取樣（依時間排序） */
   samples: MaskSample[];
+  /** 專案資料夾裡取樣存在 .data\ 的哪個檔（相對 .data，例如 masks/<id>.json）；只出現在 project.json，載入後換回 samples */
+  samplesRef?: string;
   /** 取樣間隔（秒；每秒 10 格就是 0.1）：最後一個取樣之後再撐這麼久 */
   interval: Seconds;
   /** 效果與強度（馬賽克方塊大小／模糊程度，以 1080p 為準的像素） */
@@ -225,7 +227,12 @@ export interface Synth {
   kind: "sound" | "music";
   spec: Record<string, unknown>;
   source: "builtin" | "ai";
+  /** 算成的素材（進素材庫後才有） */
   renderedMediaId?: string;
+  /** 顯示用的名字（範本名或描述） */
+  label?: string;
+  /** 配樂的原始描述（Regenerate 用它重來） */
+  prompt?: string;
 }
 
 /** 聲音分離的結果 */

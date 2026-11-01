@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { makeProject } from "../core/fixtures";
 import { fromProjectFile } from "../core/projectFile";
 import type { Media } from "../core/model";
-import { exportPathFor, loadProjectText, projectText, pushRecent, relinkMissing } from "./session";
+import { exportPathFor, loadProjectText, projectSave, projectText, pushRecent, relinkMissing } from "./session";
 
 // 專案資料夾的存與開（D41）：存的時候補上素材指紋（算過的記住）、開的時候逐支找回素材、最近開啟清單、匯出預設位置。
 const location = { name: "MyTalk", dir: "D:\\videos\\MyTalk.wordblade" };
@@ -74,5 +74,18 @@ describe("最近開啟與匯出位置", () => {
   it("匯出預設放在專案資料夾旁邊（同一層），檔名是專案名", () => {
     expect(exportPathFor(location, "mp4")).toBe("D:\\videos\\MyTalk.mp4");
     expect(exportPathFor(null, "mp4")).toBe("wordblade-export.mp4");
+  });
+});
+
+describe("projectSave：遮罩取樣存進 .data、開專案時讀回（D41 P5）", () => {
+  it("存：project.json 沒有取樣、檔案有；開：讀回取樣", async () => {
+    const p = makeProject();
+    p.masks = [{ id: "k1", mediaId: p.media[0].id, prompt: "face", label: "face 1", interval: 0.1, samples: [{ t: 1, box: [0, 0, 1, 1], mask: null }], effect: { kind: "blur", strength: 10 }, expand: 0, enabled: true } as never];
+    const location = { name: "T", dir: "D:\v\T.wordblade" };
+    const { text, files } = await projectSave(p, location, new Map(), async () => undefined, 1);
+    expect(text).not.toContain("\"box\"");
+    expect(Object.keys(files)).toEqual(["masks/k1.json"]);
+    const back = await loadProjectText(text, location, async (m) => m, async (rel) => files[rel] ?? null);
+    expect("error" in back ? null : back.project.masks[0].samples).toEqual(p.masks[0].samples);
   });
 });

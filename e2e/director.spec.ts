@@ -7,7 +7,7 @@ import { openTab } from "./helpers/tabs";
 // AI 導演（spec §5.11）的介面流程，閘道由 Playwright 攔截（不連真的 AI）：talk.mp4（4 秒，假轉錄 Hello world. / Again.）
 // → Ask the director（真的在瀏覽器轉 480p 小檔、上傳；假閘道從上傳的詞拿 id）→ 六種建議 → 採用改字、放大、遮罩（重播 SAM 實測串流）、
 // Esc 略過特效（範圍不被清掉）、採用剪 → Ctrl+Z 只回復剪的那一步。特效與運鏡的採用要真的 AI，在實機測。
-const GATEWAY = "http://fake-gateway.test";
+const GATEWAY = "https://fake-gateway.test";
 /** SAM 實測串流的逐格輸出 */
 const SAM_LINES = readFileSync(path.join(import.meta.dirname, "..", "src", "sam", "fixtures", "fosdem-person.sse"), "utf8")
   .split(/\r?\n/).filter((l) => l.startsWith("data:") && l.includes("output_text.delta"))

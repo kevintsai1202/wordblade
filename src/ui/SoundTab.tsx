@@ -6,9 +6,11 @@ import { ensureAudioGraph } from "../audio/audioGraph";
 import { SYNTH_RATE, renderMusic, renderSound, synthToWav } from "../audio/synth/render";
 import { musicSeconds, type MusicSpec, type SoundSpec } from "../audio/synth/spec";
 import { SOUND_TEMPLATES } from "../audio/synth/templates";
+import { CLIP_PEAK, shouldFallback, startMic, type MicSession } from "../audio/micRecorder";
 import { GatewayClient, GatewayError, loadSettings, saveSettings, type GatewaySettings } from "../ai/gateway";
 import { runMusic, runSound } from "../ai/synth";
-import type { Media, Project } from "../core/model";
+import type { Media, Project, Synth } from "../core/model";
+import type { Edit } from "../core/history";
 import type { Engine, ImportSource } from "../engine/Engine";
 import type { Action } from "./state";
 
@@ -30,6 +32,8 @@ interface Rendered<S> {
   prompt?: string;
   /** 已經進素材庫的話，素材 id（加到時間軸不再重複匯入） */
   mediaId?: string;
+  /** 內建範本算的（不經 AI） */
+  builtin?: boolean;
 }
 
 /** 讀同意狀態 */
@@ -86,6 +90,16 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
   /** 「改一下」的修改指示 */
   const [tweak, setTweak] = useState("");
 
+  /** 進行中的錄音：麥克風（MediaRecorder）或 Windows 錄音機（退路） */
+  const [recording, setRecording] = useState<{ method: "mic"; session: MicSession } | { method: "recorder" } | null>(null);
+  /** 錄好的一段：麥克風錄的是 WAV（樣本可以預聽）；錄音機錄的是檔案（直接匯入） */
+  const [take, setTake] = useState<{ method: "mic" | "recorder"; seconds?: number; peak?: number; wav?: Uint8Array; source?: ImportSource; mediaId?: string } | null>(null);
+  const [recError, setRecError] = useState<string | null>(null);
+  // 離開頁籤時還在用麥克風錄就放棄（不留著麥克風開著）
+  const recordingRef = useRef(recording);
+  recordingRef.current = recording;
+  useEffect(() => () => { const r = recordingRef.current; if (r?.method === "mic") r.session.cancel(); }, []);
+
   /** 正在預覽的聲音（再按一次或換一個就停） */
   const preview = useRef<AudioBufferSourceNode | null>(null);
   useEffect(() => () => preview.current?.stop(), []);
@@ -123,11 +137,11 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
   };
 
   /** 音效 spec → 樣本，成為目前的音效並播一次 */
-  const showSound = async (spec: SoundSpec, label: string) => {
+  const showSound = async (spec: SoundSpec, label: string, builtin = false) => {
     setBusy({ part: "sound", label: "Rendering…" });
     try {
       const samples = await renderSound(spec);
-      setSound({ spec, samples, label, name: fileName("sfx", label) });
+      setSound({ spec, samples, label, name: fileName("sfx", label), builtin });
       play(samples);
     } finally {
       setBusy(null);
@@ -140,7 +154,7 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
     setSoundError(null);
     setSoundLength(t.spec.length);
     try {
-      await showSound(t.spec, t.id);
+      await showSound(t.spec, t.id, true);
     } catch (e) {
       setSoundError(message(e));
     }
@@ -185,14 +199,45 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
     }
   };
 
-  /** 放進素材庫（同一版只匯入一次），回傳素材 id */
-  const saveToLibrary = async <S,>(item: Rendered<S>, update: (r: Rendered<S>) => void): Promise<string | null> => {
-    if (item.mediaId) return item.mediaId;
+  /**
+   * 放進素材庫（同一版只匯入一次），回傳素材 id。規格同時存進專案（project.synths），重開專案後還能再聽、改一下、重新生成。
+   */
+  const saveToLibrary = async <S,>(item: Rendered<S>, update: (r: Rendered<S>) => void, also: Edit[] = []): Promise<string | null> => {
+    if (item.mediaId) {
+      if (also.length) dispatch({ type: "commit", edits: also });
+      return item.mediaId;
+    }
     const source = await engine.importGenerated(item.name, synthToWav(item.samples));
     const [media] = await importSources([source]);
     if (!media) return null;
     update({ ...item, mediaId: media.id });
+    const synth: Synth = {
+      id: `synth-${media.id}`, kind: item.name.startsWith("music-") ? "music" : "sound", spec: item.spec as Record<string, unknown>,
+      source: item.builtin ? "builtin" : "ai", renderedMediaId: media.id, label: item.label, ...(item.prompt ? { prompt: item.prompt } : {}),
+    };
+    // 和放上時間軸同一次提交：一次 Ctrl+Z 一起復原
+    dispatch({ type: "commit", edits: [{ kind: "addSynth", synth }, ...also.map((e) => ("mediaId" in e && e.mediaId === "" ? { ...e, mediaId: media.id } : e))] });
     return media.id;
+  };
+
+  /** 打開專案裡存的一版：重新算樣本（素材還在就沿用，不重複匯入） */
+  const openSaved = async (synth: Synth) => {
+    const mediaId = synth.renderedMediaId && project.media.some((m) => m.id === synth.renderedMediaId) ? synth.renderedMediaId : undefined;
+    const label = synth.label ?? synth.kind;
+    setBusy({ part: synth.kind === "music" ? "music" : "sound", label: "Rendering…" });
+    try {
+      if (synth.kind === "music") {
+        const spec = synth.spec as unknown as MusicSpec;
+        setMusic({ spec, samples: await renderMusic(spec), label, prompt: synth.prompt ?? label, name: fileName("music", synth.prompt ?? label), mediaId });
+      } else {
+        const spec = synth.spec as unknown as SoundSpec;
+        setSound({ spec, samples: await renderSound(spec), label, name: fileName("sfx", label), mediaId, builtin: synth.source === "builtin" });
+      }
+    } catch (e) {
+      (synth.kind === "music" ? setMusicError : setSoundError)(message(e));
+    } finally {
+      setBusy(null);
+    }
   };
 
   /** 放到時間軸：音效 → 音效軌（A3）、配樂 → 配樂軌（A2）；有選範圍就放在範圍起點，否則放在播放頭。一次復原 */
@@ -202,9 +247,13 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
     if (!track) return setError(`There's no ${role === "sfx" ? "sound effects" : "music"} track.`);
     if (track.locked) return setError(`The ${role === "sfx" ? "sound effects" : "music"} track is locked.`);
     try {
-      const mediaId = await saveToLibrary(item, update);
-      if (!mediaId) return setError("Couldn't add it to the media library.");
-      dispatch({ type: "commit", edits: [{ kind: "place", mediaId, trackId: track.id, t: range ? range.start : playhead }] });
+      // 配樂放進比一圈長的範圍時接著重複放滿（最後一段剪到範圍結束；比一圈短就剪到範圍長度）；音效照舊放一段。
+      // 素材 id 還不知道時先填空字串，saveToLibrary 匯入後換成真的 id，和存規格同一次提交
+      const id = item.mediaId ?? "";
+      const edit: Edit = role === "music" && range
+        ? { kind: "placeLoop", mediaId: id, trackId: track.id, t: range.start, end: range.end }
+        : { kind: "place", mediaId: id, trackId: track.id, t: range ? range.start : playhead };
+      if (!(await saveToLibrary(item, update, [edit]))) return setError("Couldn't add it to the media library.");
     } catch (e) {
       setError(message(e));
     }
@@ -218,6 +267,83 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
     } catch (e) {
       setError(message(e));
     }
+  };
+
+  /** 開始錄音：先用麥克風；Windows 版被擋或逾時就改用內建錄音機 */
+  const startRecording = async () => {
+    setRecError(null);
+    setTake(null);
+    try {
+      setRecording({ method: "mic", session: await startMic() });
+    } catch (e) {
+      const name = (e as { name?: string }).name ?? "";
+      if (shouldFallback(name, engine.kind) && engine.recorderFallback) {
+        try {
+          await engine.recorderFallback.start();
+          setRecording({ method: "recorder" });
+        } catch (e2) {
+          setRecError(`Couldn't start Windows Sound Recorder: ${e2 instanceof Error ? e2.message : String(e2)}`);
+        }
+        return;
+      }
+      setRecError(name === "NotFoundError" ? "No microphone found." : name === "NotAllowedError" ? "Microphone access was blocked. Allow it in the browser's site settings." : `Can't use the microphone: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  /** 停止錄音 */
+  const stopRecording = async () => {
+    const r = recording;
+    setRecording(null);
+    if (!r) return;
+    try {
+      if (r.method === "mic") {
+        const t = await r.session.stop();
+        setTake({ method: "mic", seconds: t.seconds, peak: t.peak, wav: t.wav });
+      } else {
+        setTake({ method: "recorder", source: await engine.recorderFallback!.stop() });
+      }
+    } catch (e) {
+      setRecError(`Recording failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  /** 錄好的一段放進素材庫（只匯入一次），回傳素材 id */
+  const saveTake = async (): Promise<string | null> => {
+    if (!take) return null;
+    if (take.mediaId) return take.mediaId;
+    const source = take.source ?? await engine.importGenerated(`voice-${crypto.randomUUID().slice(0, 6)}.wav`, take.wav!);
+    const [media] = await importSources([source]);
+    if (!media) return null;
+    setTake({ ...take, mediaId: media.id });
+    return media.id;
+  };
+
+  /** 錄好的一段放到對白軌（播放頭或選取範圍起點） */
+  const addTake = async () => {
+    setRecError(null);
+    const track = project.tracks.find((t) => t.kind === "audio" && t.role === "dialogue");
+    if (!track || track.locked) return setRecError("The dialogue track is missing or locked.");
+    try {
+      const mediaId = await saveTake();
+      if (!mediaId) return setRecError("Couldn't add it to the media library.");
+      dispatch({ type: "commit", edits: [{ kind: "place", mediaId, trackId: track.id, t: range ? range.start : playhead }] });
+    } catch (e) {
+      setRecError(message(e));
+    }
+  };
+
+  /** 預聽麥克風錄的那段 */
+  const playTake = async () => {
+    if (!take?.wav) return;
+    const graph = ensureAudioGraph();
+    if (!graph) return;
+    preview.current?.stop();
+    const buffer = await graph.ctx.decodeAudioData(take.wav.slice().buffer);
+    const src = graph.ctx.createBufferSource();
+    src.buffer = buffer;
+    src.connect(graph.ctx.destination);
+    src.start();
+    preview.current = src;
   };
 
   const noToken = !settings.token;
@@ -286,6 +412,39 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
       )}
       {musicError && <p className="error" data-testid="music-error">{musicError}</p>}
 
+      <h3 className="section-title">Voice recording</h3>
+      <div className="vibe-actions">
+        {recording
+          ? <button data-testid="rec-stop" className="primary" onClick={() => void stopRecording()}>■ Stop</button>
+          : <button data-testid="rec-start" disabled={busy !== null} title="Record from the microphone" onClick={() => void startRecording()}>● Record</button>}
+        {recording && <span className="muted" data-testid="rec-status">Recording with {recording.method === "mic" ? "the microphone" : "Windows Sound Recorder (the microphone is blocked for this app)"}…</span>}
+      </div>
+      {take && (
+        <div className="vibe-actions" data-testid="rec-result" data-method={take.method}>
+          <span className="muted">{take.method === "recorder" ? `Recorded with Windows Sound Recorder · ${take.source?.name ?? ""}` : `${(take.seconds ?? 0).toFixed(1)} s`}</span>
+          {take.peak !== undefined && take.peak >= CLIP_PEAK && <span className="warning" data-testid="rec-clipped">Too loud — it clipped. Lower the mic level and record again.</span>}
+          <span className="spacer" />
+          {take.wav && <button data-testid="rec-play" onClick={() => void playTake()}>▶ Play</button>}
+          <button data-testid="rec-save" disabled={!!take.mediaId} onClick={() => void saveTake().catch((e) => setRecError(message(e)))}>{take.mediaId ? "In media" : "Save to media"}</button>
+          <button data-testid="rec-add" title={`Add to the dialogue track ${where}`} onClick={() => void addTake()}>Add to timeline</button>
+        </div>
+      )}
+      {recError && <p className="error" data-testid="rec-error">{recError}</p>}
+
+      {(project.synths ?? []).length > 0 && (
+        <>
+          <h3 className="section-title">In this project</h3>
+          <div className="vibe-examples" data-testid="synth-list">
+            {project.synths.map((x) => (
+              <button key={x.id} className="example-chip" data-testid="synth-item" data-kind={x.kind} disabled={busy !== null}
+                title={`Open this ${x.kind === "music" ? "music" : "sound"} again to play, modify or regenerate it`} onClick={() => void openSaved(x)}>
+                {x.kind === "music" ? "♪" : "🔊"} {x.label ?? x.kind}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
       {pending && (
         <div className="consent" data-testid="audio-consent">
           <p>Your description (and, when you modify music, the previous version) will be sent to the WordBlade AI service and Meta Muse Spark to compose the sound. Muse Spark runs as the Contributor version: Meta may use what you send to train its models. Built-in templates work offline and send nothing.</p>
@@ -300,7 +459,7 @@ export function SoundTab({ engine, project, playhead, range, importSources, disp
           <button type="submit">Save</button>
         </form>
       )}
-      <p className="muted">Add to timeline puts sound effects on the sound effects track and music on the music track, {where}.</p>
+      <p className="muted">Add to timeline puts sound effects on the sound effects track and music on the music track, {where}{range ? "; music repeats to fill the range" : ""}.</p>
     </div>
   );
 }

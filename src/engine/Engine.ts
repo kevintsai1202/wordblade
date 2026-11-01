@@ -7,7 +7,7 @@ import type { Media } from "../core/model";
 import type { DoneMap } from "../media/thumbs";
 
 /** 要匯入的檔案：Windows 版是路徑，網頁版是 File */
-export type ImportSource = { kind: "path"; path: string; name: string } | { kind: "file"; file: File; name: string };
+export type ImportSource = { kind: "path"; path: string; name: string } | { kind: "file"; file: File; name: string; handle?: FileSystemFileHandle };
 
 /** 匯入後的背景準備結果 */
 export interface Prepared {
@@ -112,17 +112,31 @@ export interface Engine {
   openProject(): Promise<{ location: ProjectLocation; text: string } | null>;
   /** 重新開最近的專案（不用對話框）；找不到或沒有權限回 null */
   reopenProject(location: ProjectLocation): Promise<{ location: ProjectLocation; text: string } | null>;
+  /** 寫專案 .data 裡的文字檔（rel 相對 .data，例如 masks/<id>.json；D41 P5） */
+  writeData(location: ProjectLocation, rel: string, text: string): Promise<void>;
+  /** 讀專案 .data 裡的文字檔；沒有回 null */
+  readData(location: ProjectLocation, rel: string): Promise<string | null>;
+  /** 目前開著的專案資料夾（產生的檔案寫進它的 .data\generated\）；null＝沒開 */
+  setProjectLocation(location: ProjectLocation | null): void;
   /** 寫 project.json（暫存檔＋改名，不會寫壞） */
   writeProject(location: ProjectLocation, text: string): Promise<void>;
   /** 素材的內容指紋（大小＋頭尾各 1 MB）；拿不到回 undefined */
   mediaFingerprint(media: Media): Promise<string | undefined>;
   /** 找回素材：依序試候選路徑，第一個存在且指紋相同的回傳更新過路徑的素材；都不是回 null（介面請使用者重新連結） */
   locateMedia(media: Media, candidates: string[], fingerprint?: string): Promise<Media | null>;
+  /** 網頁版重新連結：使用者選的檔案（source）接上找不到的素材；Windows 版走 locateMedia，回 false */
+  adoptFile(media: Media, source: ImportSource): Promise<boolean>;
+  /**
+   * 錄音退路（spec §5.18）：Windows 版 getUserMedia 被擋時改用內建錄音機；網頁版沒有（null）。
+   * stop 回傳錄好的檔案（.m4a，已搬進專案 .data\generated\ 或 app 資料夾），接著走一般匯入。
+   */
+  readonly recorderFallback: { start(): Promise<void>; stop(): Promise<ImportSource> } | null;
   /** 人聲／背景音樂分離，回傳兩個衍生素材的 id（§5.14） */
   separateVocals(mediaId: string): Promise<{ vocalsId: string; backgroundId: string }>;
   /**
    * 程式產生的檔案（AI 音效與配樂的 WAV，§5.15）變成可匯入的來源，接著走一般的匯入流程（useMediaLibrary.importSources）。
-   * Windows 版寫進 app 資料夾的 generated/（回傳路徑），網頁版包成 File。name 是建議的檔名（例如 sfx-whoosh.wav）。
+   * 開著專案資料夾時寫進 .data\generated\（D41 P5），沒開時：Windows 版寫進 app 資料夾的 generated/（回傳路徑），網頁版包成 File。
+   * name 是建議的檔名（例如 sfx-whoosh.wav）。
    */
   importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource>;
 }

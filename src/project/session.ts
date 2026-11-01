@@ -1,7 +1,7 @@
 // 專案資料夾的存與開（spec §5.13、D41）：存的時候補上素材指紋（算過的記住）、開的時候逐支找回素材、最近開啟清單、匯出預設位置。
 // 平台相關的事（寫檔、找檔、算指紋）由呼叫端注入（Engine），這裡可以單元測試。
 import type { Media, Project } from "../core/model";
-import { fromProjectFile, joinPath, relinkProject, toProjectFile } from "../core/projectFile";
+import { externalizeMasks, fromProjectFile, internalizeMasks, joinPath, relinkProject, toProjectFile } from "../core/projectFile";
 import type { ProjectLocation } from "../engine/Engine";
 
 /** 最近開啟的一筆 */
@@ -36,6 +36,21 @@ export async function projectText(
   return toProjectFile(project, { projectDir: location.dir, savedAt, fingerprints });
 }
 
+/**
+ * 存專案資料夾（D41 P5）：遮罩取樣拆到 .data\masks\，project.json 只留參照。
+ * 回傳 project.json 的文字與要寫進 .data 的檔案（相對 .data 的路徑 → 內容）。
+ */
+export async function projectSave(
+  project: Project,
+  location: ProjectLocation,
+  cache: Map<string, string>,
+  fingerprint: (media: Media) => Promise<string | undefined>,
+  savedAt: number,
+): Promise<{ text: string; files: Record<string, string> }> {
+  const { project: slim, files } = externalizeMasks(project);
+  return { text: await projectText(slim, location, cache, fingerprint, savedAt), files };
+}
+
 /** 開專案時找不到的素材（重新連結用：id、顯示名稱、存檔時的指紋） */
 export interface MissingMedia {
   id: string;
@@ -51,10 +66,13 @@ export async function loadProjectText(
   text: string,
   location: ProjectLocation,
   locate: Locate,
+  /** 讀 .data 裡的檔案（相對 .data；讀不到回 null）；沒給就不讀（遮罩取樣留空） */
+  readData: (rel: string) => Promise<string | null> = async () => null,
 ): Promise<{ project: Project; missing: MissingMedia[]; savedAt: number } | { error: string }> {
   const parsed = fromProjectFile(text);
   if (!parsed) return { error: `This folder's project.json can't be read (damaged, or made by a newer WordBlade).` };
-  const { project, missing } = await relinkProject(parsed.project, parsed.refs, location.dir, locate);
+  const withMasks = await internalizeMasks(parsed.project, readData);
+  const { project, missing } = await relinkProject(withMasks, parsed.refs, location.dir, locate);
   return {
     project,
     savedAt: parsed.savedAt,

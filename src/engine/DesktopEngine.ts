@@ -179,6 +179,39 @@ export class DesktopEngine implements Engine {
     await invoke("project_write", { dir: location.dir, text });
   }
 
+  /** 開著的專案資料夾（產生的檔案寫進它的 .data\generated\） */
+  private project: ProjectLocation | null = null;
+
+  /** 錄音退路：Rust 用 PowerShell 驅動 Windows 內建錄音機（scripts/recorder/sound-recorder.ps1） */
+  readonly recorderFallback = {
+    start: async (): Promise<void> => {
+      await invoke<number>("recorder_start");
+    },
+    stop: async (): Promise<ImportSource> => {
+      const { path } = await invoke<{ path: string }>("recorder_stop", { projectDir: this.project?.dir ?? null });
+      return { kind: "path", path, name: baseName(path) };
+    },
+  };
+
+  setProjectLocation(location: ProjectLocation | null): void {
+    this.project = location;
+  }
+
+  /** 寫 .data 裡的文字檔（Rust 檢查路徑跳不出 .data） */
+  async writeData(location: ProjectLocation, rel: string, text: string): Promise<void> {
+    await invoke("project_data_write", { dir: location.dir, rel, text });
+  }
+
+  /** 讀 .data 裡的文字檔 */
+  async readData(location: ProjectLocation, rel: string): Promise<string | null> {
+    return invoke<string | null>("project_data_read", { dir: location.dir, rel }).catch(() => null);
+  }
+
+  /** Windows 版重新連結走路徑（locateMedia），不用這個 */
+  async adoptFile(): Promise<boolean> {
+    return false;
+  }
+
   /** 素材指紋（Rust 讀頭尾） */
   async mediaFingerprint(media: Media): Promise<string | undefined> {
     return media.path ? invoke<string>("media_fingerprint", { path: media.path }).catch(() => undefined) : undefined;
@@ -252,9 +285,14 @@ export class DesktopEngine implements Engine {
     throw new NotImplementedError("separateVocals");
   }
 
-  /** 產生的 WAV 寫進 app 資料夾的 generated/（Rust write_generated；raw body 傳位元組，不經 JSON），回傳路徑給一般匯入流程 */
+  /**
+   * 產生的 WAV 寫進開著的專案的 .data\generated\（沒開專案時寫進 app 資料夾的 generated/；Rust write_generated，
+   * raw body 傳位元組，不經 JSON），回傳路徑給一般匯入流程。路徑放標頭要先編碼（標頭只能 ASCII）。
+   */
   async importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource> {
-    const path = await invoke<string>("write_generated", bytes, { headers: { "x-generated-name": name } });
+    const headers: Record<string, string> = { "x-generated-name": name };
+    if (this.project) headers["x-project-dir"] = encodeURIComponent(this.project.dir);
+    const path = await invoke<string>("write_generated", bytes, { headers });
     return { kind: "path", path, name: baseName(path) };
   }
 }

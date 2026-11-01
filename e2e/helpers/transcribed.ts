@@ -4,7 +4,7 @@ import { openTab } from "./tabs";
 
 // e2e 共用：用假閘道（page.route 攔 /v1/asr）轉錄 talk.mp4，得到有字幕的專案。不連真的閘道、不花錢。
 const FIXTURES = path.join(import.meta.dirname, "..", "fixtures");
-const GATEWAY = "http://fake-gateway.test";
+const GATEWAY = "https://fake-gateway.test";
 
 /** 一段假的轉錄結果 */
 export type FakeTurn = { transcript: string; startMs: number; endMs: number };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { makeProject } from "./fixtures";
-import { fromProjectFile, joinPath, relativePath, relinkCandidates, relinkProject, toProjectFile } from "./projectFile";
+import { externalizeMasks, fromProjectFile, internalizeMasks, joinPath, relativePath, relinkCandidates, relinkProject, toProjectFile } from "./projectFile";
+import type { MaskObject } from "./model";
 
 // 專案資料夾的 project.json（D41）：素材用路徑參照（絕對＋相對專案資料夾＋內容指紋），搬家後依序找。
 describe("路徑", () => {
@@ -64,3 +65,38 @@ describe("relinkProject：開專案時逐支找回素材", () => {
   });
 });
 
+
+// 遮罩取樣放進 .data\masks\（D41 P5，2026-11-01）：project.json 只留參照，SAM 的編碼內容不塞在專案檔裡。
+describe("遮罩取樣放進 .data", () => {
+  const mask = (id: string): MaskObject => ({
+    id, mediaId: "m1", prompt: "face", label: "face 1", interval: 0.1,
+    samples: [{ t: 1, box: [0, 0, 0.5, 0.5], mask: { x: 0, y: 0, w: 0.5, h: 0.5, cols: 2, rows: 2, payload: "RLE..." } }],
+    effect: { kind: "mosaic", strength: 20 },
+  } as MaskObject);
+
+  it("拆出來：專案裡的取樣清空、記參照；檔案內容是取樣", () => {
+    const p = { ...makeProject(), masks: [mask("k1")] };
+    const { project, files } = externalizeMasks(p);
+    expect(project.masks[0].samples).toEqual([]);
+    expect(project.masks[0].samplesRef).toBe("masks/k1.json");
+    expect(JSON.parse(files["masks/k1.json"])).toEqual(p.masks[0].samples);
+    // 原本的專案不動
+    expect(p.masks[0].samples).toHaveLength(1);
+  });
+
+  it("讀回：照參照讀檔接回取樣；讀不到的留空；舊專案（取樣直接在專案裡）照舊", async () => {
+    const p = { ...makeProject(), masks: [mask("k1"), mask("k2"), mask("k3")] };
+    const { project, files } = externalizeMasks({ ...p, masks: p.masks.slice(0, 2) });
+    const withOld = { ...project, masks: [...project.masks, p.masks[2]] };
+    const back = await internalizeMasks(withOld, async (rel) => (rel === "masks/k1.json" ? files[rel] : null));
+    expect(back.masks[0].samples).toEqual(p.masks[0].samples);
+    expect(back.masks[0].samplesRef).toBeUndefined();
+    expect(back.masks[1].samples).toEqual([]);
+    expect(back.masks[2].samples).toEqual(p.masks[2].samples);
+  });
+
+  it("檔名只用安全的 id（不能跳出 .data）", () => {
+    const p = { ...makeProject(), masks: [mask("../../evil")] };
+    expect(Object.keys(externalizeMasks(p).files)).toEqual(["masks/------evil.json"]);
+  });
+});

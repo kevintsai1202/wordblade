@@ -1,10 +1,11 @@
 // 專案資料夾的 project.json（spec §5.13、D41）：專案內容＋每支素材的參照（絕對路徑、相對專案資料夾的路徑、內容指紋）。
 // 素材不複製進專案；搬家或換電腦後依「相對路徑 → 原本的絕對路徑 → 指紋比對」找回來，都找不到才請使用者重新連結。純函式。
-import type { Project } from "./model";
+import type { MaskObject, Project } from "./model";
 
 /** 格式名稱與版本 */
 const FORMAT = "wordblade-project";
-const VERSION = 1;
+/** 第 2 版：遮罩取樣移到 .data\masks\（舊版程式讀不到，所以升版讓它拒絕而不是悄悄丟掉遮罩） */
+const VERSION = 2;
 
 /** 一支素材的參照 */
 export interface MediaRef {
@@ -114,3 +115,35 @@ export async function relinkProject(
   return { project: { ...project, media }, missing: project.media.map((m) => m.id).filter((id) => missing.includes(id)) };
 }
 
+
+/**
+ * 遮罩取樣拆到 .data\masks\<id>.json（D41 P5）：回傳取樣清空、記上參照的專案，與要寫的檔案（相對 .data 的路徑 → 內容）。
+ * id 只留英數、-、_，檔名跳不出 .data。原本的專案不改。
+ */
+export function externalizeMasks(project: Project): { project: Project; files: Record<string, string> } {
+  const files: Record<string, string> = {};
+  const masks = project.masks.map((m) => {
+    if (!m.samples.length) return m;
+    const rel = `masks/${m.id.replace(/[^A-Za-z0-9_-]/g, "-")}.json`;
+    files[rel] = JSON.stringify(m.samples);
+    return { ...m, samples: [], samplesRef: rel };
+  });
+  return { project: { ...project, masks }, files };
+}
+
+/** 讀回遮罩取樣：有參照的照參照讀檔（read 回 null＝讀不到，取樣留空）；沒有參照的（舊專案）照舊 */
+export async function internalizeMasks(project: Project, read: (rel: string) => Promise<string | null>): Promise<Project> {
+  const masks = await Promise.all(project.masks.map(async (m) => {
+    if (!m.samplesRef) return m;
+    const { samplesRef, ...rest } = m;
+    let samples: MaskObject["samples"] = [];
+    try {
+      const text = await read(samplesRef);
+      if (text) samples = JSON.parse(text);
+    } catch {
+      /* 壞掉的取樣檔：留空（遮罩退回不顯示），不擋開專案 */
+    }
+    return { ...rest, samples };
+  }));
+  return { ...project, masks };
+}

@@ -109,6 +109,42 @@ pub fn project_read(app: AppHandle, dir: String) -> Result<(String, String), Str
     Ok((folder.to_string_lossy().to_string(), text))
 }
 
+/// .data 裡的相對路徑 → 絕對路徑；只允許英數、-、_、. 組成的段落（不能有 ..、絕對路徑），跳不出 .data
+pub fn data_path(dir: &Path, rel: &str) -> Result<PathBuf, String> {
+    let mut out = dir.join(DATA_DIR);
+    let mut any = false;
+    for seg in rel.split('/') {
+        let ok = !seg.is_empty() && seg != "." && seg != ".." && seg.chars().all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c));
+        if !ok {
+            return Err(format!("bad data path: {rel}"));
+        }
+        out.push(seg);
+        any = true;
+    }
+    if any { Ok(out) } else { Err("empty data path".into()) }
+}
+
+/// 寫 .data 裡的文字檔（遮罩取樣等；暫存檔＋改名）
+#[tauri::command]
+pub fn project_data_write(dir: String, rel: String, text: String) -> Result<(), String> {
+    let path = data_path(Path::new(&dir), &rel)?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    write_atomic(&path, &text)
+}
+
+/// 讀 .data 裡的文字檔；沒有回 None
+#[tauri::command]
+pub fn project_data_read(dir: String, rel: String) -> Result<Option<String>, String> {
+    let path = data_path(Path::new(&dir), &rel)?;
+    match fs::read_to_string(&path) {
+        Ok(t) => Ok(Some(t)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 /// 素材的內容指紋
 #[tauri::command]
 pub async fn media_fingerprint(path: String) -> Result<String, String> {
@@ -135,6 +171,16 @@ pub async fn media_locate(app: AppHandle, candidates: Vec<String>, fingerprint: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn data_路徑_跳不出_data() {
+        let dir = Path::new("D:\\p\\T.wordblade");
+        assert_eq!(data_path(dir, "masks/k1.json").unwrap(), dir.join(".data").join("masks").join("k1.json"));
+        assert!(data_path(dir, "../project.json").is_err());
+        assert!(data_path(dir, "masks/../../x").is_err());
+        assert!(data_path(dir, "C:\\x").is_err());
+        assert!(data_path(dir, "").is_err());
+    }
 
     #[test]
     fn 原子寫入_覆蓋舊內容_不留暫存檔() {

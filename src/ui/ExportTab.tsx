@@ -91,6 +91,8 @@ export function ExportTab({ project, captions, engine, plugins, envelopes, sugge
     } finally {
       abortRef.current = null;
       images.dispose();
+      // 匯出用的特效畫格與音效網址也要釋放
+      effects.dispose();
       endBusy();
     }
   };

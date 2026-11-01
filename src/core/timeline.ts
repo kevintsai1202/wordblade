@@ -387,3 +387,27 @@ export function placeMedia(project: Project, mediaId: string, trackId: string, t
     layoutV1Draft(draft);
   });
 }
+
+/**
+ * 配樂循環放滿範圍（spec §5.15）：從 t 起首尾相接放 media（一圈的尾巴已經疊回開頭，接起來無縫），放到 end 為止，
+ * 最後一段剪到範圍結束。end ≤ t（沒選範圍）就只放一整圈。只用在音軌（不是 V1，不會漣漪）。
+ */
+export function placeLoop(project: Project, mediaId: string, trackId: string, t: Seconds, end: Seconds): Project {
+  const media = project.media.find((m) => m.id === mediaId);
+  const target = project.tracks.find((tr) => tr.id === trackId);
+  if (!media || !target || target.kind !== "audio" || !(media.duration > 0)) return placeMedia(project, mediaId, trackId, t);
+  const start = roundTime(Math.max(0, t));
+  const total = end > start ? end - start : media.duration;
+  /** 最多幾段（防呆：極短的素材配超長範圍） */
+  const MAX_LOOPS = 200;
+  return produce(project, (draft) => {
+    for (let k = 0, at = start; k < MAX_LOOPS && at < start + total - 1e-6; k++, at = roundTime(at + media.duration)) {
+      const length = Math.min(media.duration, start + total - at);
+      draft.clips.push({
+        id: newClipId(draft, `${mediaId}@${trackId}`),
+        mediaId, trackId, srcIn: 0, srcOut: roundTime(length), start: at,
+        speed: 1, opacity: 1, fadeIn: 0, fadeOut: 0, volume: 1,
+      });
+    }
+  });
+}

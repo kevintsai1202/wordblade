@@ -83,7 +83,11 @@ export function PreviewPane(props: {
         const sound = await effects.sound(e);
         if (sound) sounds.set(e.id, sound.url);
       }
-      if (effectsRef.current === effects) playerRef.current?.setEffectSounds(sounds);
+      if (effectsRef.current === effects) {
+        playerRef.current?.setEffectSounds(sounds);
+        // 播放器換掉舊的聲音元素後，才釋放不再用到的音效網址
+        void effects.pruneSounds(project);
+      }
       if (!latest.current.playing) playerRef.current?.render(latest.current.playhead, false, latest.current.rate);
     });
   }, [project]);

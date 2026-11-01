@@ -2,7 +2,7 @@
 // 例如「去贅詞 Remove all」、AI 導演採用一條建議，都只要一次 Ctrl+Z（§5.11、§5.16）。
 // 歷史存的是整份專案的快照；timeline 的函式用 Immer 做結構共享，快照之間沒改到的部分是同一個物件。
 import { addEffect, deleteEffect, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
-import type { CameraKey, DirectorChapter, Effect, MaskObject, Plugin, Project, Seconds, Suggestion, Word, ZoomRegion } from "./model";
+import type { CameraKey, DirectorChapter, Effect, MaskObject, Plugin, Project, Seconds, Suggestion, Synth, Word, ZoomRegion } from "./model";
 import { setSuggestionStatus, setSuggestions } from "./suggestions";
 import { addMasks, deleteMasks, setMask } from "./masks";
 import { setCaptionStyle, setMediaWords } from "./media";
@@ -11,7 +11,7 @@ import { addZoom, deleteZoom, setZoom } from "./zoom";
 import { setClipSpeed } from "./speed";
 import { insertIntro, type IntroInsert } from "../intro/insert";
 import type { CaptionStyle } from "../captions/captionLayout";
-import { cutByWords, cutSourceRanges, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
+import { cutByWords, cutSourceRanges, deleteClip, moveClip, placeLoop, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
 
 /** 一個編輯動作 */
 export type Edit =
@@ -22,6 +22,8 @@ export type Edit =
   | { kind: "move"; clipId: string; start: Seconds }
   | { kind: "delete"; clipId: string }
   | { kind: "place"; mediaId: string; trackId: string; t: Seconds }
+  | { kind: "placeLoop"; mediaId: string; trackId: string; t: Seconds; end: Seconds }
+  | { kind: "addSynth"; synth: Synth }
   | { kind: "addEffect"; effect: Effect; plugins: Plugin[] }
   | { kind: "moveEffect"; effectId: string; start: Seconds }
   | { kind: "trimEffect"; effectId: string; edge: "in" | "out"; t: Seconds }
@@ -53,6 +55,8 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "move": return moveClip(project, edit.clipId, edit.start);
     case "delete": return deleteClip(project, edit.clipId);
     case "place": return placeMedia(project, edit.mediaId, edit.trackId, edit.t);
+    case "placeLoop": return placeLoop(project, edit.mediaId, edit.trackId, edit.t, edit.end);
+    case "addSynth": return { ...project, synths: [...(project.synths ?? []).filter((x) => x.id !== edit.synth.id), edit.synth] };
     case "addEffect": return addEffect(project, edit.effect, edit.plugins);
     case "insertIntro": return insertIntro(project, edit.intro);
     case "moveEffect": return moveEffect(project, edit.effectId, edit.start);

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch } from "react";
 import type { Media, Project } from "../core/model";
 import { shouldSave } from "../core/session";
 import type { Engine, ProjectLocation } from "../engine/Engine";
-import { RECENT_KEY, loadProjectText, projectText, pushRecent, relinkMissing, type MissingMedia, type RecentProject } from "../project/session";
+import { RECENT_KEY, loadProjectText, projectSave, pushRecent, relinkMissing, type MissingMedia, type RecentProject } from "../project/session";
 import type { Action } from "./state";
 
 /** 讀最近開啟（讀不到回空） */
@@ -41,6 +41,13 @@ export function useProjectFolder(opts: {
   const fingerprints = useRef(new Map<string, string>());
   /** 剛載入的專案不要立刻回存（沒改東西） */
   const justLoaded = useRef(false);
+  /** 已經寫進 .data 的檔案內容（相對路徑 → 內容；沒變就不重寫） */
+  const written = useRef(new Map<string, string>());
+
+  // 讓 Engine 知道開著哪個專案（產生的音檔寫進它的 .data\generated\）
+  useEffect(() => {
+    engine.setProjectLocation(location);
+  }, [engine, location]);
 
   /** 記進最近開啟 */
   const remember = useCallback((loc: ProjectLocation) => {
@@ -59,7 +66,15 @@ export function useProjectFolder(opts: {
   const save = useCallback(async (loc: ProjectLocation, p: Project) => {
     setStatus({ kind: "saving" });
     try {
-      await engine.writeProject(loc, await projectText(p, loc, fingerprints.current, (m) => engine.mediaFingerprint(m), Date.now()));
+      // 遮罩取樣等先寫進 .data（內容沒變的不重寫），再寫 project.json
+      const { text, files } = await projectSave(p, loc, fingerprints.current, (m) => engine.mediaFingerprint(m), Date.now());
+      for (const [rel, content] of Object.entries(files)) {
+        const key = `${loc.dir}|${rel}`;
+        if (written.current.get(key) === content) continue;
+        await engine.writeData(loc, rel, content);
+        written.current.set(key, content);
+      }
+      await engine.writeProject(loc, text);
       setStatus({ kind: "saved", at: Date.now() });
     } catch (e) {
       setStatus({ kind: "error", message: e instanceof Error ? e.message : String(e) });
@@ -90,7 +105,7 @@ export function useProjectFolder(opts: {
   /** 載入讀到的專案：找回素材、換掉目前的專案 */
   const load = useCallback(async (opened: { location: ProjectLocation; text: string } | null): Promise<string | null> => {
     if (!opened) return null;
-    const result = await loadProjectText(opened.text, opened.location, (m, c, fp) => engine.locateMedia(m, c, fp));
+    const result = await loadProjectText(opened.text, opened.location, (m, c, fp) => engine.locateMedia(m, c, fp), (rel) => engine.readData(opened.location, rel));
     if ("error" in result) return result.error;
     reset(project.media);
     justLoaded.current = true;
@@ -120,7 +135,13 @@ export function useProjectFolder(opts: {
     if (!target) return null;
     const [source] = await engine.pickFiles();
     if (!source) return null;
-    if (source.kind !== "path") return "Relinking needs the Windows app.";
+    if (source.kind !== "path") {
+      // 網頁版：選的檔案直接接上這一支（沒有路徑可以找同資料夾的其他支）
+      if (!(await engine.adoptFile(target, source))) return `Can't use ${source.name}.`;
+      enqueuePrepare(target);
+      setMissing((list) => list.filter((x) => x.id !== target.id));
+      return null;
+    }
     const found = await relinkMissing(target, source.path, project.media, missing, (m, c, fp) => engine.locateMedia(m, c, fp));
     if (!found.length) return `Can't open ${source.name}.`;
     for (const { id: mid, path } of found) {

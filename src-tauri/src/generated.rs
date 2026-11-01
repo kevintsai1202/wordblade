@@ -1,4 +1,5 @@
-// 程式產生的素材（spec §5.15：AI 音效與配樂的 WAV）：前端用 OfflineAudioContext 算好的位元組寫進 app 資料夾的 generated/，
+// 程式產生的素材（spec §5.15：AI 音效與配樂的 WAV、錄音）：前端算好的位元組寫進開著的專案的 .data\generated\
+// （D41 P5；標頭 x-project-dir 給專案資料夾），沒開專案時寫進 app 資料夾的 generated/。
 // 回傳路徑後走一般匯入（probe_media）。位元組用 raw body 傳（Uint8Array），檔名放在標頭 x-generated-name。
 
 use std::path::PathBuf;
@@ -37,7 +38,22 @@ pub fn write_generated(app: AppHandle, request: Request<'_>) -> Result<String, S
         .get("x-generated-name")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("generated.wav");
-    let dir = generated_dir(&app)?;
+    // 開著專案：寫進 <專案>\.data\generated\（專案搬家時跟著走）；專案資料夾要已經有 .data（是真的專案）
+    let project = request
+        .headers()
+        .get("x-project-dir")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| percent_decode(s))
+        .map(PathBuf::from)
+        .filter(|p| p.join(".data").is_dir());
+    let dir = match project {
+        Some(p) => {
+            let d = p.join(".data").join("generated");
+            std::fs::create_dir_all(&d).map_err(|e| e.to_string())?;
+            d
+        }
+        None => generated_dir(&app)?,
+    };
     let stem = safe_stem(name);
     let mut path = dir.join(format!("{stem}.wav"));
     let mut n = 2;
@@ -50,9 +66,34 @@ pub fn write_generated(app: AppHandle, request: Request<'_>) -> Result<String, S
     Ok(path.to_string_lossy().into_owned())
 }
 
+/// 標頭只能放 ASCII：前端用 encodeURIComponent 編碼路徑，這裡解回來
+fn percent_decode(s: &str) -> String {
+    let bytes = s.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            if let Ok(b) = u8::from_str_radix(&s[i + 1..i + 3], 16) {
+                out.push(b);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
 #[cfg(test)]
 mod tests {
-    use super::safe_stem;
+    use super::{percent_decode, safe_stem};
+
+    #[test]
+    fn 標頭的路徑解碼() {
+        assert_eq!(percent_decode("D%3A%5Cv%5C%E5%B0%88%E6%A1%88.wordblade"), "D:\\v\\專案.wordblade");
+        assert_eq!(percent_decode("abc%2"), "abc%2");
+    }
 
     #[test]
     fn 檔名只留安全字元() {

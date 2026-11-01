@@ -200,9 +200,34 @@ export class EffectRenderer {
     }
   }
 
+  /**
+   * 釋放專案裡不再用到的特效音效（blob URL）。預覽在 setEffectSounds 之後才呼叫：
+   * 舊的 <audio> 換掉後才釋放，避免正在播的元素讀到失效的網址。
+   */
+  async pruneSounds(project: Project): Promise<void> {
+    const keep = new Set(project.effects.filter(hasSound).map(soundKey));
+    const stale = [...this.soundCache].filter(([key]) => !keep.has(key));
+    for (const [key] of stale) this.soundCache.delete(key);
+    for (const [, hit] of stale) {
+      const sound = await hit;
+      if (sound) URL.revokeObjectURL(sound.url);
+    }
+  }
+
+  /** 釋放全部特效音效的 blob URL */
+  async disposeSounds(): Promise<void> {
+    const all = [...this.soundCache.values()];
+    this.soundCache.clear();
+    for (const hit of all) {
+      const sound = await hit;
+      if (sound) URL.revokeObjectURL(sound.url);
+    }
+  }
+
   /** 全部釋放 */
   dispose() {
     for (const slot of this.slots.values()) slot.bitmap?.close();
     this.slots.clear();
+    void this.disposeSounds();
   }
 }
