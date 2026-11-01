@@ -10,6 +10,7 @@ import { loadSample, samplePath } from "./project/sample";
 import { EditPanel } from "./ui/EditPanel";
 import { MediaTab } from "./ui/MediaTab";
 import { PreviewPane } from "./ui/PreviewPane";
+import { WelcomePanel } from "./ui/WelcomePanel";
 import { initialState, keyToAction, projectDuration, reducer } from "./ui/state";
 import { Timeline } from "./ui/Timeline";
 import { useMediaLibrary } from "./ui/useMediaLibrary";
@@ -152,6 +153,18 @@ function App() {
     }, 2000);
     return () => clearTimeout(timer);
   }, [project, state.history.past.length, isDemo, folder.location]);
+  // 啟動時自動開最後一個專案（2026-11-01 開發者決定）：桌面版直接開；網頁版要使用者點一下才拿得到檔案權限，交給歡迎畫面的 Continue。
+  // 開不了（搬走、刪掉）就留在歡迎畫面並提示
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (autoOpened.current || START_WITH_DEMO || engine.kind !== "desktop" || !engine.projectFolders) return;
+    autoOpened.current = true;
+    const last = folder.recent[0];
+    if (last) void folder.reopen(last).then((err) => err && setNotice(err));
+  }, [engine, folder]);
+  /** 還沒開專案、專案也完全是空的（沒有素材、片段、特效）：預覽區顯示歡迎畫面；一動手就讓開 */
+  const showWelcome = !folder.location && !isDemo && project.media.length === 0 && project.clips.length === 0 && project.effects.length === 0;
+
   /** 還原上次的工作：載入專案、素材照常在背景準備（桌面版路徑還在；網頁版要重新匯入檔案） */
   const restoreLast = () => {
     if (!lastSession) return;
@@ -237,7 +250,7 @@ function App() {
         {engine.projectFolders && (
           <>
             {saveName === null
-              ? <button data-testid="project-save-as" title="Save this project as a .wordblade folder" onClick={() => setSaveName(folder.location?.name ?? project.media[0]?.name?.replace(/\.[^.]+$/, "") ?? "Untitled")}>{folder.location ? "Save as…" : "Save…"}</button>
+              ? <button data-testid="project-save-as" title="Save this project as a .wordblade folder" onClick={() => setSaveName(folder.location?.name ?? project.media[0]?.name?.replace(/\.[^.]+$/, "") ?? "Untitled")}>{folder.location ? "Save as…" : "New project…"}</button>
               : (
                 <form className="save-as" onSubmit={(e) => { e.preventDefault(); const n = saveName.trim(); setSaveName(null); if (n) void folder.saveAs(n); }}>
                   <input autoFocus data-testid="project-name-input" value={saveName} maxLength={80} onChange={(e) => setSaveName(e.target.value)} />
@@ -276,7 +289,17 @@ function App() {
         <button disabled title="Export — coming soon">Export</button>
       </header>
       <main className="workspace">
-        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} playSeq={state.playSeq} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} thumbs={thumbs} selectedEffectId={state.selectedEffectId}
+        <PreviewPane
+          cover={showWelcome ? (
+            <WelcomePanel recent={folder.recent} projectFolders={engine.projectFolders}
+              onNew={(n) => void folder.saveAs(n)}
+              onOpen={() => void folder.open().then((err) => err && setNotice(err))}
+              onReopen={(r) => void folder.reopen(r).then((err) => err && setNotice(err))}
+              onSample={() => void onLoadSample()}
+              lastSession={lastSession ? { clips: lastSession.project.clips.length, savedAt: lastSession.savedAt } : null}
+              onRestore={restoreLast} />
+          ) : undefined}
+          project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} playSeq={state.playSeq} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} thumbs={thumbs} selectedEffectId={state.selectedEffectId}
           overlay={editingZoom && zoomEdit ? (
             <ZoomEditOverlay
               zoom={editingZoom} clip={zoomClip} playhead={state.playhead} edit={zoomEdit}

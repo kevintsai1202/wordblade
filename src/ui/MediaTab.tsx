@@ -90,6 +90,16 @@ export function MediaTab({ project, library, engine, pxPerSecond, onImport, disp
                     Media offline{m.path ? ` · ${m.path}` : ""}
                   </span>
                 )}
+                <button
+                  className={`media-remove${m.offline ? " visible" : ""}`} data-testid="media-remove" title="Remove from project (its clips too; the file on disk is kept). Ctrl+Z to undo."
+                  onMouseDown={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const used = project.clips.filter((c) => c.mediaId === m.id).length;
+                    if (used && !window.confirm(`Remove ${m.name ?? "this media"} and its ${used} clip${used > 1 ? "s" : ""} from the timeline?`)) return;
+                    dispatch({ type: "commit", edits: [{ kind: "removeMedia", mediaId: m.id }] });
+                  }}
+                >Remove</button>
                 {!m.offline && item && item.status !== "ready" && (
                   <span className={`media-status ${item.status}`} data-testid="media-status">
                     {item.status === "failed" ? item.error : `Preparing ${Math.round(item.progress * 100)}%`}

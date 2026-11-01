@@ -197,4 +197,40 @@ test("素材離線（同達文西）：原檔不在了照樣開專案，素材�
   await openTab(page, "export");
   await page.getByTestId("export-start").click();
   await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 90_000 });
+
+  // 移除離線素材：素材與片段一起拿掉（有片段時先確認），Ctrl+Z 回來
+  await openTab(page, "media");
+  page.once("dialog", (d) => void d.accept());
+  await page.getByTestId("media-remove").click();
+  await expect(page.locator(".media-item")).toHaveCount(0);
+  await expect(page.locator(".clip")).toHaveCount(0);
+  await page.locator(".title-bar").click();
+  await page.keyboard.press("Control+z");
+  await expect(page.getByTestId("media-offline")).toBeVisible();
+  await expect(page.locator(".clip.offline").first()).toBeVisible();
+});
+
+test("歡迎畫面：沒開專案時出現；New project 建好就消失；重新整理後 Continue 一鍵回到上次的專案", async ({ page }) => {
+  test.setTimeout(120_000);
+  await stubPickers(page);
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/");
+  await expect(page.getByTestId("welcome")).toBeVisible();
+  await expect(page.getByTestId("welcome-continue")).toHaveCount(0);
+  // 新專案：輸入名稱 → 選位置
+  await page.getByTestId("welcome-new").click();
+  await page.getByTestId("welcome-name").fill("Hello");
+  await page.getByRole("button", { name: "Choose where to save…" }).click();
+  await expect(page.getByTestId("project-name")).toHaveText("Hello");
+  await expect(page.getByTestId("welcome")).toHaveCount(0);
+  expect(await readOpfs(page, "parent/Hello.wordblade/project.json")).toContain("wordblade-project");
+  await page.screenshot({ path: "output/ui-shots/welcome-after-new.png" });
+
+  // 重新整理：歡迎畫面的第一個大按鈕是「Continue “Hello”」，點一下就開
+  await page.reload();
+  await expect(page.getByTestId("welcome-continue")).toContainText("Hello");
+  await page.screenshot({ path: "output/ui-shots/welcome-continue.png" });
+  await page.getByTestId("welcome-continue").click();
+  await expect(page.getByTestId("project-name")).toHaveText("Hello");
+  await expect(page.getByTestId("welcome")).toHaveCount(0);
 });

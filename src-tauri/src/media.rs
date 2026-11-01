@@ -436,7 +436,12 @@ pub async fn media_thumbnail(app: AppHandle, path: String, at: f64) -> Result<ta
     let ffmpeg = tool(&app, "ffmpeg");
     let bytes = tauri::async_runtime::spawn_blocking(move || {
         let mut cmd = command(&ffmpeg);
-        cmd.args(["-hide_banner", "-loglevel", "error", "-ss", &format!("{at:.3}"), "-i", &path])
+        // 圖片不能加 -ss：單張圖的 image2 解出 0 格（2026-11-01 JPG 縮圖全破圖）；at ≤ 0 就從頭取
+        cmd.args(["-hide_banner", "-loglevel", "error"]);
+        if at > 0.0 {
+            cmd.args(["-ss", &format!("{at:.3}")]);
+        }
+        cmd.args(["-i", &path])
             .args(["-frames:v", "1", "-vf", "scale=160:-2", "-f", "image2pipe", "-c:v", "mjpeg", "-"]);
         run(cmd)
     })

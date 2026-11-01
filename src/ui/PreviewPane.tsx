@@ -36,9 +36,11 @@ export function PreviewPane(props: {
   selectedEffectId: string | null;
   /** 疊在預覽上的調框層（局部放大的放大框；有它時不顯示特效的目標框） */
   overlay?: ReactNode;
+  /** 蓋在整個預覽區上的內容（歡迎畫面）；預覽照常掛著，之後的播放器不必重建 */
+  cover?: ReactNode;
   dispatch: Dispatch<Action>;
 }) {
-  const { project, playhead, playing, rate, playSeq, duration, captions, engine, library, plugins, thumbs, selectedEffectId, overlay, dispatch } = props;
+  const { project, playhead, playing, rate, playSeq, duration, captions, engine, library, plugins, thumbs, selectedEffectId, overlay, cover, dispatch } = props;
   const frameRef = useRef<HTMLDivElement>(null);
   // 有目標框的特效（2D 與疊加的 3D）才在預覽上顯示框
   const selectedEffect = project.effects.find((e) => e.id === selectedEffectId && (e.kind === "anim2d" || e.kind === "anim3d") && !!e.params.box);
@@ -128,6 +130,7 @@ export function PreviewPane(props: {
   const caption = captions.find((c) => playhead >= c.start && playhead < c.end);
   return (
     <section className="preview">
+      {cover}
       <div className="viewer">
         <div className="frame" ref={frameRef}>
           <canvas ref={canvasRef} width={PREVIEW_WIDTH} height={PREVIEW_HEIGHT} data-testid="preview-canvas" data-caption={caption?.lines.join(" ") ?? ""} />

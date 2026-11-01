@@ -11,7 +11,7 @@ import { addZoom, deleteZoom, setZoom } from "./zoom";
 import { setClipSpeed } from "./speed";
 import { insertIntro, type IntroInsert } from "../intro/insert";
 import type { CaptionStyle } from "../captions/captionLayout";
-import { cutByWords, cutSourceRanges, deleteClip, moveClip, placeLoop, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
+import { cutByWords, cutSourceRanges, deleteClip, layoutV1, moveClip, placeLoop, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
 
 /** 一個編輯動作 */
 export type Edit =
@@ -24,6 +24,7 @@ export type Edit =
   | { kind: "place"; mediaId: string; trackId: string; t: Seconds }
   | { kind: "placeLoop"; mediaId: string; trackId: string; t: Seconds; end: Seconds }
   | { kind: "addSynth"; synth: Synth }
+  | { kind: "removeMedia"; mediaId: string }
   | { kind: "addEffect"; effect: Effect; plugins: Plugin[] }
   | { kind: "moveEffect"; effectId: string; start: Seconds }
   | { kind: "trimEffect"; effectId: string; edge: "in" | "out"; t: Seconds }
@@ -56,6 +57,7 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "delete": return deleteClip(project, edit.clipId);
     case "place": return placeMedia(project, edit.mediaId, edit.trackId, edit.t);
     case "placeLoop": return placeLoop(project, edit.mediaId, edit.trackId, edit.t, edit.end);
+    case "removeMedia": return removeMedia(project, edit.mediaId);
     case "addSynth": return { ...project, synths: [...(project.synths ?? []).filter((x) => x.id !== edit.synth.id), edit.synth] };
     case "addEffect": return addEffect(project, edit.effect, edit.plugins);
     case "insertIntro": return insertIntro(project, edit.intro);
@@ -134,4 +136,25 @@ export function redo(history: History): History {
   if (!canRedo(history)) return history;
   const [next, ...rest] = history.future;
   return { past: [...history.past, history.present], present: next, future: rest };
+}
+
+/**
+ * 從專案移除素材（2026-11-01）：素材、它在時間軸上的片段、逐字稿、遮罩、AI 建議與章節、音效規格的連結一起拿掉；
+ * V1 拿掉片段後重新接起來（不留空隙），其他軌不動。素材檔本身不動（專案只記連結）。
+ */
+function removeMedia(project: Project, mediaId: string): Project {
+  if (!project.media.some((m) => m.id === mediaId)) return project;
+  const removed = new Set(project.clips.filter((c) => c.mediaId === mediaId).map((c) => c.id));
+  let p: Project = {
+    ...project,
+    media: project.media.filter((m) => m.id !== mediaId),
+    words: project.words.filter((w) => w.mediaId !== mediaId),
+    masks: project.masks.filter((m) => m.mediaId !== mediaId),
+    suggestions: project.suggestions.filter((s) => s.mediaId !== mediaId),
+    synths: (project.synths ?? []).map((x) => (x.renderedMediaId === mediaId ? { ...x, renderedMediaId: undefined } : x)),
+    ...(project.directorChapters ? { directorChapters: project.directorChapters.filter((c) => c.mediaId !== mediaId) } : {}),
+  };
+  // 只拿掉這支素材的片段（不用漣漪刪除：那會連帶剪掉其他軌上別的素材）；V1 再重新接起來
+  p = { ...p, clips: p.clips.filter((c) => !removed.has(c.id)) };
+  return layoutV1(p);
 }

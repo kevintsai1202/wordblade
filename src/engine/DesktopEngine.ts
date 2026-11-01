@@ -162,7 +162,13 @@ export class DesktopEngine implements Engine {
   /** 開舊專案：選 .wordblade 資料夾 */
   async openProject(): Promise<{ location: ProjectLocation; text: string } | null> {
     const picked = await open({ directory: true, multiple: false, title: "Open a .wordblade project folder" });
-    return typeof picked === "string" ? this.reopenProject({ name: projectName(picked), dir: picked }) : null;
+    if (typeof picked !== "string") return null;
+    try {
+      const [dir, text] = await invoke<[string, string]>("project_read", { dir: picked });
+      return { location: { name: projectName(dir), dir }, text };
+    } catch {
+      throw new Error(`${picked} isn't a WordBlade project — pick the .wordblade folder (it has project.json inside).`);
+    }
   }
 
   /** 依路徑重新開（最近開啟） */

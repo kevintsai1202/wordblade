@@ -119,7 +119,13 @@ export function useProjectFolder(opts: {
   }, [engine, project.media, reset, dispatch, enqueuePrepare, remember]);
 
   /** 開舊專案（對話框） */
-  const open = useCallback(async () => load(await engine.openProject()), [engine, load]);
+  const open = useCallback(async () => {
+    try {
+      return await load(await engine.openProject());
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e);
+    }
+  }, [engine, load]);
   /** 開最近的專案 */
   const reopen = useCallback(async (loc: ProjectLocation) => {
     const opened = await engine.reopenProject(loc);
