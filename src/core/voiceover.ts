@@ -67,7 +67,7 @@ export function muteFactor(ranges: MuteRange[], t: Seconds, fade: Seconds = MUTE
 export type NewVoiceover = Omit<Voiceover, "clipId" | "active">;
 
 /** 找一個不重複的軌道 id：A4、A5… */
-function freeTrackId(project: Project): string {
+export function freeTrackId(project: Project): string {
   const ids = new Set(project.tracks.map((t) => t.id));
   for (let n = project.tracks.filter((t) => t.kind === "audio").length + 1; ; n++) if (!ids.has(`A${n}`)) return `A${n}`;
 }

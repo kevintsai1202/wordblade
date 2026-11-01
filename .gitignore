@@ -26,6 +26,8 @@ playwright-report/
 Thumbs.db
 # 打包用的 ffmpeg（scripts/fetch-ffmpeg.ps1 下載）
 src-tauri/resources/ffmpeg/
+# 聲音分離打包用的 DirectML.dll（scripts/fetch-directml.ps1 從 ort 建置產物複製）
+src-tauri/resources/directml/
 
 # 本機執行紀錄（測試、建置、部署、實測的 log 與結果）
 logs/

@@ -151,6 +151,11 @@ button:disabled { opacity: 0.4; cursor: default; }
 .media-item { position: relative; }
 .media-remove { position: absolute; top: 4px; right: 4px; font-size: 11px; padding: 1px 6px; opacity: 0; }
 .media-item:hover .media-remove, .media-remove.visible { opacity: 1; }
+/* 分離按鈕放在右下角（不蓋住項目中央：雙擊素材要能加到時間軸） */
+.media-separate, .media-separate-row { position: absolute; right: 4px; bottom: 4px; font-size: 11px; }
+.media-separate { padding: 1px 6px; opacity: 0.55; }
+.media-item:hover .media-separate:not(:disabled) { opacity: 1; }
+.media-separate-row { display: flex; gap: 6px; align-items: center; background: #1e1e1e; padding-left: 4px; }
 .clip.offline { background: repeating-linear-gradient(135deg, #6b1414 0 6px, #561010 6px 12px) !important; }
 .clip.offline .clip-label::before { content: "⚠ "; }
 .media-ghost { position: fixed; z-index: 100; pointer-events: none; padding: 3px 8px; background: #2d6cdf; color: #fff; border-radius: 3px; font-size: 12px; white-space: nowrap; }

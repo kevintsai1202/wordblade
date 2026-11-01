@@ -3,6 +3,7 @@
 import { concatWav, parseWav } from "../asr/wav";
 import { joinWords, timelineWords } from "../core/captions";
 import type { Media, Project, Seconds, Word } from "../core/model";
+import { sourceOfVocals } from "../core/stems";
 import { clipDuration } from "../core/timeline";
 
 /** 樣本長度的設定（秒）：原專案要 60 秒，範例專案很短，所以最少放寬到 20 秒；盡量湊到 60～90 秒 */
@@ -76,7 +77,8 @@ export function clearSeedCache() {
 
 /**
  * 由主對白素材建講者的聲音樣本：挑講話區段 → 逐段抽 16 kHz 單聲道 WAV → 接成一個 WAV；樣本文字是這些區段裡的詞。
- * 說話總長不到 SEED_MIN 或沒有文字時丟錯。extract 是引擎的 extractAsrAudio；之後有分離出的人聲軌時換來源即可。
+ * 說話總長不到 SEED_MIN 或沒有文字時丟錯。extract 是引擎的 extractAsrAudio；
+ * 素材已分離出人聲（Media.stems，§5.14）時，呼叫端的 extract 要改從人聲抽（core/stems 的 audioSourceFor），逐字稿仍用這支素材的。
  */
 export async function buildSeed(media: Media, words: Word[], extract: (media: Media, start: Seconds, end: Seconds) => Promise<Uint8Array>): Promise<Seed> {
   const cached = seedCache.get(media.id);
@@ -97,6 +99,7 @@ export async function buildSeed(media: Media, words: Word[], extract: (media: Me
 /**
  * 主對白素材：對白軌（role="dialogue"）上用得最久的素材；對白軌沒有片段就看 V1 上有聲音的影片。
  * 要複製的是主講者的聲音，所以不看配樂與音效；沒有可用的素材回 null。
+ * 對白軌放的是分離後的人聲素材時，回它的原素材（逐字稿與 stems 都記在原素材上）。
  */
 export function dialogueMedia(project: Project): Media | null {
   const dialogueTracks = new Set(project.tracks.filter((t) => t.kind === "audio" && t.role === "dialogue").map((t) => t.id));
@@ -106,7 +109,10 @@ export function dialogueMedia(project: Project): Media | null {
     const use = new Map<string, number>();
     for (const c of project.clips) if (onTrack(c.trackId) && usable(c.mediaId)) use.set(c.mediaId, (use.get(c.mediaId) ?? 0) + clipDuration(c));
     const best = [...use.entries()].sort((a, b) => b[1] - a[1])[0];
-    if (best) return usable(best[0]);
+    if (best) {
+      const found = usable(best[0]);
+      return found && sourceOfVocals(project, found);
+    }
   }
   return null;
 }

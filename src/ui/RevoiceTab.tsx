@@ -1,6 +1,7 @@
 // 特效 → Re-voice 子頁籤（spec §5.6，P2）：選一段時間軸範圍 → 改文字 → AI 用講者自己的聲音念出來，放在獨立的 Voice 音軌；
 // 範圍內原本的對白在「AI」狀態下靜音，可隨時切回原音。聲音樣本（約 60～90 秒）取自主對白素材的逐字稿講話區段，
 // 文字與樣本會送到 WordBlade AI 服務與 Fish Audio 克隆聲音（第一次用要同意）。
+import { audioSourceFor } from "../core/stems";
 import { useEffect, useState, type Dispatch } from "react";
 import { GatewayClient, GatewayError, loadSettings } from "../ai/gateway";
 import { buildSeed, dialogueMedia, fitToRange, rangeText } from "../ai/revoice";
@@ -66,7 +67,7 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
       const media = dialogueMedia(project);
       if (!media) throw new Error("There's no dialogue to learn the voice from. Add a video with speech to the timeline first.");
       setBusy("Preparing voice sample…");
-      const seed = await buildSeed(media, project.words, (m, s, e) => engine.extractAsrAudio(m, s, e));
+      const seed = await buildSeed(media, project.words, (m, s, e) => engine.extractAsrAudio(audioSourceFor(project, m), s, e));
       const client = new GatewayClient(loadSettings());
       setBusy("Generating voice…");
       const fitted = await fitToRange(

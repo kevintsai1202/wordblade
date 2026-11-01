@@ -46,6 +46,7 @@
     ],
     "resources": {
       "resources/ffmpeg/": "ffmpeg/",
+      "resources/directml/DirectML.dll": "DirectML.dll",
       "../public/sample/": "sample/"
     }
   }

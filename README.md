@@ -24,3 +24,13 @@ Built for the [Meta Global AI Developer Hackathon](https://cerebralvalley.ai/e/m
 One codebase, two shells: a Windows desktop app (Tauri 2, with native FFmpeg and ONNX Runtime for speed on CPU-only machines) and a web app for Chrome/Edge (WebCodecs) with a one-click sample project, so anyone can try it without installing anything. React 19 + TypeScript. AI calls go through a small Spring AI gateway that holds the API keys and per-user quotas.
 
 The design draws on the author's earlier experience building video tools.
+
+## Third-party models and components
+
+Vocal separation (Windows app only, runs on-device) uses:
+
+- **Kim_Vocal_2** (MDX-Net, ONNX) by Kimberley Jensen, as published in [TRvlvr/model_repo](https://github.com/TRvlvr/model_repo/releases/tag/all_public_uvr_models) (the UVR model collection). **The upstream license of this model is unclear**: the model repository has no LICENSE file, the author's repository does not include the weights, and Ultimate Vocal Remover only states that its code is MIT. We do not redistribute the weights: the app downloads the file on first use into the user's app data folder and checks its SHA-256 (`ce74ef3b6a6024ce44211a07be9cf8bc6d87728cc852a68ab34eb8e58cde9c8b`). Used here for the hackathon with the project owner's approval; confirm or replace the model before any commercial release.
+- **python-audio-separator** (MIT): the inference procedure (STFT, ONNX run, overlap-add, iSTFT; background = mix minus vocals) was ported from it to Rust.
+- **ONNX Runtime** (MIT), linked through the `ort` crate, with the DirectML execution provider on Windows and a CPU fallback. The installer ships `DirectML.dll` (Microsoft proprietary license, redistributable, Windows only).
+
+Other bundled components: FFmpeg (LGPL build), three.js (MIT), Inter and Noto Sans TC (OFL), acorn (MIT), mediabunny, soundtouchjs (LGPL), the SAM mask decoder adapted from Meta `meta_sam_parser` (SAM License, see `licenses/meta-sam-parser-LICENSE.txt`). The full list and details are in [docs/spec.md](docs/spec.md).

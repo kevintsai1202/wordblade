@@ -30,6 +30,30 @@ export class UnsupportedMediaError extends Error {
   }
 }
 
+/** 聲音分離的進度：下載模型或分離，比例 0～1 */
+export interface SeparationProgress {
+  stage: "download" | "separate";
+  ratio: number;
+}
+
+/** 聲音分離的結果：兩個衍生檔（交給 importSources 變成素材）與診斷資訊 */
+export interface SeparationResult {
+  vocals: ImportSource;
+  background: ImportSource;
+  /** 推論用的執行提供者（"directml"、"cpu"，快取命中是 "cache"） */
+  provider: string;
+  /** 分離花的秒數（不含下載；快取命中是 0） */
+  seconds: number;
+}
+
+/** 使用者取消了聲音分離 */
+export class SeparationCancelled extends Error {
+  constructor() {
+    super("Separation cancelled");
+    this.name = "SeparationCancelled";
+  }
+}
+
 /** 這個平台能做的事；介面依此決定要不要顯示功能或提示改用 Windows 版 */
 export interface EngineCapabilities {
   /** 聲音分離（D28：只有 Windows 版） */
@@ -139,8 +163,14 @@ export interface Engine {
    * stop 回傳錄好的檔案（.m4a，已搬進專案 .data\generated\ 或 app 資料夾），接著走一般匯入。
    */
   readonly recorderFallback: { start(): Promise<void>; stop(): Promise<ImportSource> } | null;
-  /** 人聲／背景音樂分離，回傳兩個衍生素材的 id（§5.14） */
-  separateVocals(mediaId: string): Promise<{ vocalsId: string; backgroundId: string }>;
+  /**
+   * 人聲／背景音樂分離（§5.14，只有 Windows 版）：本機推論，結果是兩個 WAV（人聲、背景音樂），回傳成可走一般匯入（importSources）的來源。
+   * 第一次用會先下載模型（stage="download"）；已分離過的素材（同內容指紋）直接回傳快取。onProgress 回報 0～1。
+   * 取消用 cancelSeparation，這個呼叫會以 SeparationCancelled 拒絕。
+   */
+  separateVocals(media: Media, onProgress: (p: SeparationProgress) => void): Promise<SeparationResult>;
+  /** 取消這支素材進行中的分離 */
+  cancelSeparation(mediaId: string): Promise<void>;
   /**
    * 程式產生的檔案（AI 音效與配樂的 WAV，§5.15）變成可匯入的來源，接著走一般的匯入流程（useMediaLibrary.importSources）。
    * 開著專案資料夾時寫進 .data\generated\（D41 P5），沒開時：Windows 版寫進 app 資料夾的 generated/（回傳路徑），網頁版包成 File。

@@ -3,6 +3,7 @@
 // 剪輯腳本依章節顯示：每項有目的、引用的旁白與審查意見，預設勾選審查通過的；審查刪掉的灰色列在最後。
 // 「套用勾選的項目」一次套用（apply.ts：剪、改字、遮罩、放大 → 特效、3D → 字幕、配樂 → 片頭），合成一筆編輯、一次 Ctrl+Z 復原；
 // 也可以點一條跳過去，逐條 Apply／Skip（Enter／Esc）。
+import { audioSourceFor } from "../core/stems";
 import { useEffect, useMemo, useRef, useState, type Dispatch, type KeyboardEvent } from "react";
 import { GatewayClient, loadSettings } from "../ai/gateway";
 import type { PluginService } from "../anim/pluginService";
@@ -153,7 +154,7 @@ export function DirectorTab({ project, engine, envelopes, plugins, playhead, imp
         if (!env) throw new Error("This video is still being prepared — try again in a moment.");
         setProgress({ stage: "transcribing", done: 0, total: 1 });
         const gateway = new GatewayClient(settings);
-        const result = await transcribeMedia(media, env, (m, s, e) => engine.extractAsrAudio(m, s, e), (wav) => gateway.transcribe(wav), (p) => setProgress({ stage: "transcribing", ...p }));
+        const result = await transcribeMedia(media, env, (m, s, e) => engine.extractAsrAudio(audioSourceFor(project, m), s, e), (wav) => gateway.transcribe(wav), (p) => setProgress({ stage: "transcribing", ...p }));
         words = result.words;
         dispatch({ type: "commit", edits: [{ kind: "setWords", mediaId: media.id, words }] });
       }

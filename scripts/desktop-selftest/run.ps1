@@ -29,12 +29,16 @@ $serverArgs = @((Join-Path $PSScriptRoot 'report-server.mjs')) + ($Files | ForEa
 $server = Start-Process node -ArgumentList $serverArgs -PassThru -WindowStyle Hidden
 Start-Sleep -Seconds 1
 $env:WORDBLADE_SELFTEST = 'http://127.0.0.1:8788'
+# 聲音分離的模型：transcript-review 的 spike 資料夾有現成的 Kim_Vocal_2.onnx，就指過去，檢查時不用下載 64 MB
+$modelDir = 'D:\GitHub\transcript-review\spikes\stem-separation\models'
+if (-not $env:WORDBLADE_MODEL_DIR -and (Test-Path (Join-Path $modelDir 'Kim_Vocal_2.onnx'))) { $env:WORDBLADE_MODEL_DIR = $modelDir; $setModelDir = $true }
 $app = Start-Process $Exe -PassThru
 try {
   $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
   while ((Get-Date) -lt $deadline -and -not (Test-Path $Result)) { Start-Sleep -Seconds 2 }
 } finally {
   Remove-Item Env:WORDBLADE_SELFTEST
+  if ($setModelDir) { Remove-Item Env:WORDBLADE_MODEL_DIR }
   Stop-Process -Id $app.Id -ErrorAction SilentlyContinue
   Stop-Process -Id $server.Id -ErrorAction SilentlyContinue
 }

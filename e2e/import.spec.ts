@@ -34,6 +34,12 @@ test("匯入素材、拖到時間軸、預覽與混音", async ({ page }) => {
   // 三個可用的素材＋一個不支援的（MKV）提示改用 Windows 版
   await expect(page.locator(".media-item[data-media-id]")).toHaveCount(3);
   await expect(page.locator(".media-item.failed")).toContainText("Windows app");
+  // 聲音分離（§5.14）只有 Windows 版：有聲音的素材（影片、音樂）各有一顆按鈕，網頁版停用並提示；圖片沒有
+  const separate = page.getByTestId("media-separate");
+  await expect(separate).toHaveCount(2);
+  await expect(separate.first()).toBeDisabled();
+  await expect(separate.first()).toHaveAttribute("title", "Available in the Windows app");
+  await expect(page.locator(".media-item", { hasText: "card.png" }).getByTestId("media-separate")).toHaveCount(0);
   // 背景準備完成：沒有「Preparing」，影片與圖片有縮圖
   await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
   await expect(page.locator(".media-item", { hasText: "talk.mp4" }).locator("img")).toBeVisible();

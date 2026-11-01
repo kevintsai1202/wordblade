@@ -9,6 +9,7 @@ import { setCaptionStyle, setMediaWords } from "./media";
 import { editWords } from "./transcriptEdit";
 import { addZoom, deleteZoom, setZoom } from "./zoom";
 import { setClipSpeed } from "./speed";
+import { separateStems } from "./stems";
 import { addVoiceover, deleteVoiceover, setVoiceoverActive, type NewVoiceover } from "./voiceover";
 import { insertIntro, type IntroInsert } from "../intro/insert";
 import type { CaptionStyle } from "../captions/captionLayout";
@@ -29,6 +30,7 @@ export type Edit =
   | { kind: "setTexture"; textureId: string; patch: Partial<Omit<TextureAsset, "id">> }
   | { kind: "deleteTexture"; textureId: string }
   | { kind: "removeMedia"; mediaId: string }
+  | { kind: "separateStems"; mediaId: string; vocalsId: string; backgroundId: string }
   | { kind: "addEffect"; effect: Effect; plugins: Plugin[] }
   | { kind: "moveEffect"; effectId: string; start: Seconds }
   | { kind: "trimEffect"; effectId: string; edge: "in" | "out"; t: Seconds }
@@ -65,6 +67,7 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "place": return placeMedia(project, edit.mediaId, edit.trackId, edit.t);
     case "placeLoop": return placeLoop(project, edit.mediaId, edit.trackId, edit.t, edit.end);
     case "removeMedia": return removeMedia(project, edit.mediaId);
+    case "separateStems": return separateStems(project, edit.mediaId, edit.vocalsId, edit.backgroundId);
     case "addSynth": return { ...project, synths: [...(project.synths ?? []).filter((x) => x.id !== edit.synth.id), edit.synth] };
     case "addTexture": return { ...project, textures: [...(project.textures ?? []).filter((x) => x.id !== edit.texture.id), edit.texture] };
     case "setTexture": return setTexture(project, edit.textureId, edit.patch);

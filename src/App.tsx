@@ -15,6 +15,7 @@ import { commonFolder } from "./engine/rootPath";
 import { initialState, keyToAction, projectDuration, reducer } from "./ui/state";
 import { Timeline } from "./ui/Timeline";
 import { useMediaLibrary } from "./ui/useMediaLibrary";
+import { useSeparation } from "./ui/useSeparation";
 import { VibeTab } from "./ui/VibeTab";
 import { InspectorTab } from "./ui/InspectorTab";
 import { ExportTab } from "./ui/ExportTab";
@@ -77,6 +78,7 @@ function App() {
   /** 字幕由逐字稿算出（D26），專案一變就重算 */
   const captions = useMemo(() => buildCaptions(project), [project]);
   const { library, importSources, enqueuePrepare, reset } = useMediaLibrary(engine, dispatch, thumbs);
+  const separation = useSeparation(engine, importSources, dispatch);
   /** AI 預覽中的特效設定（「用說的」的提議，還沒寫進專案；預覽畫面用它） */
   const [aiPreview, setAiPreview] = useState<{ effectId: string; params: Record<string, unknown> } | null>(null);
   /** 要求右側面板切到某個頁籤（範圍動作列的「特效」「放大」） */
@@ -335,7 +337,7 @@ function App() {
           request={tabRequest}
           initialTab={START_WITH_DEMO ? "transcript" : "media"}
           tabs={{
-            media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
+            media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} separation={separation} dispatch={dispatch} />,
             vibe: <VibeTab dimension="2d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
             vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} engine={engine} importSources={importSources} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,

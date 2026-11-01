@@ -30,6 +30,8 @@ export interface Media {
   mezzaninePath?: string;
   /** 素材的用途：texture＝材質庫的圖（顏色圖或法線圖，P1-14）；素材庫頁籤不列，其餘照一般素材存進專案 */
   role?: "texture";
+  /** 聲音分離（§5.14、P1-10）的結果：這支素材的人聲與背景音樂是素材庫裡的哪兩支；其他功能（ASR、重配音取樣）找人聲用它 */
+  stems?: { vocalsId: string; backgroundId: string };
 }
 
 /** 軌道（§4 Track）。V1 是主軌：片段首尾相接、漣漪剪輯 */

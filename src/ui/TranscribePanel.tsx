@@ -1,5 +1,6 @@
 // 逐字稿頁籤上方的轉錄工具（spec §5.2）：每支有聲素材一顆「Transcribe」，送 Muse ASR、重建詞級時間後寫進專案（一筆可復原的編輯）。
 // 完整的逐字稿面板（改字即剪等）11/1 做；這裡只放按鈕、進度、結果與漏段提醒。
+import { audioSourceFor } from "../core/stems";
 import { beginBusy } from "../core/busy";
 import { useState, type Dispatch } from "react";
 import { GatewayClient, loadSettings } from "../ai/gateway";
@@ -64,7 +65,7 @@ export function TranscribePanel({ project, engine, envelopes, dispatch }: { proj
     try {
       const result = await transcribeMedia(
         media, env,
-        (m, s, e) => engine.extractAsrAudio(m, s, e),
+        (m, s, e) => engine.extractAsrAudio(audioSourceFor(project, m), s, e),
         (wav) => gateway.transcribe(wav),
         (p) => set({ kind: "running", ...p }),
         { maxSegment: maxSegment() },

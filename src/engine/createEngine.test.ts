@@ -3,10 +3,10 @@ import { createEngine } from "./createEngine";
 import { NotImplementedError } from "./Engine";
 
 describe("createEngine", () => {
-  it("在 Tauri 裡回傳桌面版 Engine，能做任何格式匯入（聲音分離還沒做）", () => {
+  it("在 Tauri 裡回傳桌面版 Engine，能做任何格式匯入、能做聲音分離", () => {
     const engine = createEngine({ isTauri: () => true });
     expect(engine.kind).toBe("desktop");
-    expect(engine.capabilities).toEqual({ vocalSeparation: false, anyFormatImport: true });
+    expect(engine.capabilities).toEqual({ vocalSeparation: true, anyFormatImport: true });
   });
 
   it("在瀏覽器裡回傳網頁版 Engine，不做聲音分離（D28）、只吃 H.264（§5.21）", () => {
@@ -17,7 +17,7 @@ describe("createEngine", () => {
 
   it("網頁版呼叫聲音分離會拒絕並指出原因", async () => {
     const engine = createEngine({ isTauri: () => false });
-    await expect(engine.separateVocals("media-1")).rejects.toThrow(/Windows app/);
+    await expect(engine.separateVocals({ id: "media-1", kind: "audio", duration: 1 }, () => undefined)).rejects.toThrow(/Windows app/);
   });
 
   it("網頁版：專案內的 samples/ 素材對到開發伺服器的 /samples/ 網址；預覽優先用代理檔", () => {

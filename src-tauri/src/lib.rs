@@ -5,6 +5,7 @@ mod generated;
 mod media;
 mod project;
 mod recorder;
+mod stems;
 
 use tauri::webview::{PageLoadEvent, PermissionKind, PermissionResponse};
 
@@ -41,7 +42,10 @@ pub fn run() {
             export::write_text_file,
             generated::write_generated,
             recorder::recorder_start,
-            recorder::recorder_stop
+            recorder::recorder_stop,
+            stems::separate_vocals,
+            stems::separate_cancel,
+            stems::separate_evict
         ])
         // 麥克風（重配錄音，§5.18）：WebView2 預設會跳權限詢問且卡住 getUserMedia，這裡直接允許；
         // 其他權限（相機、定位…）照平台預設。Windows「隱私權 > 麥克風 > 允許桌面應用程式存取」關掉時仍會被拒。

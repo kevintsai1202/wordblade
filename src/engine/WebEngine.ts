@@ -3,7 +3,7 @@ import { EnvelopeBuilder } from "../audio/envelope";
 import type { Media } from "../core/model";
 import { TIERS, chunkCount, indicesInChunk, type DoneMap } from "../media/thumbs";
 import { IMAGE_DURATION } from "../core/media";
-import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation } from "./Engine";
+import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation, type SeparationResult } from "./Engine";
 import { classifyFile, webSupport } from "./webFormats";
 import { downsample, encodeWav } from "../asr/wav";
 import { addRoot, ensurePermission, getHandle, getRoots, putHandle } from "./handleStore";
@@ -701,9 +701,11 @@ export class WebEngine implements Engine {
     }
   }
 
-  async separateVocals(_mediaId: string): Promise<{ vocalsId: string; backgroundId: string }> {
+  async separateVocals(): Promise<SeparationResult> {
     throw new Error("Vocal separation is available in the Windows app");
   }
+
+  async cancelSeparation(): Promise<void> {}
 
   /**
    * 產生的檔（WAV；材質圖是 PNG／WebP，看建議檔名的副檔名）：開著專案資料夾時寫進 .data/generated/（帶 handle，重開專案找得回來）；

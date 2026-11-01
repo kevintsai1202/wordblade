@@ -441,6 +441,37 @@ async function checkGenerated(): Promise<Record<string, unknown>> {
   }
 }
 
+/**
+ * 聲音分離（§5.14、P1-10）：分離 talk.mp4（4 秒）——先刪掉快取，量第一次的耗時與用的執行提供者（directml 或 cpu），
+ * 讀回兩個 WAV 的長度（應與素材相同）；再分離一次，應直接回快取。模型從 WORDBLADE_MODEL_DIR（run.ps1 設）或 app 資料夾的 models\ 取得，沒有就會下載。
+ */
+async function checkStems(paths: string[]): Promise<Record<string, unknown>> {
+  const engine = createEngine();
+  const path = paths.find((p) => /talk.mp4$/i.test(p));
+  if (!path) return { skipped: "talk.mp4 not in the file list" };
+  try {
+    const media = await engine.probe({ kind: "path", path, name: "talk.mp4" }, "stems-selftest");
+    await invoke("separate_evict", { path, projectDir: null });
+    const stages = new Set<string>();
+    const t0 = performance.now();
+    const r = await engine.separateVocals(media, (p) => stages.add(p.stage));
+    const wallSeconds = Number(((performance.now() - t0) / 1000).toFixed(2));
+    const durations: Record<string, number> = {};
+    for (const [name, src] of [["vocals", r.vocals], ["background", r.background]] as const) {
+      if (src.kind === "path") durations[name] = Number((await invoke<{ duration: number }>("probe_media", { path: src.path })).duration.toFixed(3));
+    }
+    const t1 = performance.now();
+    const again = await engine.separateVocals(media, () => undefined);
+    return {
+      provider: r.provider, seconds: Number(r.seconds.toFixed(2)), wallSeconds, sourceDuration: Number(media.duration.toFixed(3)), durations, stages: [...stages],
+      cache: { provider: again.provider, ms: Math.round(performance.now() - t1), samePaths: JSON.stringify(again.vocals) === JSON.stringify(r.vocals) },
+      vocals: r.vocals.kind === "path" ? r.vocals.path : null,
+    };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
 /** 範例專案（§5.22）：找到打包（或 repo）的 sample 資料夾、讀 project.json、每個素材都讀得到（asset 協定） */
 async function checkSample(): Promise<Record<string, unknown>> {
   const engine = createEngine();
@@ -509,6 +540,7 @@ export async function runSelftest(server: string) {
     report.grabJpegs = await checkGrabJpegs(paths);
     report.projectFolder = await checkProjectFolder(paths);
     report.sample = await checkSample();
+    report.stems = await checkStems(paths);
   } catch (e) {
     report.error = String(e);
   }

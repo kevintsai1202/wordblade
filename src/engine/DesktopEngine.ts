@@ -7,7 +7,7 @@ import { pcm16ToWav } from "../asr/wav";
 import { IMAGE_DURATION } from "../core/media";
 import type { Media } from "../core/model";
 import { CHUNK, TIERS, chunkCount, indicesInChunk, type DoneMap } from "../media/thumbs";
-import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation } from "./Engine";
+import { NotImplementedError, SeparationCancelled, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation, type SeparationProgress, type SeparationResult } from "./Engine";
 
 /** 資料夾路徑 → 專案名稱（最後一段去掉 .wordblade） */
 function projectName(dir: string): string {
@@ -40,8 +40,8 @@ function baseName(path: string): string {
 /** Windows 桌面版：重運算交給 Rust 指令層（ffmpeg sidecar、onnxruntime） */
 export class DesktopEngine implements Engine {
   readonly kind = "desktop" as const;
-  /** 聲音分離（P1-10）還沒實作：旗標維持 false，等 separateVocals 做好再打開 */
-  readonly capabilities = { vocalSeparation: false, anyFormatImport: true };
+  /** 聲音分離（P1-10）：Rust 的 separate_vocals（onnxruntime，DirectML 或 CPU） */
+  readonly capabilities = { vocalSeparation: true, anyFormatImport: true };
   /** 本機檔案經 Tauri 的 asset 協定給 WebView 讀；有代理檔就用代理檔（§5.21） */
   mediaUrl(media: Media): string {
     const path = media.proxyPath ?? media.path ?? "";
@@ -293,8 +293,35 @@ export class DesktopEngine implements Engine {
     return pcm16ToWav(new Uint8Array(pcm));
   }
 
-  async separateVocals(_mediaId: string): Promise<{ vocalsId: string; backgroundId: string }> {
-    throw new NotImplementedError("separateVocals");
+  /**
+   * 聲音分離：呼叫 Rust 的 separate_vocals（開著專案時輸出放 <專案>\.data\stems\），聽 stems-progress 事件回報進度，
+   * 回傳兩個 WAV 路徑（走一般匯入）。Rust 以錯誤 "cancelled" 回應取消。
+   */
+  async separateVocals(media: Media, onProgress: (p: SeparationProgress) => void): Promise<SeparationResult> {
+    if (!media.path) throw new Error("This media has no file path");
+    const unlisten = await listen<{ mediaId: string; stage: SeparationProgress["stage"]; ratio: number }>("stems-progress", (e) => {
+      if (e.payload.mediaId === media.id) onProgress({ stage: e.payload.stage, ratio: e.payload.ratio });
+    });
+    try {
+      const r = await invoke<{ vocals: string; background: string; provider: string; seconds: number }>("separate_vocals", {
+        mediaId: media.id, path: media.path, projectDir: this.project?.dir ?? null,
+      });
+      return {
+        vocals: { kind: "path", path: r.vocals, name: baseName(r.vocals) },
+        background: { kind: "path", path: r.background, name: baseName(r.background) },
+        provider: r.provider, seconds: r.seconds,
+      };
+    } catch (e) {
+      if (String(e) === "cancelled") throw new SeparationCancelled();
+      throw e;
+    } finally {
+      unlisten();
+    }
+  }
+
+  /** 取消進行中的分離 */
+  async cancelSeparation(mediaId: string): Promise<void> {
+    await invoke("separate_cancel", { mediaId });
   }
 
   /**

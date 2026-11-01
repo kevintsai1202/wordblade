@@ -18,7 +18,7 @@ const ENVELOPE_RATE: u32 = 100;
 const ENVELOPE_SAMPLE_RATE: u32 = 8000;
 
 /// 重工作的排隊鎖：代理檔一次只轉一支（§5.21）
-static HEAVY: Mutex<()> = Mutex::new(());
+pub(crate) static HEAVY: Mutex<()> = Mutex::new(());
 /// 試編後選定的 H.264 編碼器（整個程式只試一次）
 static ENCODER: OnceLock<String> = OnceLock::new();
 
@@ -37,7 +37,7 @@ pub struct ProbeInfo {
 }
 
 /// 找 ffmpeg／ffprobe 的執行檔：打包的優先，否則用 PATH
-fn tool(app: &AppHandle, name: &str) -> PathBuf {
+pub(crate) fn tool(app: &AppHandle, name: &str) -> PathBuf {
     if let Ok(dir) = app.path().resource_dir() {
         let bundled = dir.join("ffmpeg").join("bin").join(format!("{name}.exe"));
         if bundled.exists() {
@@ -48,7 +48,7 @@ fn tool(app: &AppHandle, name: &str) -> PathBuf {
 }
 
 /// 建一個不跳視窗的指令
-fn command(program: &Path) -> Command {
+pub(crate) fn command(program: &Path) -> Command {
     #[allow(unused_mut)]
     let mut cmd = Command::new(program);
     #[cfg(windows)]
