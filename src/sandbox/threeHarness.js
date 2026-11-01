@@ -7,7 +7,11 @@
 // env：width、height（畫格像素）、duration、fps、frame、t、progress、params、box（0～1）、rand(i)（固定種子）、
 //      frameTexture（當格畫面的貼圖：NoColorSpace、不翻轉）、frameMaterial()（原樣貼當格畫面的材質，已處理上下顛倒與色彩）、
 //      toWorld(x, y, z = 0)（畫面座標 0～1、y 往下 → 世界座標：用目前鏡頭算 z 平面上的點，對準目標框用）、
-//      images（params.imageIds 依序解碼好的 ImageBitmap，唯讀；第一列在最上，貼圖要在 shader 翻 v；沒有就是空陣列）。
+//      images（params.imageIds 依序解碼好的 ImageBitmap，唯讀；第一列在最上，貼圖要在 shader 翻 v；沒有就是空陣列）、
+//      textures（P1-14 材質欄位：{ 欄位名: { map, normalMap, repeat, normalStrength } }；map／normalMap 是 THREE.Texture
+//        （顏色 SRGBColorSpace、法線 NoColorSpace、兩軸 RepeatWrapping、repeat 已設成 repeat 倍；ImageBitmap 第一列在最上、不翻轉，
+//        平鋪材質看不出來；normalMap 沒有就是 null；repeat／normalStrength 是倍數與法線強度，插件自己乘上表面的基本平鋪次數、
+//        用 normalScale 套強度）。沒有指定材質的欄位不在裡面，插件就用程式畫的預設；每次 setup 前重建，場景換掉時一起釋放）。
 // 協定同 2D harness：render {frame, fps, duration, width, height, params, box, background?} → ImageBitmap；vet {…} → {lit}；
 //   images {images: ImageBitmap[]} → true（換一組圖片，下一格從區段開頭重建場景）。
 (function (g) {
@@ -30,8 +34,10 @@
   let frameTexture = null;
   /** 沒有下層畫面時用的 1×1 黑格 */
   const black = new ImageData(1, 1);
-  /** 插件用的圖片（主程式依 params.imageIds 送進來） */
+  /** 插件用的圖片（主程式依 params.imageIds 送進來；材質引用用到的圖接在後面） */
   let images = [];
+  /** 這個場景實例的材質欄位（env.textures；setupInstance 重建） */
+  let textures = {};
 
   /** 錯誤轉成可序列化的物件（行號從堆疊裡找插件的那一行） */
   function serializeError(e) {
@@ -93,12 +99,47 @@
       width: d.width, height: d.height, duration: d.duration, fps: d.fps, frame, t,
       progress: d.duration > 0 ? Math.min(1, t / d.duration) : 1,
       params: d.params || {}, box: d.box || { cx: 0.5, cy: 0.5, w: 0.3, h: 0.2 },
-      rand: rand(d.seed || 1), frameTexture, frameMaterial, toWorld, images,
+      rand: rand(d.seed || 1), frameTexture, frameMaterial, toWorld, images, textures,
     };
+  }
+
+  /** 依 params.__textures（主程式算好的欄位 → 圖片索引）從 images 建 THREE.Texture：顏色 sRGB、法線線性，兩軸重複 */
+  function buildTextures(d) {
+    const out = {};
+    const spec = (d.params && d.params.__textures) || {};
+    /** 一張圖 → 貼圖；索引超出範圍（圖還沒送到）回 null */
+    const make = (index, colorSpace, repeat) => {
+      const image = typeof index === 'number' ? images[index] : null;
+      if (!image) return null;
+      // ImageBitmap 不吃 flipY（貼上去上下顛倒，3D 背景一眼就看得出來；法線的綠色通道也會反）：先畫到畫布，畫布的 flipY 照常生效
+      const canvas = new OffscreenCanvas(image.width, image.height);
+      canvas.getContext('2d').drawImage(image, 0, 0);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = colorSpace;
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(repeat, repeat);
+      tex.anisotropy = 4;
+      tex.needsUpdate = true;
+      return tex;
+    };
+    for (const [name, t] of Object.entries(spec)) {
+      const map = make(t.map, THREE.SRGBColorSpace, t.repeat || 1);
+      if (!map) continue;
+      out[name] = { map, normalMap: make(t.normal, THREE.NoColorSpace, t.repeat || 1), repeat: t.repeat || 1, normalStrength: typeof t.normalStrength === 'number' ? t.normalStrength : 1 };
+    }
+    return out;
+  }
+
+  /** 釋放目前的材質欄位貼圖 */
+  function disposeTextures() {
+    for (const t of Object.values(textures)) { t.map.dispose(); if (t.normalMap) t.normalMap.dispose(); }
+    textures = {};
   }
 
   /** 釋放場景裡的幾何與材質 */
   function disposeScene(scene) {
+    if (scene.background && scene.background.isTexture && scene.background !== frameTexture) scene.background.dispose();
+    disposeTextures();
     scene.traverse((o) => {
       if (o.geometry) o.geometry.dispose();
       const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
@@ -114,6 +155,7 @@
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, d.width / d.height, 0.01, 1000);
     camera.position.set(0, 0, 5);
+    textures = buildTextures(d);
     if (plugin.setup) plugin.setup(THREE, scene, camera, envOf(d, 0));
     inst = { scene, camera, key, last: -1 };
   }

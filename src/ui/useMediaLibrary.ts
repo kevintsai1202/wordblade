@@ -91,6 +91,8 @@ export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>, thum
         let media;
         try {
           media = await engine.probe(source, id);
+          // 匯入時就帶上用途（材質圖），素材庫才不會先閃一下再消失
+          if (source.role) media = { ...media, role: source.role };
         } catch (e) {
           patch(id, { status: "failed", error: e instanceof UnsupportedMediaError ? e.message : `Can't import: ${String(e)}` });
           continue;

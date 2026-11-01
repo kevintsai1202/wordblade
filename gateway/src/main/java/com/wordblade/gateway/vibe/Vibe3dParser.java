@@ -23,7 +23,9 @@ public class Vibe3dParser {
     /** 可以只填參數的內建 3D 元件 */
     static final Set<String> BUILTINS = Set.of("mascot");
     /** 參數型別 */
-    static final Set<String> PARAM_TYPES = Set.of("number", "duration", "enum", "color", "boolean");
+    static final Set<String> PARAM_TYPES = Set.of("number", "duration", "enum", "color", "boolean", "texture");
+    /** texture 參數的材質描述最長幾字（桌面拿去叫 Muse Image 產生材質） */
+    static final int MAX_DESCRIBE = 200;
     /** 參數最多幾個 */
     static final int MAX_PARAMS = 16;
     /** 程式最多幾個字 */
@@ -81,7 +83,9 @@ public class Vibe3dParser {
             for (Map.Entry<String, JsonNode> e : params.properties()) {
                 String type = e.getValue().path("type").asString("");
                 if (!PARAM_NAME.matcher(e.getKey()).matches()) errors.add(schema("參數名稱「" + e.getKey() + "」只能用英數與底線"));
-                else if (!PARAM_TYPES.contains(type)) errors.add(schema("參數 " + e.getKey() + " 的型別只能是 number、duration、enum、color、boolean"));
+                else if (!PARAM_TYPES.contains(type)) errors.add(schema("參數 " + e.getKey() + " 的型別只能是 number、duration、enum、color、boolean、texture"));
+                else if (type.equals("texture") && (e.getValue().path("describe").asString("").isBlank() || e.getValue().path("describe").asString("").length() > MAX_DESCRIBE))
+                    errors.add(schema("texture 參數 " + e.getKey() + " 要有 describe（一句英文材質描述，≤ " + MAX_DESCRIBE + " 字）"));
                 else outParams.set(e.getKey(), e.getValue());
             }
         }

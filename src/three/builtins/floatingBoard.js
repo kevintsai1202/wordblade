@@ -2,7 +2,8 @@
 // 姿勢關鍵幀沿用原專案（字導字演）的格式與數學：前面串了 vendor/plane3d_math.js（PLANE3D）與 boardGeometry.js（BOARD3D），
 // 投影結果和原專案逐點相同（boardGeometry.test.ts）。頭尾自動回滿版平面（edges），所以前後接原片看不出接縫。
 // 參數（env.params）：keys（[{anchor, t, rx, ry, rz, size, px, py, ease}]）、float（{rx, ry, period} 或 null）、edges、
-//   background（studio｜grid｜blur｜color）、color（純色背景）、shadow（0～1）。
+//   background（studio｜grid｜blur｜color｜image）、color（純色背景）、shadow（0～1）；
+//   backgroundImage（P1-14，型別 texture：env.textures.backgroundImage 是 AI 產生的 3D 背景圖，background 選 image 時鋪滿遠處的背景平面；沒選圖就畫攝影棚）。
 // 背景全部用程式畫（攝影棚、科技格線的畫法沿用原專案 scripts/plane3d-scenes-build.js）。
 /* global PLANE3D, BOARD3D */
 
@@ -80,8 +81,16 @@ function setup(THREE, scene, camera, env) {
   B.canvas = new OffscreenCanvas(Math.round(w / 2), Math.round(h / 2));
   B.ctx = B.canvas.getContext('2d');
   if (B.kind !== 'blur') paintBackground(B.ctx, B.kind, p.color, B.canvas.width, B.canvas.height);
-  B.bgTexture = new THREE.CanvasTexture(B.canvas);
-  B.bgTexture.colorSpace = THREE.SRGBColorSpace;
+  const image = B.kind === 'image' && env.textures && env.textures.backgroundImage;
+  if (image) {
+    // 使用者的背景圖：2D 貼圖、sRGB、不平鋪
+    B.bgTexture = image.map;
+    B.bgTexture.wrapS = B.bgTexture.wrapT = THREE.ClampToEdgeWrapping;
+    B.bgTexture.repeat.set(1, 1);
+  } else {
+    B.bgTexture = new THREE.CanvasTexture(B.canvas);
+    B.bgTexture.colorSpace = THREE.SRGBColorSpace;
+  }
   const far = 50;
   const bh = 2 * far * Math.tan(camera.fov * Math.PI / 360);
   const bg = new THREE.Mesh(new THREE.PlaneGeometry(bh * w / h, bh), new THREE.MeshBasicMaterial({ map: B.bgTexture, toneMapped: false }));

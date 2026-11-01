@@ -173,3 +173,67 @@ test("Vibe 3D：模型只填吉祥物的參數，直接用內建插件", async (
   await page.getByTestId("vibe-generate").click();
   await expect(page.locator(".effect-chip")).toContainText("Mascot waves", { timeout: 30_000 });
 });
+
+test("Vibe 3D 自動配材質：插件宣告 texture 參數（附描述）→ 通過後依描述產生材質、寫進特效參數；試跑時沒材質退回純色", async ({ page }) => {
+  test.setTimeout(90_000);
+  /** 有材質用材質、沒有就用綠色（試跑時沒有） */
+  const code = [
+    "const pure = true;", "const S = {};",
+    "function setup(THREE, scene, camera, env) {",
+    "  camera.position.set(0, 0, 20); camera.lookAt(0, 0, 0);",
+    "  const tx = env.textures.skin;",
+    "  const mat = tx ? new THREE.MeshBasicMaterial({ map: tx.map }) : new THREE.MeshBasicMaterial({ color: 0x00ff00 });",
+    "  S.m = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 6), mat); scene.add(S.m);",
+    "}",
+    "function update(t, env) { S.m.rotation.y = 0.4; }",
+  ].join("\n");
+  const imagePosts: string[] = [];
+  // 材質圖：全紅
+  const red = await (async () => {
+    await page.goto("/");
+    return page.evaluate(async () => {
+      const c = new OffscreenCanvas(64, 64);
+      const g = c.getContext("2d")!;
+      g.fillStyle = "#ff0000"; g.fillRect(0, 0, 64, 64);
+      const bytes = new Uint8Array(await (await c.convertToBlob({ type: "image/png" })).arrayBuffer());
+      let bin = "";
+      for (const b of bytes) bin += String.fromCharCode(b);
+      return btoa(bin);
+    });
+  })();
+  await page.route(`${GATEWAY}/**`, async (route) => {
+    const req = route.request();
+    if (req.method() === "OPTIONS") return reply(route, 204);
+    if (req.method() === "POST" && req.url().endsWith("/v1/ai/vibe3d")) return reply(route, 202, { jobId: "jt" });
+    if (req.method() === "POST" && req.url().endsWith("/v1/ai/image")) { imagePosts.push(req.postData() ?? ""); return reply(route, 202, { jobId: "img" }); }
+    if (req.url().includes("/v1/ai/image/")) return reply(route, 200, { status: "done", image: red, mime: "image/png", error: null });
+    const component = { name: "Crate", description: "A crate", params: { skin: { type: "texture", describe: "rusty red metal", label: "Surface" } }, code };
+    return reply(route, 200, { status: "done", round: 1, result: { refusal: null, mode: "new", title: "Crate", builtin: null, params: null, component }, error: null });
+  });
+  await page.addInitScript(() => { localStorage.setItem("wordblade.consent.vibe", "yes"); localStorage.setItem("wordblade.dev", "1"); });
+  await setup(page, "A metal crate", "vibe3d");
+  await page.getByTestId("vibe-generate").click();
+  await expect(page.locator(".effect-chip")).toHaveCount(1, { timeout: 60_000 });
+  // 依描述叫了一次 Muse Image（材質）
+  await expect.poll(() => imagePosts.length, { timeout: 30_000 }).toBe(1);
+  expect(imagePosts[0]).toContain("rusty red metal");
+  expect(imagePosts[0]).toContain("texture");
+  // 特效參數裡有材質引用、材質庫多一筆
+  await expect.poll(() => page.evaluate(() => {
+    const p = (window as unknown as { __wordblade: { project: () => { effects: { params: { params?: { skin?: { textureId?: string } } } }[]; textures?: unknown[] } } }).__wordblade.project();
+    return [p.textures?.length ?? 0, !!p.effects[0]?.params.params?.skin?.textureId];
+  }), { timeout: 30_000 }).toEqual([1, true]);
+  await expect(page.getByTestId("vibe-error")).toHaveCount(0);
+  // 畫面上是紅色（材質）而不是試跑時的綠色
+  await page.locator(".ruler").click({ position: { x: 30, y: 5 } });
+  await expect.poll(() => page.getByTestId("preview-canvas").evaluate((c: HTMLCanvasElement) => {
+    const p = document.createElement("canvas");
+    p.width = 40; p.height = 24;
+    const ctx = p.getContext("2d")!;
+    ctx.drawImage(c, 0, 0, 40, 24);
+    const d = ctx.getImageData(15, 8, 10, 8).data;
+    let red = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 150 && d[i + 1] < 80 && d[i + 2] < 80) red++;
+    return red;
+  }), { timeout: 30_000 }).toBeGreaterThan(40);
+});

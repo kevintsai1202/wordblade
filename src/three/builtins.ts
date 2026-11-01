@@ -35,7 +35,7 @@ export interface Component3D {
   effectKind: "scene3d" | "anim3d";
   name: string;
   description: string;
-  params: Record<string, { type: string; default?: unknown; label?: string; min?: number; max?: number; step?: number; values?: string[]; labels?: string[] }>;
+  params: Record<string, { type: string; default?: unknown; label?: string; min?: number; max?: number; step?: number; values?: string[]; labels?: string[]; kind?: "texture" | "background" }>;
   code: string;
 }
 
@@ -49,6 +49,12 @@ export const COMPONENTS_3D: Component3D[] = [
       motion: { type: "enum", values: ["reveal", "push", "orbit"], labels: ["Pull back and return", "Slow push in", "Orbit"], default: "reveal", label: "Camera (no keyframes)" },
       tilt: { type: "number", min: 0, max: 20, step: 1, default: 7, label: "Screen tilt (°)" },
       ramp: { type: "duration", min: 0.3, max: 3, default: 1.2, label: "In/out (sec)" },
+      // 材質欄位（P1-14）：沒選就用程式畫的預設；每個場景用到的欄位不同（桌面／牆／地板／黑板框與講桌／攝影棚地面）
+      deskTexture: { type: "texture", kind: "texture", default: null, label: "Desk top texture (wooden desk)" },
+      wallTexture: { type: "texture", kind: "texture", default: null, label: "Wall texture (classroom)" },
+      floorTexture: { type: "texture", kind: "texture", default: null, label: "Floor texture (classroom, studio)" },
+      frameTexture: { type: "texture", kind: "texture", default: null, label: "Board frame texture (classroom)" },
+      backgroundImage: { type: "texture", kind: "background", default: null, label: "3D background image" },
     },
     // 鏡頭關鍵幀的內插串在插件前面
     code: `${cameraPathCode}
@@ -62,8 +68,9 @@ ${deskScreenCode}`,
       keys: { type: "keys", default: [key({})], label: "Board keyframes" },
       float: { type: "float", default: null, label: "Gentle sway" },
       edges: { type: "boolean", default: true, label: "Return to full frame at both ends" },
-      background: { type: "enum", values: ["studio", "grid", "blur", "color"], labels: ["Studio", "Tech grid", "Blurred video", "Solid color"], default: "studio", label: "Background" },
+      background: { type: "enum", values: ["studio", "grid", "blur", "color", "image"], labels: ["Studio", "Tech grid", "Blurred video", "Solid color", "AI image"], default: "studio", label: "Background" },
       color: { type: "color", default: "#202020", label: "Background color" },
+      backgroundImage: { type: "texture", kind: "background", default: null, label: "Background image (when Background is AI image)" },
       shadow: { type: "number", min: 0, max: 1, step: 0.05, default: 0.55, label: "Shadow" },
     },
     // 原專案的姿勢數學與板子幾何串在插件前面，一起送進沙盒 Worker

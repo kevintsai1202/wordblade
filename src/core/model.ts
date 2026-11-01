@@ -28,6 +28,8 @@ export interface Media {
   audio?: boolean;
   proxyPath?: string;
   mezzaninePath?: string;
+  /** 素材的用途：texture＝材質庫的圖（顏色圖或法線圖，P1-14）；素材庫頁籤不列，其餘照一般素材存進專案 */
+  role?: "texture";
 }
 
 /** 軌道（§4 Track）。V1 是主軌：片段首尾相接、漣漪剪輯 */
@@ -246,6 +248,25 @@ export interface Stem {
 }
 
 /** 整個專案（存成 .wordblade.json） */
+/** 材質庫的一筆（§5.12，P1-14）：顏色圖、法線圖都是素材庫裡 role="texture" 的圖片 */
+export interface TextureAsset {
+  id: string;
+  /** texture＝可平鋪的材質（有法線圖）；background＝3D 背景（16:9，不平鋪） */
+  kind: "texture" | "background";
+  /** 顯示用的名字（取自描述） */
+  name: string;
+  /** 產生時的描述（Regenerate 用） */
+  prompt: string;
+  /** 顏色圖的素材 id */
+  colorMediaId: string;
+  /** 法線圖的素材 id（背景沒有） */
+  normalMediaId?: string;
+  /** 法線強度（插件用 normalScale 套，不重算圖片） */
+  normalStrength: number;
+  /** 平鋪次數（預設值；套用時可覆寫） */
+  repeat: number;
+}
+
 export interface Project {
   media: Media[];
   tracks: Track[];
@@ -259,6 +280,8 @@ export interface Project {
   plugins: Plugin[];
   synths: Synth[];
   stems: Stem[];
+  /** 材質庫（§5.12，P1-14；舊專案沒有這個欄位） */
+  textures?: TextureAsset[];
   /** 局部放大（§5.19；舊專案沒有這個欄位） */
   zooms?: ZoomRegion[];
   /** 燒進畫面的字幕樣式（§5.4、§5.18；沒設就用預設：白字黑描邊） */

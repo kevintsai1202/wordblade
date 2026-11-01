@@ -4,6 +4,8 @@
 // 三個場景的螢幕位置、大小相同，運鏡共用。頭尾接回滿版：區段開頭與結尾鏡頭正對螢幕、螢幕剛好填滿畫面。
 // 鏡頭：有鏡頭關鍵幀（env.params.cameraKeys，前面串了 cameraPath.js 的 CAMERA3D）就照關鍵幀走，否則用 motion 預設運鏡。
 // 參數：scene、motion（reveal 拉遠再推回／push 慢慢推近／orbit 繞半圈）、tilt（螢幕後仰度數）、ramp（頭尾過場秒數）。
+// 材質欄位（P1-14，型別 texture，env.textures[欄位]；沒選就用程式畫的預設）：deskTexture（桌面）、wallTexture／floorTexture／frameTexture
+//   （教室的牆、地板、黑板框與講桌）、floorTexture（攝影棚地面）；backgroundImage（3D 背景圖，當 scene.background）。
 /* global CAMERA3D */
 
 /** 畫面只由 t 決定（跳格不必從頭推） */
@@ -43,6 +45,32 @@ function woodTexture(THREE, tone) {
   return tex;
 }
 
+/**
+ * 材質欄位 → MeshStandardMaterial：使用者在 Inspector 選了材質才有（env.textures[field]），沒選回 null 由呼叫端用預設。
+ * repeat 是這個表面的基本平鋪次數 [橫, 縱]，再乘上使用者設的倍數；法線強度用 normalScale 套。
+ */
+function texturedMaterial(THREE, env, field, repeat) {
+  const t = env.textures && env.textures[field];
+  if (!t) return null;
+  t.map.repeat.set(repeat[0] * t.repeat, repeat[1] * t.repeat);
+  const mat = new THREE.MeshStandardMaterial({ map: t.map, roughness: 0.8 });
+  if (t.normalMap) {
+    t.normalMap.repeat.set(repeat[0] * t.repeat, repeat[1] * t.repeat);
+    mat.normalMap = t.normalMap;
+    mat.normalScale = new THREE.Vector2(t.normalStrength, t.normalStrength);
+  }
+  return mat;
+}
+
+/** 使用者選了 3D 背景圖（env.textures.backgroundImage）就拿它當 scene.background（2D 貼圖、sRGB），蓋過各場景的純色 */
+function applyBackgroundImage(THREE, scene, env) {
+  const t = env.textures && env.textures.backgroundImage;
+  if (!t) return;
+  t.map.wrapS = t.map.wrapT = THREE.ClampToEdgeWrapping;
+  t.map.repeat.set(1, 1);
+  scene.background = t.map;
+}
+
 /** 垂直漸層貼圖（攝影棚背景） */
 function gradientTexture(THREE, top, bottom) {
   const c = new OffscreenCanvas(4, 256);
@@ -58,9 +86,9 @@ function gradientTexture(THREE, top, bottom) {
 }
 
 /** 木紋桌：桌面、螢幕邊框與底座、桌上的方塊和杯子 */
-function buildDesk(THREE, scene, group) {
+function buildDesk(THREE, scene, group, env) {
   scene.background = new THREE.Color(0x1a1410);
-  const desk = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 1), roughness: 0.75 }));
+  const desk = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), texturedMaterial(THREE, env, 'deskTexture', [5, 3]) || new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 1), roughness: 0.75 }));
   desk.rotation.x = -Math.PI / 2;
   scene.add(desk);
   group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.22, SCREEN_H + 0.22, 0.1), new THREE.MeshStandardMaterial({ color: 0x15171c, roughness: 0.4, metalness: 0.3 })));
@@ -81,17 +109,17 @@ function buildDesk(THREE, scene, group) {
 }
 
 /** 教室：牆、木地板、黑板邊框與粉筆槽（影片就是板面）、講桌 */
-function buildClassroom(THREE, scene, group) {
+function buildClassroom(THREE, scene, group, env) {
   scene.background = new THREE.Color(0xd9d2c3);
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(30, 12), new THREE.MeshStandardMaterial({ color: 0xe8e0cf, roughness: 0.95 }));
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(30, 12), texturedMaterial(THREE, env, 'wallTexture', [6, 2.4]) || new THREE.MeshStandardMaterial({ color: 0xe8e0cf, roughness: 0.95 }));
   wall.position.set(0, 4, -0.3);
   scene.add(wall);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 16), new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 0.75), roughness: 0.8 }));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 16), texturedMaterial(THREE, env, 'floorTexture', [6, 3]) || new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 0.75), roughness: 0.8 }));
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -0.6;
   scene.add(floor);
   // 黑板木框（比螢幕大一圈）與粉筆槽
-  const frame = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.7 });
+  const frame = texturedMaterial(THREE, env, 'frameTexture', [1, 1]) || new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.7 });
   group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.5, SCREEN_H + 0.5, 0.08), frame));
   const tray = new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.5, 0.08, 0.25), frame);
   tray.position.set(0, -SCREEN_H / 2 - 0.28, 0.12);
@@ -109,12 +137,12 @@ function buildClassroom(THREE, scene, group) {
 }
 
 /** 攝影棚：漸層背幕、地面、螢幕立架、兩盞聚光的光錐 */
-function buildStudio(THREE, scene, group) {
+function buildStudio(THREE, scene, group, env) {
   scene.background = new THREE.Color(0x101318);
   const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 16), new THREE.MeshBasicMaterial({ map: gradientTexture(THREE, '#2c3240', '#0d0f14') }));
   backdrop.position.set(0, 4, -6);
   scene.add(backdrop);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshStandardMaterial({ color: 0x1b1f27, roughness: 0.35, metalness: 0.2 }));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), texturedMaterial(THREE, env, 'floorTexture', [8, 4]) || new THREE.MeshStandardMaterial({ color: 0x1b1f27, roughness: 0.35, metalness: 0.2 }));
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -0.6;
   scene.add(floor);
@@ -148,9 +176,10 @@ function setup(THREE, scene, camera, env) {
   group.rotation.x = tilt;
   scene.add(group);
   const kind = env.params.scene || 'desk';
-  if (kind === 'classroom') buildClassroom(THREE, scene, group);
-  else if (kind === 'studio') buildStudio(THREE, scene, group);
-  else buildDesk(THREE, scene, group);
+  if (kind === 'classroom') buildClassroom(THREE, scene, group, env);
+  else if (kind === 'studio') buildStudio(THREE, scene, group, env);
+  else buildDesk(THREE, scene, group, env);
+  applyBackgroundImage(THREE, scene, env);
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), env.frameMaterial());
   screen.position.z = 0.056;
   group.add(screen);

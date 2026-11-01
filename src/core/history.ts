@@ -2,7 +2,7 @@
 // 例如「去贅詞 Remove all」、AI 導演採用一條建議，都只要一次 Ctrl+Z（§5.11、§5.16）。
 // 歷史存的是整份專案的快照；timeline 的函式用 Immer 做結構共享，快照之間沒改到的部分是同一個物件。
 import { addEffect, deleteEffect, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
-import type { CameraKey, DirectorChapter, Effect, MaskObject, Plugin, Project, Seconds, Suggestion, Synth, Word, ZoomRegion } from "./model";
+import type { CameraKey, DirectorChapter, Effect, MaskObject, Plugin, Project, Seconds, Suggestion, Synth, TextureAsset, Word, ZoomRegion } from "./model";
 import { setSuggestionStatus, setSuggestions } from "./suggestions";
 import { addMasks, deleteMasks, setMask } from "./masks";
 import { setCaptionStyle, setMediaWords } from "./media";
@@ -24,6 +24,9 @@ export type Edit =
   | { kind: "place"; mediaId: string; trackId: string; t: Seconds }
   | { kind: "placeLoop"; mediaId: string; trackId: string; t: Seconds; end: Seconds }
   | { kind: "addSynth"; synth: Synth }
+  | { kind: "addTexture"; texture: TextureAsset }
+  | { kind: "setTexture"; textureId: string; patch: Partial<Omit<TextureAsset, "id">> }
+  | { kind: "deleteTexture"; textureId: string }
   | { kind: "removeMedia"; mediaId: string }
   | { kind: "addEffect"; effect: Effect; plugins: Plugin[] }
   | { kind: "moveEffect"; effectId: string; start: Seconds }
@@ -59,6 +62,9 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "placeLoop": return placeLoop(project, edit.mediaId, edit.trackId, edit.t, edit.end);
     case "removeMedia": return removeMedia(project, edit.mediaId);
     case "addSynth": return { ...project, synths: [...(project.synths ?? []).filter((x) => x.id !== edit.synth.id), edit.synth] };
+    case "addTexture": return { ...project, textures: [...(project.textures ?? []).filter((x) => x.id !== edit.texture.id), edit.texture] };
+    case "setTexture": return setTexture(project, edit.textureId, edit.patch);
+    case "deleteTexture": return deleteTexture(project, edit.textureId);
     case "addEffect": return addEffect(project, edit.effect, edit.plugins);
     case "insertIntro": return insertIntro(project, edit.intro);
     case "moveEffect": return moveEffect(project, edit.effectId, edit.start);
@@ -80,6 +86,23 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "setSuggestionStatus": return setSuggestionStatus(project, edit.id, edit.status);
     case "setSpeed": return setClipSpeed(project, edit.clipId, edit.speed);
   }
+}
+
+/** 改材質庫某一筆的欄位（id 不變）；找不到或沒有實際變化就回傳原物件 */
+function setTexture(project: Project, textureId: string, patch: Partial<Omit<TextureAsset, "id">>): Project {
+  const list = project.textures ?? [];
+  const old = list.find((t) => t.id === textureId);
+  if (!old) return project;
+  const next = { ...old, ...patch };
+  if (Object.keys(patch).every((k) => (old as unknown as Record<string, unknown>)[k] === (next as unknown as Record<string, unknown>)[k])) return project;
+  return { ...project, textures: list.map((t) => (t.id === textureId ? next : t)) };
+}
+
+/** 從材質庫刪掉一筆（素材庫裡的圖留著，專案只記連結；特效參數裡的引用不動，插件找不到就用預設） */
+function deleteTexture(project: Project, textureId: string): Project {
+  const list = project.textures ?? [];
+  if (!list.some((t) => t.id === textureId)) return project;
+  return { ...project, textures: list.filter((t) => t.id !== textureId) };
 }
 
 /** 依序套用多個編輯；全部沒改到就回傳原物件 */

@@ -35,6 +35,12 @@ class PublishJobsTest {
             prompts.add(prompt + "|" + mime + "|" + image.length);
             return new PublishJobs.ImageReply(new byte[] {9, 8, 7}, "image/webp", 30000, 2000, "fake-image");
         }
+
+        @Override
+        public PublishJobs.ImageReply generate(String prompt, String size) {
+            prompts.add(prompt + "|" + size);
+            return new PublishJobs.ImageReply(new byte[] {5, 4}, "image/png", 4900, 1000, "fake-image");
+        }
     }
 
     private final FakeText text = new FakeText();
@@ -94,12 +100,35 @@ class PublishJobsTest {
 
     @Test
     void 縮圖_用途不對或沒有圖_拒絕_別的權杖看不到() {
-        assertThatThrownBy(() -> jobs.startImage(7, "texture", "x", new byte[] {1}, "image/png")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> jobs.startImage(7, "poster", "x", new byte[] {1}, "image/png")).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> jobs.startImage(7, "thumbnail", "x", new byte[0], "image/png")).isInstanceOf(IllegalArgumentException.class);
         String id = jobs.startImage(7, "thumbnail", "", new byte[] {1}, "image/jpeg");
         assertThatThrownBy(() -> jobs.viewImage(8, id)).isInstanceOf(PublishJobs.NotFoundException.class);
         text.replies.add("{\"titles\":[\"a\"],\"description\":\"\",\"highlights\":[],\"chapters\":[],\"tags\":[]}");
         String kit = jobs.startKit(7, "zh", 60, lines());
         assertThatThrownBy(() -> jobs.viewKit(8, kit)).isInstanceOf(PublishJobs.NotFoundException.class);
+    }
+
+    @Test
+    void 材質_產生新圖_描述後接無縫模板_正方形_記一張() {
+        String id = jobs.startImage(7, "texture", "worn oak planks", null, null);
+        PublishJobs.ImageView v = jobs.viewImage(7, id);
+        assertThat(v.status()).isEqualTo("done");
+        assertThat(Base64.getDecoder().decode(v.image())).containsExactly(5, 4);
+        assertThat(image.prompts.get(0)).startsWith("worn oak planks").contains("seamless tileable texture").contains("no text").endsWith("|1024x1024");
+        assertThat(usage).containsExactly("7:/v1/ai/image:fake-image:1");
+    }
+
+    @Test
+    void 背景_產生新圖_16比9_不加無縫模板() {
+        String id = jobs.startImage(7, "background", "a cozy classroom with a chalkboard", null, null);
+        assertThat(jobs.viewImage(7, id).status()).isEqualTo("done");
+        assertThat(image.prompts.get(0)).startsWith("a cozy classroom").doesNotContain("seamless").endsWith("|1792x1024");
+    }
+
+    @Test
+    void 材質與背景_一定要描述() {
+        assertThatThrownBy(() -> jobs.startImage(7, "texture", " ", null, null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> jobs.startImage(7, "background", null, null, null)).isInstanceOf(IllegalArgumentException.class);
     }
 }

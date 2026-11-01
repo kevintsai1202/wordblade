@@ -7,7 +7,10 @@ import type { Media } from "../core/model";
 import type { DoneMap } from "../media/thumbs";
 
 /** 要匯入的檔案：Windows 版是路徑，網頁版是 File */
-export type ImportSource = { kind: "path"; path: string; name: string } | { kind: "file"; file: File; name: string; handle?: FileSystemFileHandle };
+export type ImportSource = ({ kind: "path"; path: string; name: string } | { kind: "file"; file: File; name: string; handle?: FileSystemFileHandle }) & {
+  /** 匯入時就標上的用途（材質圖："texture"，素材庫頁籤不列）；一般匯入沒有 */
+  role?: Media["role"];
+};
 
 /** 匯入後的背景準備結果 */
 export interface Prepared {
@@ -141,7 +144,7 @@ export interface Engine {
   /**
    * 程式產生的檔案（AI 音效與配樂的 WAV，§5.15）變成可匯入的來源，接著走一般的匯入流程（useMediaLibrary.importSources）。
    * 開著專案資料夾時寫進 .data\generated\（D41 P5），沒開時：Windows 版寫進 app 資料夾的 generated/（回傳路徑），網頁版包成 File。
-   * name 是建議的檔名（例如 sfx-whoosh.wav）。
+   * name 是建議的檔名（例如 sfx-whoosh.wav）；副檔名只認 wav、png、webp（材質圖是 PNG，§5.12），其他一律當 wav。
    */
   importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource>;
 }

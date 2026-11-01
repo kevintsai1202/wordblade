@@ -230,4 +230,28 @@ export class GatewayClient {
     const bytes = Uint8Array.from(atob(view.image), (c) => c.charCodeAt(0));
     return new Blob([bytes], { type: view.mime ?? "image/webp" });
   }
+
+  /**
+   * 材質圖或 3D 背景（§5.12）：只有描述、不帶圖 → Muse Image 產生的圖。
+   * texture 回 1600×1600、background 回約 2016×1152（都是 webp）；約 30 秒。失敗丟 GatewayError。
+   */
+  async generateImage(purpose: "texture" | "background", prompt: string): Promise<Blob> {
+    const form = new FormData();
+    form.append("purpose", purpose);
+    form.append("prompt", prompt);
+    let res: Response;
+    try {
+      // multipart 的 content-type（含 boundary）由瀏覽器填
+      res = await fetch(this.settings.url.replace(/\/$/, "") + "/v1/ai/image", { method: "POST", headers: { authorization: `Bearer ${this.settings.token}` }, body: form });
+    } catch {
+      throw new GatewayError("Can't reach the AI service. Check the address in AI settings and your connection.", 0);
+    }
+    if (res.status === 401) throw new GatewayError("The invite token isn't valid. Check it in AI settings.", 401);
+    if (!res.ok) throw new GatewayError(`The AI service returned an error (${res.status}).`, res.status);
+    const { jobId } = (await res.json()) as { jobId: string };
+    const view = await this.pollView<{ status: string; image: string | null; mime: string | null }>(`/v1/ai/image/${encodeURIComponent(jobId)}`, 240);
+    if (view.status !== "done" || !view.image) throw new GatewayError("The AI couldn't make the image. Try again, or change the description.", 0);
+    const bytes = Uint8Array.from(atob(view.image), (c) => c.charCodeAt(0));
+    return new Blob([bytes], { type: view.mime ?? "image/webp" });
+  }
 }

@@ -1,6 +1,10 @@
 // 特效 2D／3D 子頁籤（spec §5.7；開發者 2026-10-28 分成兩個子頁籤）：上半是 Vibe特效（一句話請 AI 寫特效），
 // 下半是這個維度的內建範本（2D 範本／3D 場景，點一下加在播放頭或選的範圍）。
 // AI 設定（閘道網址、邀請權杖）存在這台電腦；第一次用 AI 時顯示同意說明（送什麼、送到哪，spec §3）。
+import type { Effect, Media, Plugin } from "../core/model";
+import type { Edit } from "../core/history";
+import type { Engine, ImportSource } from "../engine/Engine";
+import { createTextureAsset } from "../texture/create";
 import { useState, type Dispatch } from "react";
 import { DEFAULT_EFFECT_SECONDS, TEMPLATES, templateEffect, type Template } from "../anim/library";
 import type { PluginService } from "../anim/pluginService";
@@ -36,7 +40,7 @@ function hasConsent(): boolean {
 }
 
 /** 特效的 2D 或 3D 子頁籤 */
-export function VibeTab({ dimension, plugins, playhead, range, dispatch }: {
+export function VibeTab({ dimension, plugins, playhead, range, dispatch, engine, importSources }: {
   /** 2D（原專案直譯器的插件）或 3D（three.js 插件，疊在影片上或蓋住 V1） */
   dimension: "2d" | "3d";
   plugins: PluginService;
@@ -44,6 +48,9 @@ export function VibeTab({ dimension, plugins, playhead, range, dispatch }: {
   /** 時間軸選的範圍：有就用它的起訖（照字導字演：先框選再加特效），沒有就放在播放頭、用預設長度 */
   range?: { start: number; end: number } | null;
   dispatch: Dispatch<Action>;
+  /** 3D：插件宣告了材質參數時，產生材質要存素材（沒給就不自動產生材質） */
+  engine?: Engine;
+  importSources?: (sources: ImportSource[]) => Promise<Media[]>;
 }) {
   /** 新特效的起點與長度（fallback：沒有範圍時的預設長度） */
   const placement = (fallback: number) => (range ? { start: range.start, duration: range.end - range.start } : { start: playhead, duration: fallback });
@@ -107,6 +114,8 @@ export function VibeTab({ dimension, plugins, playhead, range, dispatch }: {
         dispatch({ type: "commit", edits: [{ kind: "addEffect", effect: outcome.effect, plugins: outcome.plugins }] });
         dispatch({ type: "selectEffect", effectId: outcome.effect.id });
         setDescription("");
+        // Vibe 3D 的插件宣告了材質參數（附一句描述）：依描述叫 Muse Image 產生材質、套上去（另一次提交，失敗不影響特效）
+        if (dimension === "3d" && engine && importSources) await fillTextures(gateway, outcome.effect, outcome.plugins);
       } else {
         setError(outcome.message);
       }
@@ -114,6 +123,33 @@ export function VibeTab({ dimension, plugins, playhead, range, dispatch }: {
       setError(e instanceof GatewayError ? e.message : `Something went wrong: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setProgress(null);
+    }
+  };
+
+  /**
+   * 插件的 texture 參數（describe＝材質描述）逐一產生材質（最多 3 張），存進材質庫並把引用寫進這個特效的參數；一次提交。
+   * 任何一張失敗就只顯示提示，特效照樣在（插件沒有材質時會退回純色）。
+   */
+  const fillTextures = async (gateway: GatewayClient, effect: Effect, used: Plugin[]) => {
+    const component = used[0]?.component as { params?: Record<string, { type?: string; describe?: string }> } | undefined;
+    const wanted = Object.entries(component?.params ?? {}).filter(([, d]) => d.type === "texture" && d.describe?.trim()).slice(0, 3);
+    if (!wanted.length) return;
+    try {
+      setProgress({ stage: "textures", round: 1 });
+      const saveImage = async (name: string, bytes: Uint8Array) => {
+        const [media] = await importSources!([{ ...(await engine!.importGenerated(name, bytes)), role: "texture" }]);
+        if (!media) throw new Error("the texture couldn't be added to the project");
+        return media.id;
+      };
+      const textures = await Promise.all(wanted.map(([, d]) => createTextureAsset(gateway, "texture", d.describe!.trim(), saveImage)));
+      const inner = (effect.params as { params?: Record<string, unknown> }).params ?? {};
+      const refs = Object.fromEntries(wanted.map(([name], i) => [name, { textureId: textures[i].id, color: textures[i].colorMediaId, normal: textures[i].normalMediaId, repeat: 1, normalStrength: 1 }]));
+      dispatch({ type: "commit", edits: [
+        ...textures.map((texture): Edit => ({ kind: "addTexture", texture })),
+        { kind: "setEffectParams", effectId: effect.id, params: { ...effect.params, params: { ...inner, ...refs } } },
+      ] });
+    } catch (e) {
+      setError(`The effect is in, but its textures couldn't be made: ${e instanceof GatewayError ? e.message : e instanceof Error ? e.message : String(e)}`);
     }
   };
 
@@ -148,7 +184,7 @@ export function VibeTab({ dimension, plugins, playhead, range, dispatch }: {
         <label><input type="checkbox" checked={attachFrame} onChange={(e) => setAttachFrame(e.target.checked)} /> Attach current frame</label>
         <span className="spacer" />
         <button data-testid="vibe-generate" disabled={busy || !description.trim() || !settings.token} onClick={() => void generate()}>
-          {busy ? (progress.stage === "writing" ? `Writing… (round ${progress.round})` : "Checking…") : "Generate"}
+          {busy ? (progress.stage === "writing" ? `Writing… (round ${progress.round})` : progress.stage === "textures" ? "Making textures…" : "Checking…") : "Generate"}
         </button>
       </div>
       {consentAsked && (

@@ -455,6 +455,16 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
     - Vibe特效 3D：提示詞告訴 Wonder 可以宣告 `texture` 參數並附一句材質描述；沙盒試跑時用灰色棋盤格佔位；插件通過後依描述呼叫 Muse Image 補上材質，使用者可在 Inspector 換掉。
     - 2D 插件：參數型別 `texture`，直譯器的 runtime 增加以圖片填色的 API（`createPattern`，例如金屬字、木紋字）；要擴充 `anim_api_manifest.json` 與提示詞，實作時一併補直譯器測試。
   - 驗證：單元測試（無縫化後左右、上下邊緣像素差低於門檻；全平的圖算出的法線貼圖是 (128,128,255)）；e2e 用假閘道回固定圖片，走「產生 → 材質庫 → 套到教室黑板框 → 預覽畫面看得到材質」；實機另測 3 種描述（木頭、黑板、金屬）看無縫品質。
+- **11/1 已做**：
+  - 閘道 `/v1/ai/image` 的 `purpose` 多了 `texture`、`background`，走 `/v1/images/generations`。
+  - 後處理在主執行緒（`src/texture/process.ts`，純函式）。無縫化改成四份混合（原圖、橫移、直移、兩邊都移，依離邊緣遠近加權），十字遮罩法會在邊緣斷掉。實機三張的接縫差：木頭 46.9 → 14.4，黑板 21.4 → 6.6，金屬 8.6 → 3.7。
+  - 材質庫存在 `Project.textures`，材質圖是 `role="texture"` 的素材，素材庫不列出。
+  - 3D 插件拿得到 `env.textures[欄位]`。ImageBitmap 不吃 flipY，所以先畫到畫布再做貼圖，否則背景會上下顛倒。
+  - 內建「Screen in a scene」有桌面、牆、地板、黑板框的材質欄位與 3D 背景，漂浮板子的背景也可以選「AI image」。
+  - Effects → Textures 頁籤；Inspector 的材質下拉。
+  - Vibe 3D：插件可以宣告 `texture` 參數（附 `describe`），通過試跑後依描述自動產生材質並套上。試跑時沒有材質，插件要退回純色。
+  - 2D 插件的圖片填色還沒做。
+  - 驗證：`e2e/textures.spec.ts`（含背景方向）、`e2e/vibe.spec.ts`（自動配材質）、`e2e/textures-live.spec.ts`（實機：每張 23～41 秒）。
 - **3D 背景**：輸入一句描述（例如「a cozy classroom with a chalkboard」）→ Muse Image 產生 16:9 背景圖（`purpose: "background"`，不做無縫化），存進材質庫當 3D 場景或板子的自訂背景。
 - **影片縮圖**：從成片挑一格當底圖 → Muse Image 依描述改成縮圖風格（不放標題字）→ 標題文字由 WordBlade 用 canvas 疊上 → 縮放成 1280×720。原專案實測（2026-09-12，muse-image-mcp）：`size` 是長寬比字串不是像素（要 1792×1024 實際給 2016×1152），所以一定要自己縮放；`edit` 會整張重畫、小字會壞；圖裡的拉丁字串（網址、名稱）會隨機拼錯，所以字不交給模型畫。
 - API（同上實測）：`/v1/images/generations`、`/v1/images/edits`（JSON 帶 `image_url` data URL）回 `data[].b64_json`；預設輸出 webp。

@@ -706,17 +706,20 @@ export class WebEngine implements Engine {
   }
 
   /**
-   * 產生的 WAV：開著專案資料夾時寫進 .data/generated/（帶 handle，重開專案找得回來）；
+   * 產生的檔（WAV；材質圖是 PNG／WebP，看建議檔名的副檔名）：開著專案資料夾時寫進 .data/generated/（帶 handle，重開專案找得回來）；
    * 沒開時包成 File（存在記憶體，重新整理後就沒有）。
    */
   async importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource> {
     const loc = this.project;
+    // 副檔名只認 wav、png、webp、jpg（片頭封面）；其餘當 wav（同 Rust write_generated），MIME 跟著副檔名
+    const ext = /\.(png|webp|jpe?g)$/i.exec(name)?.[1].toLowerCase().replace("jpeg", "jpg") ?? "wav";
+    const type = ext === "wav" ? "audio/wav" : ext === "jpg" ? "image/jpeg" : `image/${ext}`;
     if (loc) {
       try {
         const { dir } = await this.dataFile(loc, "generated/x", true);
         const stem = name.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9_-]/g, "-") || "generated";
-        let fileName = `${stem}.wav`;
-        for (let n = 2; await dir.getFileHandle(fileName).then(() => true, () => false); n++) fileName = `${stem}-${n}.wav`;
+        let fileName = `${stem}.${ext}`;
+        for (let n = 2; await dir.getFileHandle(fileName).then(() => true, () => false); n++) fileName = `${stem}-${n}.${ext}`;
         const handle = await dir.getFileHandle(fileName, { create: true });
         const w = await handle.createWritable();
         await w.write(bytes as Uint8Array<ArrayBuffer>);
@@ -726,7 +729,7 @@ export class WebEngine implements Engine {
         /* 寫不進專案資料夾：退回記憶體 */
       }
     }
-    const file = new File([bytes as Uint8Array<ArrayBuffer>], name, { type: "audio/wav" });
+    const file = new File([bytes as Uint8Array<ArrayBuffer>], name, { type });
     return { kind: "file", file, name };
   }
 }

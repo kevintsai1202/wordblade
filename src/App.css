@@ -291,3 +291,11 @@ button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor
 .director-treatment ul { margin: 4px 0 0; padding-left: 16px; }
 .director-check-spacer { display: inline-block; width: 13px; }
 .director-empty { font-size: 11px; }
+
+/* 材質庫（P1-14）：每項一個預覽（材質是 2×2 拼貼）、名字、法線強度、再產生與刪除 */
+.texture-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.texture-item { display: flex; gap: 8px; align-items: flex-start; }
+.texture-tile { width: 96px; height: 96px; flex: none; background-color: #111; background-repeat: repeat; background-position: 0 0; border-radius: 3px; border: 1px solid rgba(255,255,255,0.12); }
+.texture-tile.background { width: 128px; height: 72px; background-repeat: no-repeat; background-position: center; }
+.texture-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.texture-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

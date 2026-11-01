@@ -27,6 +27,7 @@
 - box：目標框 {cx, cy, w, h}（0～1，中心與寬高，y 往下）：使用者想強調的位置，動畫通常圍著它、指著它或從它出發。
 - toWorld(x, y, z = 0)：畫面座標（0～1、y 往下）→ z 平面上的世界座標（THREE.Vector3）。例：const c = env.toWorld(env.box.cx, env.box.cy); 框的寬度換成世界單位 = env.toWorld(env.box.cx + env.box.w / 2, env.box.cy).x - c.x。
 - rand(i)：固定種子的亂數（同一個 i 永遠回同一個 0～1 的值；粒子的隨機位置用它，預覽與輸出才一致）。
+- textures：texture 參數的材質（見下方 component.params；沒有時是空物件或少了那個鍵）。
 - frameTexture：目前這一格的影片畫面（THREE.Texture，NoColorSpace）；frameMaterial()：原樣貼影片畫面的材質（要把影片貼在 3D 物件上時用它，不要自己設 colorSpace，否則顏色會變、每格多 40 ms）。
 
 ## 限制（不合規就整個插件被擋）
@@ -35,7 +36,11 @@
 - 程式 ≤ 30000 字、≤ 300 行；只畫畫面，不發聲。
 
 ## component.params（≤ 16 個，每個都給 label）
-- 型別：number（min、max、step、default）、duration（秒，min、max、default）、enum（values、labels、default）、color（default 是 #RRGGBB）、boolean（default）。
+- 型別：number（min、max、step、default）、duration（秒，min、max、default）、enum（values、labels、default）、color（default 是 #RRGGBB）、boolean（default）、
+  texture（材質，例如木頭桌面、金屬外殼、黑板：{"type": "texture", "describe": "一句英文材質描述，例如 worn oak planks", "label": "..."}；
+  WordBlade 會依 describe 產生一張可拼接的材質與法線圖。程式裡用 env.textures[參數名]（{map, normalMap, repeat, normalStrength}，three.js Texture，已設 RepeatWrapping）：
+  有就 new THREE.MeshStandardMaterial({ map: tx.map, normalMap: tx.normalMap, normalScale: new THREE.Vector2(tx.normalStrength, tx.normalStrength) })，
+  要調平鋪次數用 tx.map.repeat.set(n * tx.repeat, n * tx.repeat)（normalMap 一樣）；**沒有（試跑時、材質還沒產生）一定要退回純色材質**，不能出錯。最多 3 個 texture 參數）。
 
 ## 範例（new）
 {"refused": false, "mode": "new", "title": "Spinning coin", "component": {"name": "Spinning coin", "description": "A gold coin spins above the target box and pops in",

@@ -28,6 +28,7 @@ import { DirectorTab } from "./ui/DirectorTab";
 import { IntroTab } from "./ui/IntroTab";
 import { PublishTab, type Thumbnail } from "./ui/PublishTab";
 import { SoundTab } from "./ui/SoundTab";
+import { TextureTab } from "./ui/TextureTab";
 import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
 import type { ZoomEdit } from "./ui/ZoomBands";
 import { zoomFromRange } from "./core/zoom";
@@ -335,18 +336,19 @@ function App() {
           tabs={{
             media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
             vibe: <VibeTab dimension="2d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
-            vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
+            vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} engine={engine} importSources={importSources} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
             director: <DirectorTab project={project} engine={engine} envelopes={library.envelopes} plugins={plugins} playhead={state.playhead} importSources={importSources} dispatch={dispatch} />,
             mask: <MaskTab project={project} engine={engine} range={state.range} playhead={state.playhead} dispatch={dispatch} />,
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
+            textures: <TextureTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
             intro: <IntroTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab suggestedName={exportPathFor(folder.location, "mp4")} project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} thumbnail={thumbnail?.blob ?? null} />,
             publish: <PublishTab project={project} duration={projectDuration(project)} dispatch={dispatch} thumbnail={thumbnail} onThumbnail={setThumbnail} />,
-            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
+            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} onOpenTab={openTab} />,
           }}
         />
       </main>

@@ -54,4 +54,11 @@ class Vibe3dParserTest {
         rejects("{\"refused\": false, \"mode\": \"magic\"}", "mode");
         rejects("not json", "JSON");
     }
+
+    @Test
+    void 材質參數_一定要有描述() {
+        Vibe3dParser.Parsed p = parser.parse("{\"refused\": false, \"mode\": \"new\", \"component\": {\"name\": \"x\", \"params\": {\"skin\": {\"type\": \"texture\", \"describe\": \"worn oak planks\", \"label\": \"Wood\"}}, \"code\": [\"x\"]}}");
+        assertThat(p.component().path("params").path("skin").path("describe").asString()).isEqualTo("worn oak planks");
+        rejects("{\"refused\": false, \"mode\": \"new\", \"component\": {\"name\": \"x\", \"params\": {\"skin\": {\"type\": \"texture\"}}, \"code\": [\"x\"]}}", "describe");
+    }
 }

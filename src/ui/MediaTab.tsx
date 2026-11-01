@@ -56,6 +56,8 @@ export function MediaTab({ project, library, engine, pxPerSecond, onImport, disp
     dispatch({ type: "commit", edits: [{ kind: "place", mediaId, trackId, t: media.kind === "audio" ? 0 : projectDuration(project) }] });
   };
 
+  // 材質庫的圖（role="texture"，Textures 頁籤管）不列在素材庫
+  const listed = project.media.filter((m) => m.role !== "texture");
   const failed = [...library.items.entries()].filter(([id, item]) => item.status === "failed" && !project.media.some((m) => m.id === id));
   const target = drag ? dropTarget(drag.x, drag.y, pxPerSecond) : null;
 
@@ -65,9 +67,9 @@ export function MediaTab({ project, library, engine, pxPerSecond, onImport, disp
         <button onClick={onImport} data-testid="import-media">＋ Import media</button>
         <span className="muted">or drop files anywhere{engine.capabilities.anyFormatImport ? "" : " (H.264/AAC MP4, MOV, images, MP3/WAV/M4A)"}</span>
       </div>
-      {project.media.length === 0 && failed.length === 0 && <p className="muted placeholder">No media yet.</p>}
+      {listed.length === 0 && failed.length === 0 && <p className="muted placeholder">No media yet.</p>}
       <ul className="media-list">
-        {project.media.map((m) => {
+        {listed.map((m) => {
           const item = library.items.get(m.id);
           return (
             <li

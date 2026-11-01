@@ -70,11 +70,18 @@ public class PublishJobs {
         AiModel.Reply write(String language, double duration, String transcript);
     }
 
-    /** 改圖的模型（Muse Image edits） */
-    @FunctionalInterface
+    /** 圖片模型（Muse Image）：edits 改圖（縮圖底圖）、generations 產生新圖（材質、3D 背景，§5.12） */
     public interface ImageModel {
         ImageReply edit(String prompt, byte[] image, String mime);
+
+        /** 產生新圖；size 是 WxH（模型會放大，實測 1024x1024 給 1600×1600，前端自己縮） */
+        ImageReply generate(String prompt, String size);
     }
+
+    /** 材質的固定模板（§5.12，D36）：接在使用者描述後面 */
+    static final String TEXTURE_SUFFIX = ", seamless tileable texture, flat top-down orthographic view, even diffuse lighting, no shadows, no perspective, no objects, no text, edge to edge";
+    /** 3D 背景的模板：接在描述後面（不做無縫） */
+    static final String BACKGROUND_SUFFIX = ", wide 16:9 background scene, photographic, no people, no text";
 
     /** 記用量（route、units：圖片張數） */
     @FunctionalInterface
@@ -199,25 +206,39 @@ public class PublishJobs {
         return new KitView(job.status, job.result instanceof Kit k ? k : null, job.error);
     }
 
-    /** 開始改縮圖底圖；用途不是 thumbnail、沒有圖、圖太大、描述太長丟 IllegalArgumentException */
+    /**
+     * 開始一張圖：thumbnail 改縮圖底圖（要附圖）；texture／background 依描述產生新圖（§5.12，不必附圖、描述必填）。
+     * 用途不對、缺圖、圖太大、描述太長或空白丟 IllegalArgumentException。
+     */
     public String startImage(long tokenId, String purpose, String style, byte[] bytes, String mime) {
         purge();
         String s = style == null ? "" : style.replace('\n', ' ').strip();
+        if ("texture".equals(purpose) || "background".equals(purpose)) {
+            if (s.isEmpty() || s.length() > MAX_STYLE) throw new IllegalArgumentException("bad request");
+            boolean texture = "texture".equals(purpose);
+            String prompt = s + (texture ? TEXTURE_SUFFIX : BACKGROUND_SUFFIX);
+            String size = texture ? "1024x1024" : "1792x1024";
+            String id = UUID.randomUUID().toString();
+            Job job = new Job(tokenId);
+            jobs.put(id, job);
+            executor.execute(() -> runImage(job, () -> image.generate(prompt, size)));
+            return id;
+        }
         if (!"thumbnail".equals(purpose) || bytes == null || bytes.length == 0 || bytes.length > MAX_IMAGE_BYTES || s.length() > MAX_STYLE
                 || !("image/png".equals(mime) || "image/jpeg".equals(mime))) throw new IllegalArgumentException("bad request");
         String prompt = s.isEmpty() ? THUMBNAIL_PROMPT : THUMBNAIL_PROMPT + " Style: " + s + ".";
         String id = UUID.randomUUID().toString();
         Job job = new Job(tokenId);
         jobs.put(id, job);
-        executor.execute(() -> runImage(job, prompt, bytes, mime));
+        executor.execute(() -> runImage(job, () -> image.edit(prompt, bytes, mime)));
         return id;
     }
 
-    /** 背景：Muse Image 改圖（失敗重試一次） */
-    private void runImage(Job job, String prompt, byte[] bytes, String mime) {
+    /** 背景：叫 Muse Image（改圖或產生新圖；失敗重試一次） */
+    private void runImage(Job job, java.util.function.Supplier<ImageReply> call) {
         for (int attempt = 0; attempt < 2; attempt++) {
             try {
-                ImageReply r = image.edit(prompt, bytes, mime);
+                ImageReply r = call.get();
                 usage.record(job.tokenId, "/v1/ai/image", r.model(), r.inputTokens(), r.outputTokens(), 1);
                 if (r.bytes() == null || r.bytes().length == 0) continue;
                 job.result = Base64.getEncoder().encodeToString(r.bytes());

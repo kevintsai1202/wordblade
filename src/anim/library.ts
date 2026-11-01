@@ -21,6 +21,8 @@ export interface ParamDef {
   labels?: string[];
   maxLength?: number;
   role?: string;
+  /** texture 參數收哪一種（材質庫的 kind）：texture＝可平鋪的材質，background＝3D 背景 */
+  kind?: "texture" | "background";
 }
 
 /** 範本：一組圖層（元件＋參數）、預設目標框、音效（加進時間軸時跟著特效走，§5.15） */

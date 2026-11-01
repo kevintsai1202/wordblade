@@ -8,7 +8,8 @@ import { runPlane3d, type BoardParams } from "../ai/plane3d";
 import { captureFrame } from "./capture";
 import manifest from "../anim/anim_api_manifest.json";
 import { displayOf, type Component, type ParamDef } from "../anim/library";
-import type { CameraKey, Clip, Effect, Project } from "../core/model";
+import type { CameraKey, Clip, Effect, Project, TextureAsset } from "../core/model";
+import type { TextureRef } from "../anim/textureRefs";
 import { MAX_SPEED, MIN_SPEED } from "../core/speed";
 import { clipEnd } from "../core/timeline";
 import type { Action } from "./state";
@@ -39,8 +40,18 @@ function CommitInput({ value, type, onCommit, ...rest }: { value: string | numbe
   return <input type={type} value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") commit(); }} {...rest} />;
 }
 
-/** 一個參數的編輯欄位 */
-function ParamField({ name, def, label, labels, value, onChange }: { name: string; def: ParamDef; label: string; labels?: string[]; value: unknown; onChange: (v: unknown) => void }) {
+/** 材質下拉選「產生新的」的選項值 */
+const NEW_TEXTURE = "__new";
+
+/** 材質庫的項目 → 存進特效參數的引用（spec §5.12；顏色圖、法線圖、平鋪倍數與法線強度跟著項目目前的值） */
+function refOf(t: TextureAsset): TextureRef {
+  return { textureId: t.id, color: t.colorMediaId, ...(t.normalMediaId ? { normal: t.normalMediaId } : {}), repeat: t.repeat, normalStrength: t.normalStrength };
+}
+
+/**
+ * 一個參數的編輯欄位。texture 型別（P1-14）要材質庫的項目（textures）與「產生新的」的動作（onNewTexture：切到 Textures 頁籤）。
+ */
+function ParamField({ name, def, label, labels, value, onChange, textures = [], onNewTexture }: { name: string; def: ParamDef; label: string; labels?: string[]; value: unknown; onChange: (v: unknown) => void; textures?: TextureAsset[]; onNewTexture?: () => void }) {
   const v = value ?? def.default;
   let field;
   switch (def.type) {
@@ -51,6 +62,24 @@ function ParamField({ name, def, label, labels, value, onChange }: { name: strin
       field = (
         <select value={String(v)} onChange={(e) => onChange(e.target.value)}>
           {values.map((x, i) => <option key={x} value={x}>{(def.type === "enum" ? labels?.[i] : undefined) ?? x}</option>)}
+        </select>
+      );
+      break;
+    }
+    case "texture": {
+      // 下拉：預設（程式畫的）／材質庫裡同種類的項目（依名字）／產生新的；選了項目就寫入材質引用
+      const ref = v as TextureRef | null;
+      const options = textures.filter((t) => t.kind === (def.kind ?? "texture"));
+      field = (
+        <select data-testid="param-texture" value={ref?.textureId ?? ""}
+          onChange={(e) => {
+            if (e.target.value === NEW_TEXTURE) { onNewTexture?.(); return; }
+            const picked = options.find((t) => t.id === e.target.value);
+            onChange(picked ? refOf(picked) : null);
+          }}>
+          <option value="">Default</option>
+          {options.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          <option value={NEW_TEXTURE}>Generate a new one…</option>
         </select>
       );
       break;
@@ -80,7 +109,7 @@ function ParamField({ name, def, label, labels, value, onChange }: { name: strin
 }
 
 /** Inspector 頁籤 */
-export function InspectorTab({ project, effectId, clipId = null, playhead = 0, dispatch, preview, onPreview }: {
+export function InspectorTab({ project, effectId, clipId = null, playhead = 0, dispatch, preview, onPreview, onOpenTab }: {
   project: Project;
   effectId: string | null;
   /** 選取的片段（沒有選特效時顯示片段屬性：變速） */
@@ -91,6 +120,8 @@ export function InspectorTab({ project, effectId, clipId = null, playhead = 0, d
   /** AI 預覽中的設定（還沒寫進專案） */
   preview: { effectId: string; params: Record<string, unknown> } | null;
   onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void;
+  /** 切到右側面板的某個子頁籤（材質下拉的「產生新的」去 Textures） */
+  onOpenTab?: (tab: string) => void;
 }) {
   const effect: Effect | undefined = project.effects.find((e) => e.id === effectId);
   if (!effect) {
@@ -98,7 +129,7 @@ export function InspectorTab({ project, effectId, clipId = null, playhead = 0, d
     if (clip) return <ClipInspector project={project} clip={clip} dispatch={dispatch} />;
     return <p className="muted placeholder">Select a clip or an effect on the timeline to edit it.</p>;
   }
-  if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} playhead={playhead} dispatch={dispatch} preview={preview?.effectId === effect.id ? preview.params : null} onPreview={onPreview} />;
+  if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} playhead={playhead} dispatch={dispatch} preview={preview?.effectId === effect.id ? preview.params : null} onPreview={onPreview} onOpenTab={onOpenTab} />;
   const box = effect.params.box as Box;
   const layers = (effect.params.layers ?? []) as Layer[];
 
@@ -216,7 +247,7 @@ function DescribeMove({ effect, current, preview, onPreview, dispatch }: { effec
 }
 
 /** 3D 特效的設定：依 3D 元件的參數定義產生表單；關鍵幀這類複雜參數先唯讀顯示（用「用說的」或範本改） */
-function Inspector3D({ project, effect, playhead, dispatch, preview, onPreview }: { project: Project; effect: Effect; playhead: number; dispatch: Dispatch<Action>; preview: Record<string, unknown> | null; onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void }) {
+function Inspector3D({ project, effect, playhead, dispatch, preview, onPreview, onOpenTab }: { onOpenTab?: (tab: string) => void; project: Project; effect: Effect; playhead: number; dispatch: Dispatch<Action>; preview: Record<string, unknown> | null; onPreview: (p: { effectId: string; params: Record<string, unknown> } | null) => void }) {
   const plugin = project.plugins.find((p) => p.hash === effect.pluginId);
   const component = plugin?.component as { name?: string; params?: Record<string, ParamDef> } | undefined;
   const values = ((effect.params as { params?: Record<string, unknown> }).params ?? {}) as Record<string, unknown>;
@@ -232,7 +263,7 @@ function Inspector3D({ project, effect, playhead, dispatch, preview, onPreview }
         {Object.entries(component?.params ?? {}).map(([key, def]) =>
           ["keys", "float"].includes(def.type)
             ? <label key={key} className="param-field" data-param={key}><span>{def.label ?? key}</span><code className="muted">{JSON.stringify(values[key] ?? def.default)?.slice(0, 120)}</code></label>
-            : <ParamField key={key} name={key} def={def} label={def.label ?? key} labels={def.labels} value={values[key]} onChange={(v) => set(key, v)} />)}
+            : <ParamField key={key} name={key} def={def} label={def.label ?? key} labels={def.labels} value={values[key]} onChange={(v) => set(key, v)} textures={project.textures} onNewTexture={() => onOpenTab?.("textures")} />)}
       </fieldset>
       {(component as { id?: string } | undefined)?.id === "desk-screen" && <CameraKeysEditor effect={effect} playhead={playhead} dispatch={dispatch} />}
       {(component as { id?: string } | undefined)?.id === "floating-board" && <DescribeMove effect={effect} current={values} preview={preview} onPreview={onPreview} dispatch={dispatch} />}

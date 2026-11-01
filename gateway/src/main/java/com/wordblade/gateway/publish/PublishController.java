@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * 發佈包（spec §5.17、§5.12）：
  * - POST /v1/ai/publish（JSON {language, duration, lines:[{t, text}]}）→ 202 {jobId}；GET /v1/ai/publish/{jobId} → {status, kit, error}
- * - POST /v1/ai/image（multipart：purpose＝thumbnail、prompt＝風格描述、image＝PNG／JPEG）→ 202 {jobId}；GET /v1/ai/image/{jobId} → {status, image（base64）, mime, error}
+ * - POST /v1/ai/image（multipart：purpose＝thumbnail（附 image＝PNG／JPEG）、texture、background（只要 prompt 描述，§5.12））→ 202 {jobId}；GET /v1/ai/image/{jobId} → {status, image（base64）, mime, error}
  */
 @RestController
 public class PublishController {
@@ -50,9 +50,11 @@ public class PublishController {
     /** 開始改縮圖底圖 */
     @PostMapping(path = "/v1/ai/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, String>> startImage(@RequestPart("purpose") String purpose, @RequestPart(name = "prompt", required = false) String prompt,
-                                                          @RequestPart("image") MultipartFile image, HttpServletRequest req) throws IOException {
-        if (image.getSize() > PublishJobs.MAX_IMAGE_BYTES) throw new IllegalArgumentException("image too large");
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("jobId", jobs.startImage(token(req).id(), purpose, prompt, image.getBytes(), image.getContentType())));
+                                                          @RequestPart(name = "image", required = false) MultipartFile image, HttpServletRequest req) throws IOException {
+        if (image != null && image.getSize() > PublishJobs.MAX_IMAGE_BYTES) throw new IllegalArgumentException("image too large");
+        // 材質、3D 背景不附圖（產生新圖）；縮圖要附圖（PublishJobs 檢查）
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("jobId", jobs.startImage(token(req).id(), purpose, prompt,
+                image == null ? null : image.getBytes(), image == null ? null : image.getContentType())));
     }
 
     @GetMapping("/v1/ai/image/{jobId}")
