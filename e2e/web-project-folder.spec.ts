@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { openTab } from "./helpers/tabs";
 
 // 網頁版專案資料夾（spec §5.21、D41，2026-11-01）：File System Access 選資料夾、handle 記在 IndexedDB。
 // Playwright 接不到 showDirectoryPicker／showOpenFilePicker，這裡把它們換成 OPFS 裡的資料夾與檔案：
@@ -83,11 +84,6 @@ test("網頁版專案資料夾：存成 .wordblade、重新整理後從最近開
   await expect(page.locator(".media-item", { hasText: "gaps.mp4" })).toBeVisible({ timeout: 20_000 });
   await page.locator(".media-item", { hasText: "gaps.mp4" }).dblclick();
   await expect.poll(() => readOpfs(page, "parent/Demo.wordblade/project.json"), { timeout: 10_000 }).toContain("gaps.mp4");
-  // 開著專案匯入：複製進 .data/media/（桌面版開這個專案也找得到）
-  expect(await page.evaluate(async () => {
-    const d = await (await (await (await (await navigator.storage.getDirectory()).getDirectoryHandle("parent")).getDirectoryHandle("Demo.wordblade")).getDirectoryHandle(".data")).getDirectoryHandle("media");
-    return (await (await d.getFileHandle("gaps.mp4")).getFile()).size;
-  })).toBeGreaterThan(1000);
   await expect.poll(async () => JSON.parse((await readOpfs(page, "parent/Demo.wordblade/project.json")) ?? "{}").project?.clips?.length ?? 0, { timeout: 10_000 }).toBeGreaterThan(0);
 
   // prepare 的結果（縮圖＋音量包絡）存進 OPFS thumbs/<鍵>/
@@ -167,4 +163,38 @@ test("網頁版開桌面版存的專案：素材只有絕對路徑，放在專�
   await expect(page.getByTestId("project-name")).toHaveText("Desk");
   await expect(page.locator(".media-item", { hasText: "talk.mp4" }).locator("img")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("missing-media")).toHaveCount(0);
+});
+
+test("素材離線（同達文西）：原檔不在了照樣開專案，素材與片段標成離線、預覽畫 Media Offline、照樣匯出", async ({ page }) => {
+  test.setTimeout(150_000);
+  await stubPickers(page);
+  await page.addInitScript(() => localStorage.setItem("wordblade.exportToOpfs", "1"));
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/");
+  await putFixture(page, "talk.mp4");
+  await page.getByTestId("project-save-as").click();
+  await page.getByTestId("project-name-input").fill("Off");
+  await page.getByRole("button", { name: "Choose folder…" }).click();
+  await expect(page.getByTestId("project-name")).toHaveText("Off");
+  await page.evaluate(() => { (window as unknown as { __pickFiles: string[] }).__pickFiles = ["talk.mp4"]; });
+  await page.getByTestId("import-media").click();
+  await expect(page.locator(".media-item", { hasText: "talk.mp4" })).toBeVisible({ timeout: 20_000 });
+  await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
+  await expect.poll(async () => JSON.parse((await readOpfs(page, "parent/Off.wordblade/project.json")) ?? "{}").project?.clips?.length ?? 0, { timeout: 10_000 }).toBeGreaterThan(0);
+  // 原檔刪掉（素材只記連結，專案資料夾裡沒有複本）
+  await page.evaluate(async () => (await (await navigator.storage.getDirectory()).getDirectoryHandle("media")).removeEntry("talk.mp4"));
+  expect(await readOpfs(page, "parent/Off.wordblade/.data/media/talk.mp4")).toBeNull();
+
+  await page.reload();
+  await page.getByTestId("project-recent").selectOption({ label: "Off" });
+  await expect(page.getByTestId("project-name")).toHaveText("Off");
+  // 不擋：專案開好、片段還在，素材與片段標成離線
+  await expect(page.getByTestId("media-offline")).toContainText("Media offline");
+  await expect(page.locator(".clip.offline").first()).toBeVisible();
+  await expect(page.locator(".preview canvas").first()).toHaveAttribute("data-offline", /[1-9]/, { timeout: 10_000 });
+  await page.screenshot({ path: "output/ui-shots/media-offline.png" });
+  // 匯出照樣完成
+  await openTab(page, "export");
+  await page.getByTestId("export-start").click();
+  await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 90_000 });
 });

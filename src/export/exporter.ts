@@ -1,6 +1,7 @@
 // MP4 匯出（spec §5.4，D24）：和預覽共用 layerPlan 與 GlCompositor，畫面來源改成 WebCodecs 逐格解碼原檔。
 // 解一格、畫一格、編一格（不在記憶體累積）；2D／3D 特效向沙盒逐格 await；聲音由 audioMix 分段混好後送編碼器（和影像並行）。
 // mediabunny 串流寫進 Engine 給的 ExportTarget（Windows 版 Rust 分塊寫檔、網頁版可寫串流）。
+import { offlineCard } from "../compositor/offlineCard";
 import { MaskLayer } from "../sam/maskLayer";
 import type { AudioSampleSource, Input, VideoSample } from "mediabunny";
 import type { EffectRenderer } from "../anim/effectRenderer";
@@ -142,7 +143,7 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
       while (nextRange < ranges.length && ranges[nextRange].first <= i) {
         const r = ranges[nextRange++];
         const media = project.media.find((m) => m.id === r.mediaId);
-        if (!media || r.last < i) continue;
+        if (!media || media.offline || r.last < i) continue;
         if (media.kind === "image") {
           await imageOf(media);
           continue;
@@ -170,6 +171,11 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
         if (item.kind === "video") {
           const { layer } = item;
           const media = project.media.find((m) => m.id === layer.mediaId);
+          // 原檔找不到：畫「Media Offline」卡（同預覽），照樣匯出
+          if (media?.offline) {
+            compositor.draw(offlineCard(layer.rect.w * plan.width, layer.rect.h * plan.height), layer.rect, layer.opacity);
+            continue;
+          }
           if (media?.kind === "image") {
             const bitmap = images.get(media.id);
             if (bitmap) compositor.draw(bitmap, layer.rect, layer.opacity, layer.crop);

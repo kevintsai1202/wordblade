@@ -389,7 +389,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
                   : project.clips.filter((c) => c.trackId === r.id).map((c) => (
                       <div
                         key={c.id}
-                        className={`clip ${r.kind}${state.selectedClipId === c.id ? " selected" : ""}${drag?.clipId === c.id ? " dragging" : ""}`}
+                        className={`clip ${r.kind}${state.selectedClipId === c.id ? " selected" : ""}${drag?.clipId === c.id ? " dragging" : ""}${state.history.present.media.find((m) => m.id === c.mediaId)?.offline ? " offline" : ""}`}
                         style={clipBox(c)}
                         onMouseDown={(e) => onClipDown(e, c)}
                         title={`${mediaName(c.mediaId)}  ${formatTimecode(c.start)} – ${formatTimecode(clipEnd(c))}`}

@@ -180,36 +180,13 @@ export class WebEngine implements Engine {
         input.dispose();
       }
     }
-    // 開著專案：複製進 .data/media/（桌面版開這個專案也找得到），素材改用複本；複製失敗就照用原檔
-    const copy = this.project ? await this.copyIntoProject(this.project, file).catch(() => null) : null;
-    const use = copy ?? (source.handle ? { handle: source.handle, file } : null);
-    this.files.set(id, { file: use?.file ?? file, url: URL.createObjectURL(use?.file ?? file) });
-    // 有 handle 就記住（鍵＝handleKey），重開專案時 locateMedia 拿得回來
-    if (use) await putHandle(id, use.handle).catch(() => undefined);
+    // 素材只記連結（不複製進專案，2026-11-01 開發者決定）：有 handle 就記住（鍵＝handleKey），重開專案時 locateMedia 拿得回來
+    this.files.set(id, { file, url: URL.createObjectURL(file) });
+    if (source.handle) await putHandle(id, source.handle).catch(() => undefined);
     return media;
   }
 
-  /** 複製進專案的 .data/media/（同名同指紋沿用、同名不同內容加 -2…），串流寫入不整支讀進記憶體 */
-  private async copyIntoProject(location: ProjectLocation, file: File): Promise<{ handle: FileSystemFileHandle; file: File }> {
-    const { dir } = await this.dataFile(location, "media/x", true);
-    const dot = file.name.lastIndexOf(".");
-    const stem = dot > 0 ? file.name.slice(0, dot) : file.name;
-    const ext = dot > 0 ? file.name.slice(dot) : "";
-    const fp = await fingerprintFile(file);
-    for (let n = 1; ; n++) {
-      const name = n === 1 ? file.name : `${stem}-${n}${ext}`;
-      const existing = await dir.getFileHandle(name).catch(() => null);
-      if (existing) {
-        const f = await existing.getFile();
-        if ((await fingerprintFile(f)) === fp) return { handle: existing, file: f };
-        continue;
-      }
-      const handle = await dir.getFileHandle(name, { create: true });
-      const w = await handle.createWritable();
-      await file.stream().pipeTo(w);
-      return { handle, file: await handle.getFile() };
-    }
-  }
+
 
   /** 縮圖（影片取 1 秒處、圖片縮小）與音量包絡；網頁版不做代理檔，預覽直接用原檔（§5.21） */
   async prepare(media: Media, onProgress: (ratio: number) => void): Promise<Prepared> {

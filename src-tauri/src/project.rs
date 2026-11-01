@@ -145,42 +145,6 @@ pub fn project_data_read(dir: String, rel: String) -> Result<Option<String>, Str
     }
 }
 
-/// 匯入的素材複製進專案的 .data\media\（2026-11-01 開發者決定：開著專案時自動複製，網頁版與桌面版開對方的專案都找得到）。
-/// 已經在專案資料夾裡的檔案不複製；同名且指紋相同的直接沿用；同名不同內容就加 -2、-3…。回傳複製後的路徑。
-pub fn copy_into(dir: &Path, src: &Path) -> Result<PathBuf, String> {
-    if src.starts_with(dir) {
-        return Ok(src.to_path_buf());
-    }
-    let media = dir.join(DATA_DIR).join("media");
-    fs::create_dir_all(&media).map_err(|e| e.to_string())?;
-    let name = src.file_name().ok_or("no file name")?.to_string_lossy().to_string();
-    let (stem, ext) = match name.rsplit_once('.') {
-        Some((s, e)) => (s.to_string(), format!(".{e}")),
-        None => (name.clone(), String::new()),
-    };
-    let fp = fingerprint(src)?;
-    let mut n = 1;
-    loop {
-        let dest = media.join(if n == 1 { name.clone() } else { format!("{stem}-{n}{ext}") });
-        if !dest.exists() {
-            fs::copy(src, &dest).map_err(|e| format!("無法複製到 {}：{e}", dest.display()))?;
-            return Ok(dest);
-        }
-        if fingerprint(&dest).ok().as_deref() == Some(fp.as_str()) {
-            return Ok(dest);
-        }
-        n += 1;
-    }
-}
-
-/// 匯入的素材複製進專案（見 copy_into），放行給 asset 協定
-#[tauri::command]
-pub async fn project_copy_in(app: AppHandle, dir: String, src: String) -> Result<String, String> {
-    let dest = tauri::async_runtime::spawn_blocking(move || copy_into(Path::new(&dir), Path::new(&src))).await.map_err(|e| e.to_string())??;
-    let _ = app.asset_protocol_scope().allow_file(&dest);
-    Ok(dest.to_string_lossy().to_string())
-}
-
 /// 素材的內容指紋
 #[tauri::command]
 pub async fn media_fingerprint(path: String) -> Result<String, String> {
@@ -207,22 +171,6 @@ pub async fn media_locate(app: AppHandle, candidates: Vec<String>, fingerprint: 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn 複製進專案_同內容沿用_不同內容加編號_專案裡的不複製() {
-        let root = std::env::temp_dir().join(format!("wb-copy-test-{}", std::process::id()));
-        let dir = root.join("T.wordblade");
-        fs::create_dir_all(dir.join(DATA_DIR)).unwrap();
-        let src = root.join("a.mp4");
-        fs::write(&src, b"one").unwrap();
-        let first = copy_into(&dir, &src).unwrap();
-        assert_eq!(first, dir.join(".data").join("media").join("a.mp4"));
-        assert_eq!(copy_into(&dir, &src).unwrap(), first);
-        fs::write(&src, b"two").unwrap();
-        assert_eq!(copy_into(&dir, &src).unwrap(), dir.join(".data").join("media").join("a-2.mp4"));
-        assert_eq!(copy_into(&dir, &first).unwrap(), first);
-        fs::remove_dir_all(&root).unwrap();
-    }
 
     #[test]
     fn data_路徑_跳不出_data() {

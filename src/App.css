@@ -134,6 +134,11 @@ button:disabled { opacity: 0.4; cursor: default; }
 .media-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .media-status { font-size: 11px; color: #e0b050; }
 .media-status.failed { color: #ff7a7a; white-space: normal; }
+/* 原檔找不到（同達文西的 Media Offline）：素材與片段標紅，照樣能剪 */
+.media-status.offline { color: #ff7a7a; white-space: normal; word-break: break-all; }
+.media-item.offline .media-thumb { outline: 2px solid #c0392b; }
+.clip.offline { background: repeating-linear-gradient(135deg, #6b1414 0 6px, #561010 6px 12px) !important; }
+.clip.offline .clip-label::before { content: "⚠ "; }
 .media-ghost { position: fixed; z-index: 100; pointer-events: none; padding: 3px 8px; background: #2d6cdf; color: #fff; border-radius: 3px; font-size: 12px; white-space: nowrap; }
 /* 專案資料夾：另存的名稱輸入 */
 .save-as { display: inline-flex; gap: 4px; align-items: center; }

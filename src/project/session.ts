@@ -72,7 +72,10 @@ export async function loadProjectText(
   const parsed = fromProjectFile(text);
   if (!parsed) return { error: `This folder's project.json can't be read (damaged, or made by a newer WordBlade).` };
   const withMasks = await internalizeMasks(parsed.project, readData);
-  const { project, missing } = await relinkProject(withMasks, parsed.refs, location.dir, locate);
+  const relinked = await relinkProject(withMasks, parsed.refs, location.dir, locate);
+  const { missing } = relinked;
+  // 找不到的素材標成離線（同達文西）：專案照開、時間軸不動，預覽與匯出畫「Media Offline」
+  const project = { ...relinked.project, media: relinked.project.media.map((m) => (missing.includes(m.id) ? { ...m, offline: true } : m)) };
   return {
     project,
     savedAt: parsed.savedAt,

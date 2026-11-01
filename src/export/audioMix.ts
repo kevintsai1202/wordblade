@@ -179,7 +179,7 @@ export async function mixAudio(job: MixJob): Promise<void> {
       const out: [Float32Array, Float32Array] = [new Float32Array(length), new Float32Array(length)];
       for (const span of voicesIn(project, c0, c1)) {
         const media = project.media.find((m) => m.id === span.mediaId);
-        if (!media || media.kind === "image" || media.audio === false) continue;
+        if (!media || media.offline || media.kind === "image" || media.audio === false) continue;
         let input = inputs.get(media.id);
         if (!input) {
           const src = await job.source(media);

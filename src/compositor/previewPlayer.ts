@@ -1,6 +1,7 @@
 // 預覽播放器（§5.13）：依 framePlan／audioPlan 讓每個片段的 <video>／<img>／<audio> 對準時間，再交給合成器畫。
 // 影像元素一律靜音，聲音由 A 軌片段各自的 <audio> 發出：Web Audio 混音圖建立後（第一次按播放）走 AudioGraph，
 // 片段增益＋配樂匯流排壓低；還沒建立或瀏覽器不支援時退回直接設 el.volume。
+import { offlineCard } from "./offlineCard";
 import { MaskLayer } from "../sam/maskLayer";
 import type { ThumbStore } from "../media/thumbStore";
 import type { EffectRenderer } from "../anim/effectRenderer";
@@ -172,6 +173,8 @@ export class PreviewPlayer {
     // 依 §5.10 的順序畫：V1 → 3D 場景 → V2 以上 → 2D／3D 插件（layerPlan）
     /** 到目前為止畫過的圖層狀態（特效的下層畫面換了沒，靠它判斷） */
     let below = "";
+    /** 這一格畫了幾個離線卡（e2e 讀 data-offline） */
+    let offline = 0;
     for (const item of layerPlan(project, t, this.fps)) {
       if (item.kind !== "video") {
         // 特效：畫格由沙盒非同步畫，拿不到這一格時先畫上一張；要下層畫面的在這一刻（只畫到這一層）截圖
@@ -186,6 +189,13 @@ export class PreviewPlayer {
       const layer = item.layer;
       active.add(layer.clipId);
       const media = project.media.find((m) => m.id === layer.mediaId);
+      // 原檔找不到：畫「Media Offline」卡代替（不擋播放與剪輯）
+      if (media?.offline) {
+        this.compositor.draw(offlineCard(layer.rect.w * width, layer.rect.h * height), layer.rect, layer.opacity);
+        offline++;
+        below += `|${layer.clipId}:offline`;
+        continue;
+      }
       if (media?.kind === "image") {
         const img = this.element(this.images, layer.clipId, layer.mediaId, () => {
           const i = new Image();
@@ -232,12 +242,14 @@ export class PreviewPlayer {
       below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : useThumb ? `t${thumb.time}` : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
     }
 
+    this.canvas.dataset.offline = String(offline);
     // 字幕畫在最上層（預覽與匯出同一個 CaptionLayer）
     const captionCanvas = this.captionLayer.render(this.captions, this.captionWords, t, project.captionStyle ?? DEFAULT_CAPTION_STYLE, width, height);
     if (captionCanvas) this.compositor.draw(captionCanvas, { x: 0, y: 0, w: 1, h: 1 }, 1);
 
     const graph = currentAudioGraph();
     for (const voice of audioPlan(project, t)) {
+      if (project.media.find((m) => m.id === voice.mediaId)?.offline) continue;
       active.add(voice.clipId);
       const el = this.element(this.audios, voice.clipId, voice.mediaId, () => {
         const a = document.createElement("audio");

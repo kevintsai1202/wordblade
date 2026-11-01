@@ -16,6 +16,8 @@ export interface Media {
   path?: string;
   /** 網頁版：指向 IndexedDB 裡 FileSystemHandle 的鍵 */
   handleKey?: string;
+  /** 原檔找不到（開專案時沒找回、還沒重新連結）：照樣留在專案，預覽與匯出畫「Media Offline」；只在執行中，不存進 project.json */
+  offline?: boolean;
   kind: "video" | "image" | "audio";
   duration: Seconds;
   fps?: number;

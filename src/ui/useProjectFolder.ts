@@ -140,7 +140,7 @@ export function useProjectFolder(opts: {
       const handleKey = await engine.adoptFile(target, source);
       if (!handleKey) return `Can't use ${source.name}.`;
       // 桌面版存的素材原本沒有 handleKey：補上，之後預覽與存檔都用它
-      if (target.handleKey !== handleKey) dispatch({ type: "patchMedia", id: target.id, patch: { handleKey } });
+      dispatch({ type: "patchMedia", id: target.id, patch: { handleKey, offline: undefined } });
       enqueuePrepare({ ...target, handleKey });
       setMissing((list) => list.filter((x) => x.id !== target.id));
       return null;
@@ -149,7 +149,7 @@ export function useProjectFolder(opts: {
     if (!found.length) return `Can't open ${source.name}.`;
     for (const { id: mid, path } of found) {
       const m = project.media.find((x) => x.id === mid)!;
-      dispatch({ type: "patchMedia", id: mid, patch: { path, proxyPath: undefined } });
+      dispatch({ type: "patchMedia", id: mid, patch: { path, proxyPath: undefined, offline: undefined } });
       enqueuePrepare({ ...m, path, proxyPath: undefined });
     }
     setMissing((list) => list.filter((x) => !found.some((f) => f.id === x.id)));

@@ -68,7 +68,9 @@ export function toProjectFile(project: Project, opts: { projectDir: string; save
     if (fp) ref.fingerprint = fp;
     media[m.id] = ref;
   }
-  return JSON.stringify({ format: FORMAT, v: VERSION, savedAt: opts.savedAt, media, project }, null, 1);
+  // offline 是執行中的狀態，不存（下次開專案重新找）
+  const saved = { ...project, media: project.media.map(({ offline: _offline, ...m }) => m) };
+  return JSON.stringify({ format: FORMAT, v: VERSION, savedAt: opts.savedAt, media, project: saved }, null, 1);
 }
 
 /** project.json 的文字 → 專案、各素材的參照、存檔時間；格式或版本不對回 null */

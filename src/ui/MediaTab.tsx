@@ -72,7 +72,7 @@ export function MediaTab({ project, library, engine, pxPerSecond, onImport, disp
           return (
             <li
               key={m.id}
-              className={`media-item ${m.kind}`}
+              className={`media-item ${m.kind}${m.offline ? " offline" : ""}`}
               data-media-id={m.id}
               onMouseDown={(e) => { e.preventDefault(); setDrag({ mediaId: m.id, x: e.clientX, y: e.clientY }); }}
               onDoubleClick={() => addToEnd(m.id)}
@@ -85,7 +85,12 @@ export function MediaTab({ project, library, engine, pxPerSecond, onImport, disp
                   {m.kind === "image" ? `${m.width}×${m.height}` : formatTimecode(m.duration).slice(3)}
                   {m.kind === "video" && m.height ? ` · ${m.height}p` : ""}
                 </span>
-                {item && item.status !== "ready" && (
+                {m.offline && (
+                  <span className="media-status offline" data-testid="media-offline" title={m.path ? `Original file: ${m.path}` : "The original file can't be found"}>
+                    Media offline{m.path ? ` · ${m.path}` : ""}
+                  </span>
+                )}
+                {!m.offline && item && item.status !== "ready" && (
                   <span className={`media-status ${item.status}`} data-testid="media-status">
                     {item.status === "failed" ? item.error : `Preparing ${Math.round(item.progress * 100)}%`}
                   </span>

@@ -89,3 +89,25 @@ describe("projectSave：遮罩取樣存進 .data、開專案時讀回（D41 P5�
     expect("error" in back ? null : back.project.masks[0].samples).toEqual(p.masks[0].samples);
   });
 });
+
+// 素材離線（2026-11-01 開發者決定，同達文西）：原檔不在了照樣開專案，素材標成 offline；offline 只在執行中，不存進 project.json
+describe("素材離線", () => {
+  it("開專案時找不到的素材標成 offline，找到的不標", async () => {
+    const p = makeProject();
+    const location = { name: "T", dir: "D:\v\T.wordblade" };
+    const text = await projectText(p, location, new Map(), async () => undefined, 1);
+    const result = await loadProjectText(text, location, async (m) => (m.id === p.media[0].id ? m : null));
+    if ("error" in result) throw new Error(result.error);
+    expect(result.project.media[0].offline).toBeUndefined();
+    expect(result.project.media.slice(1).every((m) => m.offline === true)).toBe(true);
+    // 時間軸照樣在（不因為素材離線被拿掉）
+    expect(result.project.clips).toEqual(p.clips);
+  });
+
+  it("offline 不存進 project.json", async () => {
+    const p = makeProject();
+    p.media = p.media.map((m) => ({ ...m, offline: true }));
+    const text = await projectText(p, { name: "T", dir: "D:\v\T.wordblade" }, new Map(), async () => undefined, 1);
+    expect(fromProjectFile(text)!.project.media.some((m) => "offline" in m)).toBe(false);
+  });
+});
