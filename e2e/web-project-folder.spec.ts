@@ -234,3 +234,58 @@ test("歡迎畫面：沒開專案時出現；New project 建好就消失；重�
   await expect(page.getByTestId("project-name")).toHaveText("Hello");
   await expect(page.getByTestId("welcome")).toHaveCount(0);
 });
+
+test("素材在專案外面：網頁版問一次要不要允許那個資料夾，允許後全部接回來；重新整理後不用再問", async ({ page }) => {
+  test.setTimeout(150_000);
+  await stubPickers(page);
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto("/");
+  await putFixture(page, "talk.mp4");
+  // 先用網頁版做出一個有 talk.mp4 片段的專案，再改成「桌面版存的、素材在 D:\GitHub\clips\talk.mp4」
+  await page.getByTestId("project-save-as").click();
+  await page.getByTestId("project-name-input").fill("Src");
+  await page.getByRole("button", { name: "Choose folder…" }).click();
+  await expect(page.getByTestId("project-name")).toHaveText("Src");
+  await page.evaluate(() => { (window as unknown as { __pickFiles: string[] }).__pickFiles = ["talk.mp4"]; });
+  await page.getByTestId("import-media").click();
+  await expect(page.locator(".media-item", { hasText: "talk.mp4" })).toBeVisible({ timeout: 20_000 });
+  await page.locator(".media-item", { hasText: "talk.mp4" }).dblclick();
+  await expect.poll(async () => JSON.parse((await readOpfs(page, "parent/Src.wordblade/project.json")) ?? "{}").project?.clips?.length ?? 0, { timeout: 10_000 }).toBeGreaterThan(0);
+  const saved = JSON.parse((await readOpfs(page, "parent/Src.wordblade/project.json"))!);
+  await page.evaluate(async (text) => {
+    const data = JSON.parse(text);
+    for (const m of data.project.media) { delete m.handleKey; m.path = "D:\\GitHub\\clips\\" + m.name; }
+    for (const id of Object.keys(data.media)) data.media[id] = { path: "D:\\GitHub\\clips\\talk.mp4", fingerprint: data.media[id].fingerprint };
+    const root = await navigator.storage.getDirectory();
+    const desk = await (await root.getDirectoryHandle("parent")).getDirectoryHandle("Far.wordblade", { create: true });
+    const w = await (await desk.getFileHandle("project.json", { create: true })).createWritable();
+    await w.write(JSON.stringify(data));
+    await w.close();
+    // 素材放在專案外面的 GitHub/clips/ 裡
+    const clips = await (await root.getDirectoryHandle("GitHub", { create: true })).getDirectoryHandle("clips", { create: true });
+    const v = await (await clips.getFileHandle("talk.mp4", { create: true })).createWritable();
+    await v.write(await (await (await root.getDirectoryHandle("media")).getFileHandle("talk.mp4")).getFile());
+    await v.close();
+  }, JSON.stringify(saved));
+
+  // 開 Far：素材離線，提示允許 D:\GitHub
+  await page.reload();
+  await page.evaluate(() => { (window as unknown as { __pickDir: string }).__pickDir = "parent/Far.wordblade"; });
+  await page.getByTestId("project-open").click();
+  await expect(page.getByTestId("project-name")).toHaveText("Far");
+  await expect(page.getByTestId("media-offline")).toBeVisible();
+  await expect(page.getByTestId("allow-media-folder")).toContainText("D:\\GitHub\\clips");
+  // 允許（選 GitHub 資料夾）：素材接回來
+  await page.evaluate(() => { (window as unknown as { __pickDir: string }).__pickDir = "GitHub"; });
+  await page.getByTestId("allow-media-folder").click();
+  await expect(page.getByTestId("missing-media")).toHaveCount(0);
+  await expect(page.getByTestId("media-offline")).toHaveCount(0);
+
+  // 重新整理再開：記住的資料夾直接找到，不再問
+  await page.reload();
+  await page.getByTestId("welcome-continue").click();
+  await expect(page.getByTestId("project-name")).toHaveText("Far");
+  await expect(page.locator(".media-item", { hasText: "talk.mp4" }).locator("img")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("allow-media-folder")).toHaveCount(0);
+  await expect(page.getByTestId("media-offline")).toHaveCount(0);
+});

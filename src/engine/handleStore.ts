@@ -59,3 +59,17 @@ export async function ensurePermission(handle: FileSystemHandle, mode: "read" | 
     return false;
   }
 }
+
+/** 授權的素材資料夾（網頁版開桌面版的專案時，素材在專案外面；允許一次就記住）存在這個鍵 */
+const ROOTS_KEY = "roots";
+
+/** 記住一個授權的素材資料夾（同名的換成新的） */
+export async function addRoot(dir: FileSystemDirectoryHandle): Promise<void> {
+  const list = await getRoots();
+  await run("readwrite", (s) => s.put([...list.filter((d) => d.name !== dir.name), dir], ROOTS_KEY));
+}
+
+/** 授權過的素材資料夾 */
+export async function getRoots(): Promise<FileSystemDirectoryHandle[]> {
+  return ((await run("readonly", (s) => s.get(ROOTS_KEY) as IDBRequest<FileSystemDirectoryHandle[] | undefined>).catch(() => undefined)) ?? []);
+}

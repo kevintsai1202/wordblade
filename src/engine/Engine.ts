@@ -124,6 +124,11 @@ export interface Engine {
   mediaFingerprint(media: Media): Promise<string | undefined>;
   /** 找回素材：依序試候選路徑，第一個存在且指紋相同的回傳更新過路徑的素材；都不是回 null（介面請使用者重新連結） */
   locateMedia(media: Media, candidates: string[], fingerprint?: string): Promise<Media | null>;
+  /**
+   * 網頁版：讓使用者授權一個素材資料夾（素材在專案資料夾外面時；允許一次就記住，之後開專案自動在裡面找）。
+   * 要在使用者手勢裡呼叫；取消或桌面版回 false。
+   */
+  grantMediaFolder(): Promise<boolean>;
   /** 網頁版重新連結：使用者選的檔案（source）接上找不到的素材，回傳素材的 handleKey；Windows 版走 locateMedia，回 null */
   adoptFile(media: Media, source: ImportSource): Promise<string | null>;
   /**

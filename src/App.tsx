@@ -11,6 +11,7 @@ import { EditPanel } from "./ui/EditPanel";
 import { MediaTab } from "./ui/MediaTab";
 import { PreviewPane } from "./ui/PreviewPane";
 import { WelcomePanel } from "./ui/WelcomePanel";
+import { commonFolder } from "./engine/rootPath";
 import { initialState, keyToAction, projectDuration, reducer } from "./ui/state";
 import { Timeline } from "./ui/Timeline";
 import { useMediaLibrary } from "./ui/useMediaLibrary";
@@ -271,6 +272,16 @@ function App() {
           <span className="warning" data-testid="missing-media" title={folder.missing.map((m) => m.name).join(", ")}>
             {folder.missing.length} media file{folder.missing.length > 1 ? "s" : ""} not found: {folder.missing.slice(0, 2).map((m) => m.name).join(", ")}{folder.missing.length > 2 ? "…" : ""}
             {/* 一次連一支（從第一支開始）；同資料夾裡的其他支會一起找回 */}
+            {engine.kind === "web" && (() => {
+              const paths = folder.missing.map((x) => project.media.find((m) => m.id === x.id)?.path).filter((p): p is string => !!p);
+              const where = commonFolder(paths);
+              return paths.length > 0 && (
+                <button data-testid="allow-media-folder" className="primary" title="The browser can only read folders you allow. Allow once and WordBlade remembers it."
+                  onClick={() => void folder.allowFolder().then((err) => err && setNotice(err))}>
+                  Allow access to {where ?? "the media folder"}…
+                </button>
+              );
+            })()}
             <button data-testid="relink-media" title={`Locate ${folder.missing[0].name}; others in the same folder are found automatically`} onClick={() => void folder.relink(folder.missing[0].id).then((err) => err && setNotice(err))}>Locate {folder.missing[0].name}…</button>
             <button onClick={folder.dismissMissing}>✕</button>
           </span>

@@ -162,5 +162,25 @@ export function useProjectFolder(opts: {
     return null;
   }, [engine, project.media, missing, dispatch, enqueuePrepare]);
 
-  return { location, status, recent, missing, saveAs, open, reopen, relink, dismissMissing: () => setMissing([]) };
+  /**
+   * 網頁版：授權一個素材資料夾（素材在專案外面），然後把所有找不到的素材在裡面重找一次；找到的清掉離線標示。
+   * 回傳錯誤訊息或 null。
+   */
+  const allowFolder = useCallback(async (): Promise<string | null> => {
+    if (!(await engine.grantMediaFolder())) return null;
+    const found: string[] = [];
+    for (const miss of missing) {
+      const m = project.media.find((x) => x.id === miss.id);
+      if (!m) continue;
+      const hit = await engine.locateMedia(m, [], miss.fingerprint);
+      if (!hit) continue;
+      dispatch({ type: "patchMedia", id: m.id, patch: { handleKey: hit.handleKey, offline: undefined } });
+      enqueuePrepare({ ...hit, offline: undefined });
+      found.push(m.id);
+    }
+    setMissing((list) => list.filter((x) => !found.includes(x.id)));
+    return found.length ? null : "None of the missing files are in that folder.";
+  }, [engine, missing, project.media, dispatch, enqueuePrepare]);
+
+  return { location, status, recent, missing, saveAs, open, reopen, relink, allowFolder, dismissMissing: () => setMissing([]) };
 }

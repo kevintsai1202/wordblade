@@ -214,6 +214,11 @@ export class DesktopEngine implements Engine {
     return invoke<string | null>("project_data_read", { dir: location.dir, rel }).catch(() => null);
   }
 
+  /** 桌面版照路徑讀檔，不用授權資料夾 */
+  async grantMediaFolder(): Promise<boolean> {
+    return false;
+  }
+
   /** Windows 版重新連結走路徑（locateMedia），不用這個 */
   async adoptFile(): Promise<string | null> {
     return null;

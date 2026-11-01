@@ -6,7 +6,8 @@ import { IMAGE_DURATION } from "../core/media";
 import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation } from "./Engine";
 import { classifyFile, webSupport } from "./webFormats";
 import { downsample, encodeWav } from "../asr/wav";
-import { ensurePermission, getHandle, putHandle } from "./handleStore";
+import { addRoot, ensurePermission, getHandle, getRoots, putHandle } from "./handleStore";
+import { pathUnderRoot } from "./rootPath";
 import { fingerprintFile } from "../core/fingerprint";
 
 /** File System Access 的選取器（DOM 型別還沒有） */
@@ -558,7 +559,45 @@ export class WebEngine implements Engine {
         }
       }
     }
-    return this.findInProject(media, fingerprint);
+    return (await this.findInProject(media, fingerprint)) ?? this.findInRoots(media, fingerprint);
+  }
+
+  /** 讓使用者選一個素材資料夾並記住（要在使用者手勢裡） */
+  async grantMediaFolder(): Promise<boolean> {
+    try {
+      const dir = await pickers().showDirectoryPicker!({ mode: "read", id: "wordblade-media" });
+      await addRoot(dir);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 在授權過的素材資料夾裡找：素材路徑裡和資料夾同名的那一層之後照層走（例如 D:\GitHub\yt\a.mp4 在授權的 GitHub 裡走 yt/a.mp4），
+   * 走不到就在資料夾最上層找同名檔；有指紋就比對。沒有讀取權限時請求一次（瀏覽器在使用者手勢裡才會問；問過允許就不再問）。
+   */
+  private async findInRoots(media: Media, fingerprint?: string): Promise<Media | null> {
+    const name = media.path?.split(/[\\/]/).pop() ?? media.name;
+    if (!name) return null;
+    for (const root of await getRoots()) {
+      if (!(await ensurePermission(root, "read"))) continue;
+      const tries = [media.path ? pathUnderRoot(media.path, root.name) : null, [name]].filter((x): x is string[] => !!x);
+      for (const segs of tries) {
+        try {
+          let dir = root;
+          for (const seg of segs.slice(0, -1)) dir = await dir.getDirectoryHandle(seg);
+          const handle = await dir.getFileHandle(segs[segs.length - 1]);
+          const file = await handle.getFile();
+          if (fingerprint && (await fingerprintFile(file)) !== fingerprint) continue;
+          const key = media.handleKey ?? media.id;
+          this.files.set(key, { file, url: URL.createObjectURL(file) });
+          await putHandle(key, handle).catch(() => undefined);
+          return { ...media, handleKey: key };
+        } catch { /* 這裡沒有 */ }
+      }
+    }
+    return null;
   }
 
   /** 用檔名在專案資料夾（與 .data/generated）裡找素材；找到就記住 handle、回傳帶 handleKey 的素材 */
