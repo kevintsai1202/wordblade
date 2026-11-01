@@ -2,9 +2,12 @@ package com.wordblade.gateway.director;
 
 import com.wordblade.gateway.ai.AiError;
 import com.wordblade.gateway.ai.AiModel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,6 +35,7 @@ import tools.jackson.databind.node.ObjectNode;
  * 3. 審查：桌面依各項時間截圖拼成一張縮圖總表送來 → 另一個 Muse Wonder（審查者，獨立對話與系統提示詞，只看腳本、大綱、逐字稿與總表）
  *    逐項判定 keep／revise／drop 並指出漏掉的 → 有退回或漏掉就把意見交回規劃者改一輪 → 審查刪掉的移到 removed → done。
  *    審查員另外點名「最先刪」的項目（prune）不交回規劃者，標上 prune 讓使用者預設不勾。
+ * 診斷記錄（設了記錄目錄才記）：規劃者與審查員每輪的輸入、原始回覆、規則錯誤、對帳清單，寫成 <目錄>/<工作 id>.json，建立者可用 log() 取回。
  * 段落失敗照樣規劃（記失敗段數），全部失敗才算失敗。工作放記憶體，一小時後清掉，只有建立它的權杖看得到；影片位元組用完就丟。
  */
 public class DirectorJobs {
@@ -184,6 +188,7 @@ public class DirectorJobs {
 
     /** 一個工作 */
     private static final class Job {
+        final String id;
         final long tokenId;
         final StartRequest req;
         final Instant created = Instant.now();
@@ -212,8 +217,11 @@ public class DirectorJobs {
         volatile List<JudgedRetake> retakes = List.of();
         /** 程式決定的剪（片頭、片尾空白、確認的重講；FixedCuts）與補充的提醒 */
         volatile List<DirectorRules.Suggestion> fixed = List.of();
+        /** 診斷記錄：規劃者與審查員每一輪（role、message、reply、errors…）；沒設記錄目錄時是空的 */
+        final List<ObjectNode> rounds = Collections.synchronizedList(new ArrayList<>());
 
-        Job(long tokenId, StartRequest req) {
+        Job(String id, long tokenId, StartRequest req) {
+            this.id = id;
             this.tokenId = tokenId;
             this.req = req;
         }
@@ -228,6 +236,8 @@ public class DirectorJobs {
     private final RetakeJudge judge;
     private final JsonMapper json = JsonMapper.builder().build();
     private final Map<String, Job> jobs = new ConcurrentHashMap<>();
+    /** 診斷記錄的目錄（null：不記錄；Zeabur 預設不設） */
+    private volatile Path logDir;
 
     /**
      * @param planner  規劃者（Muse Wonder，系統提示詞 director/plan-prompt.txt）
@@ -252,7 +262,7 @@ public class DirectorJobs {
         purge();
         if (req.segments() < 1 || req.segments() > MAX_SEGMENTS || !(req.duration() > 0)) throw new IllegalArgumentException("bad request");
         String id = UUID.randomUUID().toString();
-        jobs.put(id, new Job(tokenId, req));
+        jobs.put(id, new Job(id, tokenId, req));
         return id;
     }
 
@@ -350,10 +360,12 @@ public class DirectorJobs {
             job.chapters = result.chapters();
             job.suggestions = result.suggestions();
             job.status = job.cancelled ? "cancelled" : "planned";
+            persist(job);
         } catch (RuntimeException e) {
             log.warn("director plan failed: {}", e.getMessage());
             job.error = "plan-failed";
             job.status = job.cancelled ? "cancelled" : "failed";
+            record(job, failure("planner", e));
             planner.forget(job.plannerConversation);
         }
     }
@@ -370,6 +382,7 @@ public class DirectorJobs {
             job.planSheet = null;
             AiModel.Reply r = planner.call(job.plannerConversation, message, sheet);
             usage.record(job.tokenId, r.model(), r.inputTokens(), r.outputTokens());
+            ObjectNode entry = entry("planner", message, sheet != null, r);
             result = DirectorRules.check(read(r.text()), job.req.duration(), s.scenes(), s.words(), s.activities(),
                     new DirectorRules.Options(job.req.style(), job.problemIds, allWords(job), confirmedRetakes(job), job.req.directiveList(), job.ledger,
                             job.fixed.stream().filter(f -> f.kind().equals("cut")).map(f -> new double[] {f.start(), f.end()}).toList()));
@@ -378,6 +391,11 @@ public class DirectorJobs {
             if (result.treatment() != null) job.treatment = result.treatment();
             if (result.treatment() != null && result.treatment().has("directives")) job.ledger = result.treatment().path("directives");
             job.problemIds = result.problemIds();
+            ArrayNode errs = entry.putArray("errors");
+            result.errors().forEach(e -> errs.add(e.message()));
+            if (job.ledger != null) entry.set("ledger", job.ledger);
+            entry.put("kept", result.suggestions().size());
+            record(job, entry);
             if (result.errors().isEmpty() || round == MAX_ROUNDS) break;
             message = feedback(result.errors());
         }
@@ -410,8 +428,10 @@ public class DirectorJobs {
     private void runReview(Job job, AiModel.Image sheet) {
         String conversation = UUID.randomUUID().toString();
         try {
-            AiModel.Reply r = reviewer.call(conversation, reviewBrief(job, sheet != null), sheet);
+            String brief = reviewBrief(job, sheet != null);
+            AiModel.Reply r = reviewer.call(conversation, brief, sheet);
             usage.record(job.tokenId, r.model(), r.inputTokens(), r.outputTokens());
+            record(job, entry("reviewer", brief, sheet != null, r));
             JsonNode root = read(r.text());
             Map<String, DirectorRules.Review> verdicts = new LinkedHashMap<>();
             if (root != null) root.path("verdicts").forEach(v -> {
@@ -470,8 +490,10 @@ public class DirectorJobs {
         } catch (RuntimeException e) {
             // 審查失敗不影響已經有的腳本：照規劃的結果給使用者
             log.warn("director review failed: {}", e.getMessage());
+            record(job, failure("reviewer", e));
             job.status = job.cancelled ? "cancelled" : "done";
         } finally {
+            persist(job);
             reviewer.forget(conversation);
             planner.forget(job.plannerConversation);
         }
@@ -725,6 +747,69 @@ public class DirectorJobs {
         StringBuilder sb = new StringBuilder("Some items were invalid and were dropped. Return the complete corrected JSON again (treatment, chapters, items):");
         errors.stream().limit(12).forEach(e -> sb.append("\n- ").append(e.message()));
         return sb.toString();
+    }
+
+    /** 開始寫診斷記錄（目錄不存在就建；null 是不記錄） */
+    public void logTo(Path dir) {
+        logDir = dir;
+    }
+
+    /** 一輪的診斷記錄：誰、送了什麼（有沒有附圖）、原始回覆、模型與 token */
+    private ObjectNode entry(String role, String message, boolean image, AiModel.Reply r) {
+        ObjectNode e = json.createObjectNode();
+        e.put("at", Instant.now().toString()).put("role", role).put("message", message).put("image", image)
+                .put("reply", r.text()).put("model", r.model()).put("inputTokens", r.inputTokens()).put("outputTokens", r.outputTokens());
+        return e;
+    }
+
+    /** 失敗的診斷記錄 */
+    private ObjectNode failure(String role, RuntimeException ex) {
+        ObjectNode e = json.createObjectNode();
+        e.put("at", Instant.now().toString()).put("role", role).put("failed", String.valueOf(ex.getMessage()));
+        return e;
+    }
+
+    /** 記下一輪並把整份記錄重寫成檔案；沒設目錄就不記，寫檔失敗只留警告（不影響工作） */
+    private void record(Job job, ObjectNode entry) {
+        Path dir = logDir;
+        if (dir == null) return;
+        job.rounds.add(entry);
+        persist(job);
+    }
+
+    /** 整份記錄重寫成檔案（狀態改變後也要寫，檔案裡的 status 才是最後的） */
+    private void persist(Job job) {
+        Path dir = logDir;
+        if (dir == null) return;
+        try {
+            Files.createDirectories(dir);
+            Files.writeString(dir.resolve(job.id + ".json"), json.writerWithDefaultPrettyPrinter().writeValueAsString(snapshot(job)));
+        } catch (Exception e) {
+            log.warn("director log write failed: {}", e.getMessage());
+        }
+    }
+
+    /** 整份診斷記錄：工作的輸入、程式決定的剪與重講判斷、每一輪 */
+    private ObjectNode snapshot(Job job) {
+        ObjectNode root = json.createObjectNode();
+        root.put("id", job.id).put("created", job.created.toString()).put("status", job.status)
+                .put("mediaName", job.req.mediaName()).put("duration", job.req.duration()).put("style", job.req.style());
+        ArrayNode directives = root.putArray("directives");
+        job.req.directiveList().forEach(directives::add);
+        root.set("fixed", json.valueToTree(job.fixed));
+        root.set("retakes", json.valueToTree(job.retakes));
+        ArrayNode rounds = root.putArray("rounds");
+        synchronized (job.rounds) {
+            job.rounds.forEach(rounds::add);
+        }
+        return root;
+    }
+
+    /** 診斷記錄（只有建立者看得到；沒設記錄目錄時找不到） */
+    public JsonNode log(long tokenId, String id) {
+        Job job = own(tokenId, id);
+        if (logDir == null) throw new NotFoundException();
+        return snapshot(job);
     }
 
     /** 狀態 */

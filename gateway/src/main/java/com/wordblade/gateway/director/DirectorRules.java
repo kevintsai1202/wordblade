@@ -93,6 +93,8 @@ public final class DirectorRules {
 
     /** 吉祥物最短幾秒（走進來再指或走到目標，太短看不清） */
     static final double MASCOT_MIN = 3;
+    /** 照指示做的項目部分被剪時，至少要留下的秒數 */
+    static final double PARTLY_MIN = 1.0;
 
     /** 第 i 條指示的 id（d1 起算） */
     public static String directiveId(int i) {
@@ -586,20 +588,45 @@ public final class DirectorRules {
 
     /**
      * 照指示做的項目整段落在剪掉的範圍（規劃者的剪或程式決定的剪）裡，觀眾永遠看不到：擋下並回錯誤（指示對帳時當成不採用的理由）。
+     * 部分被剪也一樣：被剪掉的超過一半，或留下不到 PARTLY_MIN 秒，就擋下（2026-11-01 開發者決定）。
      */
     private static List<Suggestion> hiddenByCuts(List<Suggestion> list, List<double[]> fixedCuts, List<AiError> errors) {
         List<double[]> cuts = new ArrayList<>(fixedCuts);
         list.stream().filter(s -> s.kind().equals("cut")).forEach(s -> cuts.add(new double[] {s.start(), s.end()}));
+        List<double[]> merged = union(cuts);
         List<Suggestion> out = new ArrayList<>();
         for (Suggestion s : list) {
-            double[] hit = !directed(s) || s.kind().equals("cut") || GLOBAL.contains(s.kind()) ? null
-                    : cuts.stream().filter(c -> c[0] <= s.start() + 1e-6 && s.end() <= c[1] + 1e-6).findFirst().orElse(null);
-            if (hit == null) {
+            if (!directed(s) || s.kind().equals("cut") || GLOBAL.contains(s.kind())) {
                 out.add(s);
                 continue;
             }
-            errors.add(error(String.format(java.util.Locale.ROOT, "%s (%s) lies entirely inside the cut %.1f–%.1f s, so the viewer would never see it; "
-                    + "move it to footage that is kept, or give notAdopted.", s.id(), s.kind(), hit[0], hit[1])));
+            double len = s.end() - s.start();
+            double[] inside = merged.stream().filter(c -> c[0] <= s.start() + 1e-6 && s.end() <= c[1] + 1e-6).findFirst().orElse(null);
+            if (inside != null) {
+                errors.add(error(String.format(java.util.Locale.ROOT, "%s (%s) lies entirely inside the cut %.1f–%.1f s, so the viewer would never see it; "
+                        + "move it to footage that is kept, or give notAdopted.", s.id(), s.kind(), inside[0], inside[1])));
+                continue;
+            }
+            // 部分被剪：被剪掉的超過一半、或留下不到 PARTLY_MIN 秒，觀眾看不到指示要的效果
+            double covered = 0;
+            for (double[] c : merged) covered += Math.max(0, Math.min(c[1], s.end()) - Math.max(c[0], s.start()));
+            if (len > 0 && covered > 1e-6 && (covered > len / 2 + 1e-6 || len - covered < PARTLY_MIN - 1e-6)) {
+                errors.add(error(String.format(java.util.Locale.ROOT, "%s (%s) %.1f–%.1f s: %.1f of its %.1f s fall inside cuts, so the viewer would see too little of it; "
+                        + "move it to footage that is kept, or give notAdopted.", s.id(), s.kind(), s.start(), s.end(), covered, len)));
+                continue;
+            }
+            out.add(s);
+        }
+        return out;
+    }
+
+    /** 剪的範圍合併成不重疊的區間（重疊的剪不重複算） */
+    private static List<double[]> union(List<double[]> cuts) {
+        List<double[]> sorted = cuts.stream().sorted(java.util.Comparator.comparingDouble(c -> c[0])).toList();
+        List<double[]> out = new ArrayList<>();
+        for (double[] c : sorted) {
+            if (!out.isEmpty() && c[0] <= out.getLast()[1] + 1e-6) out.getLast()[1] = Math.max(out.getLast()[1], c[1]);
+            else out.add(new double[] {c[0], c[1]});
         }
         return out;
     }

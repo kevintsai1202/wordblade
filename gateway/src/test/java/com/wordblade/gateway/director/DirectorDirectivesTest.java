@@ -124,4 +124,36 @@ class DirectorDirectivesTest {
         assertThat(ledger(r, "d1").path("notAdopted").asString()).contains("inside the cut");
         assertThat(ledger(r, "d2").path("items").size()).isEqualTo(1);
     }
+
+    /** 部分被剪：d1 的玩偶 40～46 秒；fixedCuts 給剪掉的範圍 */
+    private DirectorRules.Result partly(double... cuts) {
+        JsonNode root = json.readTree("{" + HEAD + """
+                ,"treatment":{"problems":[],"directives":[{"id":"d1","items":["i1"]},{"id":"d2","notAdopted":"n"}]},
+                "items":[{"id":"i1","kind":"mascot","start":40,"end":46,"directive":"d1","purpose":"p","x":0.4,"y":0.3,"w":0.2,"h":0.1}]}""");
+        List<double[]> list = new java.util.ArrayList<>();
+        for (int i = 0; i < cuts.length; i += 2) list.add(new double[] {cuts[i], cuts[i + 1]});
+        return DirectorRules.check(root, 100, Set.of(), Set.of(), Set.of(),
+                new DirectorRules.Options("plain", Set.of(), List.of(), List.of(), DIRECTIVES, null, list));
+    }
+
+    @Test
+    void 照指示做的項目超過一半被剪掉_擋下並寫出被剪幾秒() {
+        var r = partly(30, 43.6);
+        assertThat(r.suggestions()).isEmpty();
+        assertThat(ledger(r, "d1").path("notAdopted").asString()).contains("3.6 of its 6.0 s");
+    }
+
+    @Test
+    void 照指示做的項目被剪不到一半且留下至少一秒_放行() {
+        var r = partly(30, 41.8);
+        assertThat(r.suggestions()).extracting(DirectorRules.Suggestion::id).containsExactly("i1");
+    }
+
+    @Test
+    void 兩段剪各不到一半但合起來超過一半_擋下_重疊的剪不重複算() {
+        // 40～42.5 與 44～46：共 4.5 秒；另一段 41～42 和第一段重疊，不能算成 5.5 秒
+        var r = partly(30, 42.5, 41, 42, 44, 50);
+        assertThat(r.suggestions()).isEmpty();
+        assertThat(ledger(r, "d1").path("notAdopted").asString()).contains("4.5 of its 6.0 s");
+    }
 }

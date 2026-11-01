@@ -338,4 +338,37 @@ class DirectorJobsTest {
         assertThat(v.removed()).isEmpty();
         assertThat(v.suggestions()).singleElement().satisfies(s -> assertThat(s.review().verdict()).isEqualTo("revised"));
     }
+
+    @Test
+    void 設了記錄目錄_每輪規劃與審查的輸入輸出與規則錯誤都記下來_也寫成檔案(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir) throws Exception {
+        jobs.logTo(dir);
+        // 第一輪格式不合（不是 JSON），第二輪合格；審查要求修改，規劃者再改一輪
+        planner.replies.add("not json at all");
+        planner.replies.add(SCRIPT);
+        reviewer.replies.add("{\"verdicts\":[{\"id\":\"i3\",\"verdict\":\"revise\",\"note\":\"too loud\"}],\"missing\":[]}");
+        planner.replies.add(SCRIPT);
+        String id = twoSegments();
+        jobs.review(7, id, null);
+        tools.jackson.databind.JsonNode log = jobs.log(7, id);
+        assertThat(log.path("rounds")).hasSize(4);
+        tools.jackson.databind.JsonNode first = log.path("rounds").get(0);
+        assertThat(first.path("role").asString()).isEqualTo("planner");
+        assertThat(first.path("message").asString()).contains("desk-reveal");
+        assertThat(first.path("reply").asString()).isEqualTo("not json at all");
+        assertThat(first.path("errors")).isNotEmpty();
+        assertThat(first.path("model").asString()).isEqualTo("fake-planner");
+        assertThat(log.path("rounds").get(2).path("role").asString()).isEqualTo("reviewer");
+        assertThat(log.path("rounds").get(3).path("message").asString()).contains("too loud");
+        assertThat(log.has("fixed")).isTrue();
+        assertThat(java.nio.file.Files.readString(dir.resolve(id + ".json"))).contains("not json at all").contains("too loud");
+        // 審查完的狀態也寫進檔案
+        assertThat(java.nio.file.Files.readString(dir.resolve(id + ".json"))).contains("\"status\" : \"done\"");
+    }
+
+    @Test
+    void 沒設記錄目錄_不記錄_查記錄是找不到() {
+        planner.replies.add(SCRIPT);
+        String id = twoSegments();
+        assertThatThrownBy(() -> jobs.log(7, id)).isInstanceOf(DirectorJobs.NotFoundException.class);
+    }
 }

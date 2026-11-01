@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -90,6 +91,12 @@ public class DirectorController {
     @GetMapping("/v1/ai/director/{jobId}")
     public DirectorJobs.View view(@PathVariable String jobId, HttpServletRequest req) {
         return jobs.view(token(req).id(), jobId);
+    }
+
+    /** 診斷記錄（規劃者與審查員每輪的輸入輸出；閘道沒設 wordblade.director.log-dir 時 404） */
+    @GetMapping("/v1/ai/director/{jobId}/log")
+    public JsonNode log(@PathVariable String jobId, HttpServletRequest req) {
+        return jobs.log(token(req).id(), jobId);
     }
 
     /** 取消 */

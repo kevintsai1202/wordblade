@@ -41,6 +41,7 @@ public class DirectorConfig {
     DirectorJobs directorJobs(@Value("${wordblade.meta.base-url}") String baseUrl, @Value("${wordblade.meta.api-key}") String apiKey,
                               @Value("${wordblade.typesafe.base-url}") String typesafeUrl, @Value("${wordblade.typesafe.api-key:}") String typesafeKey,
                               @Value("${wordblade.typesafe.model}") String jevModel,
+                              @Value("${wordblade.director.log-dir:}") String logDir,
                               ChatClient.Builder chat, GatewayProperties props, UsageService usage) throws IOException {
         JsonMapper json = JsonMapper.builder().build();
         var factory = new SimpleClientHttpRequestFactory();
@@ -68,6 +69,9 @@ public class DirectorConfig {
         DirectorJobs.RetakeJudge judge = typesafeKey.isBlank() ? null : new AveragingRetakeJudge(new RestJevRetakeJudge(
                 RestClient.builder().baseUrl(typesafeUrl).defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + typesafeKey).requestFactory(factory).build(),
                 jevModel, json), JEV_TIMES);
-        return new DirectorJobs(spark, planner, reviewer, pool, (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/director", m, in, out, 0), judge);
+        DirectorJobs jobs = new DirectorJobs(spark, planner, reviewer, pool, (tokenId, m, in, out) -> usage.record(tokenId, "/v1/ai/director", m, in, out, 0), judge);
+        // 診斷記錄：本機開發設 WORDBLADE_DIRECTOR_LOG_DIR（例如 output/director-logs）；Zeabur 不設就不記
+        if (!logDir.isBlank()) jobs.logTo(java.nio.file.Path.of(logDir));
+        return jobs;
     }
 }

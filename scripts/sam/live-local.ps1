@@ -47,6 +47,8 @@ try {
   $env:DB_URL = 'jdbc:postgresql://localhost:55432/wordblade'
   $env:WORDBLADE_CORS_ALLOWED_ORIGINS = "http://localhost:$WebPort"
   $env:WORDBLADE_E2E_PORT = "$WebPort"
+  # 導演診斷記錄（規劃者與審查員每輪的輸入輸出）：本機實測一律記在 output/director-logs/<工作 id>.json
+  $env:WORDBLADE_DIRECTOR_LOG_DIR = Join-Path $Root 'output/director-logs'
   $gateway = Start-Process java -ArgumentList '-jar', $jar.FullName -PassThru -RedirectStandardOutput $GatewayLog -RedirectStandardError "$GatewayLog.err" -WindowStyle Hidden
   $ready = $false
   for ($i = 0; $i -lt 90 -and -not $ready; $i++) {

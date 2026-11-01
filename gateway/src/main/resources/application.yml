@@ -38,6 +38,9 @@ wordblade:
   meta:
     base-url: ${WORDBLADE_META_BASE_URL:https://api.meta.ai}
     api-key: ${META_API_KEY:}
+  # AI 導演診斷記錄（規劃者與審查員每輪的輸入輸出）：設了目錄才記，GET /v1/ai/director/{id}/log 取回；Zeabur 不設
+  director:
+    log-dir: ${WORDBLADE_DIRECTOR_LOG_DIR:}
   # TypeSafe Jev：AI 導演判斷重講候選（docs/plan-10-31-director4.md）；沒設金鑰就不判斷，候選標成未確認
   typesafe:
     base-url: ${WORDBLADE_TYPESAFE_BASE_URL:https://api.typesafe.ai}
