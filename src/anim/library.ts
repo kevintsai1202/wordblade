@@ -23,7 +23,7 @@ export interface ParamDef {
   role?: string;
 }
 
-/** 範本：一組圖層（元件＋參數）、預設目標框、音效（今天先不放，§5.15 的音效另做） */
+/** 範本：一組圖層（元件＋參數）、預設目標框、音效（加進時間軸時跟著特效走，§5.15） */
 export interface Template {
   id: string;
   name: string;
@@ -76,13 +76,14 @@ export const DEFAULT_EFFECT_SECONDS = 2.5;
 
 /**
  * 範本 → 時間軸上的 2D 特效。hashOf：元件 id → 沙盒算出的雜湊（圖層用雜湊指到元件）。
- * 目標框預設在畫面中央、大小用範本的；音效今天先不帶（§5.15 另做）。
+ * 目標框預設在畫面中央、大小用範本的；音效跟著特效走（元件換成雜湊，預覽與匯出混進聲音，§5.15）。
  */
 export function templateEffect(template: Template, hashOf: (componentId: string) => string, id: string, start: number, duration = DEFAULT_EFFECT_SECONDS): Effect {
   const box = { cx: 0.5, cy: 0.5, w: template.box?.w ?? 0.3, h: template.box?.h ?? 0.2 };
   const layers = template.layers.map((l) => ({ component: hashOf(l.component), params: { ...l.params } }));
   return {
     id, kind: "anim2d", start, end: start + duration, pluginId: layers[0]?.component ?? "", anchorIds: [],
-    params: { template: template.id, title: template.title, box, layers, sounds: [] },
+    params: { template: template.id, title: template.title, box, layers,
+      sounds: (template.sounds ?? []).map((s) => ({ component: hashOf(s.component), params: { ...s.params }, at: s.at })) },
   };
 }

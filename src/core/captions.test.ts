@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { makeClip, makeProject } from "./fixtures";
 import type { Project, Word } from "./model";
-import { breakLines, buildCaptions, timelineWords } from "./captions";
+import { breakLines, buildCaptions, joinWords, timelineWords } from "./captions";
 
 /** 用一串英文詞建逐字稿：每個詞 0.3 秒、詞間 0.05 秒；gapsAfter 指定某些詞後面的停頓 */
 function wordsOf(text: string, gapsAfter: Record<number, number> = {}, mediaId = "m1"): Word[] {
@@ -106,5 +106,39 @@ describe("buildCaptions", () => {
     const caps = buildCaptions(p);
     const chars = caps[0].lines.join(" ").length;
     expect(chars / (caps[0].end - caps[0].start)).toBeLessThanOrEqual(17);
+  });
+});
+
+describe("joinWords（中文字之間不加空白）", () => {
+  it("中文、日文、全形標點相鄰不加空白；英文之間、中英交界照舊加", () => {
+    expect(joinWords(["我", "們", "接下來"])).toBe("我們接下來");
+    expect(joinWords(["介紹", "Spring", "MVC", "，", "好"])).toBe("介紹 Spring MVC，好");
+    expect(joinWords(["Hello", "there."])).toBe("Hello there.");
+    expect(joinWords(["これ", "は"])).toBe("これは");
+  });
+
+  it("字幕的每行：中文不夾空白，lineWords 留著每個詞", () => {
+    let t = 0;
+    const words = ["我", "們", "接", "下", "來", "介", "紹", "Spring", "MVC。"].map((w, i) => {
+      const word = { id: `w${i}`, mediaId: "m1", text: w, start: t, end: t + 0.2 };
+      t += 0.25;
+      return word;
+    });
+    const [cap] = buildCaptions(projectWith(words));
+    expect(cap.lines).toEqual(["我們接下來介紹 Spring MVC。"]);
+    expect(cap.lineWords[0]).toEqual(["我", "們", "接", "下", "來", "介", "紹", "Spring", "MVC。"]);
+  });
+
+  it("中文：全形句號／問號斷句；一行最多約 19 個中文字（中文字寬算 2.2 個英文字元）", () => {
+    let t = 0;
+    const text = "這是一個很長的句子用來測試中文字幕每一行最多可以放多少個字才不會太寬喔。好？";
+    const words = [...text].map((c, i) => {
+      const word = { id: `w${i}`, mediaId: "m1", text: c, start: t, end: t + 0.15 };
+      t += 0.17;
+      return word;
+    });
+    const caps = buildCaptions(projectWith(words));
+    expect(caps[caps.length - 1].lines.join("/")).toBe("好？");
+    for (const c of caps) for (const line of c.lines) expect([...line].length).toBeLessThanOrEqual(19);
   });
 });

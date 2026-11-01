@@ -3,6 +3,7 @@
 import type { Envelope } from "../audio/envelope";
 import type { Media, Word } from "../core/model";
 import { splitAtSilence } from "./segment";
+import { toTraditional } from "./traditional";
 import { coverage, DELTA_DELAY, deltasToWords, turnsToWords, type Delta, type Turn } from "./wordTiming";
 
 /** 閘道 /v1/asr 的回應 */
@@ -42,6 +43,31 @@ export interface TranscribeOptions {
   maxSegment?: number;
   /** 閘道忙時重試的等待基數（毫秒） */
   retryDelayMs?: number;
+}
+
+/** 比較用：小寫、去掉標點 */
+const bare = (text: string) => text.toLowerCase().replace(/[\p{P}\p{S}]/gu, "");
+/** 字尾的標點 */
+const trailing = (text: string) => /[\p{P}\p{S}]+$/u.exec(text)?.[0] ?? "";
+
+/**
+ * 相鄰的同一個英文字併成一個：Muse ASR 偶爾把一個字重複輸出（2026-10-29 實測 DIARIZATION、ENDPOINTING、DELTA 都會，
+ * 每 2 分鐘 3～7 處、每次不同字；講稿只有一處是真的重複），字幕會出現「file file」。
+ * 留第一個字、時間延到第二個的結尾、字尾標點用第二個的。中日文的疊字（謝謝、看看）是真的詞，不動。
+ * 真的口吃（with with）也會被併掉——字幕上本來就不該出現，對應的畫面與聲音不受影響。
+ */
+export function collapseRepeats(words: Word[]): Word[] {
+  const out: Word[] = [];
+  for (const w of words) {
+    const prev = out[out.length - 1];
+    const key = bare(w.text);
+    if (prev && key && /[a-z0-9]/.test(key) && key === bare(prev.text)) {
+      out[out.length - 1] = { ...prev, text: prev.text.replace(/[\p{P}\p{S}]+$/u, "") + trailing(w.text), end: Math.max(prev.end, w.end) };
+    } else {
+      out.push(w);
+    }
+  }
+  return out;
 }
 
 /** 閘道忙（503）最多試幾次 */
@@ -102,6 +128,7 @@ export async function transcribeMedia(
   const all = turns.flat().sort((a, b) => a.start - b.start);
   // 每段都有 DELTA 事件：用它當詞級時間的錨點；否則照舊依包絡把 turn 的字攤開
   const anchored = deltas.every((d) => d !== null);
-  const words = anchored ? deltasToWords(media.id, deltas.flatMap((d) => d!), env) : turnsToWords(media.id, all, env);
+  // 中文一律用繁體（Muse ASR 對台灣口音也回簡體）
+  const words = await toTraditional(collapseRepeats(anchored ? deltasToWords(media.id, deltas.flatMap((d) => d!), env) : turnsToWords(media.id, all, env)));
   return { words, segments: segments.length, coverage: coverage(all, env, 0, media.duration), turns: all };
 }

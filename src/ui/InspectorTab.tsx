@@ -2,6 +2,7 @@
 // 表單依插件的參數定義（原專案 anim_runtime 的參數型別）自動產生；每次改動是一筆可復原的編輯（setEffectParams）。
 // 文字與數字在離開欄位或按 Enter 時才送出，避免打一個字就留一筆歷史。
 import { useEffect, useState, type Dispatch } from "react";
+import { soundGain } from "../anim/effectSound";
 import { GatewayClient, GatewayError, loadSettings } from "../ai/gateway";
 import { runPlane3d, type BoardParams } from "../ai/plane3d";
 import { captureFrame } from "./capture";
@@ -120,6 +121,16 @@ export function InspectorTab({ project, effectId, clipId = null, playhead = 0, d
           </label>
         ))}
       </fieldset>
+      {Array.isArray(effect.params.sounds) && (effect.params.sounds as unknown[]).length > 0 && (
+        <fieldset className="param-group">
+          <legend>Sound</legend>
+          <label className="param-field" data-param="soundGain">
+            <span>Volume (0 = off)</span>
+            <CommitInput type="number" data-testid="effect-sound-gain" value={soundGain(effect)} step={0.05} min={0} max={1}
+              onCommit={(x) => update({ ...effect.params, soundGain: Math.min(1, Math.max(0, Number(x) || 0)) })} />
+          </label>
+        </fieldset>
+      )}
       {layers.map((layer, i) => {
         const plugin = project.plugins.find((p) => p.hash === layer.component);
         if (!plugin) return <p key={i} className="error">Missing plugin for layer {i + 1}</p>;

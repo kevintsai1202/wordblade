@@ -1,6 +1,6 @@
 // 燒進畫面的字幕（spec §5.4、§5.18，D37：自己用 Canvas 2D 畫，取代 JASSUB）：純函式的排版與逐字高亮狀態，Vitest 測。
 // 斷行已由 buildCaptions 決定（每行最多 42 字元、最多 2 行）；這裡只量每個詞的寬、置中、算位置，必要時整體縮小塞進畫面。
-import type { Caption } from "../core/captions";
+import { needsSpace, type Caption } from "../core/captions";
 import type { Seconds } from "../core/model";
 
 /** 字幕樣式（存在 Project.captionStyle；沒設就用 DEFAULT_CAPTION_STYLE） */
@@ -68,14 +68,17 @@ export function captionAt(captions: Caption[], t: Seconds): Caption | null {
 }
 
 /**
- * 排版：每行的詞依序排、詞間一個空白、整行水平置中；最後一行基線在離底 bottom 處，其他行往上疊。
+ * 排版：每行的詞依序排、詞間一個空白（中文字之間不留）、整行水平置中；最後一行基線在離底 bottom 處，其他行往上疊。
  * measure(text, px)：用該字高量文字寬（Canvas measureText；測試注入假的）。
  */
 export function captionLayout(caption: Caption, width: number, height: number, style: CaptionStyle, measure: (text: string, px: number) => number): CaptionLayout {
   let px = Math.max(8, Math.round(height * style.size));
   // 量寬是字高的線性函數：先用目前字高量，太寬就等比縮小
-  const lineWidth = (ids: string[], words: string[], size: number) => words.reduce((w, t) => w + measure(t, size), 0) + measure(" ", size) * Math.max(0, ids.length - 1);
-  const wordsOf = (i: number) => caption.lines[i].split(" ").filter(Boolean);
+  // 詞間的空白：英文一個空白，中文字之間沒有（needsSpace）
+  const gaps = (words: string[]) => words.reduce((n, t, k) => n + (k > 0 && needsSpace(words[k - 1], t) ? 1 : 0), 0);
+  const lineWidth = (_ids: string[], words: string[], size: number) => words.reduce((w, t) => w + measure(t, size), 0) + measure(" ", size) * gaps(words);
+  // 每行的詞：有 lineWords 就用（中文的行沒有空白可切）；舊資料退回用空白切
+  const wordsOf = (i: number) => caption.lineWords?.[i] ?? caption.lines[i].split(" ").filter(Boolean);
   const widest = Math.max(1, ...caption.lineWordIds.map((ids, i) => lineWidth(ids, wordsOf(i), px)));
   if (widest > width * MAX_WIDTH) px = Math.max(8, Math.floor((px * width * MAX_WIDTH) / widest));
   const space = measure(" ", px);
@@ -86,9 +89,10 @@ export function captionLayout(caption: Caption, width: number, height: number, s
     const total = lineWidth(ids, texts, px);
     let x = (width - total) / 2;
     const words = texts.map((text, k) => {
+      if (k > 0 && needsSpace(texts[k - 1], text)) x += space;
       const w = measure(text, px);
       const laid = { id: ids[k] ?? `${caption.id}#${i}.${k}`, text, x, width: w };
-      x += w + space;
+      x += w;
       return laid;
     });
     return { x: (width - total) / 2, width: total, baseline: height * (1 - style.bottom) - (n - 1 - i) * px * LINE_HEIGHT, words };

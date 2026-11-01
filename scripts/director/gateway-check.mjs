@@ -3,7 +3,7 @@
 // id 像 demo:w12）→ 輪詢到完成 → 檢查有沒有找到正確答案：假金鑰（31.4～43.0 秒）要有 mask、重講（49.3～54.6 秒）要有 cut。
 // 環境變數：WORDBLADE_LIVE_GATEWAY、WORDBLADE_LIVE_TOKEN。結果：output/director-gateway-check.json
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -53,17 +53,45 @@ async function main() {
   fd.append("meta", JSON.stringify({ start: 0, end: truth.duration, words: wordsFromTruth() }));
   await call(`/v1/ai/director/${jobId}/segments/0`, { method: "POST", body: fd });
   let view;
-  for (;;) {
-    view = await call(`/v1/ai/director/${jobId}`);
-    if (!["collecting", "planning"].includes(view.status)) break;
-    await new Promise((r) => setTimeout(r, 2000));
+  /** 輪詢到狀態離開 states */
+  const waitWhile = async (states) => {
+    for (;;) {
+      view = await call(`/v1/ai/director/${jobId}`);
+      if (!states.includes(view.status)) return;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  };
+  await waitWhile(["collecting", "planning"]);
+  const planned = view.suggestions;
+  // 審查（docs/plan-10-29-director2.md）：每項開頭各截一格、標上項目 id，拼成一張縮圖總表送審
+  if (view.status === "planned") {
+    const dir = join(ROOT, "output", "director-sheet");
+    mkdirSync(dir, { recursive: true });
+    planned.forEach((s, i) => {
+      const label = `${s.id} ${s.kind} ${s.start.toFixed(1)}s`.replace(/:/g, " ");
+      execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(s.start + 0.2), "-i", SAMPLE, "-frames:v", "1",
+        "-vf", `scale=480:-2,drawbox=x=0:y=0:w=iw:h=34:color=black@0.75:t=fill,drawtext=fontfile='C\\:/Windows/Fonts/arial.ttf':text='${label}':x=8:y=7:fontsize=20:fontcolor=white`,
+        join(dir, `f${String(i + 1).padStart(3, "0")}.jpg`)]);
+    });
+    const cols = 4;
+    const rows = Math.max(1, Math.ceil(planned.length / cols));
+    const sheet = join(dir, "sheet.jpg");
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", join(dir, "f%03d.jpg"), "-vf", `tile=${cols}x${rows}:padding=4:color=white`, "-frames:v", "1", "-q:v", "4", sheet]);
+    const rf = new FormData();
+    rf.append("sheet", new Blob([readFileSync(sheet)], { type: "image/jpeg" }), "sheet.jpg");
+    await call(`/v1/ai/director/${jobId}/review`, { method: "POST", body: rf });
+    await waitWhile(["reviewing", "planned"]);
   }
   const seconds = +((performance.now() - t0) / 1000).toFixed(1);
   const foundKey = view.suggestions.some((s) => s.kind === "mask" && overlaps(s, truth.apiKey.start, truth.apiKey.end));
   const foundRetake = view.suggestions.some((s) => s.kind === "cut" && overlaps(s, truth.retake.start, truth.retake.end));
-  const report = { seconds, status: view.status, error: view.error, segmentsFailed: view.segmentsFailed, foundKey, foundRetake, suggestions: view.suggestions };
+  const report = { seconds, status: view.status, error: view.error, segmentsFailed: view.segmentsFailed, foundKey, foundRetake, chapters: view.chapters, planned, suggestions: view.suggestions, removed: view.removed };
   writeFileSync(join(ROOT, "output", "director-gateway-check.json"), JSON.stringify(report, null, 2));
-  console.log(JSON.stringify(report, null, 2));
+  // 終端印精簡版：章節、每項（時間、種類、目的、引用、審查）、審查刪掉的
+  console.log(`${seconds} s, ${view.status}; key ${foundKey}, retake ${foundRetake}`);
+  for (const c of view.chapters ?? []) console.log(`CHAPTER ${c.start.toFixed(1)}–${c.end.toFixed(1)} ${c.title}`);
+  for (const s of view.suggestions) console.log(`${s.id} ${s.kind} ${s.start.toFixed(1)}–${s.end.toFixed(1)} | ${s.purpose} | "${s.quote}" | ${JSON.stringify(s.payload)} | review ${s.review?.verdict ?? "-"} ${s.review?.note ?? ""}`);
+  for (const s of view.removed ?? []) console.log(`REMOVED ${s.id} ${s.kind} ${s.start.toFixed(1)} | ${s.purpose} | ${s.review?.note ?? ""}`);
   if (view.status !== "done" || !foundKey || !foundRetake) process.exit(1);
 }
 

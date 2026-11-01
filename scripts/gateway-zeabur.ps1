@@ -85,7 +85,7 @@ function Set-GatewayVariables([string]$Sid) {
     WORDBLADE_CORS_ALLOWED_ORIGINS = $CorsOrigins
     WORDBLADE_TIMEZONE             = 'Asia/Taipei'
   }
-  $fromEnv = Read-DotEnv @('META_API_KEY', 'WORDBLADE_MODEL_SPARK', 'WORDBLADE_MODEL_WONDER', 'WORDBLADE_MODEL_IMAGE', 'WORDBLADE_MODEL_SAM', 'WORDBLADE_MODEL_ASR', 'FISH_API_KEY')
+  $fromEnv = Read-DotEnv @('META_API_KEY', 'WORDBLADE_MODEL_SPARK', 'WORDBLADE_MODEL_WONDER', 'WORDBLADE_MODEL_IMAGE', 'WORDBLADE_MODEL_SAM', 'WORDBLADE_MODEL_ASR', 'FISH_API_KEY', 'TYPESAFE_API_KEY', 'WORDBLADE_MODEL_JEV')
   if (-not $fromEnv.Contains('META_API_KEY')) { throw '.env 缺少 META_API_KEY' }
   foreach ($k in $fromEnv.Keys) { $vars[$k] = $fromEnv[$k] }
   Set-Variables $Sid $vars

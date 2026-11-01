@@ -133,3 +133,15 @@ describe("建議的編輯", () => {
     expect(p.suggestions[0].status).toBe("skipped");
   });
 });
+
+describe("導演改版：章節跟著建議存、審查刪掉的是略過狀態", () => {
+  it("setSuggestions 帶章節時換掉同一支素材的章節；沒帶章節不動", () => {
+    const chapters = [{ mediaId: "a", title: "Setup", start: 0, end: 30 }, { mediaId: "a", title: "Code", start: 30, end: 60 }];
+    let p = applyEdits(makeProject(), [{ kind: "setSuggestions", mediaId: "a", suggestions: [], chapters }]);
+    expect(p.directorChapters).toEqual(chapters);
+    p = applyEdits(p, [{ kind: "setSuggestions", mediaId: "b", suggestions: [], chapters: [{ mediaId: "b", title: "X", start: 0, end: 5 }] }]);
+    expect(p.directorChapters?.map((c) => c.title)).toEqual(["Setup", "Code", "X"]);
+    p = applyEdits(p, [{ kind: "setSuggestions", mediaId: "a", suggestions: [] }]);
+    expect(p.directorChapters).toHaveLength(3);
+  });
+});

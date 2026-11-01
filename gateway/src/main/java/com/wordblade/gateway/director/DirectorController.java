@@ -1,5 +1,6 @@
 package com.wordblade.gateway.director;
 
+import com.wordblade.gateway.ai.AiModel;
 import com.wordblade.gateway.auth.TokenAuthInterceptor;
 import com.wordblade.gateway.auth.TokenService.TokenInfo;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,11 +19,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
  * AI 導演（spec §5.11）：
- * - POST /v1/ai/director {mediaName, duration, segments, scenes:[{id,name}]} → 202 {jobId}
+ * - POST /v1/ai/director {mediaName, duration, segments, scenes:[{id,name}], style} → 202 {jobId}
+ * - POST /v1/ai/director/{jobId}/frames（multipart：sheet＝規劃者要看的畫面總表）→ 202；要在最後一段上傳前送
  * - POST /v1/ai/director/{jobId}/segments/{index}（multipart：video＝480p 每秒 2 格無聲 MP4、meta＝{start, end, words:[{id,t,text}]}）→ 202
  * - GET /v1/ai/director/{jobId} → 狀態、段落進度、建議
  * - DELETE /v1/ai/director/{jobId} → 取消
@@ -56,10 +59,44 @@ public class DirectorController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
+    /** 縮圖總表最大幾位元組 */
+    static final long MAX_SHEET_BYTES = 6L * 1024 * 1024;
+
+    /** 審查：送縮圖總表（JPEG／PNG，選填；每項一格、標上項目 id）→ 審查者逐項判定，有退回就讓規劃者改一輪 */
+    @PostMapping(path = "/v1/ai/director/{jobId}/review", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> review(@PathVariable String jobId, @RequestPart(name = "sheet", required = false) MultipartFile sheet,
+                                       HttpServletRequest req) throws IOException {
+        jobs.review(token(req).id(), jobId, image(sheet));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
+
+    /** 規劃前的畫面總表（每個畫面變化區、每隔一段時間一格）：最後一段上傳前送，規劃者第一次規劃時看 */
+    @PostMapping(path = "/v1/ai/director/{jobId}/frames", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> frames(@PathVariable String jobId, @RequestPart("sheet") MultipartFile sheet, HttpServletRequest req) throws IOException {
+        AiModel.Image image = image(sheet);
+        if (image == null) throw new IllegalArgumentException("no sheet");
+        jobs.frames(token(req).id(), jobId, image);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
+
+    /** 上傳的總表 → 圖片（JPEG／PNG、6 MB 以內）；沒送回 null，格式不對丟 IllegalArgumentException */
+    private static AiModel.Image image(MultipartFile sheet) throws IOException {
+        if (sheet == null || sheet.isEmpty()) return null;
+        String type = sheet.getContentType();
+        if (sheet.getSize() > MAX_SHEET_BYTES || !("image/jpeg".equals(type) || "image/png".equals(type))) throw new IllegalArgumentException("bad sheet");
+        return new AiModel.Image(type, sheet.getBytes());
+    }
+
     /** 狀態與建議 */
     @GetMapping("/v1/ai/director/{jobId}")
     public DirectorJobs.View view(@PathVariable String jobId, HttpServletRequest req) {
         return jobs.view(token(req).id(), jobId);
+    }
+
+    /** 診斷記錄（規劃者與審查員每輪的輸入輸出；閘道沒設 wordblade.director.log-dir 時 404） */
+    @GetMapping("/v1/ai/director/{jobId}/log")
+    public JsonNode log(@PathVariable String jobId, HttpServletRequest req) {
+        return jobs.log(token(req).id(), jobId);
     }
 
     /** 取消 */

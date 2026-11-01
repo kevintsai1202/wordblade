@@ -1,7 +1,8 @@
 // 內建 3D 範本「Mascot」（spec §5.7、§5.8 吉祥物）：基本幾何組成的小角色，疊在影片上（anim3d，透明背景）。
 // 從畫面一側走進來，停在目標框旁邊，然後揮手或指著目標框；目標框 env.box（0～1）可以在預覽上拖。
 // 畫面只由 t 決定（pure）；鏡頭固定，畫面座標用 z=0 平面換算（box 的位置對得上畫面）。
-// 參數：action（wave 揮手／point 指著框）、from（left／right 從哪邊走進來）、color、height（角色高度佔畫面高的比例）、walk（走路秒數）。
+// 參數：action（wave 揮手／point 指著框／walk 一路走到框旁、到了原地輕輕晃）、from（left／right 從哪邊走進來）、color、height（角色高度佔畫面高的比例）、
+// walk（走路秒數；walk 動作不看這個，整段幾乎都在走：片長 − 0.4 秒）。
 
 /** 畫面只由 t 決定 */
 const pure = true;
@@ -76,7 +77,31 @@ function smooth(u) {
   return x * x * (3 - 2 * x);
 }
 
-/** 每格：走路 → 停在框旁 → 揮手或指著框 */
+/**
+ * 站的位置（畫面座標 0～1，y 往下）：平常站在框靠入場那一側的外面、腳對齊框下緣；
+ * 框上面放不下整個角色（框在畫面最上方）就站到框下面；靠邊放不下就往畫面內移，並保證從畫面外走一段路進來。
+ * 回傳 startX（畫面外的起點）、standX、footY、halfW（角色半寬，畫面寬的比例）。
+ * @param height 角色高度（畫面高的比例）；aspect 畫面寬高比
+ */
+function standPose(box, fromLeft, height, aspect) {
+  const halfW = height * 0.25 / aspect;  // 模型半寬約 0.65（高 2.6）
+  const margin = 0.02;
+  const lo = halfW + margin;
+  const hi = 1 - halfW - margin;
+  const bottom = box.cy + box.h / 2;
+  // 框上面放得下就站框旁、腳對齊下緣；放不下站到框下面（頭在框下緣之下）
+  const below = bottom - height < margin;
+  const footY = Math.min(1 - margin, below ? bottom + height + margin : bottom);
+  let standX = fromLeft ? box.cx - box.w / 2 - halfW - 0.03 : box.cx + box.w / 2 + halfW + 0.03;
+  // 框旁邊放不下：站到框下面靠入場那側的邊緣（在框的範圍裡）
+  if (standX < lo || standX > hi) standX = fromLeft ? box.cx - box.w / 2 + halfW + 0.03 : box.cx + box.w / 2 - halfW - 0.03;
+  standX = Math.min(hi, Math.max(lo, standX));
+  // 起點在畫面外，至少走 0.2 個畫面寬
+  const startX = fromLeft ? Math.min(-halfW - margin, standX - 0.2) : Math.max(1 + halfW + margin, standX + 0.2);
+  return { startX, standX, footY, halfW };
+}
+
+/** 每格：走路 → 停在框旁 → 揮手、指著框，或（walk）原地輕輕晃 */
 function update(t, env) {
   const p = env.params;
   const box = env.box || { cx: 0.5, cy: 0.5, w: 0.3, h: 0.2 };
@@ -85,12 +110,12 @@ function update(t, env) {
   const size = (p.height ?? 0.35) * M.viewH / 2.6;  // 角色模型高約 2.6
   P.root.scale.setScalar(size);
 
-  // 站的位置：框靠近入場那一側的外面，腳底對齊框的下緣（畫面外就夾回來）
-  const standX = Math.min(0.92, Math.max(0.08, fromLeft ? box.cx - box.w / 2 - 0.07 : box.cx + box.w / 2 + 0.07));
-  const footY = Math.min(0.98, box.cy + box.h / 2);
-  const start = toWorld(fromLeft ? -0.12 : 1.12, footY);
-  const stand = toWorld(standX, footY);
-  const walk = Math.min(p.walk ?? 1.6, env.duration * 0.6);
+  // 站的位置（整個角色在畫面裡；見 standPose）
+  const pose = standPose(box, fromLeft, p.height ?? 0.35, M.viewW / M.viewH);
+  const start = toWorld(pose.startX, pose.footY);
+  const stand = toWorld(pose.standX, pose.footY);
+  const walkOnly = p.action === 'walk';
+  const walk = walkOnly ? Math.max(0.3, env.duration - 0.4) : Math.min(p.walk ?? 1.6, env.duration * 0.6);
   const k = smooth(t / walk);
   P.root.position.set(start.x + (stand.x - start.x) * k, stand.y, 0);
 
@@ -110,6 +135,11 @@ function update(t, env) {
     near.rotation.set(-swing * 0.8, 0, 0);
     far.rotation.set(swing * 0.8, 0, 0);
     P.head.rotation.z = 0;
+  } else if (walkOnly) {
+    // 走到了：兩手垂下、頭左右輕晃
+    near.rotation.set(0, 0, 0);
+    far.rotation.set(0, 0, 0);
+    P.head.rotation.z = Math.sin((t - walk) * 4) * 0.08;
   } else {
     const a = smooth((t - walk) / 0.35);
     far.rotation.set(0, 0, (fromLeft ? 1 : -1) * 0.15 * a);

@@ -76,7 +76,14 @@ export function PreviewPane(props: {
     const effects = effectsRef.current;
     if (!effects) return;
     effects.prune(project);
-    void effects.syncPlugins(project.plugins).then(() => {
+    void effects.syncPlugins(project.plugins).then(async () => {
+      // 2D 特效的音效（跟著特效走）：算好的交給播放器
+      const sounds = new Map<string, string>();
+      for (const e of project.effects) {
+        const sound = await effects.sound(e);
+        if (sound) sounds.set(e.id, sound.url);
+      }
+      if (effectsRef.current === effects) playerRef.current?.setEffectSounds(sounds);
       if (!latest.current.playing) playerRef.current?.render(latest.current.playhead, false, latest.current.rate);
     });
   }, [project]);

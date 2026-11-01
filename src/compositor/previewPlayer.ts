@@ -85,6 +85,23 @@ export class PreviewPlayer {
     this.thumbs = store;
   }
 
+  /** 2D 特效的音效（特效 id → WAV 網址；跟著特效走） */
+  private fxSounds = new Map<string, string>();
+  /** 特效音效的元素（特效 id → 元素） */
+  private readonly fxAudios = new Map<string, HTMLAudioElement>();
+
+  /** 設定特效音效（特效 id → WAV 網址）；不再用到的元素停掉 */
+  setEffectSounds(sounds: Map<string, string>) {
+    this.fxSounds = sounds;
+    this.canvas.dataset.fxSounds = String(sounds.size);
+    for (const [id, el] of this.fxAudios) {
+      if (sounds.get(id) === el.dataset.src) continue;
+      el.pause();
+      currentAudioGraph()?.drop(`fx:${id}`);
+      this.fxAudios.delete(id);
+    }
+  }
+
   /** 接上 2D 特效（沙盒畫格）與格率 */
   setEffectRenderer(renderer: EffectRenderer | null, fps: number) {
     this.effects = renderer;
@@ -248,6 +265,24 @@ export class PreviewPlayer {
       }
     }
 
+    // 2D 特效的音效：播放頭在特效範圍內就從特效起點算的時間播（跟片段一樣同步）
+    for (const effect of project.effects) {
+      const url = this.fxSounds.get(effect.id);
+      if (!url || t < effect.start || t >= effect.end) continue;
+      let el = this.fxAudios.get(effect.id);
+      if (!el) {
+        el = document.createElement("audio");
+        el.dataset.src = url;
+        el.src = url;
+        this.fxAudios.set(effect.id, el);
+      }
+      const key = `fx:${effect.id}`;
+      active.add(key);
+      if (graph) graph.connect(key, el, "fx");
+      this.sync(el, t - effect.start, playing, rate);
+    }
+    for (const [id, el] of this.fxAudios) if (!active.has(`fx:${id}`) && !el.paused) el.pause();
+
     // 這一格用不到的元素一律暫停
     for (const map of [this.videos, this.audios]) {
       for (const [id, el] of map) if (!active.has(id) && !el.paused) el.pause();
@@ -257,6 +292,8 @@ export class PreviewPlayer {
   /** 停止所有元素並釋放 */
   dispose() {
     for (const id of this.audios.keys()) currentAudioGraph()?.drop(id);
+    for (const [id, el] of this.fxAudios) { el.pause(); currentAudioGraph()?.drop(`fx:${id}`); }
+    this.fxAudios.clear();
     for (const map of [this.videos, this.images, this.audios] as Map<string, HTMLElement>[]) {
       for (const el of map.values()) {
         if (el instanceof HTMLMediaElement) el.pause();

@@ -191,6 +191,18 @@ export class WebEngine implements Engine {
     return "samples";
   }
 
+  /** 範例專案：靜態網站的 /sample/project.json */
+  async openSample(): Promise<{ root: string; text: string } | null> {
+    const res = await fetch("/sample/project.json").catch(() => null);
+    return res?.ok ? { root: "sample", text: await res.text() } : null;
+  }
+
+  /** 開發用（範例專案打包腳本）：匯入或產生的檔案的位元組；不是這裡管的回 null */
+  async fileBytes(handleKey: string): Promise<Uint8Array | null> {
+    const entry = this.files.get(handleKey);
+    return entry ? new Uint8Array(await entry.file.arrayBuffer()) : null;
+  }
+
   async makeMezzanine(_mediaId: string): Promise<string> {
     throw new NotImplementedError("makeMezzanine");
   }

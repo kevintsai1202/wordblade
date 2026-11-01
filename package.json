@@ -19,6 +19,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "immer": "^11.2.9",
     "mediabunny": "^1.62.1",
+    "opencc-js": "1.0.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "soundtouchjs": "0.3.0",

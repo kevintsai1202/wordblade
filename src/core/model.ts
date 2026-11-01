@@ -178,12 +178,31 @@ export interface Anchor {
 export interface Suggestion {
   id: string;
   mediaId: string;
-  kind: "cut" | "mask" | "effect" | "camera" | "fix" | "zoom";
+  /** camera 是舊名稱（等同 transition）；captionStyle、music、intro 是整體項目（docs/plan-10-29-director2.md）；note 是只給人看的提醒（後面補充前面漏講的，docs/plan-10-31-director4.md） */
+  kind: "cut" | "mask" | "effect" | "camera" | "transition" | "mascot" | "fix" | "zoom" | "captionStyle" | "music" | "intro" | "note";
   start: Seconds;
   end: Seconds;
   payload: Record<string, unknown>;
   reason: string;
   status: "pending" | "applied" | "skipped";
+  /** 為什麼這樣剪（導演改版起才有） */
+  purpose?: string;
+  /** 對應的那句旁白 */
+  quote?: string;
+  /** 屬於第幾個章節（Project.directorChapters 裡這支素材的順序） */
+  chapter?: number;
+  /** 解決導演構想裡的哪個問題（問題 id；畫面類才有，docs/plan-10-30-director3.md） */
+  problem?: string;
+  /** 審查結果：keep 通過、revised 依審查改過、added 審查後補上、prune 審查員認為可有可無（預設不勾）、drop 審查刪掉（狀態是 skipped） */
+  review?: { verdict: "keep" | "revised" | "added" | "prune" | "drop"; note: string };
+}
+
+/** AI 導演整理的章節（素材時間） */
+export interface DirectorChapter {
+  mediaId: string;
+  title: string;
+  start: Seconds;
+  end: Seconds;
 }
 
 /**
@@ -235,6 +254,8 @@ export interface Project {
   zooms?: ZoomRegion[];
   /** 燒進畫面的字幕樣式（§5.4、§5.18；沒設就用預設：白字黑描邊） */
   captionStyle?: CaptionStyle;
+  /** AI 導演整理的章節（依素材；導演改版起才有） */
+  directorChapters?: DirectorChapter[];
   /** 發佈包（§5.17）：標題、說明、章節、標籤；縮圖不存在專案裡 */
   publish?: PublishKit;
 }

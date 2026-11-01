@@ -77,6 +77,19 @@ class RestMuseAsrClientTest {
     }
 
     @Test
+    void 中文串流以UTF8解讀_上游沒標charset也不會變亂碼() {
+        // Meta 回 text/event-stream 不帶 charset；當成 ISO-8859-1 讀會把中文變成「æä»¬」（2026-10-31 實測 OBS 錄影）
+        String stream = sse("{\"type\":\"speechStart\",\"audioProcessedMs\":100,\"turnId\":0}",
+                "{\"type\":\"transcript\",\"transcript\":\"我们 接下来\",\"final\":false,\"audioProcessedMs\":500}",
+                "{\"type\":\"speechComplete\",\"audioProcessedMs\":900,\"turnId\":0,\"transcript\":\"我们 接下来\"}");
+        server.expect(requestTo("https://api.example/v1/asr/transcribe"))
+                .andRespond(withSuccess(stream.getBytes(java.nio.charset.StandardCharsets.UTF_8), MediaType.TEXT_EVENT_STREAM));
+        AsrResult r = client.transcribe(WavInfoTest.wav(1, 16000, 16, 1), List.of());
+        assertThat(r.deltas()).containsExactly(new AsrResult.Delta("我们 接下来", 500));
+        assertThat(r.turns().get(0).transcript()).isEqualTo("我们 接下来");
+    }
+
+    @Test
     void 沒有關鍵字就不送keywords() {
         server.expect(requestTo("https://api.example/v1/asr/transcribe"))
                 .andExpect(content().string(not(containsString("keywords"))))

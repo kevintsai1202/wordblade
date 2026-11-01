@@ -10,6 +10,7 @@ const caption: Caption = {
   id: "w1", start: 1, end: 4,
   lines: ["Hello there,", "general Kenobi"],
   lineWordIds: [["w1", "w2"], ["w3", "w4"]],
+  lineWords: [["Hello", "there,"], ["general", "Kenobi"]],
   wordIds: ["w1", "w2", "w3", "w4"],
 };
 /** 詞的時間 */
@@ -60,5 +61,18 @@ describe("captionAt", () => {
     expect(captionAt(list, 3.99)?.id).toBe("w1");
     expect(captionAt(list, 4)?.id).toBe("w9");
     expect(captionAt(list, 6)).toBeNull();
+  });
+});
+
+describe("captionLayout 中文", () => {
+  it("中文字之間不留空白，中英交界留一個空白；每個字仍是獨立的詞（逐字高亮用）", () => {
+    const zh: Caption = { id: "z1", start: 0, end: 2, lines: ["我們 MVC"], lineWordIds: [["a", "b", "c"]], lineWords: [["我", "們", "MVC"]], wordIds: ["a", "b", "c"] };
+    const l = captionLayout(zh, 1920, 1080, DEFAULT_CAPTION_STYLE, measure);
+    const px = l.fontPx;
+    const [w1, w2, w3] = l.lines[0].words;
+    expect(w1.text).toBe("我");
+    expect(w2.x).toBeCloseTo(w1.x + w1.width, 5);
+    expect(w3.x).toBeCloseTo(w2.x + w2.width + measure(" ", px), 5);
+    expect(l.lines[0].width).toBeCloseTo(w3.x + w3.width - w1.x, 5);
   });
 });

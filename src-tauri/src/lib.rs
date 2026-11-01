@@ -22,6 +22,7 @@ pub fn run() {
             media::media_tools,
             media::evict_proxy,
             media::find_samples_dir,
+            media::find_sample_dir,
             media::asr_pcm,
             media::thumbs_status,
             project::project_create,

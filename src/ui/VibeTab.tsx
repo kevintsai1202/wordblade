@@ -60,7 +60,8 @@ export function VibeTab({ dimension, plugins, playhead, range, dispatch }: {
   const addTemplate = async (template: Template) => {
     try {
       const builtins = await plugins.builtins();
-      const used = template.layers.map((l) => builtins.get(l.component)!);
+      // 圖層與音效用到的內建插件都要進專案（沙盒靠雜湊找元件）
+      const used = [...template.layers, ...(template.sounds ?? [])].map((l) => builtins.get(l.component)!);
       const at = placement(DEFAULT_EFFECT_SECONDS);
       const effect = templateEffect(template, (id) => builtins.get(id)!.hash, newEffectId(), at.start, at.duration);
       dispatch({ type: "commit", edits: [{ kind: "addEffect", effect, plugins: used }] });

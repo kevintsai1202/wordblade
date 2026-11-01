@@ -40,7 +40,8 @@ function baseName(path: string): string {
 /** Windows 桌面版：重運算交給 Rust 指令層（ffmpeg sidecar、onnxruntime） */
 export class DesktopEngine implements Engine {
   readonly kind = "desktop" as const;
-  readonly capabilities = { vocalSeparation: true, anyFormatImport: true };
+  /** 聲音分離（P1-10）還沒實作：旗標維持 false，等 separateVocals 做好再打開 */
+  readonly capabilities = { vocalSeparation: false, anyFormatImport: true };
   /** 本機檔案經 Tauri 的 asset 協定給 WebView 讀；有代理檔就用代理檔（§5.21） */
   mediaUrl(media: Media): string {
     const path = media.proxyPath ?? media.path ?? "";
@@ -194,6 +195,14 @@ export class DesktopEngine implements Engine {
 
   async demoMediaRoot(): Promise<string | null> {
     return invoke<string | null>("find_samples_dir");
+  }
+
+  /** 範例專案：Rust 找安裝資料夾（或 repo 的 public\sample\）並放行讀取，再經 asset 協定讀 project.json */
+  async openSample(): Promise<{ root: string; text: string } | null> {
+    const root = await invoke<string | null>("find_sample_dir");
+    if (!root) return null;
+    const res = await fetch(convertFileSrc(`${root}\\project.json`)).catch(() => null);
+    return res?.ok ? { root, text: await res.text() } : null;
   }
 
   async makeMezzanine(_mediaId: string): Promise<string> {

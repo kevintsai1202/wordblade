@@ -8,104 +8,522 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
- * AI 導演建議的檢查（spec §5.11；docs/plan-10-28-director.md）：Muse Wonder 回的 {"suggestions":[…]} → 合格的建議＋要回饋的錯誤。
- * 規則：時間夾在片長內、太短丟掉；各種類必填欄位（mask 的 target 要是 SAM 看得懂的英文名詞片語、camera 的 scene 要在給的清單裡、
- * fix 的 wordIds 要是送出去的詞、zoom 的 cx／cy／w 在 0～1）；同種重疊的合併（剪取聯集，其他留先出現的）；每種與總數上限。
- * 前端 src/director/suggestions.ts 的 clampSuggestions 再做一次簡化版檢查。
+ * AI 導演剪輯腳本的檢查（spec §5.11；docs/plan-10-29-director2.md、docs/plan-10-30-director3.md）：
+ * Muse Wonder 回的 {"treatment":{…}, "chapters":[…], "items":[…]} → 導演構想＋章節＋合格的項目＋要回饋的錯誤。
+ * 規則：
+ * - 每項都要有目的（purpose）；剪、放大、特效、轉場、吉祥物要引用對應的旁白（quote）。
+ * - 畫面類（放大、特效、轉場、吉祥物）要用 problem 指名導演構想裡的一個問題（觀眾看不清、會分心的地方）；構想沒給就沿用上一輪的問題。
+ * - 風格（plain／light／playful）決定能用哪些種類；plain 只有剪、改字、遮罩、放大、字幕樣式、片頭。
+ * - 放大至少 6 秒，兩次放大之間至少隔 5 秒（不要一句話放大一次）。
+ * - 剪要標種類（retake／silence／head／tail），各有證據條件（重講要和後面的話相近或對上 Jev 確認的候選、沒講話的範圍不能有詞）；改字一項只改一個位置（≤ 1.5 秒、詞連續）。
+ * - 時間夾在片長內；各種類必填欄位（遮罩的名詞片語、轉場的場景、改字的詞 id、放大的活動區或框、吉祥物的目標框、字幕樣式、配樂描述、片頭標題）。
+ * - 3D 轉場只能在章節交界（離某個章節起點 3 秒內）、長 2～6 秒、最多 3 個、彼此相隔 30 秒；特效每 20 秒最多 1 個、整支最多 5 個；吉祥物最多 1 次。
+ * - 畫面類（放大、特效、轉場、吉祥物）彼此不重疊；剪的重疊取聯集；改字以詞為準（同一個詞只能被改一次）。
+ * - 導演指示（docs/plan-11-01-directives.md）：使用者的指示 d1、d2…；照指示做的項目（"directive"）不受風格、次數上限、特效密度、problem、quote 限制，
+ *   時間長度、重疊、必填欄位照樣檢查；treatment.directives 逐條交代用哪些項目做到或為什麼不採用，漏交代退回；被規則擋下又沒理由時，規則的錯誤當理由。
+ * 舊名稱 camera 當作 transition。前端 src/director/suggestions.ts 的 clampSuggestions 再做一次簡化版檢查。
  */
 public final class DirectorRules {
 
-    /** 一條合格的建議（素材時間） */
-    public record Suggestion(String kind, double start, double end, String reason, Map<String, Object> payload) {}
+    /** 審查結果（keep：通過；revised：依審查意見改過；added：審查後補的；prune：審查員認為可有可無、預設不勾；drop：刪掉；null：還沒審查） */
+    public record Review(String verdict, String note) {}
 
-    /** 檢查結果 */
-    public record Result(List<Suggestion> suggestions, List<AiError> errors) {}
+    /** 一個合格的項目（素材時間）；reason 和 purpose 相同（舊版介面讀 reason）；problem 是它解決的構想問題 id（畫面類才有） */
+    public record Suggestion(String id, String kind, double start, double end, String reason, Map<String, Object> payload,
+                             String purpose, String quote, int chapter, Review review, String problem) {
+        Suggestion withReview(Review r) {
+            return new Suggestion(id, kind, start, end, reason, payload, purpose, quote, chapter, r, problem);
+        }
 
-    /** 各種類最多幾條 */
-    static final Map<String, Integer> CAPS = Map.of("cut", 20, "mask", 15, "effect", 10, "camera", 5, "fix", 30, "zoom", 10);
-    /** 全部最多幾條 */
-    static final int TOTAL = 60;
+        Suggestion withEnd(double e) {
+            return new Suggestion(id, kind, start, e, reason, payload, purpose, quote, chapter, review, problem);
+        }
+    }
+
+    /** 章節（素材時間） */
+    public record Chapter(String title, double start, double end) {}
+
+    /**
+     * 檢查結果。
+     *
+     * @param treatment  導演構想原文（觀眾、每章帶走的事、問題清單）；沒給是 null
+     * @param problemIds 這一輪可引用的問題 id（構想的；沒給就是沿用的）
+     */
+    public record Result(List<Chapter> chapters, List<Suggestion> suggestions, List<AiError> errors, JsonNode treatment, Set<String> problemIds) {}
+
+    /**
+     * 檢查選項。
+     *
+     * @param style            風格 plain／light／playful（null 或不認得當 plain）
+     * @param fallbackProblems 上一輪構想的問題 id（格式修正或審查後重寫時，模型可能漏掉構想）
+     * @param directives       使用者的導演指示（依序是 d1、d2…）；沒有是空的
+     * @param fallbackLedger   上一輪的指示對帳清單（這一輪漏給時沿用）；沒有是 null
+     * @param fixedCuts        程式決定的剪 [start, end]（照指示做的項目整段落在裡面就看不到）
+     */
+    public record Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words, List<double[]> confirmedRetakes,
+                          List<String> directives, JsonNode fallbackLedger, List<double[]> fixedCuts) {
+        /** 沒有逐字稿的詞（只檢查格式，不做重講、無聲、改字連續的檢查） */
+        public Options(String style, Set<String> fallbackProblems) {
+            this(style, fallbackProblems, List.of(), List.of());
+        }
+
+        /** 沒有 Jev 確認過的重講候選 */
+        public Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words) {
+            this(style, fallbackProblems, words, List.of());
+        }
+
+        /** 沒有導演指示 */
+        public Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words, List<double[]> confirmedRetakes) {
+            this(style, fallbackProblems, words, confirmedRetakes, List.of(), null);
+        }
+
+        /** 沒有程式決定的剪 */
+        public Options(String style, Set<String> fallbackProblems, List<DirectorJobs.Word> words, List<double[]> confirmedRetakes,
+                       List<String> directives, JsonNode fallbackLedger) {
+            this(style, fallbackProblems, words, confirmedRetakes, directives, fallbackLedger, List.of());
+        }
+    }
+
+    /** 吉祥物最短幾秒（走進來再指或走到目標，太短看不清） */
+    static final double MASCOT_MIN = 3;
+    /** 照指示做的項目部分被剪時，至少要留下的秒數 */
+    static final double PARTLY_MIN = 1.0;
+
+    /** 第 i 條指示的 id（d1 起算） */
+    public static String directiveId(int i) {
+        return "d" + (i + 1);
+    }
+
+    /** 重講的剪對上 Jev 確認的候選：起訖都在幾秒內 */
+    static final double CANDIDATE_TOLERANCE = 1.5;
+
+    /** 剪的種類：重講、沒講話、片頭空白、片尾空白 */
+    static final Set<String> CUT_REASONS = Set.of("retake", "silence", "head", "tail");
+    /** 重講的剪最長幾秒（第一次講到一半放棄、連同後面的空檔；實測 OBS 錄影約 44 秒） */
+    static final double RETAKE_MAX = 60;
+    /** 重講要在剪的結尾之後幾秒內出現 */
+    static final double RESTART_WINDOW = 60;
+    /** 剪掉的內容和後面重講的相似度門檻（字元兩兩一組的 Jaccard；中文單字太常見，用兩字組才分得出來） */
+    static final double RETAKE_SIMILARITY = 0.4;
+    /** 比對的詞數上限 */
+    static final int RETAKE_WORDS = 15;
+    /** 沒講話的剪最短幾秒 */
+    static final double SILENCE_MIN = 2;
+    /** 沒講話、片頭、片尾的範圍內最多容許幾個詞（片尾的一聲 Yeah） */
+    static final int SILENCE_WORDS = 1;
+    /** 改字一項最長幾秒（只改一個位置） */
+    static final double FIX_MAX = 1.5;
+
+    /** 各風格能用的種類：plain 給螢幕教學片（預設），light 加 2D 特效與配樂，playful 再加 3D 轉場與吉祥物 */
+    static final Map<String, Set<String>> STYLES = Map.of(
+            "plain", Set.of("cut", "fix", "mask", "zoom", "captionStyle", "intro"),
+            "light", Set.of("cut", "fix", "mask", "zoom", "captionStyle", "intro", "effect", "music"),
+            "playful", Set.of("cut", "fix", "mask", "zoom", "captionStyle", "intro", "effect", "music", "transition", "mascot"));
+
+    /** 風格名稱正規化：null 或不認得當 plain */
+    public static String style(String style) {
+        return style != null && STYLES.containsKey(style) ? style : "plain";
+    }
+
+    /** 這個風格能用的種類 */
+    public static Set<String> allowedKinds(String style) {
+        return STYLES.get(style(style));
+    }
+
+    /** 各種類最多幾項 */
+    static final Map<String, Integer> CAPS = Map.ofEntries(
+            Map.entry("cut", 20), Map.entry("mask", 15), Map.entry("fix", 30), Map.entry("zoom", 10), Map.entry("effect", 5),
+            Map.entry("transition", 3), Map.entry("mascot", 1), Map.entry("captionStyle", 1), Map.entry("music", 1), Map.entry("intro", 1));
+    /** 全部最多幾項 */
+    static final int TOTAL = 80;
+    /** 要引用旁白的種類 */
+    private static final Set<String> NEEDS_QUOTE = Set.of("zoom", "effect", "transition", "mascot");
+    /** 畫面類（彼此不重疊） */
+    private static final Set<String> VISUAL = Set.of("zoom", "effect", "transition", "mascot");
+    /** 整體項目（時間由規則決定） */
+    private static final Set<String> GLOBAL = Set.of("captionStyle", "music", "intro");
+    /** 字幕樣式的逐字高亮選項 */
+    private static final Set<String> KARAOKE = Set.of("off", "fill", "scale", "box");
     /** 最短幾秒 */
     private static final double MIN_LENGTH = 0.1;
+    /** 轉場離章節起點多近算在交界（秒） */
+    static final double BOUNDARY = 3;
+    /** 特效密度：每這麼多秒最多 1 個 */
+    static final double EFFECT_WINDOW = 20;
+    /** 轉場彼此至少相隔幾秒 */
+    static final double TRANSITION_GAP = 30;
+    /** 放大最短幾秒（放大後要維持住，讓觀眾看清楚） */
+    static final double ZOOM_MIN = 6;
+    /** 兩次放大之間至少隔幾秒（不要放大、拉回、又放大） */
+    static final double ZOOM_GAP = 5;
 
     private DirectorRules() {}
 
-    /** 檢查 Wonder 的回應 */
-    public static Result check(JsonNode root, double duration, Set<String> scenes, Set<String> wordIds) {
+    /** 檢查 Wonder 的剪輯腳本（所有種類都能用、沒有沿用的問題） */
+    public static Result check(JsonNode root, double duration, Set<String> scenes, Set<String> wordIds, Set<String> activities) {
+        return check(root, duration, scenes, wordIds, activities, new Options("playful", Set.of()));
+    }
+
+    /**
+     * 檢查 Wonder 的剪輯腳本。
+     *
+     * @param scenes     可用的 3D 場景 id
+     * @param wordIds    送出去的詞 id（改字用）
+     * @param activities 畫面變化區的 id（放大用）
+     * @param options    風格與沿用的問題 id
+     */
+    public static Result check(JsonNode root, double duration, Set<String> scenes, Set<String> wordIds, Set<String> activities, Options options) {
         List<AiError> errors = new ArrayList<>();
-        JsonNode list = root == null ? null : root.path("suggestions");
-        if (root == null || !root.isObject() || list == null || !list.isArray()) {
-            errors.add(error("The response must be a JSON object with a \"suggestions\" array."));
-            return new Result(List.of(), errors);
+        JsonNode list = root == null ? null : root.path("items");
+        if (root == null || !root.isObject() || !list.isArray()) {
+            errors.add(error("The response must be a JSON object with \"treatment\", \"chapters\" and \"items\"."));
+            return new Result(List.of(), List.of(), errors, null, options.fallbackProblems());
         }
+        List<Chapter> chapters = chapters(root.path("chapters"), duration);
+        if (chapters.isEmpty()) errors.add(error("\"chapters\" must list the video's sections (title, start, end), at least one."));
+        // 導演構想的問題 id；這一輪沒給就沿用上一輪的
+        JsonNode treatment = root.path("treatment").isObject() ? root.path("treatment") : null;
+        Set<String> problems = new TreeSet<>();
+        if (treatment != null) treatment.path("problems").forEach(p -> {
+            String pid = p.path("id").asString("").strip();
+            if (!pid.isEmpty()) problems.add(pid);
+        });
+        if (problems.isEmpty()) problems.addAll(options.fallbackProblems());
+        String style = style(options.style());
+        Set<String> allowed = allowedKinds(style);
+        List<String> directives = options.directives() == null ? List.of() : options.directives();
+        Set<String> directiveIds = new TreeSet<>();
+        for (int d = 0; d < directives.size(); d++) directiveIds.add(directiveId(d));
+        /** 照指示做的項目（項目 id → 指示 id），被擋下時找得到理由 */
+        Map<String, String> directed = new LinkedHashMap<>();
+
         List<Suggestion> ok = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             JsonNode s = list.get(i);
             String kind = s.path("kind").asString("");
+            if (kind.equals("camera")) kind = "transition";
+            String id = s.path("id").asString("").strip();
+            if (id.isEmpty()) id = "i" + (i + 1);
+            String where = "items[" + i + "] (" + id + ")";
+            if (!CAPS.containsKey(kind)) {
+                errors.add(error(where + ": unknown kind \"" + kind + "\" (use " + String.join(", ", new TreeSet<>(allowed)) + ")."));
+                continue;
+            }
+            // 照指示做的項目：指示 id 要對得上；風格、引用、problem、次數上限放寬
+            String directive = s.path("directive").asString("").strip();
+            if (directive.isEmpty()) directive = null;
+            if (directive != null && !directiveIds.contains(directive)) {
+                errors.add(error(where + ": \"directive\" \"" + directive + "\" is not one of the user's directives ("
+                        + (directiveIds.isEmpty() ? "there are none" : String.join(", ", directiveIds)) + ")."));
+                continue;
+            }
+            if (directive != null) directed.put(id, directive);
+            if (directive == null && !allowed.contains(kind)) {
+                errors.add(error(where + ": " + kind + " is not allowed in the \"" + style + "\" style — drop it."));
+                continue;
+            }
+            String purpose = s.path("purpose").asString("").strip();
+            String quote = s.path("quote").asString("").strip();
+            if (purpose.isEmpty()) {
+                errors.add(error(where + ": every item needs a \"purpose\" — say why the edit helps the viewer; drop it if you can't."));
+                continue;
+            }
+            if (directive == null && NEEDS_QUOTE.contains(kind) && quote.isEmpty()) {
+                errors.add(error(where + ": " + kind + " needs \"quote\" — the transcript sentence it belongs to."));
+                continue;
+            }
+            // 畫面類要說它解決構想裡的哪個問題；剪、改字、遮罩本身就有理由，不用
+            String problem = null;
+            if (VISUAL.contains(kind) && directive != null) {
+                // 指示本身就是理由；有指名構想裡的問題就帶上
+                String p = s.path("problem").asString("").strip();
+                problem = problems.contains(p) ? p : null;
+            } else if (VISUAL.contains(kind)) {
+                problem = s.path("problem").asString("").strip();
+                if (problems.isEmpty()) {
+                    errors.add(error(where + ": " + kind + " needs \"problem\", but there is no \"treatment\" with problems — write the treatment first."));
+                    continue;
+                }
+                if (!problems.contains(problem)) {
+                    errors.add(error(where + ": " + kind + " needs \"problem\": the id of the treatment problem it solves (" + String.join(", ", problems) + "); if it solves none, drop it."));
+                    continue;
+                }
+            }
             double start = Math.max(0, s.path("start").asDouble(Double.NaN));
             double end = Math.min(duration, s.path("end").asDouble(Double.NaN));
-            String reason = s.path("reason").asString("").strip();
-            String where = "suggestions[" + i + "]";
-            if (!CAPS.containsKey(kind)) {
-                errors.add(error(where + ": unknown kind \"" + kind + "\" (use cut, mask, effect, camera, fix or zoom)."));
-                continue;
+            if (GLOBAL.contains(kind)) {
+                // 字幕樣式整支；配樂從 start 到片尾；片頭在開頭
+                if (kind.equals("captionStyle")) { start = 0; end = duration; }
+                if (kind.equals("music")) { start = Double.isNaN(start) ? 0 : Math.min(start, duration - MIN_LENGTH); end = duration; }
+                if (kind.equals("intro")) { start = 0; end = Math.min(duration, 1); }
             }
             if (Double.isNaN(start) || Double.isNaN(end) || end - start < MIN_LENGTH) {
                 errors.add(error(where + ": start/end must be seconds inside the video (0 to " + duration + ") with end > start."));
                 continue;
             }
             Map<String, Object> payload = new LinkedHashMap<>();
-            String problem = switch (kind) {
-                case "cut" -> null;
-                case "mask" -> {
-                    String target = s.path("target").asString("").strip();
-                    payload.put("target", target);
-                    // 框（選填）：螢幕上的文字（金鑰、Email）SAM 分割不出來，前端改用這個框遮
-                    double[] box = new double[4];
-                    boolean hasBox = true;
-                    String[] keys = {"x", "y", "w", "h"};
-                    for (int k = 0; k < 4; k++) {
-                        box[k] = s.path(keys[k]).asDouble(Double.NaN);
-                        if (Double.isNaN(box[k]) || box[k] < 0 || box[k] > 1) hasBox = false;
-                    }
-                    if (hasBox && box[2] > 0 && box[3] > 0) for (int k = 0; k < 4; k++) payload.put(keys[k], box[k]);
-                    yield SamPhrase.valid(target) ? null : "target must be a short English noun phrase for SAM (e.g. \"API key\", \"human face\").";
-                }
-                case "effect" -> text(s, "description", payload);
-                case "camera" -> {
-                    String scene = s.path("scene").asString("");
-                    payload.put("scene", scene);
-                    String d = text(s, "description", payload);
-                    yield !scenes.contains(scene) ? "scene \"" + scene + "\" is not one of the listed scenes." : d;
-                }
-                case "fix" -> {
-                    List<String> ids = new ArrayList<>();
-                    s.path("wordIds").forEach(n -> ids.add(n.asString("")));
-                    payload.put("wordIds", ids);
-                    String t = text(s, "text", payload);
-                    yield ids.isEmpty() || !wordIds.containsAll(ids) ? "wordIds must be ids of the transcript words you were given." : t;
-                }
-                case "zoom" -> {
-                    String bad = null;
-                    for (String k : List.of("cx", "cy", "w")) {
-                        double v = s.path(k).asDouble(Double.NaN);
-                        if (Double.isNaN(v) || v < 0 || v > 1) bad = "cx, cy and w must be numbers from 0 to 1.";
-                        payload.put(k, v);
-                    }
-                    yield bad;
-                }
-                default -> "unknown kind";
-            };
-            if (problem != null) {
-                errors.add(error(where + " (" + kind + "): " + problem));
+            String bad = fields(kind, s, payload, scenes, wordIds, activities, start, end, chapters);
+            if (bad == null && kind.equals("cut")) bad = cut(s, payload, quote, start, end, duration, options.words(), options.confirmedRetakes());
+            if (bad == null && kind.equals("fix")) bad = fixSpan(payload, start, end, options.words());
+            if (bad != null) {
+                errors.add(error(where + ": " + bad));
                 continue;
             }
-            ok.add(new Suggestion(kind, start, end, reason.isEmpty() ? kind : reason, payload));
+            if (directive != null) payload.put("directive", directive);
+            int chapter = s.path("chapter").asInt(-1);
+            ok.add(new Suggestion(id, kind, start, end, purpose, payload, purpose, quote, chapter, null, problem));
         }
-        return new Result(merge(ok), errors);
+        List<Suggestion> merged = merge(ok, errors);
+        merged = hiddenByCuts(merged, options.fixedCuts() == null ? List.of() : options.fixedCuts(), errors);
+        if (!directives.isEmpty()) treatment = ledger(treatment, directives, merged, directed, errors, options.fallbackLedger());
+        return new Result(chapters, merged, errors, treatment, Set.copyOf(problems));
+    }
+
+    /**
+     * 指示對帳清單：每條指示 {id, text, items（留下來的項目 id）, notAdopted（不採用的理由）}，寫回 treatment.directives。
+     * 規劃者的清單這一輪沒給就用上一輪的；沒交代的退回（理由先寫「沒交代」）；項目全被規則擋下又沒理由時，規則的錯誤當理由。
+     */
+    private static JsonNode ledger(JsonNode treatment, List<String> directives, List<Suggestion> kept, Map<String, String> directed,
+                                   List<AiError> errors, JsonNode fallback) {
+        JsonNode given = treatment != null && treatment.path("directives").isArray() ? treatment.path("directives") : fallback;
+        /** 規劃者寫的不採用理由（指示 id → 理由） */
+        Map<String, String> reasons = new LinkedHashMap<>();
+        if (given != null) given.forEach(d -> reasons.put(d.path("id").asString("").strip(), d.path("notAdopted").asString("").strip()));
+        ObjectNode out = treatment instanceof ObjectNode o ? o.deepCopy() : JsonNodeFactory.instance.objectNode();
+        ArrayNode list = out.putArray("directives");
+        List<AiError> missing = new ArrayList<>();
+        for (int d = 0; d < directives.size(); d++) {
+            String did = directiveId(d);
+            ObjectNode entry = list.addObject();
+            entry.put("id", did).put("text", directives.get(d));
+            ArrayNode items = entry.putArray("items");
+            kept.stream().filter(s -> did.equals(s.payload().get("directive"))).forEach(s -> items.add(s.id()));
+            String reason = reasons.getOrDefault(did, "");
+            if (items.isEmpty() && reason.isEmpty()) {
+                // 照這條指示做的項目被規則擋下：把擋下的原因當理由
+                List<String> rejected = directed.entrySet().stream().filter(e -> e.getValue().equals(did)).map(Map.Entry::getKey).toList();
+                List<String> why = errors.stream().map(AiError::message)
+                        .filter(m -> rejected.stream().anyMatch(id -> m.contains("(" + id + ")") || m.startsWith(id + " ("))).toList();
+                if (!why.isEmpty()) {
+                    reason = "Rejected by the edit rules: " + String.join(" ", why);
+                } else {
+                    reason = "Not addressed by the director.";
+                    missing.add(error("treatment.directives: " + did + " (\"" + directives.get(d) + "\") is not addressed. Add items with \"directive\":\"" + did
+                            + "\" that carry it out, or give \"notAdopted\" with the reason it can't or shouldn't be done."));
+                }
+            }
+            if (!reason.isEmpty()) entry.put("notAdopted", reason);
+        }
+        errors.addAll(missing);
+        return out;
+    }
+
+    /** 章節：夾在片長內、依起點排序、去掉空的 */
+    private static List<Chapter> chapters(JsonNode list, double duration) {
+        List<Chapter> out = new ArrayList<>();
+        list.forEach(c -> {
+            String title = c.path("title").asString("").strip();
+            double start = Math.max(0, c.path("start").asDouble(Double.NaN));
+            double end = Math.min(duration, c.path("end").asDouble(Double.NaN));
+            if (!title.isEmpty() && !Double.isNaN(start) && !Double.isNaN(end) && end > start) out.add(new Chapter(title, start, end));
+        });
+        out.sort(Comparator.comparingDouble(Chapter::start));
+        return out;
+    }
+
+    /** 各種類的欄位：放進 payload，不合格回錯誤說明 */
+    private static String fields(String kind, JsonNode s, Map<String, Object> payload, Set<String> scenes, Set<String> wordIds,
+                                 Set<String> activities, double start, double end, List<Chapter> chapters) {
+        return switch (kind) {
+            case "cut" -> null; // 種類與證據在 cut() 檢查
+            case "mask" -> {
+                String target = s.path("target").asString("").strip();
+                payload.put("target", target);
+                // 框（選填）：螢幕上的文字（金鑰、Email）SAM 分割不出來，前端改用這個框遮
+                double[] box = box(s);
+                if (box != null) putBox(payload, box);
+                yield SamPhrase.valid(target) ? null : "target must be a short English noun phrase for SAM (e.g. \"API key\", \"human face\").";
+            }
+            case "fix" -> {
+                List<String> ids = new ArrayList<>();
+                s.path("wordIds").forEach(n -> ids.add(n.asString("")));
+                payload.put("wordIds", ids);
+                String t = text(s, "text", payload);
+                yield ids.isEmpty() || !wordIds.containsAll(ids) ? "wordIds must be ids of the transcript words you were given." : t;
+            }
+            case "zoom" -> {
+                if (end - start < ZOOM_MIN) yield "a zoom lasts at least " + (int) ZOOM_MIN + " seconds — zoom in, hold while the viewer reads, then pull out.";
+                String activity = s.path("activity").asString("").strip();
+                if (!activity.isEmpty()) {
+                    payload.put("activity", activity);
+                    yield activities.contains(activity) ? null : "activity \"" + activity + "\" is not one of the listed screen activity ids.";
+                }
+                String bad = null;
+                for (String k : List.of("cx", "cy", "w")) {
+                    double v = s.path(k).asDouble(Double.NaN);
+                    if (Double.isNaN(v) || v < 0 || v > 1) bad = "zoom needs an \"activity\" id, or cx, cy and w as numbers from 0 to 1.";
+                    payload.put(k, v);
+                }
+                yield bad;
+            }
+            case "effect" -> {
+                double[] box = box(s);
+                if (box != null) putBox(payload, box);
+                yield text(s, "description", payload);
+            }
+            case "transition" -> {
+                String scene = s.path("scene").asString("");
+                payload.put("scene", scene);
+                if (s.has("fromChapter")) payload.put("fromChapter", s.path("fromChapter").asInt());
+                if (s.has("toChapter")) payload.put("toChapter", s.path("toChapter").asInt());
+                if (!scenes.contains(scene)) yield "scene \"" + scene + "\" is not one of the listed scenes.";
+                if (end - start < 2 || end - start > 6) yield "a transition lasts 2 to 6 seconds.";
+                boolean atBoundary = chapters.stream().skip(1).anyMatch(c -> Math.abs(c.start() - start) <= BOUNDARY || Math.abs(c.start() - (start + end) / 2) <= BOUNDARY);
+                yield atBoundary ? null : "a transition must sit at a chapter boundary (within " + (int) BOUNDARY + " s of a chapter's start, other than the first).";
+            }
+            case "mascot" -> {
+                double[] box = box(s);
+                String action = s.path("action").asString("point");
+                payload.put("action", Set.of("wave", "walk").contains(action) ? action : "point");
+                // 從哪一邊走進來（walk 一路走到目標框）
+                String from = s.path("from").asString("");
+                if (from.equals("left") || from.equals("right")) payload.put("from", from);
+                if (box == null) yield "a mascot needs the target box x, y, w, h (fractions of the frame) it points at.";
+                if (end - start < MASCOT_MIN) yield "a mascot lasts at least " + (int) MASCOT_MIN + " seconds.";
+                putBox(payload, box);
+                yield null;
+            }
+            case "captionStyle" -> {
+                String k = s.path("karaoke").asString("");
+                payload.put("karaoke", k);
+                yield KARAOKE.contains(k) ? null : "karaoke must be one of off, fill, scale, box.";
+            }
+            case "music" -> text(s, "description", payload);
+            case "intro" -> {
+                String title = s.path("title").asString("").strip();
+                payload.put("title", title);
+                payload.put("subtitle", s.path("subtitle").asString("").strip());
+                yield title.isEmpty() || title.length() > 40 ? "intro needs a title of at most 40 characters." : null;
+            }
+            default -> "unknown kind";
+        };
+    }
+
+    /**
+     * 剪的框架：一定要標種類（reason），各種類有自己的證據條件（有逐字稿的詞才檢查）。
+     * - retake：要引用旁白；最長 60 秒；剪掉的內容要和結尾之後 60 秒內的話相近（重講）。
+     * - silence：至少 2 秒、範圍內最多 1 個詞。
+     * - head／tail：從 0 秒開始／剪到片尾，範圍內最多 1 個詞。
+     */
+    private static String cut(JsonNode s, Map<String, Object> payload, String quote, double start, double end, double duration,
+                              List<DirectorJobs.Word> words, List<double[]> confirmed) {
+        String reason = s.path("reason").asString("").strip();
+        if (!CUT_REASONS.contains(reason)) return "a cut needs \"reason\": one of retake, silence, head, tail. If none fits, do not cut.";
+        payload.put("reason", reason);
+        List<DirectorJobs.Word> inside = words.stream().filter(w -> w.t() >= start && w.t() < end).toList();
+        switch (reason) {
+            case "retake" -> {
+                if (quote.isEmpty()) return "a retake cut needs \"quote\": the abandoned sentence it removes.";
+                if (end - start > RETAKE_MAX) return "a retake cut lasts at most " + (int) RETAKE_MAX + " seconds.";
+                if (words.isEmpty()) return null;
+                if (inside.isEmpty()) return "this retake cut has no speech inside; use reason silence instead.";
+                // Jev 確認過的候選（看得懂換句話說的重講）：起訖對得上就放行
+                if (confirmed.stream().anyMatch(c -> Math.abs(c[0] - start) <= CANDIDATE_TOLERANCE && Math.abs(c[1] - end) <= CANDIDATE_TOLERANCE)) return null;
+                List<DirectorJobs.Word> after = words.stream().filter(w -> w.t() >= end && w.t() < end + RESTART_WINDOW).toList();
+                int k = Math.min(RETAKE_WORDS, inside.size());
+                if (after.isEmpty() || similarity(inside, after.subList(0, Math.min(k, after.size()))) < RETAKE_SIMILARITY)
+                    return "a retake cut must end where the speaker restarts the same thing: the speech right after "
+                            + String.format(java.util.Locale.ROOT, "%.1f", end) + " s does not repeat what is cut. Cut only what is said again later, or do not cut.";
+                return null;
+            }
+            case "silence" -> {
+                if (end - start < SILENCE_MIN) return "a silence cut lasts at least " + (int) SILENCE_MIN + " seconds.";
+            }
+            case "head" -> {
+                if (start > 0.1) return "a head cut starts at 0.";
+            }
+            case "tail" -> {
+                if (end < duration - 0.1) return "a tail cut ends at the end of the video (" + duration + ").";
+            }
+            default -> { }
+        }
+        return inside.size() > SILENCE_WORDS ? "this " + reason + " cut has speech inside (" + inside.size() + " words); never cut speech as " + reason + "." : null;
+    }
+
+    /** 剪掉的詞和後面的詞相不相近：後面的 k 個詞當樣本，在剪掉的詞裡滑動同樣長度的窗，取最高的兩字組 Jaccard */
+    static double similarity(List<DirectorJobs.Word> cut, List<DirectorJobs.Word> after) {
+        String sample = normalize(after);
+        int k = after.size();
+        if (cut.size() < k) return jaccard(normalize(cut), sample);
+        double best = 0;
+        for (int i = 0; i + k <= cut.size(); i++) best = Math.max(best, jaccard(normalize(cut.subList(i, i + k)), sample));
+        return best;
+    }
+
+    /** 詞接成比對用的字串：小寫、去標點；中文字直接相接，英文詞間一個空白 */
+    private static String normalize(List<DirectorJobs.Word> words) {
+        StringBuilder b = new StringBuilder();
+        for (DirectorJobs.Word w : words) {
+            String t = w.text().toLowerCase(java.util.Locale.ROOT).replaceAll("[\\p{P}\\p{S}]", "");
+            if (t.isEmpty()) continue;
+            if (b.length() > 0 && !t.codePoints().allMatch(Character::isIdeographic)) b.append(' ');
+            b.append(t);
+        }
+        return b.toString();
+    }
+
+    /** 兩字組的 Jaccard 相似度 */
+    private static double jaccard(String a, String b) {
+        Set<String> x = bigrams(a);
+        Set<String> y = bigrams(b);
+        long both = x.stream().filter(y::contains).count();
+        long any = x.size() + y.size() - both;
+        return any == 0 ? 0 : (double) both / any;
+    }
+
+    /** 字串的兩字組 */
+    private static Set<String> bigrams(String s) {
+        int[] cps = s.codePoints().toArray();
+        Set<String> out = new java.util.HashSet<>();
+        for (int i = 0; i + 1 < cps.length; i++) out.add(new String(cps, i, 2));
+        return out;
+    }
+
+    /** 改字只改一個位置：最長 1.5 秒；有逐字稿時，要改的詞必須連續 */
+    @SuppressWarnings("unchecked")
+    private static String fixSpan(Map<String, Object> payload, double start, double end, List<DirectorJobs.Word> words) {
+        if (end - start > FIX_MAX) return "a fix covers one place, at most " + FIX_MAX + " seconds. Give each misheard place its own fix.";
+        if (words.isEmpty()) return null;
+        List<String> ids = (List<String>) payload.get("wordIds");
+        List<String> order = words.stream().sorted(Comparator.comparingDouble(DirectorJobs.Word::t)).map(DirectorJobs.Word::id).toList();
+        List<Integer> idx = ids.stream().map(order::indexOf).sorted().toList();
+        for (int i = 1; i < idx.size(); i++) if (idx.get(i) != idx.get(i - 1) + 1) return "a fix changes consecutive words only (one place); split it.";
+        return null;
+    }
+
+    /** 框 x、y、w、h（0～1）；缺或不合理回 null */
+    private static double[] box(JsonNode s) {
+        double[] b = new double[4];
+        String[] keys = {"x", "y", "w", "h"};
+        for (int k = 0; k < 4; k++) {
+            b[k] = s.path(keys[k]).asDouble(Double.NaN);
+            if (Double.isNaN(b[k]) || b[k] < 0 || b[k] > 1) return null;
+        }
+        return b[2] > 0 && b[3] > 0 ? b : null;
+    }
+
+    private static void putBox(Map<String, Object> payload, double[] b) {
+        payload.put("x", b[0]);
+        payload.put("y", b[1]);
+        payload.put("w", b[2]);
+        payload.put("h", b[3]);
     }
 
     /** 必填文字欄位：放進 payload，空的回錯誤 */
@@ -115,26 +533,107 @@ public final class DirectorRules {
         return v.isEmpty() ? key + " is required." : null;
     }
 
-    /** 同種重疊的合併、上限、依時間排序 */
-    private static List<Suggestion> merge(List<Suggestion> list) {
+    /** 同種重疊的合併、畫面類不重疊、密度與上限、依時間排序 */
+    private static List<Suggestion> merge(List<Suggestion> list, List<AiError> errors) {
         List<Suggestion> sorted = new ArrayList<>(list);
         sorted.sort(Comparator.comparingDouble(Suggestion::start));
         List<Suggestion> out = new ArrayList<>();
         Map<String, Integer> count = new LinkedHashMap<>();
         for (Suggestion s : sorted) {
-            // 改字以詞為準（相鄰的兩個聽錯的詞時間會重疊，不能互相吃掉）；其他種類看時間重疊
-            Suggestion prev = out.stream().filter(o -> o.kind().equals(s.kind())
-                    && (s.kind().equals("fix") ? o.payload().get("wordIds").equals(s.payload().get("wordIds")) : s.start() < o.end())).findFirst().orElse(null);
-            if (prev != null) {
-                // 剪取聯集；其他種類留先出現的那條
-                if (s.kind().equals("cut")) out.set(out.indexOf(prev), new Suggestion("cut", prev.start(), Math.max(prev.end(), s.end()), prev.reason(), prev.payload()));
+            String where = s.id() + " (" + s.kind() + ")";
+            if (s.kind().equals("fix")) {
+                // 改字以詞為準：完全相同的去掉；部分重疊（同一個詞被改兩次）退回，免得套用時互相蓋掉
+                if (out.stream().anyMatch(o -> o.kind().equals("fix") && o.payload().get("wordIds").equals(s.payload().get("wordIds")))) continue;
+                Suggestion clash = out.stream().filter(o -> o.kind().equals("fix")
+                        && ((List<?>) o.payload().get("wordIds")).stream().anyMatch(((List<?>) s.payload().get("wordIds"))::contains)).findFirst().orElse(null);
+                if (clash != null) {
+                    errors.add(error(where + " changes some of the same words as " + clash.id() + "; merge them into one fix covering all the words."));
+                    continue;
+                }
+            } else if (s.kind().equals("cut") || s.kind().equals("mask")) {
+                Suggestion prev = out.stream().filter(o -> o.kind().equals(s.kind()) && s.start() < o.end()).findFirst().orElse(null);
+                if (prev != null) {
+                    // 剪取聯集；遮罩留先出現的
+                    if (s.kind().equals("cut")) out.set(out.indexOf(prev), prev.withEnd(Math.max(prev.end(), s.end())));
+                    continue;
+                }
+            } else if (VISUAL.contains(s.kind())) {
+                Suggestion clash = out.stream().filter(o -> VISUAL.contains(o.kind()) && s.start() < o.end() && o.start() < s.end()).findFirst().orElse(null);
+                if (clash != null) {
+                    errors.add(error(where + " overlaps " + clash.id() + " (" + clash.kind() + "); zooms, effects, transitions and the mascot must not overlap."));
+                    continue;
+                }
+                if (s.kind().equals("effect") && !directed(s) && out.stream().anyMatch(o -> o.kind().equals("effect") && s.start() - o.start() < EFFECT_WINDOW)) {
+                    errors.add(error(where + ": at most one effect per " + (int) EFFECT_WINDOW + " seconds."));
+                    continue;
+                }
+                if (s.kind().equals("zoom") && out.stream().anyMatch(o -> o.kind().equals("zoom") && s.start() - o.end() < ZOOM_GAP)) {
+                    errors.add(error(where + ": zooms must be at least " + (int) ZOOM_GAP + " seconds apart — extend the earlier zoom instead."));
+                    continue;
+                }
+                if (s.kind().equals("transition") && out.stream().anyMatch(o -> o.kind().equals("transition") && s.start() - o.start() < TRANSITION_GAP)) {
+                    errors.add(error(where + ": transitions must be at least " + (int) TRANSITION_GAP + " seconds apart."));
+                    continue;
+                }
+            }
+            if ((!directed(s) && count.getOrDefault(s.kind(), 0) >= CAPS.get(s.kind())) || out.size() >= TOTAL) {
+                errors.add(error(where + ": too many " + s.kind() + " items (at most " + CAPS.get(s.kind()) + ")."));
                 continue;
             }
-            if (count.getOrDefault(s.kind(), 0) >= CAPS.get(s.kind()) || out.size() >= TOTAL) continue;
             count.merge(s.kind(), 1, Integer::sum);
             out.add(s);
         }
         return out;
+    }
+
+    /**
+     * 照指示做的項目整段落在剪掉的範圍（規劃者的剪或程式決定的剪）裡，觀眾永遠看不到：擋下並回錯誤（指示對帳時當成不採用的理由）。
+     * 部分被剪也一樣：被剪掉的超過一半，或留下不到 PARTLY_MIN 秒，就擋下（2026-11-01 開發者決定）。
+     */
+    private static List<Suggestion> hiddenByCuts(List<Suggestion> list, List<double[]> fixedCuts, List<AiError> errors) {
+        List<double[]> cuts = new ArrayList<>(fixedCuts);
+        list.stream().filter(s -> s.kind().equals("cut")).forEach(s -> cuts.add(new double[] {s.start(), s.end()}));
+        List<double[]> merged = union(cuts);
+        List<Suggestion> out = new ArrayList<>();
+        for (Suggestion s : list) {
+            if (!directed(s) || s.kind().equals("cut") || GLOBAL.contains(s.kind())) {
+                out.add(s);
+                continue;
+            }
+            double len = s.end() - s.start();
+            double[] inside = merged.stream().filter(c -> c[0] <= s.start() + 1e-6 && s.end() <= c[1] + 1e-6).findFirst().orElse(null);
+            if (inside != null) {
+                errors.add(error(String.format(java.util.Locale.ROOT, "%s (%s) lies entirely inside the cut %.1f–%.1f s, so the viewer would never see it; "
+                        + "move it to footage that is kept, or give notAdopted.", s.id(), s.kind(), inside[0], inside[1])));
+                continue;
+            }
+            // 部分被剪：被剪掉的超過一半、或留下不到 PARTLY_MIN 秒，觀眾看不到指示要的效果
+            double covered = 0;
+            for (double[] c : merged) covered += Math.max(0, Math.min(c[1], s.end()) - Math.max(c[0], s.start()));
+            if (len > 0 && covered > 1e-6 && (covered > len / 2 + 1e-6 || len - covered < PARTLY_MIN - 1e-6)) {
+                errors.add(error(String.format(java.util.Locale.ROOT, "%s (%s) %.1f–%.1f s: %.1f of its %.1f s fall inside cuts, so the viewer would see too little of it; "
+                        + "move it to footage that is kept, or give notAdopted.", s.id(), s.kind(), s.start(), s.end(), covered, len)));
+                continue;
+            }
+            out.add(s);
+        }
+        return out;
+    }
+
+    /** 剪的範圍合併成不重疊的區間（重疊的剪不重複算） */
+    private static List<double[]> union(List<double[]> cuts) {
+        List<double[]> sorted = cuts.stream().sorted(java.util.Comparator.comparingDouble(c -> c[0])).toList();
+        List<double[]> out = new ArrayList<>();
+        for (double[] c : sorted) {
+            if (!out.isEmpty() && c[0] <= out.getLast()[1] + 1e-6) out.getLast()[1] = Math.max(out.getLast()[1], c[1]);
+            else out.add(new double[] {c[0], c[1]});
+        }
+        return out;
+    }
+
+    /** 照使用者指示做的項目（次數上限與特效密度不算它） */
+    private static boolean directed(Suggestion s) {
+        return s.payload().containsKey("directive");
     }
 
     private static AiError error(String message) {

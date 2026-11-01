@@ -466,6 +466,73 @@
       ]
     },
     {
+      "id": "particles", "version": 2, "schema": 2, "category": "fx", "preview": {"t": 0.5, "box": {"w": 0.2, "h": 0.2}}, "kind": "visual", "name": "粒子迸發",
+      "description": "從框的中心迸出一圈彩色紙片，往外飛散、受重力落下並淡出，用在完成或慶祝的時刻",
+      "tags": ["粒子", "彩帶", "慶祝"],
+      "params": {
+        "color": {"type": "color", "role": "primary", "default": "#f59e0b", "label": "主色"},
+        "accent": {"type": "color", "role": "secondary", "default": "#38bdf8", "label": "副色"},
+        "count": {"type": "number", "min": 10, "max": 80, "step": 1, "default": 40, "label": "數量"},
+        "spread": {"type": "number", "min": 0.5, "max": 3, "step": 0.1, "default": 1.2, "label": "飛散範圍"},
+        "gravity": {"type": "number", "min": 0, "max": 2, "step": 0.1, "default": 0.8, "label": "重力"},
+        "life": {"type": "number", "min": 0.4, "max": 3, "step": 0.1, "default": 1.4, "label": "每片停留（秒）"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, cx = b.x + b.w / 2, cy = b.y + b.h / 2;",
+        "  const reach = Math.max(120, Math.max(b.w, b.h)) * p.spread;",
+        "  const end = clamp((env.duration - t) / 0.3, 0, 1);",
+        "  g.save(); g.alpha(end);",
+        "  for (let i = 0; i < p.count; i++) {",
+        "    const delay = env.rand(i * 5) * 0.15, local = t - delay;",
+        "    if (local < 0 || local > p.life) continue;",
+        "    const u = local / p.life, a = env.rand(i * 5 + 1) * Math.PI * 2, speed = 0.55 + env.rand(i * 5 + 2) * 0.45;",
+        "    const dist = reach * speed * ease.outCubic(clamp(u * 1.6, 0, 1));",
+        "    const x = cx + Math.cos(a) * dist, y = cy + Math.sin(a) * dist * 0.8 + p.gravity * 900 * local * local * 0.35;",
+        "    const size = 18 + env.rand(i * 5 + 3) * 16, spin = (env.rand(i * 5 + 4) - 0.5) * 14 * local;",
+        "    g.save(); g.translate(x, y); g.rotate(spin); g.scale(1, Math.cos(local * 9 + i));",
+        "    g.begin(); g.rect(-size / 2, -size / 4, size, size / 2);",
+        "    g.fill({color: i % 2 === 0 ? p.color : p.accent, alpha: 1 - ease.inCubic(u)});",
+        "    g.restore();",
+        "  }",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
+      "id": "counter", "version": 2, "schema": 2, "category": "text", "preview": {"t": 1.2, "box": {"w": 0.3, "h": 0.2}}, "kind": "visual", "name": "數字跳動",
+      "description": "在框的中心把數字從起始值快速跳到目標值，可加前後綴與小數位，最後輕輕彈一下，用在強調統計或成績",
+      "tags": ["數字", "計數", "統計"],
+      "params": {
+        "from": {"type": "number", "min": -1000000, "max": 1000000, "step": 1, "default": 0, "label": "起始值"},
+        "to": {"type": "number", "min": -1000000, "max": 1000000, "step": 1, "default": 100, "label": "目標值"},
+        "decimals": {"type": "number", "min": 0, "max": 3, "step": 1, "default": 0, "label": "小數位"},
+        "prefix": {"type": "text", "maxLength": 8, "default": "", "label": "前綴"},
+        "suffix": {"type": "text", "maxLength": 8, "default": "%", "label": "後綴"},
+        "inDur": {"type": "duration", "min": 0.2, "max": 5, "default": 1.2, "label": "跳動時間（秒）"},
+        "size": {"type": "number", "min": 40, "max": 400, "step": 5, "default": 160, "label": "字級"},
+        "color": {"type": "color", "role": "text", "default": "#ffffff", "label": "顏色"},
+        "outline": {"type": "color", "role": "outline", "default": "#2563eb", "label": "描邊"},
+        "font": {"type": "font", "default": "display", "label": "字型"}
+      },
+      "code": [
+        "function draw(g, t, p, env) {",
+        "  const b = env.box, cx = b.x + b.w / 2, cy = b.y + b.h / 2;",
+        "  const u = ease.outCubic(clamp(t / p.inDur, 0, 1)), value = lerp(p.from, p.to, u);",
+        "  const digits = Math.round(clamp(p.decimals, 0, 3)), unit = Math.pow(10, digits);",
+        "  const n = Math.round(value * unit) / unit, whole = Math.trunc(Math.abs(n)), frac = Math.round((Math.abs(n) - whole) * unit);",
+        "  let text = (n < 0 ? '-' : '') + String(whole);",
+        "  if (digits > 0) text += '.' + String(frac + unit).slice(1);",
+        "  const pop = t < p.inDur ? 1 : 1 + 0.12 * Math.sin(clamp((t - p.inDur) / 0.25, 0, 1) * Math.PI);",
+        "  const fade = clamp((env.duration - t) / 0.3, 0, 1) * clamp(t / 0.15, 0, 1);",
+        "  g.save(); g.alpha(fade); g.translate(cx, cy); g.scale(pop, pop);",
+        "  g.text(p.prefix + text + p.suffix, 0, 0, {size: p.size, weight: 900, font: p.font, color: p.color, align: 'center', baseline: 'middle',",
+        "    outline: p.outline, outlineWidth: Math.max(4, p.size * 0.06), shadow: {color: '#00000099', blur: 14, x: 0, y: 6}});",
+        "  g.restore();",
+        "}"
+      ]
+    },
+    {
       "id": "whoosh", "version": 2, "schema": 2, "category": "sound", "kind": "sound", "name": "咻",
       "description": "風切聲：雜訊的頻率由低往高掃過，配合飛入的動作",
       "tags": ["咻", "飛入"],
@@ -613,6 +680,8 @@
      "layers": [{"component": "title", "params": {"mode": "pop"}}], "sounds": [{"component": "pop", "params": {}, "at": 0}]},
     {"id": "title-typewriter", "name": "打字機標題（＋喀喀）", "title": "打字機", "box": {"w": 0.6, "h": 0.18},
      "layers": [{"component": "title", "params": {"mode": "typewriter", "inDur": 1}}], "sounds": [{"component": "click", "params": {"count": 10, "gap": 0.1}, "at": 0}]},
-    {"id": "magnifier", "name": "放大鏡（讀畫面）", "title": "放大鏡", "box": {"w": 0.2, "h": 0.2}, "layers": [{"component": "magnifier", "params": {}}], "sounds": [{"component": "pop", "params": {}, "at": 0}]}
+    {"id": "magnifier", "name": "放大鏡（讀畫面）", "title": "放大鏡", "box": {"w": 0.2, "h": 0.2}, "layers": [{"component": "magnifier", "params": {}}], "sounds": [{"component": "pop", "params": {}, "at": 0}]},
+    {"id": "confetti-burst", "name": "粒子迸發＋閃亮", "title": "慶祝", "box": {"w": 0.2, "h": 0.2}, "layers": [{"component": "particles", "params": {}}], "sounds": [{"component": "sparkle", "params": {}, "at": 0}]},
+    {"id": "count-up", "name": "數字跳動＋上升音", "title": "數字", "box": {"w": 0.3, "h": 0.2}, "layers": [{"component": "counter", "params": {}}], "sounds": [{"component": "rise", "params": {}, "at": 0}]}
   ]
 }

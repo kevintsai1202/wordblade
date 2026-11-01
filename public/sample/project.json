@@ -1,0 +1,2860 @@
+{
+ "format": "wordblade-project",
+ "v": 1,
+ "savedAt": 1793293617833,
+ "media": {
+  "m-6a8b0c2e": {
+   "path": "sample/media/demo-2min.mp4",
+   "rel": "sample/media/demo-2min.mp4"
+  }
+ },
+ "project": {
+  "media": [
+   {
+    "id": "m-6a8b0c2e",
+    "name": "demo-2min.mp4",
+    "kind": "video",
+    "duration": 108.279,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "hasAlpha": false,
+    "audio": true,
+    "path": "sample/media/demo-2min.mp4"
+   }
+  ],
+  "tracks": [
+   {
+    "id": "V1",
+    "kind": "video",
+    "index": 0,
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "V2",
+    "kind": "video",
+    "index": 1,
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A1",
+    "kind": "audio",
+    "index": 0,
+    "role": "dialogue",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A2",
+    "kind": "audio",
+    "index": 1,
+    "role": "music",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A3",
+    "kind": "audio",
+    "index": 2,
+    "role": "sfx",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   }
+  ],
+  "clips": [
+   {
+    "id": "m-6a8b0c2e@V1",
+    "mediaId": "m-6a8b0c2e",
+    "trackId": "V1",
+    "srcIn": 0,
+    "srcOut": 9.31,
+    "start": 0,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-6a8b0c2e@V1-3",
+    "mediaId": "m-6a8b0c2e",
+    "trackId": "V1",
+    "srcIn": 9.81,
+    "srcOut": 17.71,
+    "start": 9.31,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-6a8b0c2e@V1-2",
+    "mediaId": "m-6a8b0c2e",
+    "trackId": "V1",
+    "srcIn": 17.811,
+    "srcOut": 49.4,
+    "start": 17.21,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-6a8b0c2e@V1-2-2",
+    "mediaId": "m-6a8b0c2e",
+    "trackId": "V1",
+    "srcIn": 55.1,
+    "srcOut": 108.279,
+    "start": 48.799,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-6a8b0c2e@A1",
+    "mediaId": "m-6a8b0c2e",
+    "trackId": "A1",
+    "srcIn": 0,
+    "srcOut": 9.31,
+    "start": 0,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-6a8b0c2e@A1-3",
+    "mediaId": "m-6a8b0c2e",
+    "trackId": "A1",
+    "srcIn": 9.81,
+    "srcOut": 17.71,
+    "start": 9.31,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-6a8b0c2e@A1-2",
+    "mediaId": "m-6a8b0c2e",
+    "trackId": "A1",
+    "srcIn": 17.811,
+    "srcOut": 49.4,
+    "start": 17.21,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-6a8b0c2e@A1-2-2",
+    "mediaId": "m-6a8b0c2e",
+    "trackId": "A1",
+    "srcIn": 55.1,
+    "srcOut": 108.279,
+    "start": 48.799,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   }
+  ],
+  "words": [
+   {
+    "id": "m-6a8b0c2e:w0",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Hey",
+    "start": 0.85,
+    "end": 1.09
+   },
+   {
+    "id": "m-6a8b0c2e:w1",
+    "mediaId": "m-6a8b0c2e",
+    "text": "everyone,",
+    "start": 1.09,
+    "end": 1.48
+   },
+   {
+    "id": "m-6a8b0c2e:w2",
+    "mediaId": "m-6a8b0c2e",
+    "text": "in",
+    "start": 1.91,
+    "end": 2.21
+   },
+   {
+    "id": "m-6a8b0c2e:w3",
+    "mediaId": "m-6a8b0c2e",
+    "text": "this",
+    "start": 2.21,
+    "end": 2.45
+   },
+   {
+    "id": "m-6a8b0c2e:w4",
+    "mediaId": "m-6a8b0c2e",
+    "text": "short",
+    "start": 2.45,
+    "end": 2.61
+   },
+   {
+    "id": "m-6a8b0c2e:w5",
+    "mediaId": "m-6a8b0c2e",
+    "text": "video,",
+    "start": 2.61,
+    "end": 2.77
+   },
+   {
+    "id": "m-6a8b0c2e:w6",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I'm",
+    "start": 2.77,
+    "end": 2.85
+   },
+   {
+    "id": "m-6a8b0c2e:w7",
+    "mediaId": "m-6a8b0c2e",
+    "text": "going",
+    "start": 3.23,
+    "end": 3.65
+   },
+   {
+    "id": "m-6a8b0c2e:w8",
+    "mediaId": "m-6a8b0c2e",
+    "text": "to",
+    "start": 3.65,
+    "end": 3.89
+   },
+   {
+    "id": "m-6a8b0c2e:w9",
+    "mediaId": "m-6a8b0c2e",
+    "text": "build",
+    "start": 3.89,
+    "end": 4.21
+   },
+   {
+    "id": "m-6a8b0c2e:w10",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 4.21,
+    "end": 4.37
+   },
+   {
+    "id": "m-6a8b0c2e:w11",
+    "mediaId": "m-6a8b0c2e",
+    "text": "tiny",
+    "start": 4.37,
+    "end": 4.45
+   },
+   {
+    "id": "m-6a8b0c2e:w12",
+    "mediaId": "m-6a8b0c2e",
+    "text": "command",
+    "start": 4.45,
+    "end": 4.844
+   },
+   {
+    "id": "m-6a8b0c2e:w13",
+    "mediaId": "m-6a8b0c2e",
+    "text": "line",
+    "start": 4.844,
+    "end": 5.09
+   },
+   {
+    "id": "m-6a8b0c2e:w14",
+    "mediaId": "m-6a8b0c2e",
+    "text": "tool",
+    "start": 5.09,
+    "end": 5.25
+   },
+   {
+    "id": "m-6a8b0c2e:w15",
+    "mediaId": "m-6a8b0c2e",
+    "text": "that",
+    "start": 5.25,
+    "end": 5.301
+   },
+   {
+    "id": "m-6a8b0c2e:w16",
+    "mediaId": "m-6a8b0c2e",
+    "text": "summarizes",
+    "start": 5.65,
+    "end": 6.335
+   },
+   {
+    "id": "m-6a8b0c2e:w17",
+    "mediaId": "m-6a8b0c2e",
+    "text": "your",
+    "start": 6.335,
+    "end": 6.61
+   },
+   {
+    "id": "m-6a8b0c2e:w18",
+    "mediaId": "m-6a8b0c2e",
+    "text": "meeting",
+    "start": 6.61,
+    "end": 6.93
+   },
+   {
+    "id": "m-6a8b0c2e:w19",
+    "mediaId": "m-6a8b0c2e",
+    "text": "notes",
+    "start": 6.93,
+    "end": 7.17
+   },
+   {
+    "id": "m-6a8b0c2e:w20",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 7.17,
+    "end": 7.37
+   },
+   {
+    "id": "m-6a8b0c2e:w21",
+    "mediaId": "m-6a8b0c2e",
+    "text": "an",
+    "start": 7.37,
+    "end": 7.49
+   },
+   {
+    "id": "m-6a8b0c2e:w22",
+    "mediaId": "m-6a8b0c2e",
+    "text": "AI",
+    "start": 7.49,
+    "end": 7.81
+   },
+   {
+    "id": "m-6a8b0c2e:w23",
+    "mediaId": "m-6a8b0c2e",
+    "text": "model.",
+    "start": 7.81,
+    "end": 8.08
+   },
+   {
+    "id": "m-6a8b0c2e:w24",
+    "mediaId": "m-6a8b0c2e",
+    "text": "It",
+    "start": 8.74,
+    "end": 8.791
+   },
+   {
+    "id": "m-6a8b0c2e:w25",
+    "mediaId": "m-6a8b0c2e",
+    "text": "takes",
+    "start": 8.76,
+    "end": 9.31
+   },
+   {
+    "id": "m-6a8b0c2e:w26",
+    "mediaId": "m-6a8b0c2e",
+    "text": "um",
+    "start": 9.31,
+    "end": 9.81
+   },
+   {
+    "id": "m-6a8b0c2e:w27",
+    "mediaId": "m-6a8b0c2e",
+    "text": "about",
+    "start": 9.81,
+    "end": 10.098
+   },
+   {
+    "id": "m-6a8b0c2e:w28",
+    "mediaId": "m-6a8b0c2e",
+    "text": "two",
+    "start": 10.098,
+    "end": 10.29
+   },
+   {
+    "id": "m-6a8b0c2e:w29",
+    "mediaId": "m-6a8b0c2e",
+    "text": "minutes,",
+    "start": 10.29,
+    "end": 10.61
+   },
+   {
+    "id": "m-6a8b0c2e:w30",
+    "mediaId": "m-6a8b0c2e",
+    "text": "so",
+    "start": 10.61,
+    "end": 11.09
+   },
+   {
+    "id": "m-6a8b0c2e:w31",
+    "mediaId": "m-6a8b0c2e",
+    "text": "let's",
+    "start": 11.09,
+    "end": 11.31
+   },
+   {
+    "id": "m-6a8b0c2e:w32",
+    "mediaId": "m-6a8b0c2e",
+    "text": "jump",
+    "start": 11.31,
+    "end": 11.79
+   },
+   {
+    "id": "m-6a8b0c2e:w33",
+    "mediaId": "m-6a8b0c2e",
+    "text": "right",
+    "start": 12.63,
+    "end": 12.681000000000001
+   },
+   {
+    "id": "m-6a8b0c2e:w34",
+    "mediaId": "m-6a8b0c2e",
+    "text": "in.",
+    "start": 12.65,
+    "end": 12.701
+   },
+   {
+    "id": "m-6a8b0c2e:w35",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Here's",
+    "start": 12.67,
+    "end": 12.721
+   },
+   {
+    "id": "m-6a8b0c2e:w36",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 12.69,
+    "end": 12.85
+   },
+   {
+    "id": "m-6a8b0c2e:w37",
+    "mediaId": "m-6a8b0c2e",
+    "text": "kind",
+    "start": 12.85,
+    "end": 12.93
+   },
+   {
+    "id": "m-6a8b0c2e:w38",
+    "mediaId": "m-6a8b0c2e",
+    "text": "of",
+    "start": 12.93,
+    "end": 13.41
+   },
+   {
+    "id": "m-6a8b0c2e:w40",
+    "mediaId": "m-6a8b0c2e",
+    "text": "notes",
+    "start": 13.41,
+    "end": 13.65
+   },
+   {
+    "id": "m-6a8b0c2e:w41",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I",
+    "start": 13.65,
+    "end": 13.73
+   },
+   {
+    "id": "m-6a8b0c2e:w42",
+    "mediaId": "m-6a8b0c2e",
+    "text": "mean.",
+    "start": 13.73,
+    "end": 13.88
+   },
+   {
+    "id": "m-6a8b0c2e:w43",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Just",
+    "start": 14.33,
+    "end": 14.621
+   },
+   {
+    "id": "m-6a8b0c2e:w44",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 14.621,
+    "end": 14.85
+   },
+   {
+    "id": "m-6a8b0c2e:w45",
+    "mediaId": "m-6a8b0c2e",
+    "text": "few",
+    "start": 14.85,
+    "end": 14.995
+   },
+   {
+    "id": "m-6a8b0c2e:w46",
+    "mediaId": "m-6a8b0c2e",
+    "text": "bullet",
+    "start": 14.995,
+    "end": 15.25
+   },
+   {
+    "id": "m-6a8b0c2e:w47",
+    "mediaId": "m-6a8b0c2e",
+    "text": "points",
+    "start": 15.25,
+    "end": 15.53
+   },
+   {
+    "id": "m-6a8b0c2e:w48",
+    "mediaId": "m-6a8b0c2e",
+    "text": "from",
+    "start": 15.53,
+    "end": 15.73
+   },
+   {
+    "id": "m-6a8b0c2e:w49",
+    "mediaId": "m-6a8b0c2e",
+    "text": "our",
+    "start": 15.73,
+    "end": 16.05
+   },
+   {
+    "id": "m-6a8b0c2e:w50",
+    "mediaId": "m-6a8b0c2e",
+    "text": "weekly",
+    "start": 16.05,
+    "end": 16.21
+   },
+   {
+    "id": "m-6a8b0c2e:w51",
+    "mediaId": "m-6a8b0c2e",
+    "text": "sync.",
+    "start": 16.21,
+    "end": 16.37
+   },
+   {
+    "id": "m-6a8b0c2e:w52",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Nothing",
+    "start": 16.9,
+    "end": 17.141
+   },
+   {
+    "id": "m-6a8b0c2e:w53",
+    "mediaId": "m-6a8b0c2e",
+    "text": "fancy,",
+    "start": 17.141,
+    "end": 17.71
+   },
+   {
+    "id": "m-6a8b0c2e:w54",
+    "mediaId": "m-6a8b0c2e",
+    "text": "um",
+    "start": 17.71,
+    "end": 17.761
+   },
+   {
+    "id": "m-6a8b0c2e:w55",
+    "mediaId": "m-6a8b0c2e",
+    "text": "just",
+    "start": 18.01,
+    "end": 18.61
+   },
+   {
+    "id": "m-6a8b0c2e:w56",
+    "mediaId": "m-6a8b0c2e",
+    "text": "plain",
+    "start": 18.61,
+    "end": 18.91
+   },
+   {
+    "id": "m-6a8b0c2e:w57",
+    "mediaId": "m-6a8b0c2e",
+    "text": "markdown",
+    "start": 18.91,
+    "end": 19.41
+   },
+   {
+    "id": "m-6a8b0c2e:w58",
+    "mediaId": "m-6a8b0c2e",
+    "text": "that",
+    "start": 19.41,
+    "end": 19.65
+   },
+   {
+    "id": "m-6a8b0c2e:w59",
+    "mediaId": "m-6a8b0c2e",
+    "text": "anyone",
+    "start": 19.65,
+    "end": 19.97
+   },
+   {
+    "id": "m-6a8b0c2e:w60",
+    "mediaId": "m-6a8b0c2e",
+    "text": "on",
+    "start": 19.97,
+    "end": 20.29
+   },
+   {
+    "id": "m-6a8b0c2e:w61",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 20.29,
+    "end": 20.45
+   },
+   {
+    "id": "m-6a8b0c2e:w62",
+    "mediaId": "m-6a8b0c2e",
+    "text": "team",
+    "start": 20.45,
+    "end": 20.61
+   },
+   {
+    "id": "m-6a8b0c2e:w63",
+    "mediaId": "m-6a8b0c2e",
+    "text": "can",
+    "start": 20.61,
+    "end": 20.9
+   },
+   {
+    "id": "m-6a8b0c2e:w64",
+    "mediaId": "m-6a8b0c2e",
+    "text": "write.",
+    "start": 22.09,
+    "end": 22.141
+   },
+   {
+    "id": "m-6a8b0c2e:w65",
+    "mediaId": "m-6a8b0c2e",
+    "text": "First",
+    "start": 22.11,
+    "end": 22.21
+   },
+   {
+    "id": "m-6a8b0c2e:w66",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I'll",
+    "start": 22.21,
+    "end": 22.61
+   },
+   {
+    "id": "m-6a8b0c2e:w67",
+    "mediaId": "m-6a8b0c2e",
+    "text": "create",
+    "start": 22.61,
+    "end": 22.921
+   },
+   {
+    "id": "m-6a8b0c2e:w68",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 22.921,
+    "end": 23.01
+   },
+   {
+    "id": "m-6a8b0c2e:w69",
+    "mediaId": "m-6a8b0c2e",
+    "text": "new",
+    "start": 23.01,
+    "end": 23.25
+   },
+   {
+    "id": "m-6a8b0c2e:w70",
+    "mediaId": "m-6a8b0c2e",
+    "text": "folder",
+    "start": 23.25,
+    "end": 23.57
+   },
+   {
+    "id": "m-6a8b0c2e:w71",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 23.57,
+    "end": 23.71
+   },
+   {
+    "id": "m-6a8b0c2e:w72",
+    "mediaId": "m-6a8b0c2e",
+    "text": "install",
+    "start": 23.71,
+    "end": 24.21
+   },
+   {
+    "id": "m-6a8b0c2e:w73",
+    "mediaId": "m-6a8b0c2e",
+    "text": "two",
+    "start": 24.21,
+    "end": 24.29
+   },
+   {
+    "id": "m-6a8b0c2e:w74",
+    "mediaId": "m-6a8b0c2e",
+    "text": "packages,",
+    "start": 24.29,
+    "end": 24.8
+   },
+   {
+    "id": "m-6a8b0c2e:w76",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 25.28,
+    "end": 25.65
+   },
+   {
+    "id": "m-6a8b0c2e:w77",
+    "mediaId": "m-6a8b0c2e",
+    "text": "OpenAI",
+    "start": 25.65,
+    "end": 26.13
+   },
+   {
+    "id": "m-6a8b0c2e:w78",
+    "mediaId": "m-6a8b0c2e",
+    "text": "client",
+    "start": 26.13,
+    "end": 26.45
+   },
+   {
+    "id": "m-6a8b0c2e:w79",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 26.45,
+    "end": 27.31
+   },
+   {
+    "id": "m-6a8b0c2e:w80",
+    "mediaId": "m-6a8b0c2e",
+    "text": "dotenv",
+    "start": 27.31,
+    "end": 27.360999999999997
+   },
+   {
+    "id": "m-6a8b0c2e:w81",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Okay,",
+    "start": 27.91,
+    "end": 28.33
+   },
+   {
+    "id": "m-6a8b0c2e:w82",
+    "mediaId": "m-6a8b0c2e",
+    "text": "that's",
+    "start": 28.61,
+    "end": 28.85
+   },
+   {
+    "id": "m-6a8b0c2e:w83",
+    "mediaId": "m-6a8b0c2e",
+    "text": "done.",
+    "start": 28.85,
+    "end": 29.09
+   },
+   {
+    "id": "m-6a8b0c2e:w84",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Next,",
+    "start": 30.59,
+    "end": 30.66
+   },
+   {
+    "id": "m-6a8b0c2e:w85",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I'll",
+    "start": 31.13,
+    "end": 31.81
+   },
+   {
+    "id": "m-6a8b0c2e:w86",
+    "mediaId": "m-6a8b0c2e",
+    "text": "open",
+    "start": 31.81,
+    "end": 31.89
+   },
+   {
+    "id": "m-6a8b0c2e:w87",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 31.89,
+    "end": 32.13
+   },
+   {
+    "id": "m-6a8b0c2e:w88",
+    "mediaId": "m-6a8b0c2e",
+    "text": ".env",
+    "start": 32.13,
+    "end": 32.379
+   },
+   {
+    "id": "m-6a8b0c2e:w89",
+    "mediaId": "m-6a8b0c2e",
+    "text": "file",
+    "start": 32.379,
+    "end": 32.64
+   },
+   {
+    "id": "m-6a8b0c2e:w90",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 33.01,
+    "end": 33.061
+   },
+   {
+    "id": "m-6a8b0c2e:w91",
+    "mediaId": "m-6a8b0c2e",
+    "text": "paste",
+    "start": 33.03,
+    "end": 33.39
+   },
+   {
+    "id": "m-6a8b0c2e:w92",
+    "mediaId": "m-6a8b0c2e",
+    "text": "my",
+    "start": 33.39,
+    "end": 33.89
+   },
+   {
+    "id": "m-6a8b0c2e:w93",
+    "mediaId": "m-6a8b0c2e",
+    "text": "API",
+    "start": 33.89,
+    "end": 34.21
+   },
+   {
+    "id": "m-6a8b0c2e:w94",
+    "mediaId": "m-6a8b0c2e",
+    "text": "key",
+    "start": 34.21,
+    "end": 34.281
+   },
+   {
+    "id": "m-6a8b0c2e:w95",
+    "mediaId": "m-6a8b0c2e",
+    "text": "here.",
+    "start": 34.281,
+    "end": 34.37
+   },
+   {
+    "id": "m-6a8b0c2e:w96",
+    "mediaId": "m-6a8b0c2e",
+    "text": "key",
+    "start": 34.37,
+    "end": 34.45
+   },
+   {
+    "id": "m-6a8b0c2e:w97",
+    "mediaId": "m-6a8b0c2e",
+    "text": "here.",
+    "start": 34.45,
+    "end": 34.6
+   },
+   {
+    "id": "m-6a8b0c2e:w98",
+    "mediaId": "m-6a8b0c2e",
+    "text": "You",
+    "start": 35.2,
+    "end": 35.251000000000005
+   },
+   {
+    "id": "m-6a8b0c2e:w99",
+    "mediaId": "m-6a8b0c2e",
+    "text": "know,",
+    "start": 35.22,
+    "end": 35.65
+   },
+   {
+    "id": "m-6a8b0c2e:w100",
+    "mediaId": "m-6a8b0c2e",
+    "text": "you",
+    "start": 35.65,
+    "end": 35.701
+   },
+   {
+    "id": "m-6a8b0c2e:w101",
+    "mediaId": "m-6a8b0c2e",
+    "text": "should",
+    "start": 36.02,
+    "end": 36.29
+   },
+   {
+    "id": "m-6a8b0c2e:w103",
+    "mediaId": "m-6a8b0c2e",
+    "text": "never",
+    "start": 36.29,
+    "end": 36.75
+   },
+   {
+    "id": "m-6a8b0c2e:w104",
+    "mediaId": "m-6a8b0c2e",
+    "text": "hard",
+    "start": 36.75,
+    "end": 37.25
+   },
+   {
+    "id": "m-6a8b0c2e:w105",
+    "mediaId": "m-6a8b0c2e",
+    "text": "code",
+    "start": 37.25,
+    "end": 37.421
+   },
+   {
+    "id": "m-6a8b0c2e:w106",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 37.421,
+    "end": 37.49
+   },
+   {
+    "id": "m-6a8b0c2e:w107",
+    "mediaId": "m-6a8b0c2e",
+    "text": "key",
+    "start": 37.49,
+    "end": 37.81
+   },
+   {
+    "id": "m-6a8b0c2e:w108",
+    "mediaId": "m-6a8b0c2e",
+    "text": "in",
+    "start": 37.81,
+    "end": 37.87
+   },
+   {
+    "id": "m-6a8b0c2e:w109",
+    "mediaId": "m-6a8b0c2e",
+    "text": "your",
+    "start": 37.87,
+    "end": 37.97
+   },
+   {
+    "id": "m-6a8b0c2e:w110",
+    "mediaId": "m-6a8b0c2e",
+    "text": "source",
+    "start": 37.97,
+    "end": 38.21
+   },
+   {
+    "id": "m-6a8b0c2e:w111",
+    "mediaId": "m-6a8b0c2e",
+    "text": "code.",
+    "start": 38.21,
+    "end": 38.33
+   },
+   {
+    "id": "m-6a8b0c2e:w112",
+    "mediaId": "m-6a8b0c2e",
+    "text": "And",
+    "start": 38.93,
+    "end": 39.41
+   },
+   {
+    "id": "m-6a8b0c2e:w113",
+    "mediaId": "m-6a8b0c2e",
+    "text": "please",
+    "start": 39.41,
+    "end": 39.73
+   },
+   {
+    "id": "m-6a8b0c2e:w114",
+    "mediaId": "m-6a8b0c2e",
+    "text": "don't",
+    "start": 39.73,
+    "end": 40.05
+   },
+   {
+    "id": "m-6a8b0c2e:w115",
+    "mediaId": "m-6a8b0c2e",
+    "text": "share",
+    "start": 40.05,
+    "end": 40.477
+   },
+   {
+    "id": "m-6a8b0c2e:w116",
+    "mediaId": "m-6a8b0c2e",
+    "text": "it",
+    "start": 40.477,
+    "end": 40.69
+   },
+   {
+    "id": "m-6a8b0c2e:w117",
+    "mediaId": "m-6a8b0c2e",
+    "text": "on",
+    "start": 40.69,
+    "end": 40.762
+   },
+   {
+    "id": "m-6a8b0c2e:w118",
+    "mediaId": "m-6a8b0c2e",
+    "text": "screen",
+    "start": 40.762,
+    "end": 40.93
+   },
+   {
+    "id": "m-6a8b0c2e:w119",
+    "mediaId": "m-6a8b0c2e",
+    "text": "like",
+    "start": 40.93,
+    "end": 41.17
+   },
+   {
+    "id": "m-6a8b0c2e:w120",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I",
+    "start": 41.17,
+    "end": 41.41
+   },
+   {
+    "id": "m-6a8b0c2e:w121",
+    "mediaId": "m-6a8b0c2e",
+    "text": "just",
+    "start": 41.41,
+    "end": 41.49
+   },
+   {
+    "id": "m-6a8b0c2e:w122",
+    "mediaId": "m-6a8b0c2e",
+    "text": "did.",
+    "start": 41.49,
+    "end": 41.9
+   },
+   {
+    "id": "m-6a8b0c2e:w123",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Now",
+    "start": 42.99,
+    "end": 43.51
+   },
+   {
+    "id": "m-6a8b0c2e:w124",
+    "mediaId": "m-6a8b0c2e",
+    "text": "let's",
+    "start": 43.51,
+    "end": 43.75
+   },
+   {
+    "id": "m-6a8b0c2e:w125",
+    "mediaId": "m-6a8b0c2e",
+    "text": "write",
+    "start": 43.75,
+    "end": 43.942
+   },
+   {
+    "id": "m-6a8b0c2e:w126",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 43.942,
+    "end": 44.07
+   },
+   {
+    "id": "m-6a8b0c2e:w127",
+    "mediaId": "m-6a8b0c2e",
+    "text": "main",
+    "start": 44.07,
+    "end": 44.39
+   },
+   {
+    "id": "m-6a8b0c2e:w128",
+    "mediaId": "m-6a8b0c2e",
+    "text": "script.",
+    "start": 44.39,
+    "end": 44.58
+   },
+   {
+    "id": "m-6a8b0c2e:w129",
+    "mediaId": "m-6a8b0c2e",
+    "text": "We",
+    "start": 44.93,
+    "end": 45.08
+   },
+   {
+    "id": "m-6a8b0c2e:w130",
+    "mediaId": "m-6a8b0c2e",
+    "text": "load",
+    "start": 45.08,
+    "end": 45.43
+   },
+   {
+    "id": "m-6a8b0c2e:w131",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 45.43,
+    "end": 45.75
+   },
+   {
+    "id": "m-6a8b0c2e:w132",
+    "mediaId": "m-6a8b0c2e",
+    "text": "key",
+    "start": 45.75,
+    "end": 45.801
+   },
+   {
+    "id": "m-6a8b0c2e:w133",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 45.786,
+    "end": 46.21
+   },
+   {
+    "id": "m-6a8b0c2e:w134",
+    "mediaId": "m-6a8b0c2e",
+    "text": "dotenv",
+    "start": 46.21,
+    "end": 46.42
+   },
+   {
+    "id": "m-6a8b0c2e:w135",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 46.88,
+    "end": 46.931000000000004
+   },
+   {
+    "id": "m-6a8b0c2e:w136",
+    "mediaId": "m-6a8b0c2e",
+    "text": "read",
+    "start": 46.9,
+    "end": 47.35
+   },
+   {
+    "id": "m-6a8b0c2e:w137",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 47.35,
+    "end": 47.67
+   },
+   {
+    "id": "m-6a8b0c2e:w138",
+    "mediaId": "m-6a8b0c2e",
+    "text": "notes",
+    "start": 47.67,
+    "end": 47.801
+   },
+   {
+    "id": "m-6a8b0c2e:w139",
+    "mediaId": "m-6a8b0c2e",
+    "text": "file",
+    "start": 47.801,
+    "end": 47.91
+   },
+   {
+    "id": "m-6a8b0c2e:w140",
+    "mediaId": "m-6a8b0c2e",
+    "text": "from",
+    "start": 47.91,
+    "end": 48.07
+   },
+   {
+    "id": "m-6a8b0c2e:w141",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 48.07,
+    "end": 48.39
+   },
+   {
+    "id": "m-6a8b0c2e:w142",
+    "mediaId": "m-6a8b0c2e",
+    "text": "first",
+    "start": 48.39,
+    "end": 48.47
+   },
+   {
+    "id": "m-6a8b0c2e:w143",
+    "mediaId": "m-6a8b0c2e",
+    "text": "argument.",
+    "start": 48.47,
+    "end": 48.8
+   },
+   {
+    "id": "m-6a8b0c2e:w144",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Then",
+    "start": 49.37,
+    "end": 49.51
+   },
+   {
+    "id": "m-6a8b0c2e:w145",
+    "mediaId": "m-6a8b0c2e",
+    "text": "we",
+    "start": 49.51,
+    "end": 49.59
+   },
+   {
+    "id": "m-6a8b0c2e:w146",
+    "mediaId": "m-6a8b0c2e",
+    "text": "call",
+    "start": 49.59,
+    "end": 49.99
+   },
+   {
+    "id": "m-6a8b0c2e:w147",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 49.99,
+    "end": 50.31
+   },
+   {
+    "id": "m-6a8b0c2e:w148",
+    "mediaId": "m-6a8b0c2e",
+    "text": "chat",
+    "start": 50.31,
+    "end": 50.47
+   },
+   {
+    "id": "m-6a8b0c2e:w149",
+    "mediaId": "m-6a8b0c2e",
+    "text": "endpoint",
+    "start": 50.47,
+    "end": 50.881
+   },
+   {
+    "id": "m-6a8b0c2e:w150",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 50.881,
+    "end": 51.421
+   },
+   {
+    "id": "m-6a8b0c2e:w152",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 51.421,
+    "end": 51.67
+   },
+   {
+    "id": "m-6a8b0c2e:w153",
+    "mediaId": "m-6a8b0c2e",
+    "text": "wrong",
+    "start": 51.67,
+    "end": 52.03
+   },
+   {
+    "id": "m-6a8b0c2e:w154",
+    "mediaId": "m-6a8b0c2e",
+    "text": "sorry",
+    "start": 52.7,
+    "end": 53.03
+   },
+   {
+    "id": "m-6a8b0c2e:w155",
+    "mediaId": "m-6a8b0c2e",
+    "text": "let",
+    "start": 53.03,
+    "end": 53.081
+   },
+   {
+    "id": "m-6a8b0c2e:w156",
+    "mediaId": "m-6a8b0c2e",
+    "text": "me",
+    "start": 53.45,
+    "end": 53.59
+   },
+   {
+    "id": "m-6a8b0c2e:w157",
+    "mediaId": "m-6a8b0c2e",
+    "text": "say",
+    "start": 53.59,
+    "end": 53.91
+   },
+   {
+    "id": "m-6a8b0c2e:w158",
+    "mediaId": "m-6a8b0c2e",
+    "text": "that",
+    "start": 53.91,
+    "end": 54.07
+   },
+   {
+    "id": "m-6a8b0c2e:w159",
+    "mediaId": "m-6a8b0c2e",
+    "text": "again.",
+    "start": 54.07,
+    "end": 54.36
+   },
+   {
+    "id": "m-6a8b0c2e:w160",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Then",
+    "start": 55.09,
+    "end": 55.141000000000005
+   },
+   {
+    "id": "m-6a8b0c2e:w161",
+    "mediaId": "m-6a8b0c2e",
+    "text": "we",
+    "start": 55.11,
+    "end": 55.35
+   },
+   {
+    "id": "m-6a8b0c2e:w162",
+    "mediaId": "m-6a8b0c2e",
+    "text": "call",
+    "start": 55.35,
+    "end": 55.59
+   },
+   {
+    "id": "m-6a8b0c2e:w163",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 55.59,
+    "end": 55.81
+   },
+   {
+    "id": "m-6a8b0c2e:w164",
+    "mediaId": "m-6a8b0c2e",
+    "text": "chat",
+    "start": 55.81,
+    "end": 56.31
+   },
+   {
+    "id": "m-6a8b0c2e:w165",
+    "mediaId": "m-6a8b0c2e",
+    "text": "completions",
+    "start": 56.31,
+    "end": 56.79
+   },
+   {
+    "id": "m-6a8b0c2e:w166",
+    "mediaId": "m-6a8b0c2e",
+    "text": "endpoint",
+    "start": 56.79,
+    "end": 57.19
+   },
+   {
+    "id": "m-6a8b0c2e:w167",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 57.19,
+    "end": 57.35
+   },
+   {
+    "id": "m-6a8b0c2e:w169",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 57.35,
+    "end": 57.414
+   },
+   {
+    "id": "m-6a8b0c2e:w170",
+    "mediaId": "m-6a8b0c2e",
+    "text": "model",
+    "start": 57.414,
+    "end": 57.51
+   },
+   {
+    "id": "m-6a8b0c2e:w171",
+    "mediaId": "m-6a8b0c2e",
+    "text": "name",
+    "start": 57.51,
+    "end": 57.91
+   },
+   {
+    "id": "m-6a8b0c2e:w172",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 58.2,
+    "end": 58.251000000000005
+   },
+   {
+    "id": "m-6a8b0c2e:w173",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 58.23,
+    "end": 58.71
+   },
+   {
+    "id": "m-6a8b0c2e:w174",
+    "mediaId": "m-6a8b0c2e",
+    "text": "short",
+    "start": 58.71,
+    "end": 58.87
+   },
+   {
+    "id": "m-6a8b0c2e:w175",
+    "mediaId": "m-6a8b0c2e",
+    "text": "system",
+    "start": 58.87,
+    "end": 59.25
+   },
+   {
+    "id": "m-6a8b0c2e:w176",
+    "mediaId": "m-6a8b0c2e",
+    "text": "prompt.",
+    "start": 59.25,
+    "end": 59.48
+   },
+   {
+    "id": "m-6a8b0c2e:w177",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Finally",
+    "start": 60,
+    "end": 60.55
+   },
+   {
+    "id": "m-6a8b0c2e:w178",
+    "mediaId": "m-6a8b0c2e",
+    "text": "we",
+    "start": 60.55,
+    "end": 60.63
+   },
+   {
+    "id": "m-6a8b0c2e:w179",
+    "mediaId": "m-6a8b0c2e",
+    "text": "print",
+    "start": 60.63,
+    "end": 61.014
+   },
+   {
+    "id": "m-6a8b0c2e:w180",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 61.014,
+    "end": 61.27
+   },
+   {
+    "id": "m-6a8b0c2e:w181",
+    "mediaId": "m-6a8b0c2e",
+    "text": "summary.",
+    "start": 61.27,
+    "end": 61.45
+   },
+   {
+    "id": "m-6a8b0c2e:w182",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Let's",
+    "start": 62.61,
+    "end": 63.11
+   },
+   {
+    "id": "m-6a8b0c2e:w183",
+    "mediaId": "m-6a8b0c2e",
+    "text": "try",
+    "start": 63.11,
+    "end": 63.659
+   },
+   {
+    "id": "m-6a8b0c2e:w184",
+    "mediaId": "m-6a8b0c2e",
+    "text": "it",
+    "start": 63.659,
+    "end": 64.07
+   },
+   {
+    "id": "m-6a8b0c2e:w185",
+    "mediaId": "m-6a8b0c2e",
+    "text": "on",
+    "start": 64.07,
+    "end": 64.214
+   },
+   {
+    "id": "m-6a8b0c2e:w186",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 64.214,
+    "end": 64.31
+   },
+   {
+    "id": "m-6a8b0c2e:w187",
+    "mediaId": "m-6a8b0c2e",
+    "text": "real",
+    "start": 64.31,
+    "end": 64.61
+   },
+   {
+    "id": "m-6a8b0c2e:w188",
+    "mediaId": "m-6a8b0c2e",
+    "text": "meeting",
+    "start": 64.61,
+    "end": 64.661
+   },
+   {
+    "id": "m-6a8b0c2e:w189",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 65.33,
+    "end": 65.49
+   },
+   {
+    "id": "m-6a8b0c2e:w190",
+    "mediaId": "m-6a8b0c2e",
+    "text": "there",
+    "start": 65.49,
+    "end": 65.99
+   },
+   {
+    "id": "m-6a8b0c2e:w191",
+    "mediaId": "m-6a8b0c2e",
+    "text": "it",
+    "start": 65.99,
+    "end": 66.06
+   },
+   {
+    "id": "m-6a8b0c2e:w192",
+    "mediaId": "m-6a8b0c2e",
+    "text": "is",
+    "start": 66.47,
+    "end": 66.521
+   },
+   {
+    "id": "m-6a8b0c2e:w193",
+    "mediaId": "m-6a8b0c2e",
+    "text": "three",
+    "start": 66.49,
+    "end": 66.79
+   },
+   {
+    "id": "m-6a8b0c2e:w194",
+    "mediaId": "m-6a8b0c2e",
+    "text": "bullet",
+    "start": 66.79,
+    "end": 67.27
+   },
+   {
+    "id": "m-6a8b0c2e:w195",
+    "mediaId": "m-6a8b0c2e",
+    "text": "points",
+    "start": 67.27,
+    "end": 67.45
+   },
+   {
+    "id": "m-6a8b0c2e:w196",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 67.8,
+    "end": 67.851
+   },
+   {
+    "id": "m-6a8b0c2e:w197",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 67.83,
+    "end": 68.15
+   },
+   {
+    "id": "m-6a8b0c2e:w198",
+    "mediaId": "m-6a8b0c2e",
+    "text": "list",
+    "start": 68.15,
+    "end": 68.23
+   },
+   {
+    "id": "m-6a8b0c2e:w199",
+    "mediaId": "m-6a8b0c2e",
+    "text": "of",
+    "start": 68.23,
+    "end": 68.61
+   },
+   {
+    "id": "m-6a8b0c2e:w200",
+    "mediaId": "m-6a8b0c2e",
+    "text": "action",
+    "start": 68.61,
+    "end": 69.11
+   },
+   {
+    "id": "m-6a8b0c2e:w201",
+    "mediaId": "m-6a8b0c2e",
+    "text": "items.",
+    "start": 69.11,
+    "end": 69.161
+   },
+   {
+    "id": "m-6a8b0c2e:w202",
+    "mediaId": "m-6a8b0c2e",
+    "text": "That",
+    "start": 69.64,
+    "end": 69.71
+   },
+   {
+    "id": "m-6a8b0c2e:w203",
+    "mediaId": "m-6a8b0c2e",
+    "text": "took",
+    "start": 69.71,
+    "end": 69.97
+   },
+   {
+    "id": "m-6a8b0c2e:w204",
+    "mediaId": "m-6a8b0c2e",
+    "text": "about",
+    "start": 69.97,
+    "end": 70.93
+   },
+   {
+    "id": "m-6a8b0c2e:w205",
+    "mediaId": "m-6a8b0c2e",
+    "text": "four",
+    "start": 70.93,
+    "end": 71.49
+   },
+   {
+    "id": "m-6a8b0c2e:w206",
+    "mediaId": "m-6a8b0c2e",
+    "text": "seconds",
+    "start": 71.49,
+    "end": 71.66
+   },
+   {
+    "id": "m-6a8b0c2e:w207",
+    "mediaId": "m-6a8b0c2e",
+    "text": "which",
+    "start": 71.94,
+    "end": 72.15
+   },
+   {
+    "id": "m-6a8b0c2e:w208",
+    "mediaId": "m-6a8b0c2e",
+    "text": "is",
+    "start": 72.15,
+    "end": 72.55
+   },
+   {
+    "id": "m-6a8b0c2e:w209",
+    "mediaId": "m-6a8b0c2e",
+    "text": "fast",
+    "start": 72.55,
+    "end": 72.63
+   },
+   {
+    "id": "m-6a8b0c2e:w210",
+    "mediaId": "m-6a8b0c2e",
+    "text": "enough",
+    "start": 72.63,
+    "end": 72.87
+   },
+   {
+    "id": "m-6a8b0c2e:w211",
+    "mediaId": "m-6a8b0c2e",
+    "text": "for",
+    "start": 72.87,
+    "end": 72.95
+   },
+   {
+    "id": "m-6a8b0c2e:w212",
+    "mediaId": "m-6a8b0c2e",
+    "text": "me.",
+    "start": 72.95,
+    "end": 73.22
+   },
+   {
+    "id": "m-6a8b0c2e:w213",
+    "mediaId": "m-6a8b0c2e",
+    "text": "One",
+    "start": 74.41,
+    "end": 74.71
+   },
+   {
+    "id": "m-6a8b0c2e:w214",
+    "mediaId": "m-6a8b0c2e",
+    "text": "more",
+    "start": 74.71,
+    "end": 74.87
+   },
+   {
+    "id": "m-6a8b0c2e:w215",
+    "mediaId": "m-6a8b0c2e",
+    "text": "thing,",
+    "start": 74.87,
+    "end": 74.95
+   },
+   {
+    "id": "m-6a8b0c2e:w216",
+    "mediaId": "m-6a8b0c2e",
+    "text": "if",
+    "start": 74.95,
+    "end": 75.06
+   },
+   {
+    "id": "m-6a8b0c2e:w217",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 75.67,
+    "end": 75.75
+   },
+   {
+    "id": "m-6a8b0c2e:w218",
+    "mediaId": "m-6a8b0c2e",
+    "text": "file",
+    "start": 75.75,
+    "end": 76.15
+   },
+   {
+    "id": "m-6a8b0c2e:w219",
+    "mediaId": "m-6a8b0c2e",
+    "text": "is",
+    "start": 76.15,
+    "end": 76.39
+   },
+   {
+    "id": "m-6a8b0c2e:w220",
+    "mediaId": "m-6a8b0c2e",
+    "text": "missing",
+    "start": 76.39,
+    "end": 76.87
+   },
+   {
+    "id": "m-6a8b0c2e:w221",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 76.87,
+    "end": 77.088
+   },
+   {
+    "id": "m-6a8b0c2e:w223",
+    "mediaId": "m-6a8b0c2e",
+    "text": "script",
+    "start": 77.088,
+    "end": 77.57
+   },
+   {
+    "id": "m-6a8b0c2e:w224",
+    "mediaId": "m-6a8b0c2e",
+    "text": "crashes",
+    "start": 77.57,
+    "end": 78.07
+   },
+   {
+    "id": "m-6a8b0c2e:w225",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 78.07,
+    "end": 78.15
+   },
+   {
+    "id": "m-6a8b0c2e:w226",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 78.15,
+    "end": 78.31
+   },
+   {
+    "id": "m-6a8b0c2e:w227",
+    "mediaId": "m-6a8b0c2e",
+    "text": "pretty",
+    "start": 78.31,
+    "end": 78.39
+   },
+   {
+    "id": "m-6a8b0c2e:w228",
+    "mediaId": "m-6a8b0c2e",
+    "text": "ugly",
+    "start": 78.39,
+    "end": 78.93
+   },
+   {
+    "id": "m-6a8b0c2e:w229",
+    "mediaId": "m-6a8b0c2e",
+    "text": "stack",
+    "start": 78.93,
+    "end": 79.43
+   },
+   {
+    "id": "m-6a8b0c2e:w230",
+    "mediaId": "m-6a8b0c2e",
+    "text": "trace.",
+    "start": 79.43,
+    "end": 79.49
+   },
+   {
+    "id": "m-6a8b0c2e:w231",
+    "mediaId": "m-6a8b0c2e",
+    "text": "So",
+    "start": 79.97,
+    "end": 80.021
+   },
+   {
+    "id": "m-6a8b0c2e:w232",
+    "mediaId": "m-6a8b0c2e",
+    "text": "let's",
+    "start": 79.99,
+    "end": 80.177
+   },
+   {
+    "id": "m-6a8b0c2e:w233",
+    "mediaId": "m-6a8b0c2e",
+    "text": "add",
+    "start": 80.177,
+    "end": 80.47
+   },
+   {
+    "id": "m-6a8b0c2e:w234",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 80.47,
+    "end": 80.71
+   },
+   {
+    "id": "m-6a8b0c2e:w235",
+    "mediaId": "m-6a8b0c2e",
+    "text": "small",
+    "start": 80.71,
+    "end": 81.01
+   },
+   {
+    "id": "m-6a8b0c2e:w236",
+    "mediaId": "m-6a8b0c2e",
+    "text": "error",
+    "start": 81.01,
+    "end": 81.51
+   },
+   {
+    "id": "m-6a8b0c2e:w237",
+    "mediaId": "m-6a8b0c2e",
+    "text": "handler",
+    "start": 81.51,
+    "end": 81.67
+   },
+   {
+    "id": "m-6a8b0c2e:w238",
+    "mediaId": "m-6a8b0c2e",
+    "text": "that",
+    "start": 81.67,
+    "end": 81.75
+   },
+   {
+    "id": "m-6a8b0c2e:w239",
+    "mediaId": "m-6a8b0c2e",
+    "text": "prints",
+    "start": 81.75,
+    "end": 82.123
+   },
+   {
+    "id": "m-6a8b0c2e:w240",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 82.123,
+    "end": 82.23
+   },
+   {
+    "id": "m-6a8b0c2e:w241",
+    "mediaId": "m-6a8b0c2e",
+    "text": "friendly",
+    "start": 82.23,
+    "end": 82.63
+   },
+   {
+    "id": "m-6a8b0c2e:w243",
+    "mediaId": "m-6a8b0c2e",
+    "text": "message",
+    "start": 82.63,
+    "end": 83.09
+   },
+   {
+    "id": "m-6a8b0c2e:w244",
+    "mediaId": "m-6a8b0c2e",
+    "text": "instead",
+    "start": 83.09,
+    "end": 83.52
+   },
+   {
+    "id": "m-6a8b0c2e:w245",
+    "mediaId": "m-6a8b0c2e",
+    "text": "And",
+    "start": 84.1,
+    "end": 84.48
+   },
+   {
+    "id": "m-6a8b0c2e:w246",
+    "mediaId": "m-6a8b0c2e",
+    "text": "now,",
+    "start": 84.48,
+    "end": 85.021
+   },
+   {
+    "id": "m-6a8b0c2e:w248",
+    "mediaId": "m-6a8b0c2e",
+    "text": "when",
+    "start": 84.996,
+    "end": 85.047
+   },
+   {
+    "id": "m-6a8b0c2e:w249",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I",
+    "start": 85.04,
+    "end": 85.2
+   },
+   {
+    "id": "m-6a8b0c2e:w250",
+    "mediaId": "m-6a8b0c2e",
+    "text": "run",
+    "start": 85.2,
+    "end": 85.36
+   },
+   {
+    "id": "m-6a8b0c2e:w251",
+    "mediaId": "m-6a8b0c2e",
+    "text": "on",
+    "start": 85.36,
+    "end": 85.48
+   },
+   {
+    "id": "m-6a8b0c2e:w252",
+    "mediaId": "m-6a8b0c2e",
+    "text": "it",
+    "start": 85.48,
+    "end": 85.6
+   },
+   {
+    "id": "m-6a8b0c2e:w253",
+    "mediaId": "m-6a8b0c2e",
+    "text": "again",
+    "start": 85.6,
+    "end": 85.68
+   },
+   {
+    "id": "m-6a8b0c2e:w254",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 85.68,
+    "end": 85.84
+   },
+   {
+    "id": "m-6a8b0c2e:w255",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 85.84,
+    "end": 86.24
+   },
+   {
+    "id": "m-6a8b0c2e:w256",
+    "mediaId": "m-6a8b0c2e",
+    "text": "wrong",
+    "start": 86.24,
+    "end": 86.64
+   },
+   {
+    "id": "m-6a8b0c2e:w257",
+    "mediaId": "m-6a8b0c2e",
+    "text": "file",
+    "start": 86.64,
+    "end": 86.83
+   },
+   {
+    "id": "m-6a8b0c2e:w258",
+    "mediaId": "m-6a8b0c2e",
+    "text": "name,",
+    "start": 87.28,
+    "end": 87.331
+   },
+   {
+    "id": "m-6a8b0c2e:w259",
+    "mediaId": "m-6a8b0c2e",
+    "text": "we",
+    "start": 87.3,
+    "end": 87.44
+   },
+   {
+    "id": "m-6a8b0c2e:w260",
+    "mediaId": "m-6a8b0c2e",
+    "text": "get",
+    "start": 87.44,
+    "end": 87.52
+   },
+   {
+    "id": "m-6a8b0c2e:w261",
+    "mediaId": "m-6a8b0c2e",
+    "text": "one",
+    "start": 87.52,
+    "end": 87.9
+   },
+   {
+    "id": "m-6a8b0c2e:w262",
+    "mediaId": "m-6a8b0c2e",
+    "text": "clear",
+    "start": 87.9,
+    "end": 88.4
+   },
+   {
+    "id": "m-6a8b0c2e:w263",
+    "mediaId": "m-6a8b0c2e",
+    "text": "line.",
+    "start": 88.4,
+    "end": 88.56
+   },
+   {
+    "id": "m-6a8b0c2e:w264",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Let",
+    "start": 89.73,
+    "end": 89.781
+   },
+   {
+    "id": "m-6a8b0c2e:w265",
+    "mediaId": "m-6a8b0c2e",
+    "text": "me",
+    "start": 89.75,
+    "end": 90.08
+   },
+   {
+    "id": "m-6a8b0c2e:w266",
+    "mediaId": "m-6a8b0c2e",
+    "text": "quickly",
+    "start": 90.08,
+    "end": 90.4
+   },
+   {
+    "id": "m-6a8b0c2e:w267",
+    "mediaId": "m-6a8b0c2e",
+    "text": "recap.",
+    "start": 90.4,
+    "end": 90.73
+   },
+   {
+    "id": "m-6a8b0c2e:w268",
+    "mediaId": "m-6a8b0c2e",
+    "text": "We",
+    "start": 91.15,
+    "end": 91.44
+   },
+   {
+    "id": "m-6a8b0c2e:w269",
+    "mediaId": "m-6a8b0c2e",
+    "text": "installed",
+    "start": 91.44,
+    "end": 91.92
+   },
+   {
+    "id": "m-6a8b0c2e:w270",
+    "mediaId": "m-6a8b0c2e",
+    "text": "two",
+    "start": 91.92,
+    "end": 92.3
+   },
+   {
+    "id": "m-6a8b0c2e:w271",
+    "mediaId": "m-6a8b0c2e",
+    "text": "packages,",
+    "start": 92.3,
+    "end": 93.18
+   },
+   {
+    "id": "m-6a8b0c2e:w273",
+    "mediaId": "m-6a8b0c2e",
+    "text": "stored",
+    "start": 93.18,
+    "end": 93.68
+   },
+   {
+    "id": "m-6a8b0c2e:w274",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 93.68,
+    "end": 93.73100000000001
+   },
+   {
+    "id": "m-6a8b0c2e:w275",
+    "mediaId": "m-6a8b0c2e",
+    "text": "key",
+    "start": 93.72,
+    "end": 93.771
+   },
+   {
+    "id": "m-6a8b0c2e:w276",
+    "mediaId": "m-6a8b0c2e",
+    "text": "in",
+    "start": 93.76,
+    "end": 93.84
+   },
+   {
+    "id": "m-6a8b0c2e:w277",
+    "mediaId": "m-6a8b0c2e",
+    "text": "a",
+    "start": 93.84,
+    "end": 94.08
+   },
+   {
+    "id": "m-6a8b0c2e:w278",
+    "mediaId": "m-6a8b0c2e",
+    "text": ".env",
+    "start": 94.08,
+    "end": 94.4
+   },
+   {
+    "id": "m-6a8b0c2e:w279",
+    "mediaId": "m-6a8b0c2e",
+    "text": "file,",
+    "start": 94.4,
+    "end": 94.72
+   },
+   {
+    "id": "m-6a8b0c2e:w280",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and",
+    "start": 94.72,
+    "end": 94.771
+   },
+   {
+    "id": "m-6a8b0c2e:w281",
+    "mediaId": "m-6a8b0c2e",
+    "text": "called",
+    "start": 95.12,
+    "end": 95.44
+   },
+   {
+    "id": "m-6a8b0c2e:w282",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 95.44,
+    "end": 95.66
+   },
+   {
+    "id": "m-6a8b0c2e:w283",
+    "mediaId": "m-6a8b0c2e",
+    "text": "chat",
+    "start": 95.66,
+    "end": 96.16
+   },
+   {
+    "id": "m-6a8b0c2e:w284",
+    "mediaId": "m-6a8b0c2e",
+    "text": "completions",
+    "start": 96.16,
+    "end": 96.4
+   },
+   {
+    "id": "m-6a8b0c2e:w285",
+    "mediaId": "m-6a8b0c2e",
+    "text": "endpoint",
+    "start": 96.4,
+    "end": 96.88
+   },
+   {
+    "id": "m-6a8b0c2e:w286",
+    "mediaId": "m-6a8b0c2e",
+    "text": "with",
+    "start": 96.88,
+    "end": 97.04
+   },
+   {
+    "id": "m-6a8b0c2e:w287",
+    "mediaId": "m-6a8b0c2e",
+    "text": "our",
+    "start": 97.04,
+    "end": 97.28
+   },
+   {
+    "id": "m-6a8b0c2e:w288",
+    "mediaId": "m-6a8b0c2e",
+    "text": "notes.",
+    "start": 97.28,
+    "end": 97.58
+   },
+   {
+    "id": "m-6a8b0c2e:w289",
+    "mediaId": "m-6a8b0c2e",
+    "text": "In",
+    "start": 98.47,
+    "end": 98.521
+   },
+   {
+    "id": "m-6a8b0c2e:w290",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 98.49,
+    "end": 98.693
+   },
+   {
+    "id": "m-6a8b0c2e:w291",
+    "mediaId": "m-6a8b0c2e",
+    "text": "next",
+    "start": 98.693,
+    "end": 98.96
+   },
+   {
+    "id": "m-6a8b0c2e:w292",
+    "mediaId": "m-6a8b0c2e",
+    "text": "video,",
+    "start": 98.96,
+    "end": 99.28
+   },
+   {
+    "id": "m-6a8b0c2e:w293",
+    "mediaId": "m-6a8b0c2e",
+    "text": "I'll",
+    "start": 99.28,
+    "end": 99.331
+   },
+   {
+    "id": "m-6a8b0c2e:w294",
+    "mediaId": "m-6a8b0c2e",
+    "text": "add",
+    "start": 99.65,
+    "end": 100.3
+   },
+   {
+    "id": "m-6a8b0c2e:w295",
+    "mediaId": "m-6a8b0c2e",
+    "text": "streaming",
+    "start": 100.3,
+    "end": 100.53
+   },
+   {
+    "id": "m-6a8b0c2e:w296",
+    "mediaId": "m-6a8b0c2e",
+    "text": "so",
+    "start": 100.9,
+    "end": 101.12
+   },
+   {
+    "id": "m-6a8b0c2e:w297",
+    "mediaId": "m-6a8b0c2e",
+    "text": "the",
+    "start": 101.12,
+    "end": 101.2
+   },
+   {
+    "id": "m-6a8b0c2e:w298",
+    "mediaId": "m-6a8b0c2e",
+    "text": "summary",
+    "start": 101.2,
+    "end": 101.68
+   },
+   {
+    "id": "m-6a8b0c2e:w299",
+    "mediaId": "m-6a8b0c2e",
+    "text": "shows",
+    "start": 101.68,
+    "end": 101.92
+   },
+   {
+    "id": "m-6a8b0c2e:w300",
+    "mediaId": "m-6a8b0c2e",
+    "text": "up",
+    "start": 101.92,
+    "end": 102.07
+   },
+   {
+    "id": "m-6a8b0c2e:w301",
+    "mediaId": "m-6a8b0c2e",
+    "text": "word",
+    "start": 102.07,
+    "end": 102.32
+   },
+   {
+    "id": "m-6a8b0c2e:w302",
+    "mediaId": "m-6a8b0c2e",
+    "text": "by",
+    "start": 102.32,
+    "end": 102.64
+   },
+   {
+    "id": "m-6a8b0c2e:w303",
+    "mediaId": "m-6a8b0c2e",
+    "text": "word.",
+    "start": 102.64,
+    "end": 102.83
+   },
+   {
+    "id": "m-6a8b0c2e:w304",
+    "mediaId": "m-6a8b0c2e",
+    "text": "Thanks",
+    "start": 103.48,
+    "end": 103.531
+   },
+   {
+    "id": "m-6a8b0c2e:w305",
+    "mediaId": "m-6a8b0c2e",
+    "text": "for",
+    "start": 103.5,
+    "end": 103.98
+   },
+   {
+    "id": "m-6a8b0c2e:w306",
+    "mediaId": "m-6a8b0c2e",
+    "text": "watching",
+    "start": 103.98,
+    "end": 104.32
+   },
+   {
+    "id": "m-6a8b0c2e:w307",
+    "mediaId": "m-6a8b0c2e",
+    "text": "and,",
+    "start": 104.61,
+    "end": 104.85
+   },
+   {
+    "id": "m-6a8b0c2e:w308",
+    "mediaId": "m-6a8b0c2e",
+    "text": "you",
+    "start": 105.18,
+    "end": 105.44
+   },
+   {
+    "id": "m-6a8b0c2e:w309",
+    "mediaId": "m-6a8b0c2e",
+    "text": "know,",
+    "start": 105.44,
+    "end": 105.92
+   },
+   {
+    "id": "m-6a8b0c2e:w310",
+    "mediaId": "m-6a8b0c2e",
+    "text": "see",
+    "start": 105.92,
+    "end": 106.08
+   },
+   {
+    "id": "m-6a8b0c2e:w311",
+    "mediaId": "m-6a8b0c2e",
+    "text": "you",
+    "start": 106.08,
+    "end": 106.258
+   },
+   {
+    "id": "m-6a8b0c2e:w312",
+    "mediaId": "m-6a8b0c2e",
+    "text": "next",
+    "start": 106.258,
+    "end": 106.48
+   },
+   {
+    "id": "m-6a8b0c2e:w313",
+    "mediaId": "m-6a8b0c2e",
+    "text": "time.",
+    "start": 106.48,
+    "end": 106.61
+   }
+  ],
+  "captionBreaks": [],
+  "masks": [
+   {
+    "id": "text-81253f84-1",
+    "mediaId": "m-6a8b0c2e",
+    "prompt": "API key",
+    "label": "API key 1",
+    "samples": [
+     {
+      "t": 32,
+      "box": [
+       0.276,
+       0.078,
+       0.40800000000000003,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 33,
+      "box": [
+       0.276,
+       0.078,
+       0.488,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 34,
+      "box": [
+       0.276,
+       0.078,
+       0.536,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 35,
+      "box": [
+       0.276,
+       0.078,
+       0.536,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 36,
+      "box": [
+       0.276,
+       0.078,
+       0.536,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 37,
+      "box": [
+       0.276,
+       0.076,
+       0.536,
+       0.1
+      ],
+      "mask": null
+     },
+     {
+      "t": 38,
+      "box": [
+       0.296,
+       0.076,
+       0.532,
+       0.098
+      ],
+      "mask": null
+     },
+     {
+      "t": 39,
+      "box": [
+       0.296,
+       0.076,
+       0.532,
+       0.098
+      ],
+      "mask": null
+     },
+     {
+      "t": 40,
+      "box": [
+       0.296,
+       0.076,
+       0.532,
+       0.098
+      ],
+      "mask": null
+     },
+     {
+      "t": 41,
+      "box": [
+       0.296,
+       0.076,
+       0.532,
+       0.098
+      ],
+      "mask": null
+     },
+     {
+      "t": 42,
+      "box": [
+       0.296,
+       0.076,
+       0.532,
+       0.098
+      ],
+      "mask": null
+     }
+    ],
+    "interval": 1,
+    "hold": 1,
+    "effect": {
+     "kind": "mosaic",
+     "strength": 16
+    },
+    "expand": 15,
+    "enabled": true,
+    "shape": "rect"
+   }
+  ],
+  "effects": [],
+  "anchors": [],
+  "suggestions": [
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i1",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "captionStyle",
+    "start": 0,
+    "end": 108.279,
+    "payload": {
+     "karaoke": "fill"
+    },
+    "reason": "so the viewer can follow the spoken instructions while watching the screen",
+    "status": "applied",
+    "purpose": "so the viewer can follow the spoken instructions while watching the screen",
+    "quote": "",
+    "chapter": 0,
+    "review": {
+     "verdict": "added",
+     "note": "Added after review"
+    }
+   },
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i2",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "zoom",
+    "start": 22.1,
+    "end": 30,
+    "payload": {
+     "activity": "a220",
+     "w": 0.3,
+     "cx": 0.28125,
+     "cy": 0.6945,
+     "path": [
+      {
+       "src": 30,
+       "cx": 0.28125,
+       "cy": 0.6945
+      }
+     ]
+    },
+    "reason": "so the viewer can read the folder-creation and package-install commands",
+    "status": "applied",
+    "purpose": "so the viewer can read the folder-creation and package-install commands",
+    "quote": "First I'll create a new folder and install two packages, the OpenAI client and Daindov.",
+    "chapter": 1,
+    "review": {
+     "verdict": "keep",
+     "note": "Matches p1 and the transcript, lasts long enough, and the terminal commands are small in the frame."
+    },
+    "problem": "p1"
+   },
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i3",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "fix",
+    "start": 27.3,
+    "end": 27.8,
+    "payload": {
+     "wordIds": [
+      "m-6a8b0c2e:w80"
+     ],
+     "text": "dotenv"
+    },
+    "reason": "correct the package name in the transcript",
+    "status": "applied",
+    "purpose": "correct the package name in the transcript",
+    "quote": "",
+    "chapter": 1,
+    "review": {
+     "verdict": "keep",
+     "note": "Correctly changes the transcribed 'Daindov' at 27.3s to 'dotenv'."
+    }
+   },
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i4",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "mask",
+    "start": 30,
+    "end": 43,
+    "payload": {
+     "target": "API key",
+     "x": 0.24,
+     "y": 0.05,
+     "w": 0.38,
+     "h": 0.04
+    },
+    "reason": "hide the pasted API key for the whole time it is visible",
+    "status": "applied",
+    "purpose": "hide the pasted API key for the whole time it is visible",
+    "quote": "",
+    "chapter": 1,
+    "review": {
+     "verdict": "keep",
+     "note": "Covers the pasted API key for its full visible period from 30.0s to 43.0s."
+    }
+   },
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i5",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "zoom",
+    "start": 43,
+    "end": 57.6,
+    "payload": {
+     "activity": "a420",
+     "w": 0.4208,
+     "cx": 0.34375,
+     "cy": 0.2104,
+     "path": [
+      {
+       "src": 43,
+       "cx": 0.34375,
+       "cy": 0.2104
+      }
+     ]
+    },
+    "reason": "so the viewer can read the index.js code as it is typed and explained",
+    "status": "applied",
+    "purpose": "so the viewer can read the index.js code as it is typed and explained",
+    "quote": "Then we call the chat completions endpoint with the model name and a short system prompt.",
+    "chapter": 2,
+    "review": {
+     "verdict": "keep",
+     "note": "Matches p2, spans the code being typed, and lasts well over six seconds."
+    },
+    "problem": "p2"
+   },
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i6",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "fix",
+    "start": 46.2,
+    "end": 46.7,
+    "payload": {
+     "wordIds": [
+      "m-6a8b0c2e:w134"
+     ],
+     "text": "dotenv"
+    },
+    "reason": "correct the package name in the transcript",
+    "status": "applied",
+    "purpose": "correct the package name in the transcript",
+    "quote": "",
+    "chapter": 2,
+    "review": {
+     "verdict": "keep",
+     "note": "Correctly changes the transcribed 'dondov' at 46.2s to 'dotenv'."
+    }
+   },
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i7",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "cut",
+    "start": 49.4,
+    "end": 55.1,
+    "payload": {},
+    "reason": "remove the failed chat endpoint wording and the apology before the correct restart",
+    "status": "applied",
+    "purpose": "remove the failed chat endpoint wording and the apology before the correct restart",
+    "quote": "Then we call the chat endpoint with the wrong sorry let me say that again.",
+    "chapter": 2,
+    "review": {
+     "verdict": "keep",
+     "note": "The quoted failed wording and apology are in the transcript and form a clear retake to remove."
+    }
+   },
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i8",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "zoom",
+    "start": 62.6,
+    "end": 70,
+    "payload": {
+     "activity": "a690",
+     "w": 0.6704,
+     "cx": 0.3352,
+     "cy": 0.6648000000000001,
+     "path": [
+      {
+       "src": 69,
+       "cx": 0.3352,
+       "cy": 0.6648000000000001
+      },
+      {
+       "src": 70,
+       "cx": 0.3352,
+       "cy": 0.6648000000000001
+      }
+     ]
+    },
+    "reason": "so the viewer can read the three bullet points and action items printed as the result",
+    "status": "applied",
+    "purpose": "so the viewer can read the three bullet points and action items printed as the result",
+    "quote": "Let's try it on a real meeting and there it is three bullet points and a list of action items.",
+    "chapter": 3,
+    "review": {
+     "verdict": "revised",
+     "note": "Shift the zoom to 62.6-70.0s to match p3; starting at 65.0s misses the run's opening and ending at 72.0s lingers after the output discussion."
+    },
+    "problem": "p3"
+   },
+   {
+    "id": "sug-m-6a8b0c2e-mvtsmbkl-i9",
+    "mediaId": "m-6a8b0c2e",
+    "kind": "zoom",
+    "start": 83,
+    "end": 89,
+    "payload": {
+     "activity": "a880",
+     "w": 0.7696000000000001,
+     "cx": 0.38480000000000003,
+     "cy": 0.6152,
+     "path": [
+      {
+       "src": 88,
+       "cx": 0.38480000000000003,
+       "cy": 0.6152
+      },
+      {
+       "src": 89,
+       "cx": 0.38480000000000003,
+       "cy": 0.6152
+      }
+     ]
+    },
+    "reason": "so the viewer can read the one clear friendly error line in the terminal",
+    "status": "applied",
+    "purpose": "so the viewer can read the one clear friendly error line in the terminal",
+    "quote": "And now, when I run on it again with the wrong file name, we get one clear line.",
+    "chapter": 4,
+    "review": {
+     "verdict": "revised",
+     "note": "End the zoom at 89.0s to match p4 instead of continuing to 90.5s into the recap chapter."
+    },
+    "problem": "p4"
+   }
+  ],
+  "plugins": [],
+  "synths": [],
+  "stems": [],
+  "zooms": [
+   {
+    "id": "zoom-sug-m-6a8b0c2e-mvtsmbkl-i2",
+    "mediaId": "m-6a8b0c2e",
+    "start": 22.1,
+    "end": 30,
+    "w": 0.3,
+    "path": [
+     {
+      "src": 30,
+      "cx": 0.28125,
+      "cy": 0.6945
+     }
+    ],
+    "enabled": true
+   },
+   {
+    "id": "zoom-sug-m-6a8b0c2e-mvtsmbkl-i5",
+    "mediaId": "m-6a8b0c2e",
+    "start": 43,
+    "end": 57.6,
+    "w": 0.4208,
+    "path": [
+     {
+      "src": 43,
+      "cx": 0.34375,
+      "cy": 0.2104
+     }
+    ],
+    "enabled": true
+   },
+   {
+    "id": "zoom-sug-m-6a8b0c2e-mvtsmbkl-i8",
+    "mediaId": "m-6a8b0c2e",
+    "start": 62.6,
+    "end": 70,
+    "w": 0.6704,
+    "path": [
+     {
+      "src": 69,
+      "cx": 0.3352,
+      "cy": 0.6648000000000001
+     },
+     {
+      "src": 70,
+      "cx": 0.3352,
+      "cy": 0.6648000000000001
+     }
+    ],
+    "enabled": true
+   },
+   {
+    "id": "zoom-sug-m-6a8b0c2e-mvtsmbkl-i9",
+    "mediaId": "m-6a8b0c2e",
+    "start": 83,
+    "end": 89,
+    "w": 0.7696000000000001,
+    "path": [
+     {
+      "src": 88,
+      "cx": 0.38480000000000003,
+      "cy": 0.6152
+     },
+     {
+      "src": 89,
+      "cx": 0.38480000000000003,
+      "cy": 0.6152
+     }
+    ],
+    "enabled": true
+   }
+  ],
+  "directorChapters": [
+   {
+    "mediaId": "m-6a8b0c2e",
+    "title": "Build a notes summarizer",
+    "start": 0,
+    "end": 22.1
+   },
+   {
+    "mediaId": "m-6a8b0c2e",
+    "title": "Install packages, add key",
+    "start": 22.1,
+    "end": 43
+   },
+   {
+    "mediaId": "m-6a8b0c2e",
+    "title": "Write main script",
+    "start": 43,
+    "end": 62.6
+   },
+   {
+    "mediaId": "m-6a8b0c2e",
+    "title": "Run on notes",
+    "start": 62.6,
+    "end": 74.4
+   },
+   {
+    "mediaId": "m-6a8b0c2e",
+    "title": "Handle missing file",
+    "start": 74.4,
+    "end": 89.7
+   },
+   {
+    "mediaId": "m-6a8b0c2e",
+    "title": "Recap",
+    "start": 89.7,
+    "end": 108.279
+   }
+  ],
+  "captionStyle": {
+   "preset": "outline",
+   "size": 0.055,
+   "bottom": 0.08,
+   "color": "#ffffff",
+   "karaoke": "fill",
+   "highlight": "#ffd400"
+  },
+  "publish": {
+   "language": "en",
+   "titles": [
+    "Build a CLI to Summarize Meeting Notes with AI",
+    "Summarize Markdown Notes in 4 Seconds with AI",
+    "Tiny AI Meeting Summarizer: Setup to Error Handling"
+   ],
+   "title": 0,
+   "description": "Watch how to build a tiny command line tool that summarizes meeting notes with an AI model. You will see how to install the OpenAI client and dotenv, store the API key in a .env file, call the chat completions endpoint, and add friendly error handling. The demo runs on real weekly sync notes and produces bullet points and action items in about four seconds.",
+   "highlights": [
+    "Install OpenAI client and dotenv packages",
+    "Store API key safely in .env file",
+    "Call chat completions to summarize notes",
+    "Get bullets and action items in seconds",
+    "Add friendly error for missing files"
+   ],
+   "chapters": [
+    {
+     "t": 0,
+     "title": "Intro: Build AI notes summarizer"
+    },
+    {
+     "t": 12.91,
+     "title": "Example weekly sync notes"
+    },
+    {
+     "t": 29.989,
+     "title": "Store API key in .env"
+    },
+    {
+     "t": 42.389,
+     "title": "Write main summarizer script"
+    },
+    {
+     "t": 56.309,
+     "title": "Live demo in four seconds"
+    },
+    {
+     "t": 68.109,
+     "title": "Handle missing file gracefully"
+    },
+    {
+     "t": 83.429,
+     "title": "Recap and next: streaming"
+    }
+   ],
+   "tags": [
+    "ai meeting summarizer",
+    "openai chat completions",
+    "command line tool",
+    "dotenv",
+    "markdown notes",
+    "python cli",
+    "error handling",
+    "ai tutorial"
+   ]
+  }
+ }
+}

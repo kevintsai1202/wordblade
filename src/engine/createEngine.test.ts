@@ -3,10 +3,10 @@ import { createEngine } from "./createEngine";
 import { NotImplementedError } from "./Engine";
 
 describe("createEngine", () => {
-  it("在 Tauri 裡回傳桌面版 Engine，能做聲音分離與任何格式匯入", () => {
+  it("在 Tauri 裡回傳桌面版 Engine，能做任何格式匯入（聲音分離還沒做）", () => {
     const engine = createEngine({ isTauri: () => true });
     expect(engine.kind).toBe("desktop");
-    expect(engine.capabilities).toEqual({ vocalSeparation: true, anyFormatImport: true });
+    expect(engine.capabilities).toEqual({ vocalSeparation: false, anyFormatImport: true });
   });
 
   it("在瀏覽器裡回傳網頁版 Engine，不做聲音分離（D28）、只吃 H.264（§5.21）", () => {

@@ -31,3 +31,8 @@ src-tauri/resources/ffmpeg/
 logs/
 # spikes 裡 Tauri 自動產生的 schema
 spikes/**/gen/schemas/
+
+# IDE 自動產生的 Eclipse 專案設定
+.classpath
+.project
+.settings/

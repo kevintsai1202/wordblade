@@ -96,6 +96,22 @@ function splitDraft(draft: Draft<Project>, clip: Draft<Clip>, t: Seconds): Draft
 }
 
 /** 特效被刪掉 [a, b) 後的新範圍；整段在範圍內回 null。鏡頭關鍵幀（相對時間）依比例壓縮 */
+/**
+ * 2D 特效內部的時間（特效內的秒數：圖層 start／end、音效 at）跟著時間軸的剪接換算。
+ * map 收「特效內的秒數」回傳新的秒數；只處理 anim2d 的 layers、sounds，欄位不是數字的不動（end 為 null＝到特效結尾）。
+ */
+function remapAnimTimes(effect: Draft<Effect>, map: (t: Seconds) => Seconds) {
+  if (effect.kind !== "anim2d") return;
+  const { layers, sounds } = effect.params as { layers?: unknown; sounds?: unknown };
+  if (Array.isArray(layers)) {
+    for (const l of layers as Record<string, unknown>[]) {
+      if (typeof l.start === "number") l.start = map(l.start);
+      if (typeof l.end === "number") l.end = map(l.end);
+    }
+  }
+  if (Array.isArray(sounds)) for (const s of sounds as Record<string, unknown>[]) if (typeof s.at === "number") s.at = map(s.at);
+}
+
 function rippleEffect(effect: Draft<Effect>, a: Seconds, b: Seconds): boolean {
   const d = b - a;
   const { start, end } = effect;
@@ -109,6 +125,12 @@ function rippleEffect(effect: Draft<Effect>, a: Seconds, b: Seconds): boolean {
   const oldLen = end - start;
   const newLen = roundTime(oldLen - overlap);
   if (newLen <= 0) return false;
+  // 特效內部的時間：剪點前不動、剪掉範圍之後左移、落在範圍內的收到剪點（剪接不是等比壓縮）
+  remapAnimTimes(effect, (t) => {
+    const g = start + t;
+    if (g < a) return t;
+    return roundTime(g >= b ? t - d : a - start);
+  });
   effect.start = roundTime(start < a ? start : a);
   effect.end = roundTime(effect.start + newLen);
   for (const key of effect.cameraKeys ?? []) key.t = roundTime((key.t * newLen) / oldLen);
@@ -301,6 +323,9 @@ function insertIntoEffect(effect: Draft<Effect>, p: Seconds, d: Seconds) {
     return;
   }
   const oldLen = effect.end - effect.start;
+  // 特效內部的時間：插入點之後的右移
+  const start = effect.start;
+  remapAnimTimes(effect, (t) => (start + t >= p ? roundTime(t + d) : t));
   effect.end = roundTime(effect.end + d);
   const newLen = effect.end - effect.start;
   for (const key of effect.cameraKeys ?? []) key.t = roundTime((key.t * newLen) / oldLen);

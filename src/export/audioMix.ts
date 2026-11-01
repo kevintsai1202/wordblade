@@ -111,6 +111,23 @@ export function mixSpan(out: [Float32Array, Float32Array], chunkStart: Seconds, 
   }
 }
 
+/** 時間軸 t 秒開始的一段額外聲音（特效音效；已是輸出取樣率、雙聲道） */
+export interface ExtraSound {
+  t: Seconds;
+  channels: [Float32Array, Float32Array];
+}
+
+/** 把額外聲音疊進從時間軸 chunkStart 開始的輸出區塊（只疊區塊裡的那段） */
+export function mixExtra(out: [Float32Array, Float32Array], chunkStart: Seconds, rate: number, extra: ExtraSound) {
+  const offset = Math.round((extra.t - chunkStart) * rate);
+  const from = Math.max(0, -offset);
+  const to = Math.min(extra.channels[0].length, out[0].length - offset);
+  for (let k = from; k < to; k++) {
+    out[0][offset + k] += extra.channels[0][k];
+    out[1][offset + k] += extra.channels[1][k];
+  }
+}
+
 /** 混音需要的東西 */
 export interface MixJob {
   project: Project;
@@ -120,6 +137,8 @@ export interface MixJob {
   audioSource: AudioSampleSource;
   /** 配樂壓低曲線（沒有就不壓） */
   duck?: DuckCurve | null;
+  /** 額外的聲音（2D 特效的音效） */
+  extras?: ExtraSound[];
   signal: AbortSignal;
 }
 
@@ -177,6 +196,7 @@ export async function mixAudio(job: MixJob): Promise<void> {
         if (span.speed !== 1) pcm = stretch(pcm, span.speed, outLen);
         mixSpan(out, c0, SAMPLE_RATE, project, span, pcm, job.duck ?? null);
       }
+      for (const extra of job.extras ?? []) mixExtra(out, c0, SAMPLE_RATE, extra);
       // 超過 ±1 的削掉（多軌疊加可能超過）
       for (const ch of out) for (let i = 0; i < ch.length; i++) ch[i] = Math.max(-1, Math.min(1, ch[i]));
       // 每秒一塊送進編碼器（AudioSample 是 planar：左聲道接右聲道）

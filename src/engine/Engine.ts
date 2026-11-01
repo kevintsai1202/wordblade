@@ -82,6 +82,11 @@ export interface Engine {
   release(media: Media): void;
   /** 示範專案的素材資料夾：網頁版是開發伺服器的 samples/；Windows 版找 repo 的 samples/，找不到（安裝版）回 null */
   demoMediaRoot(): Promise<string | null>;
+  /**
+   * 範例專案（§5.22）：讀 sample/project.json，回傳範例資料夾（素材路徑改寫用，見 project/sample.ts）與檔案內容；找不到回 null。
+   * 網頁版從靜態網站讀（root 是 "sample"）；Windows 版讀安裝資料夾裡的 sample\（開發時是 repo 的 public\sample\）。
+   */
+  openSample(): Promise<{ root: string; text: string } | null>;
   /** 匯出讀的素材來源（原檔或中間檔，不用代理檔）：網頁版是 File，Windows 版是 asset 協定的網址（mediabunny 分段讀） */
   exportSource(media: Media): Promise<Blob | string>;
   /** 選擇匯出位置（存檔對話框）；使用者取消回 null */

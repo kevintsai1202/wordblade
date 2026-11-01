@@ -43,6 +43,9 @@ public class RestSparkVideoClient implements DirectorJobs.SegmentModel {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("model", model);
         body.put("reasoning_effort", "low");
+        // 溫度 0＋固定種子（Spark 實測仍不完全一樣，但變化較小）
+        body.put("temperature", 0);
+        body.put("seed", DirectorConfig.SEED);
         body.put("response_format", Map.of("type", "json_schema", "json_schema", Map.of("name", "segment_report", "strict", true, "schema", schema)));
         body.put("messages", List.of(Map.of("role", "user", "content", List.of(
                 Map.of("type", "text", "text", text),

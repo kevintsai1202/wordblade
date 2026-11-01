@@ -6,6 +6,7 @@ import { setEffectParams } from "./core/effects";
 import { PluginService } from "./anim/pluginService";
 import { createEngine } from "./engine/createEngine";
 import { demoProject } from "./ui/demoProject";
+import { loadSample, samplePath } from "./project/sample";
 import { EditPanel } from "./ui/EditPanel";
 import { MediaTab } from "./ui/MediaTab";
 import { PreviewPane } from "./ui/PreviewPane";
@@ -54,6 +55,9 @@ function App() {
   const { layout, set: setLayout, reset: resetLayout } = useLayout();
   const [state, dispatch] = useReducer(reducer, START_WITH_DEMO ? demoProject() : emptyProject(), initialState);
   const project = state.history.present;
+  /** 最新的專案（開發用匯出鉤子讀） */
+  const latestProject = useRef(project);
+  latestProject.current = project;
   /** 縮圖序列（D39）：匯入時做第一層，之後空檔（沒播放、沒有重工作）再做細層 */
   const thumbs = useMemo(() => new ThumbStore(engine), [engine]);
   /** 排程器讀的最新播放狀態 */
@@ -78,6 +82,9 @@ function App() {
   const [zoomEdit, setZoomEdit] = useState<ZoomEdit | null>(null);
   /** 發佈包的縮圖（只在記憶體；匯出時寫在影片旁邊） */
   const [thumbnail, setThumbnail] = useState<Thumbnail | null>(null);
+  /** 最新的縮圖（開發用匯出鉤子讀） */
+  const thumbRef = useRef(thumbnail);
+  thumbRef.current = thumbnail;
   const editingZoom = zoomEdit ? project.zooms?.find((z) => z.id === zoomEdit.zoomId) ?? null : null;
   const v1Track = project.tracks.filter((t) => t.kind === "video").sort((a, b) => a.index - b.index)[0]?.id;
   /** 播放頭所在、用到這段放大的素材的 V1 片段 */
@@ -173,23 +180,50 @@ function App() {
   }, [state]);
 
   /**
-   * 載入示範專案：素材資料夾由 Engine 決定（Windows 版找 repo 的 samples/ 並放行讀取；安裝版沒有就提示）。
-   * 換專案前釋放舊素材的資源，載入後照常在背景準備（縮圖、波形、代理檔）。
+   * 開範例專案（§5.22）：預先算好的 2 分鐘範例（逐字稿、AI 結果、特效都在裡面），不用權杖、不呼叫 AI。
+   * 和示範專案一樣是「示範狀態」：沒編輯前不自動存，不蓋掉上次的工作。
    */
-  const onLoadDemo = async () => {
-    const root = await engine.demoMediaRoot();
-    if (root === null) {
-      setNotice("Sample media not found (the samples/ folder only exists in the repo).");
+  const onLoadSample = async () => {
+    const opened = await engine.openSample();
+    const sample = opened && loadSample(opened.text, opened.root);
+    if (!sample) {
+      setNotice("The sample project isn't available here.");
       return;
     }
     setNotice(null);
     setIsDemo(true);
     setLastSession(null);
-    const demo = demoProject(root);
     reset(project.media);
-    dispatch({ type: "load", project: demo });
-    for (const m of demo.media) enqueuePrepare(m);
+    dispatch({ type: "load", project: sample });
+    for (const m of sample.media) enqueuePrepare(m);
+    // 發佈包的縮圖不在專案裡：範例資料夾有 thumbnail.png 就一起載入（匯出時寫在影片旁邊）
+    const thumbUrl = engine.mediaUrl({ id: "sample-thumbnail", kind: "image", duration: 0, path: samplePath("sample/thumbnail.png", opened.root) });
+    const res = await fetch(thumbUrl).catch(() => null);
+    if (res?.ok) {
+      const blob = await res.blob();
+      setThumbnail({ blob, url: URL.createObjectURL(blob) });
+    }
   };
+
+  // 網址帶 ?sample=1 就直接開範例專案（e2e 與分享連結用）
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("sample")) void onLoadSample();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 開發用（範例專案打包腳本 e2e/sample-build.spec.ts）：localStorage wordblade.dev＝1 時提供目前的專案與素材檔的位元組
+  useEffect(() => {
+    let dev = false;
+    try {
+      dev = localStorage.getItem("wordblade.dev") === "1";
+    } catch { /* 沒有 localStorage 就不開 */ }
+    if (!dev) return;
+    (window as unknown as { __wordblade?: unknown }).__wordblade = {
+      project: () => latestProject.current,
+      dispatch,
+      thumbnail: async () => (thumbRef.current ? Array.from(new Uint8Array(await thumbRef.current.blob.arrayBuffer())) : null),
+      fileBytes: (handleKey: string) => (engine as unknown as { fileBytes?: (k: string) => Promise<Uint8Array | null> }).fileBytes?.(handleKey) ?? Promise.resolve(null),
+    };
+  }, [engine, dispatch]);
 
   /** 開選檔對話框並匯入 */
   const onImport = async () => importSources(await engine.pickFiles());
@@ -228,7 +262,7 @@ function App() {
             <button onClick={folder.dismissMissing}>✕</button>
           </span>
         )}
-        <button title="Open the sample project (local samples/ folder)" data-testid="load-demo" onClick={() => void onLoadDemo()}>Load demo</button>
+        <button title="Open a ready-made 2-minute sample: transcript, AI suggestions and effects are already in it (no token needed)" data-testid="load-sample" onClick={() => void onLoadSample()}>Try the sample project</button>
         {lastSession && !project.media.length && (
           <span className="restore-bar" data-testid="restore-bar">
             Last session: {lastSession.project.clips.length} clips, saved {new Date(lastSession.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -270,7 +304,7 @@ function App() {
             vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
-            director: <DirectorTab project={project} engine={engine} envelopes={library.envelopes} plugins={plugins} playhead={state.playhead} dispatch={dispatch} />,
+            director: <DirectorTab project={project} engine={engine} envelopes={library.envelopes} plugins={plugins} playhead={state.playhead} importSources={importSources} dispatch={dispatch} />,
             mask: <MaskTab project={project} engine={engine} range={state.range} playhead={state.playhead} dispatch={dispatch} />,
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
