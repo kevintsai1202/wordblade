@@ -137,8 +137,11 @@ export function useProjectFolder(opts: {
     if (!source) return null;
     if (source.kind !== "path") {
       // 網頁版：選的檔案直接接上這一支（沒有路徑可以找同資料夾的其他支）
-      if (!(await engine.adoptFile(target, source))) return `Can't use ${source.name}.`;
-      enqueuePrepare(target);
+      const handleKey = await engine.adoptFile(target, source);
+      if (!handleKey) return `Can't use ${source.name}.`;
+      // 桌面版存的素材原本沒有 handleKey：補上，之後預覽與存檔都用它
+      if (target.handleKey !== handleKey) dispatch({ type: "patchMedia", id: target.id, patch: { handleKey } });
+      enqueuePrepare({ ...target, handleKey });
       setMissing((list) => list.filter((x) => x.id !== target.id));
       return null;
     }

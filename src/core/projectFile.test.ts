@@ -27,7 +27,7 @@ describe("project.json", () => {
     const text = toProjectFile(p, { projectDir: "D:\\videos\\MyTalk.wordblade", savedAt: 5, fingerprints: { [p.media[0].id]: "abc" } });
     const json = JSON.parse(text);
     expect(json.format).toBe("wordblade-project");
-    expect(json.media[p.media[0].id]).toEqual({ path: "D:\\videos\\clip-0.mp4", rel: "../clip-0.mp4", fingerprint: "abc" });
+    expect(json.media[p.media[0].id]).toEqual({ name: "clip-0.mp4", path: "D:\\videos\\clip-0.mp4", rel: "../clip-0.mp4", fingerprint: "abc" });
     const back = fromProjectFile(text)!;
     expect(back.project).toEqual(p);
     expect(back.savedAt).toBe(5);
@@ -39,11 +39,11 @@ describe("project.json", () => {
     expect(fromProjectFile(JSON.stringify({ format: "wordblade-project", v: 99, project: p, media: {} }))).toBeNull();
   });
 
-  it("搬家後找素材的順序：相對路徑（照新的專案位置）→ 原本的絕對路徑，不重複", () => {
+  it("搬家後找素材的順序：相對路徑（照新的專案位置）→ 原本的絕對路徑 → 專案裡與 .data/generated 的同名檔，不重複", () => {
     const text = toProjectFile(p, { projectDir: "D:\\videos\\MyTalk.wordblade", savedAt: 1 });
     const back = fromProjectFile(text)!;
-    expect(relinkCandidates(back.refs[p.media[0].id], "E:\\backup\\MyTalk.wordblade")).toEqual(["E:\\backup\\clip-0.mp4", "D:\\videos\\clip-0.mp4"]);
-    expect(relinkCandidates(back.refs[p.media[0].id], "D:\\videos\\MyTalk.wordblade")).toEqual(["D:\\videos\\clip-0.mp4"]);
+    expect(relinkCandidates(back.refs[p.media[0].id], "E:\\backup\\MyTalk.wordblade")).toEqual(["E:\\backup\\clip-0.mp4", "D:\\videos\\clip-0.mp4", "E:\\backup\\MyTalk.wordblade\\.data\\media\\clip-0.mp4", "E:\\backup\\MyTalk.wordblade\\clip-0.mp4", "E:\\backup\\MyTalk.wordblade\\.data\\generated\\clip-0.mp4"]);
+    expect(relinkCandidates(back.refs[p.media[0].id], "D:\\videos\\MyTalk.wordblade")).toEqual(["D:\\videos\\clip-0.mp4", "D:\\videos\\MyTalk.wordblade\\.data\\media\\clip-0.mp4", "D:\\videos\\MyTalk.wordblade\\clip-0.mp4", "D:\\videos\\MyTalk.wordblade\\.data\\generated\\clip-0.mp4"]);
   });
 });
 
@@ -58,7 +58,7 @@ describe("relinkProject：開專案時逐支找回素材", () => {
       asked.push([...candidates, fp ?? "-"]);
       return m.id === p.media[0].id ? { ...m, path: candidates[0] } : null;
     });
-    expect(asked[0]).toEqual(["E:/moved/clip-0.mp4", "D:/videos/clip-0.mp4", "fp0"]);
+    expect(asked[0]).toEqual(["E:/moved/clip-0.mp4", "D:/videos/clip-0.mp4", "E:/moved/MyTalk.wordblade/.data/media/clip-0.mp4", "E:/moved/MyTalk.wordblade/clip-0.mp4", "E:/moved/MyTalk.wordblade/.data/generated/clip-0.mp4", "fp0"]);
     expect(result.project.media[0].path).toBe("E:/moved/clip-0.mp4");
     expect(result.missing).toEqual(p.media.slice(1).map((m) => m.id));
     expect(result.project.media).toHaveLength(p.media.length);
@@ -98,5 +98,20 @@ describe("遮罩取樣放進 .data", () => {
   it("檔名只用安全的 id（不能跳出 .data）", () => {
     const p = { ...makeProject(), masks: [mask("../../evil")] };
     expect(Object.keys(externalizeMasks(p).files)).toEqual(["masks/------evil.json"]);
+  });
+});
+
+// 跨平台（2026-11-01）：網頁版存的素材沒有路徑，只有檔名；桌面版用檔名在專案旁邊、專案裡、.data/generated 找（再比指紋）
+describe("用檔名找素材", () => {
+  it("候選：相對路徑、絕對路徑之後，加上專案旁邊、專案裡、.data/generated 的同名檔", () => {
+    expect(relinkCandidates({ name: "talk.mp4" }, "D:\\v\\T.wordblade")).toEqual([
+      "D:\\v\\T.wordblade\\.data\\media\\talk.mp4", "D:\\v\\talk.mp4", "D:\\v\\T.wordblade\\talk.mp4", "D:\\v\\T.wordblade\\.data\\generated\\talk.mp4",
+    ]);
+  });
+
+  it("存檔時記下檔名（網頁版的素材也有）", () => {
+    const p = makeProject();
+    p.media = [{ id: "w1", name: "talk.mp4", handleKey: "w1", kind: "video", duration: 4 }];
+    expect(fromProjectFile(toProjectFile(p, { projectDir: "project:T", savedAt: 1 }))!.refs.w1.name).toBe("talk.mp4");
   });
 });

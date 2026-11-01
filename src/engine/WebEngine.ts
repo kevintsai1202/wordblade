@@ -7,6 +7,7 @@ import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTar
 import { classifyFile, webSupport } from "./webFormats";
 import { downsample, encodeWav } from "../asr/wav";
 import { ensurePermission, getHandle, putHandle } from "./handleStore";
+import { fingerprintFile } from "../core/fingerprint";
 
 /** File System Access 的選取器（DOM 型別還沒有） */
 interface Pickers {
@@ -179,19 +180,104 @@ export class WebEngine implements Engine {
         input.dispose();
       }
     }
-    this.files.set(id, { file, url: URL.createObjectURL(file) });
+    // 開著專案：複製進 .data/media/（桌面版開這個專案也找得到），素材改用複本；複製失敗就照用原檔
+    const copy = this.project ? await this.copyIntoProject(this.project, file).catch(() => null) : null;
+    const use = copy ?? (source.handle ? { handle: source.handle, file } : null);
+    this.files.set(id, { file: use?.file ?? file, url: URL.createObjectURL(use?.file ?? file) });
     // 有 handle 就記住（鍵＝handleKey），重開專案時 locateMedia 拿得回來
-    if (source.handle) await putHandle(id, source.handle).catch(() => undefined);
+    if (use) await putHandle(id, use.handle).catch(() => undefined);
     return media;
+  }
+
+  /** 複製進專案的 .data/media/（同名同指紋沿用、同名不同內容加 -2…），串流寫入不整支讀進記憶體 */
+  private async copyIntoProject(location: ProjectLocation, file: File): Promise<{ handle: FileSystemFileHandle; file: File }> {
+    const { dir } = await this.dataFile(location, "media/x", true);
+    const dot = file.name.lastIndexOf(".");
+    const stem = dot > 0 ? file.name.slice(0, dot) : file.name;
+    const ext = dot > 0 ? file.name.slice(dot) : "";
+    const fp = await fingerprintFile(file);
+    for (let n = 1; ; n++) {
+      const name = n === 1 ? file.name : `${stem}-${n}${ext}`;
+      const existing = await dir.getFileHandle(name).catch(() => null);
+      if (existing) {
+        const f = await existing.getFile();
+        if ((await fingerprintFile(f)) === fp) return { handle: existing, file: f };
+        continue;
+      }
+      const handle = await dir.getFileHandle(name, { create: true });
+      const w = await handle.createWritable();
+      await file.stream().pipeTo(w);
+      return { handle, file: await handle.getFile() };
+    }
   }
 
   /** 縮圖（影片取 1 秒處、圖片縮小）與音量包絡；網頁版不做代理檔，預覽直接用原檔（§5.21） */
   async prepare(media: Media, onProgress: (ratio: number) => void): Promise<Prepared> {
     const entry = media.handleKey ? this.files.get(media.handleKey) : undefined;
     if (!entry) return {};
+    // 快取（OPFS thumbs/<鍵>/）：重開專案、重新整理不必再解碼整支影片的聲音（鍵含大小與修改時間，檔案換了就重算）
+    const cached = await this.readPrepared(media);
+    if (cached) {
+      onProgress(1);
+      return cached;
+    }
+    const result = await this.computePrepared(media, entry.file, onProgress);
+    await this.writePrepared(media, result);
+    return result;
+  }
+
+  /** 快取的資料夾 OPFS thumbs/<鍵>/（和縮圖序列同一個鍵） */
+  private async preparedDir(media: Media, create: boolean): Promise<FileSystemDirectoryHandle | null> {
+    const key = this.thumbKey(media);
+    if (!key) return null;
+    try {
+      return await (await (await navigator.storage.getDirectory()).getDirectoryHandle("thumbs", { create })).getDirectoryHandle(key, { create });
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * 讀快取：prepared.json 是完成標記（記有沒有縮圖、包絡的取樣率），prepared.jpg 是縮圖，envelope.bin 是包絡（Float32）。
+   * 沒有或讀壞了回 null（重算）。
+   */
+  private async readPrepared(media: Media): Promise<Prepared | null> {
+    const dir = await this.preparedDir(media, false);
+    if (!dir) return null;
+    try {
+      const meta = JSON.parse(await (await (await dir.getFileHandle("prepared.json")).getFile()).text()) as { thumb: boolean; rate: number | null };
+      const out: Prepared = {};
+      if (meta.thumb) out.thumbnailUrl = URL.createObjectURL(await (await dir.getFileHandle("prepared.jpg")).getFile());
+      if (meta.rate) out.envelope = { rate: meta.rate, rms: new Float32Array(await (await (await dir.getFileHandle("envelope.bin")).getFile()).arrayBuffer()) };
+      return out;
+    } catch {
+      return null;
+    }
+  }
+
+  /** 寫快取（完成標記最後寫；寫失敗不影響這次的結果） */
+  private async writePrepared(media: Media, result: Prepared): Promise<void> {
+    const dir = await this.preparedDir(media, true);
+    if (!dir) return;
+    const put = async (name: string, data: Blob | ArrayBuffer | string) => {
+      const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+      await w.write(data);
+      await w.close();
+    };
+    try {
+      if (result.thumbnailUrl) await put("prepared.jpg", await (await fetch(result.thumbnailUrl)).blob());
+      if (result.envelope) await put("envelope.bin", result.envelope.rms.slice().buffer);
+      await put("prepared.json", JSON.stringify({ thumb: !!result.thumbnailUrl, rate: result.envelope?.rate ?? null }));
+    } catch {
+      /* 存不了就下次再算 */
+    }
+  }
+
+  /** 從原檔算縮圖與音量包絡 */
+  private async computePrepared(media: Media, file: File, onProgress: (ratio: number) => void): Promise<Prepared> {
     const result: Prepared = {};
     if (media.kind === "image") {
-      const bitmap = await createImageBitmap(entry.file, { resizeWidth: THUMB_WIDTH, resizeQuality: "medium" });
+      const bitmap = await createImageBitmap(file, { resizeWidth: THUMB_WIDTH, resizeQuality: "medium" });
       const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
       canvas.getContext("2d")!.drawImage(bitmap, 0, 0);
       bitmap.close();
@@ -200,7 +286,7 @@ export class WebEngine implements Engine {
       return result;
     }
     const mb = await loadMediabunny();
-    const input = new mb.Input({ source: new mb.BlobSource(entry.file), formats: mb.ALL_FORMATS });
+    const input = new mb.Input({ source: new mb.BlobSource(file), formats: mb.ALL_FORMATS });
     try {
       const video = await input.getPrimaryVideoTrack();
       if (video) {
@@ -375,8 +461,10 @@ export class WebEngine implements Engine {
   private async remember(dir: FileSystemDirectoryHandle): Promise<ProjectLocation> {
     const key = `project:${dir.name}`;
     await putHandle(key, dir);
-    this.folderOpen = true;
-    return { name: projectName(dir.name), dir: key };
+    const location = { name: projectName(dir.name), dir: key };
+    // 開專案時就要知道是哪個資料夾（locateMedia 在專案資料夾裡用檔名找素材）
+    this.setProjectLocation(location);
+    return location;
   }
 
   /** 新專案：選放在哪裡，建 <名稱>.wordblade（含 .data） */
@@ -403,8 +491,9 @@ export class WebEngine implements Engine {
     if (!dir || !(await ensurePermission(dir, "readwrite"))) return null;
     const text = await readProjectFile(dir);
     if (text === null) return null;
-    this.folderOpen = true;
-    return { location: { name: projectName(dir.name), dir: location.dir }, text };
+    const opened = { name: projectName(dir.name), dir: location.dir };
+    this.setProjectLocation(opened);
+    return { location: opened, text };
   }
 
   /** 寫 project.json（createWritable 先寫暫存、close 時才換掉，不會寫壞） */
@@ -416,9 +505,10 @@ export class WebEngine implements Engine {
     await w.close();
   }
 
-  /** 網頁版不算指紋（找素材靠記住的 handle） */
-  async mediaFingerprint(): Promise<string | undefined> {
-    return undefined;
+  /** 素材指紋（和桌面版同一個算法）：桌面版開網頁版的專案時，用它確認找到的是同一支檔案 */
+  async mediaFingerprint(media: Media): Promise<string | undefined> {
+    const entry = media.handleKey ? this.files.get(media.handleKey) : undefined;
+    return entry ? fingerprintFile(entry.file).catch(() => undefined) : undefined;
   }
 
   /** 網頁版沒有錄音退路（被擋就提示） */
@@ -461,28 +551,64 @@ export class WebEngine implements Engine {
   }
 
   /** 重新連結：使用者替找不到的素材選了檔案，換掉記住的 handle 與記憶體裡的檔案 */
-  async adoptFile(media: Media, source: ImportSource): Promise<boolean> {
-    if (source.kind !== "file" || !media.handleKey) return false;
-    const old = this.files.get(media.handleKey);
+  async adoptFile(media: Media, source: ImportSource): Promise<string | null> {
+    if (source.kind !== "file") return null;
+    // 桌面版存的素材沒有 handleKey：用素材 id 當鍵
+    const key = media.handleKey ?? media.id;
+    const old = this.files.get(key);
     if (old) URL.revokeObjectURL(old.url);
-    this.files.set(media.handleKey, { file: source.file, url: URL.createObjectURL(source.file) });
-    if (source.handle) await putHandle(media.handleKey, source.handle).catch(() => undefined);
-    return true;
+    this.files.set(key, { file: source.file, url: URL.createObjectURL(source.file) });
+    if (source.handle) await putHandle(key, source.handle).catch(() => undefined);
+    return key;
   }
 
-  /** 找回素材：記憶體裡有就用；否則從 IndexedDB 拿記住的 handle（要有讀取權限） */
-  async locateMedia(media: Media): Promise<Media | null> {
-    if (!media.handleKey) return null;
-    if (this.files.has(media.handleKey)) return media;
-    const handle = await getHandle<FileSystemFileHandle>(media.handleKey).catch(() => undefined);
-    if (!handle || !(await ensurePermission(handle, "read"))) return null;
-    try {
-      const file = await handle.getFile();
-      this.files.set(media.handleKey, { file, url: URL.createObjectURL(file) });
-      return media;
-    } catch {
-      return null;
+  /**
+   * 找回素材：記憶體裡有就用；再來是 IndexedDB 記住的 handle（要有讀取權限）；
+   * 都沒有（例如桌面版存的專案，素材只有路徑）就用檔名在專案資料夾與 .data/generated 裡找、比指紋。
+   * 瀏覽器只看得到授權的專案資料夾，專案外面的素材找不到（介面請使用者重新連結）。
+   */
+  async locateMedia(media: Media, _candidates: string[] = [], fingerprint?: string): Promise<Media | null> {
+    if (media.handleKey && this.files.has(media.handleKey)) return media;
+    if (media.handleKey) {
+      const handle = await getHandle<FileSystemFileHandle>(media.handleKey).catch(() => undefined);
+      if (handle && (await ensurePermission(handle, "read"))) {
+        try {
+          const file = await handle.getFile();
+          this.files.set(media.handleKey, { file, url: URL.createObjectURL(file) });
+          return media;
+        } catch {
+          /* 檔案不見了：往下用檔名找 */
+        }
+      }
     }
+    return this.findInProject(media, fingerprint);
+  }
+
+  /** 用檔名在專案資料夾（與 .data/generated）裡找素材；找到就記住 handle、回傳帶 handleKey 的素材 */
+  private async findInProject(media: Media, fingerprint?: string): Promise<Media | null> {
+    const loc = this.project;
+    const name = media.path?.split(/[\\/]/).pop() ?? media.name;
+    if (!loc || !name) return null;
+    const root = await getHandle<FileSystemDirectoryHandle>(loc.dir).catch(() => undefined);
+    if (!root) return null;
+    const dirs: FileSystemDirectoryHandle[] = [root];
+    for (const sub of ["media", "generated"]) {
+      try {
+        dirs.push(await (await root.getDirectoryHandle(DATA_DIR)).getDirectoryHandle(sub));
+      } catch { /* 沒有 */ }
+    }
+    for (const dir of dirs) {
+      try {
+        const handle = await dir.getFileHandle(name);
+        const file = await handle.getFile();
+        if (fingerprint && (await fingerprintFile(file)) !== fingerprint) continue;
+        const key = media.handleKey ?? media.id;
+        this.files.set(key, { file, url: URL.createObjectURL(file) });
+        await putHandle(key, handle).catch(() => undefined);
+        return { ...media, handleKey: key };
+      } catch { /* 這裡沒有 */ }
+    }
+    return null;
   }
 
   /** 縮圖快取的鍵：匯入的檔案用「檔名＋大小＋修改時間」，示範素材用路徑；都沒有回 null */

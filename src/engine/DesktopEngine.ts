@@ -75,8 +75,10 @@ export class DesktopEngine implements Engine {
     const info = await invoke<ProbeInfo>("probe_media", { path: source.path }).catch((e: unknown) => {
       throw new UnsupportedMediaError(`Can't read ${source.name}: ${String(e)}`);
     });
+    // 開著專案：讀得了的素材複製進 .data\media\，素材指向複本（網頁版開這個專案也找得到）
+    const path = this.project ? await invoke<string>("project_copy_in", { dir: this.project.dir, src: source.path }) : source.path;
     return {
-      id, name: source.name, path: source.path, kind: info.kind,
+      id, name: source.name, path, kind: info.kind,
       duration: info.kind === "image" ? IMAGE_DURATION : info.duration,
       ...(info.width ? { width: info.width, height: info.height } : {}),
       ...(info.fps ? { fps: info.fps } : {}),
@@ -208,8 +210,8 @@ export class DesktopEngine implements Engine {
   }
 
   /** Windows 版重新連結走路徑（locateMedia），不用這個 */
-  async adoptFile(): Promise<boolean> {
-    return false;
+  async adoptFile(): Promise<string | null> {
+    return null;
   }
 
   /** 素材指紋（Rust 讀頭尾） */

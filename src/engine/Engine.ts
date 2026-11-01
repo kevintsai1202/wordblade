@@ -124,8 +124,8 @@ export interface Engine {
   mediaFingerprint(media: Media): Promise<string | undefined>;
   /** 找回素材：依序試候選路徑，第一個存在且指紋相同的回傳更新過路徑的素材；都不是回 null（介面請使用者重新連結） */
   locateMedia(media: Media, candidates: string[], fingerprint?: string): Promise<Media | null>;
-  /** 網頁版重新連結：使用者選的檔案（source）接上找不到的素材；Windows 版走 locateMedia，回 false */
-  adoptFile(media: Media, source: ImportSource): Promise<boolean>;
+  /** 網頁版重新連結：使用者選的檔案（source）接上找不到的素材，回傳素材的 handleKey；Windows 版走 locateMedia，回 null */
+  adoptFile(media: Media, source: ImportSource): Promise<string | null>;
   /**
    * 錄音退路（spec §5.18）：Windows 版 getUserMedia 被擋時改用內建錄音機；網頁版沒有（null）。
    * stop 回傳錄好的檔案（.m4a，已搬進專案 .data\generated\ 或 app 資料夾），接著走一般匯入。

@@ -23,14 +23,14 @@ export async function projectText(
   savedAt: number,
 ): Promise<string> {
   for (const m of project.media) {
-    const key = `${m.id}|${m.path ?? ""}`;
-    if (!m.path || cache.has(key)) continue;
+    const key = `${m.id}|${m.path ?? m.handleKey ?? ""}`;
+    if ((!m.path && !m.handleKey) || cache.has(key)) continue;
     const fp = await fingerprint(m);
     if (fp) cache.set(key, fp);
   }
   const fingerprints: Record<string, string> = {};
   for (const m of project.media) {
-    const fp = cache.get(`${m.id}|${m.path ?? ""}`);
+    const fp = cache.get(`${m.id}|${m.path ?? m.handleKey ?? ""}`);
     if (fp) fingerprints[m.id] = fp;
   }
   return toProjectFile(project, { projectDir: location.dir, savedAt, fingerprints });

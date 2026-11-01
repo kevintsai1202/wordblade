@@ -10,6 +10,8 @@ const RESULT = join(import.meta.dirname, "..", "..", "logs", "desktop-selftest.j
 const ACCESS_LOG = join(import.meta.dirname, "..", "..", "logs", "desktop-selftest-server.log");
 /** 要檢查的檔案（命令列參數） */
 const paths = process.argv.slice(2);
+/** 只檢查開這個專案資料夾（run.ps1 -OpenProject）；沒設就跑全部 */
+const openProject = process.env.WORDBLADE_SELFTEST_PROJECT || null;
 
 const server = createServer((req, res) => {
   appendFileSync(ACCESS_LOG, `${new Date().toISOString()} ${req.method} ${req.url} origin=${req.headers.origin ?? "-"}\n`);
@@ -20,7 +22,7 @@ const server = createServer((req, res) => {
   if (req.method === "OPTIONS") return res.end();
   if (req.url === "/config") {
     res.setHeader("Content-Type", "application/json");
-    return res.end(JSON.stringify({ paths }));
+    return res.end(JSON.stringify({ paths, openProject }));
   }
   let body = "";
   req.on("data", (chunk) => { body += chunk; });

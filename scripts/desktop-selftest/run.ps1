@@ -8,7 +8,9 @@
 param(
   [string]$Exe,
   [string[]]$Files,
-  [int]$TimeoutSeconds = 300
+  [int]$TimeoutSeconds = 300,
+  # 只檢查開這個 .wordblade 專案資料夾（真的 Engine：讀 project.json、找素材、讀 .data），回報片段數與找不到的素材
+  [string]$OpenProject
 )
 $ErrorActionPreference = 'Stop'
 
@@ -22,6 +24,7 @@ if (-not $Files) {
 $Result = Join-Path $Root 'logs\desktop-selftest.json'
 Remove-Item $Result -ErrorAction SilentlyContinue
 
+if ($OpenProject) { $env:WORDBLADE_SELFTEST_PROJECT = (Resolve-Path $OpenProject).Path } else { Remove-Item Env:WORDBLADE_SELFTEST_PROJECT -ErrorAction SilentlyContinue }
 $serverArgs = @((Join-Path $PSScriptRoot 'report-server.mjs')) + ($Files | ForEach-Object { '"{0}"' -f $_ })
 $server = Start-Process node -ArgumentList $serverArgs -PassThru -WindowStyle Hidden
 Start-Sleep -Seconds 1

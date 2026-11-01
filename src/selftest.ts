@@ -12,7 +12,7 @@ import { instanceOf } from "./anim/effectRenderer";
 import { TEMPLATES_3D, builtinPlugins3D } from "./three/builtins";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { Media, Project } from "./core/model";
-import { relinkMissing } from "./project/session";
+import { loadProjectText, relinkMissing } from "./project/session";
 import { loadSample } from "./project/sample";
 import { emptyProject } from "./core/media";
 import { placeMedia } from "./core/timeline";
@@ -460,6 +460,25 @@ async function checkSample(): Promise<Record<string, unknown>> {
   }
 }
 
+/** 開指定的專案資料夾：回報素材、片段、特效、遮罩數，以及找到／找不到的素材 */
+async function checkOpenProject(dir: string) {
+  try {
+    const engine = createEngine();
+    const opened = await engine.reopenProject({ name: dir, dir });
+    if (!opened) return { error: "reopenProject returned null" };
+    const result = await loadProjectText(opened.text, opened.location, (m, c, fp) => engine.locateMedia(m, c, fp), (rel) => engine.readData(opened.location, rel));
+    if ("error" in result) return { error: result.error };
+    const p = result.project;
+    return {
+      dir: opened.location.dir, media: p.media.length, clips: p.clips.length, effects: p.effects.length, masks: p.masks.length,
+      found: p.media.filter((m) => !result.missing.some((x) => x.id === m.id)).map((m) => ({ name: m.name, path: m.path })),
+      missing: result.missing.map((m) => m.name),
+    };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
 /** 跑自我檢查：從回報伺服器拿要檢查的檔案清單，逐一檢查後把結果送回去 */
 export async function runSelftest(server: string) {
   const report: Record<string, unknown> = { origin: location.origin, userAgent: navigator.userAgent, startedAt: new Date().toISOString() };
@@ -467,7 +486,14 @@ export async function runSelftest(server: string) {
     report.isolation = { crossOriginIsolated: self.crossOriginIsolated, sharedArrayBuffer: typeof SharedArrayBuffer };
     report.samplesDir = await invoke("find_samples_dir");
     report.tools = await invoke("media_tools");
-    const { paths } = (await (await fetch(`${server}/config`)).json()) as { paths: string[] };
+    const { paths, openProject } = (await (await fetch(`${server}/config`)).json()) as { paths: string[]; openProject?: string | null };
+    // 只檢查開某個專案資料夾（-OpenProject）：和介面按 Open… 走同一條路（reopenProject → loadProjectText → locateMedia／readData）
+    if (openProject) {
+      report.openProject = await checkOpenProject(openProject);
+      report.finishedAt = new Date().toISOString();
+      await fetch(`${server}/report`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(report) });
+      return;
+    }
     const files: unknown[] = [];
     for (const [i, path] of paths.entries()) files.push(await checkFile(path, i));
     report.files = files;

@@ -31,6 +31,7 @@ pub fn run() {
             project::project_read,
             project::project_data_write,
             project::project_data_read,
+            project::project_copy_in,
             project::media_fingerprint,
             project::media_locate,
             media::thumbs_make,

@@ -37,6 +37,9 @@
 - 「最近開啟」重開時要求權限，需要使用者手勢。
 - 開著專案時選檔改用 `showOpenFilePicker`、拖放時取 `getAsFileSystemHandle`，素材 handle 存進 IndexedDB，鍵是 `handleKey`，重開專案時 `locateMedia` 找得回來。用 `<input>` 匯入的列為找不到，可以用 `adoptFile` 重新連結。
 - `project.json` 用 `createWritable` 寫。
+- 跨平台（11/1）：素材參照多記 `name`，網頁版也算指紋（`core/fingerprint.ts`，和 Rust 同一個 FNV-1a 64）。
+  - 桌面版開網頁版的專案：在專案旁邊、專案裡、`.data/generated` 依序找同名檔，再比對指紋。
+  - 網頁版開桌面版的專案：只能在授權的專案資料夾與 `.data/generated` 裡用檔名找，同樣比對指紋；專案外面的素材要按「Locate」重新連結，連結時會補上 `handleKey`。
 - Playwright 接不到這些選取器，`e2e/web-project-folder.spec.ts` 把它們換成 OPFS 的 handle，涵蓋另存、自動存檔、重新整理後重開、重新連結。 |
 | P4 | 進行中（10/28） | `project/session.ts`（存前補指紋、開時找回素材、最近開啟、匯出預設在資料夾旁；Vitest 4）、`ui/useProjectFolder.ts`、標題列 Save…／Open…／Recent、已儲存時間、找不到的素材提示；開著資料夾時瀏覽器自動存檔停用；匯出對話框預設 `<父資料夾>\<專案名>.mp4`；重新連結：提示列「Locate <檔名>…」選檔，同資料夾其他遺失素材依原檔名＋指紋一起找回（`relinkMissing`，Vitest 2；WebView2 自我檢查 relinked 2/2）。**還沒做**：桌面 UI 實際點過（對話框無法自動化，留給開發者手點）。e2e 沙盒逾時已查明：iframeRuntime.js 被 autocrlf 轉成 CRLF，srcdoc 解析後是 LF，CSP 雜湊對不上（095870b 修正） |
 | P5 | 完成（11/1） | `.data\` 放兩類東西：

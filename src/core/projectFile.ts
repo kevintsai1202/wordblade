@@ -13,8 +13,10 @@ export interface MediaRef {
   path?: string;
   /** 相對專案資料夾的路徑（一律用 /；不同磁碟機時沒有） */
   rel?: string;
-  /** 內容指紋（大小＋頭尾各 1 MB 的 SHA-256） */
+  /** 內容指紋（大小＋頭尾各 1 MB 的 FNV-1a 64，core/fingerprint.ts） */
   fingerprint?: string;
+  /** 檔名：網頁版的素材沒有路徑，另一個平台開專案時用它找（2026-11-01） */
+  name?: string;
 }
 
 /** 路徑拆成磁碟機（或根）與各段；分隔符號 \ 和 / 都接受 */
@@ -55,6 +57,8 @@ export function toProjectFile(project: Project, opts: { projectDir: string; save
   const media: Record<string, MediaRef> = {};
   for (const m of project.media) {
     const ref: MediaRef = {};
+    const name = m.path ? m.path.split(/[\\/]/).pop() : m.name;
+    if (name) ref.name = name;
     if (m.path) {
       ref.path = m.path;
       const rel = relativePath(opts.projectDir, m.path);
@@ -79,12 +83,18 @@ export function fromProjectFile(text: string): { project: Project; refs: Record<
   }
 }
 
-/** 找素材的順序：相對路徑（照現在的專案位置）→ 原本的絕對路徑；重複的只留一個（之後再用指紋確認是同一支） */
+/**
+ * 找素材的順序：相對路徑（照現在的專案位置）→ 原本的絕對路徑 → 用檔名在專案旁邊、專案裡、.data/generated 找
+ * （網頁版存的素材只有檔名）；重複的只留一個（之後再用指紋確認是同一支）
+ */
 export function relinkCandidates(ref: MediaRef | undefined, projectDir: string): string[] {
   if (!ref) return [];
   const list: string[] = [];
   if (ref.rel) list.push(joinPath(projectDir, ref.rel));
   if (ref.path) list.push(ref.path);
+  if (ref.name && !/[\\/]/.test(ref.name)) {
+    for (const rel of [`.data/media/${ref.name}`, `../${ref.name}`, ref.name, `.data/generated/${ref.name}`]) list.push(joinPath(projectDir, rel));
+  }
   const seen = new Set<string>();
   return list.filter((p) => {
     const k = p.replace(/\\/g, "/").toLowerCase();
@@ -107,7 +117,7 @@ export async function relinkProject(
   const missing: string[] = [];
   const media = await Promise.all(project.media.map(async (m) => {
     const ref = refs[m.id];
-    const found = await locate(m, relinkCandidates(ref ?? { path: m.path }, projectDir), ref?.fingerprint);
+    const found = await locate(m, relinkCandidates({ name: m.name, ...(ref ?? { path: m.path }) }, projectDir), ref?.fingerprint);
     if (found) return found;
     missing.push(m.id);
     return m;
