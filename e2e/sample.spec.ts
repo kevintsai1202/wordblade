@@ -73,7 +73,7 @@ test("特效範例：離線也能開，2D／3D 插件、3D 場景、轉場、色
       vibe3d: p.plugins.filter((x: { source: string; kind: string }) => x.source === "vibe" && x.kind === "3d").length,
       cameraKeys: p.effects.filter((e: { kind: string; cameraKeys?: unknown[] }) => e.kind === "scene3d" && e.cameraKeys?.length).length, transitions: (p.transitions ?? []).length, kinds: new Set((p.transitions ?? []).map((t: { kind: string }) => t.kind)).size,
       grades: (p.colorGrades ?? []).length, synths: p.synths.length, images: p.media.filter((m: { kind: string }) => m.kind === "image").length,
-      words: p.words.length,
+      words: p.words.length, masks: p.masks.filter((m: { enabled: boolean }) => m.enabled).length,
     };
   });
   console.log(JSON.stringify(summary));
@@ -88,6 +88,7 @@ test("特效範例：離線也能開，2D／3D 插件、3D 場景、轉場、色
   expect(summary.synths).toBeGreaterThanOrEqual(1);   // AI 配樂或音效
   expect(summary.images).toBeGreaterThanOrEqual(3);   // 片頭封面
   expect(summary.words).toBeGreaterThan(100);         // 逐字稿（逐字高亮字幕、3D 插件讀得到字）
+  expect(summary.masks).toBeGreaterThanOrEqual(1);    // 假 API 金鑰要遮（沿用導演範例的 SAM 遮罩）
 
   // 匯出整支，存到 output/sample-effects-export.mp4（人工檢查每種特效的樣子）
   await openTab(page, "export");

@@ -245,6 +245,14 @@ type Step = (name: string, run: () => Promise<string>, fallback?: () => Promise<
  * 排法避開轉場的接點（30、55、80 秒）與 3D 場景（20～26 秒，它蓋住主軌）。
  */
 async function buildEffects(page: Page, step: Step, log: string[]) {
+  // 遮假 API 金鑰：沿用導演範例的 SAM 遮罩（同一支素材、遮罩用素材時間記，換成這個專案的素材 id 就好，不再呼叫 SAM）
+  const director = JSON.parse(readFileSync(path.join(ROOT, "public", "sample", "project.json"), "utf8")) as { project: Project };
+  const mediaId = await page.evaluate(() => (window as unknown as { __wordblade: Hook }).__wordblade.project().media.find((m) => m.kind === "video")!.id);
+  const masks = director.project.masks.map((m) => ({ ...m, mediaId }));
+  if (!masks.length) throw new Error("導演範例沒有遮罩可以沿用");
+  await dispatch(page, { type: "commit", edits: [{ kind: "addMasks", masks }] });
+  log.push(`Mask: ${masks.length} SAM mask(s) on the fake API key, reused from the director sample.`);
+
   // 逐字高亮字幕
   await openTab(page, "style");
   await page.getByTestId("caption-karaoke").selectOption("fill");

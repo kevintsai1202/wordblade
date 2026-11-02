@@ -17,3 +17,4 @@ Footage: samples/demo-2min.mp4 — a synthetic screen recording with a TTS voice
 - Sound effect: built-in template at 70 s.
 - Background music (Muse Spark → synth): 16 bars on the music track (13 s)
 - Intro: flip intro with 8 covers (scripts/sample/covers.mjs), built-in music.
+- Mask: 1 SAM mask on the fake API key, reused from the director sample (added afterwards, 2026-11-02).
