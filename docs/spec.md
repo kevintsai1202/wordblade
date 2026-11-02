@@ -317,7 +317,7 @@
   - 閘道 `/v1/tts`：msgpack 轉給 Fish，串流 WAV 會重包。實測 9.5～14 秒。
   - 長度對齊：先用自然速度生成；太長就加速重生一次（上限 1.3 倍）；還太長再用片段變速。
   - 生成的聲音放在另一條音軌（`Project.voiceovers`）。生效時，範圍內的對白靜音（預覽把增益設 0；匯出加 10 ms 淡出入）；每段可以切回原聲。範圍跟著 AI 片段的位置走。
-  - 還沒做：字幕不跟著改；AI 聲音那段範圍內的配樂不會壓低；新增的音軌名稱顯示「A4」。
+  - 11/2 補上：生效時範圍內的字幕換成重配的文字（依字元數平均分配時間）；AI 聲音也會讓配樂壓低；新增的音軌標「Voice」。
   - 驗證：`e2e/revoice.spec.ts`、`e2e/revoice-live.spec.ts`（實機）。生成的聲音還沒有人工聽過。
 - Fish 的契約（原專案實測 2026-07-21、09-17）：模型用 HTTP header `model` 指定；即時克隆的參考音檔要 raw bytes，請求本體用 msgpack；標記一律方括號 `[break]`（圓括號會被唸出來）；串流 WAV 的標頭長度欄位是錯的（0xFFFFFFFF），要依 fmt 重新包裝；`prosody.speed` 上限 1.3，超過的部分用片段變速；0.2 秒以下的極短區間不要送。
 
@@ -551,7 +551,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 素材庫的「Separate」按鈕：原本的音訊片段換成人聲（留在原軌）加背景（新的 music 軌），位置與修邊相同，一次 Ctrl+Z 復原；`Media.stems` 記錄兩者的關聯。
 - 轉錄與 AI 重配音的聲音樣本改用分離後的人聲。網頁版按鈕停用。
 - 速度：DirectML 第一次會先編譯（4 秒的音訊約 62 秒），之後 4 秒音訊約 11 秒；CPU 約 0.4 倍即時。
-- 安裝版（NSIS）裡帶的 DirectML.dll 還沒有實際裝起來驗證。新 clone 要先 `cargo build`，再跑 `scripts/fetch-directml.ps1`。
+- 11/2 安裝版驗證過（`scripts/verify-installer.ps1`）：DirectML.dll 裝在 exe 旁邊；安裝後用 DirectML 分 4 秒的音訊只要 3.8 秒（release 版）。新 clone 要先 `cargo build`，再跑 `scripts/fetch-directml.ps1`。
 
 **介面與時間軸**
 
