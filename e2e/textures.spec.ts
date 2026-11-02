@@ -123,6 +123,8 @@ test("材質：產生 → 材質庫（不在素材庫列出）→ 套到教室�
   await openTab(page, "inspector");
   const wall = page.locator('[data-param="wallTexture"] [data-testid="param-texture"]');
   await expect(wall.locator("option")).toHaveText(["Default", "worn oak planks", "Generate a new one…"]);
+  // 教室場景用不到桌面的材質欄位，不顯示（2026-11-02）
+  await expect(page.locator('[data-param="deskTexture"]')).toHaveCount(0);
   // 背景圖的下拉只列 3D 背景（目前沒有）
   await expect(page.locator('[data-param="backgroundImage"] [data-testid="param-texture"] option')).toHaveText(["Default", "Generate a new one…"]);
   await wall.selectOption({ label: "worn oak planks" });

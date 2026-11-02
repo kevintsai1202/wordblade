@@ -47,3 +47,13 @@
 
 - 單元：transitions、freeze、colorGrades（含漣漪）、framePlan／clipFrames 的轉場、runtime 的 fill、karaoke 提詞時間。
 - e2e：新寫 `e2e/edit-features.spec.ts`（加轉場、定格、色彩、填色、錄音用假麥克風），加跑 timeline、export、revoice 相關 spec。
+
+## 第二輪（11/2 開發者：卡拉 OK 要播影片、可開關原聲監聽；小缺口照建議修；轉場能加的都加）
+
+1. 卡拉 OK：倒數結束開始錄的同時，從範圍起點播放（播到範圍結尾停）；「Hear original」勾選框（預設關）——關掉時錄音期間對白軌靜音（只影響預覽，不改專案）。麥克風開不了時，桌面版改用 Windows 錄音機（engine.recorderFallback）；提詞與播放照常，停止後取回檔案，剪到範圍長度。
+2. 3D 場景只顯示用得到的材質欄位：參數定義加 `when: { param, values }`（desk-screen 依 scene、floating-board 依 background）；舊專案存的元件沒有 when 就全部顯示。
+3. 3D 背景圖不縮到 1280：effectImages 對材質庫 background 那張改成上限 2560（材質仍 1280）。
+4. 聲音分離快取不無限長大：app 快取的 stems\ 超過 2 GB 時，依修改時間刪最舊的（專案資料夾的 .data\stems 不動）。
+5. 長影片分離：用 10 分鐘音訊實測速度與記憶體，結果寫進 spec（不改程式，除非發現問題）。
+6. 網頁版還原上次工作：沒有 handle（或 handle 取不回、沒權限）的素材標成 offline，顯示 Media Offline 卡，可重新連結。
+7. 轉場新增：推近（zoomIn）、拉遠（zoomOut）、上推／下推（pushUp、pushDown）、左右滑入（slideLeft、slideRight：後一段蓋在前一段上滑進來）、四向擦除（wipeLeft、wipeRight、wipeUp、wipeDown）。擦除用框＋裁切實作（和局部放大的 crop 疊乘），不用新的 shader。

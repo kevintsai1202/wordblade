@@ -39,4 +39,7 @@ test("編輯後自動存檔，重新整理可還原；示範專案不會蓋掉",
   await expect(page.locator('.track-row[data-track-id="V1"] .clip')).toHaveCount(1);
   await expect.poll(() => edited(page)).toBeCloseTo(2, 1);
   await expect(page.locator(".media-item", { hasText: "talk.mp4" })).toHaveCount(1);
+  // 網頁版：用檔案選擇器匯入的檔案重新整理後拿不回來 → 標成離線、預覽畫 Media Offline 卡、出現重新連結（2026-11-02）
+  await expect(page.getByTestId("missing-media")).toContainText("talk.mp4");
+  await expect(page.getByTestId("preview-canvas")).toHaveAttribute("data-offline", "1");
 });

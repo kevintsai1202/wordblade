@@ -168,3 +168,29 @@ export function template3DEffect(template: Template3D, plugin: Plugin, id: strin
     },
   };
 }
+
+/**
+ * 內建 3D 元件裡「只有某些設定才用得到」的參數（2026-11-02）：Inspector 依目前的值決定要不要顯示。
+ * 放在元件外面（不在 params 裡），元件內容雜湊不變，舊專案與範例照樣套得到。
+ * 鍵：元件 id → 參數名稱 → { 看哪個參數, 那個參數是哪些值時才顯示 }。
+ */
+export const PARAM_WHEN: Record<string, Record<string, { param: string; values: unknown[] }>> = {
+  "desk-screen": {
+    deskTexture: { param: "scene", values: ["desk"] },
+    wallTexture: { param: "scene", values: ["classroom"] },
+    floorTexture: { param: "scene", values: ["classroom", "studio"] },
+    frameTexture: { param: "scene", values: ["classroom"] },
+  },
+  "floating-board": {
+    backgroundImage: { param: "background", values: ["image"] },
+    color: { param: "background", values: ["color"] },
+  },
+};
+
+/** 某個參數現在要不要顯示（沒有條件就顯示；值沒設時用元件的預設值判斷） */
+export function paramVisible(componentId: string | undefined, key: string, values: Record<string, unknown>, defaults: Record<string, { default?: unknown }>): boolean {
+  const when = componentId ? PARAM_WHEN[componentId]?.[key] : undefined;
+  if (!when) return true;
+  const current = values[when.param] ?? defaults[when.param]?.default;
+  return when.values.includes(current);
+}

@@ -290,8 +290,16 @@ export interface TextureAsset {
   repeat: number;
 }
 
-/** 轉場種類（§5.9）：溶接、穿黑、穿白、往左推、往右推 */
-export type TransitionKind = "dissolve" | "dipBlack" | "dipWhite" | "pushLeft" | "pushRight";
+/**
+ * 轉場種類（§5.9）：溶接、穿黑／白、推移（四向）、滑入（左右：後一段蓋上來）、擦除（四向：邊界往那個方向走）、推近、拉遠。
+ * 方向的意思一律是「畫面（或邊界）往哪邊走」。
+ */
+export type TransitionKind =
+  | "dissolve" | "dipBlack" | "dipWhite"
+  | "pushLeft" | "pushRight" | "pushUp" | "pushDown"
+  | "slideLeft" | "slideRight"
+  | "wipeLeft" | "wipeRight" | "wipeUp" | "wipeDown"
+  | "zoomIn" | "zoomOut";
 
 /**
  * 轉場（§5.9，P2；2026-11-02）：放在 V1 片段 clipId 的起點（和前一段的接點）。不改長度：

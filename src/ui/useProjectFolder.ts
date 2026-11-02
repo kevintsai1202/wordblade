@@ -182,5 +182,8 @@ export function useProjectFolder(opts: {
     return found.length ? null : "None of the missing files are in that folder.";
   }, [engine, missing, project.media, dispatch, enqueuePrepare]);
 
-  return { location, status, recent, missing, saveAs, open, reopen, relink, allowFolder, dismissMissing: () => setMissing([]) };
+  /** 外面（網頁版還原上次工作）找不到的素材交給這裡，沿用同一套「Locate…／Allow folder」重新連結介面 */
+  const markMissing = useCallback((list: MissingMedia[]) => setMissing(list), []);
+
+  return { location, status, recent, missing, saveAs, open, reopen, relink, allowFolder, markMissing, dismissMissing: () => setMissing([]) };
 }

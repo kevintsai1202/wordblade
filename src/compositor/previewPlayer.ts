@@ -9,6 +9,7 @@ import { currentAudioGraph } from "../audio/audioGraph";
 import { gainAt, type DuckCurve } from "../audio/ducking";
 import type { Media, Project, Seconds } from "../core/model";
 import { audioPlan, type VideoLayer } from "./framePlan";
+import { isMonitorMuted } from "../audio/monitor";
 import { layerPlan } from "./layerPlan";
 import { GlCompositor } from "./glCompositor";
 import { CaptionLayer } from "../captions/captionLayer";
@@ -22,7 +23,7 @@ const PLAY_DRIFT: Seconds = 0.15;
 function layerLook(layer: VideoLayer): string {
   const r = layer.rect;
   const g = layer.grade;
-  return `:${r.x.toFixed(3)},${layer.opacity.toFixed(3)}${g ? `:g${g.brightness},${g.contrast},${g.saturation},${g.temperature}` : ""}`;
+  return `:${r.x.toFixed(3)},${r.y.toFixed(3)},${r.w.toFixed(3)},${r.h.toFixed(3)},${layer.opacity.toFixed(3)}${g ? `:g${g.brightness},${g.contrast},${g.saturation},${g.temperature}` : ""}`;
 }
 /** 暫停時差超過這個值（秒）就把元素拖到正確位置 */
 const SEEK_EPSILON: Seconds = 1 / 60;
@@ -272,7 +273,9 @@ export class PreviewPlayer {
         return a;
       });
       if (!el) continue;
-      const gain = Math.max(0, voice.gain);
+      // 卡拉 OK 錄音時關掉原聲（只影響預覽）
+      const role = project.tracks.find((tr) => tr.id === project.clips.find((c) => c.id === voice.clipId)?.trackId)?.role;
+      const gain = isMonitorMuted(role) ? 0 : Math.max(0, voice.gain);
       if (graph) {
         const trackId = project.clips.find((c) => c.id === voice.clipId)!.trackId;
         graph.connect(voice.clipId, el, trackId);

@@ -11,7 +11,7 @@ export const EFFECT_IMAGE_MAX_WIDTH = 1280;
  * @param mediaUrl 素材的網址（Engine.mediaUrl）
  * @param findMedia 依 id 找素材（找目前專案）
  */
-export function createImageSource(mediaUrl: (media: Media) => string, findMedia: (id: string) => Media | undefined): ImageSource & { dispose(): void } {
+export function createImageSource(mediaUrl: (media: Media) => string, findMedia: (id: string) => Media | undefined, isBackground: (id: string) => boolean = () => false): ImageSource & { dispose(): void } {
   /** 素材 id → 解碼中或解好的圖 */
   const cache = new Map<string, Promise<ImageBitmap>>();
 
@@ -22,7 +22,8 @@ export function createImageSource(mediaUrl: (media: Media) => string, findMedia:
       if (!media || media.kind !== "image") throw new Error("not an image");
       const blob = await (await fetch(mediaUrl(media))).blob();
       const full = await createImageBitmap(blob);
-      if (full.width <= EFFECT_IMAGE_MAX_WIDTH) return full;
+      // 3D 背景圖不縮（存檔時已經不超過 1920 寬，縮到 1280 在 1080p 輸出會糊；2026-11-02）
+      if (full.width <= EFFECT_IMAGE_MAX_WIDTH || isBackground(id)) return full;
       const scaled = await createImageBitmap(full, { resizeWidth: EFFECT_IMAGE_MAX_WIDTH, resizeHeight: Math.round((full.height * EFFECT_IMAGE_MAX_WIDTH) / full.width), resizeQuality: "high" });
       full.close();
       return scaled;

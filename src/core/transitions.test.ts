@@ -1,7 +1,7 @@
 // 轉場（§5.9）、色彩調整（P3）、定格（§5.20）的純函式測試（2026-11-02）
 import { describe, expect, it } from "vitest";
 import { makeProject } from "./fixtures";
-import { setTransition, transitionAudioFactor, transitionCuts, transitionLook, visibleRange, extendedSource } from "./transitions";
+import { applySide, setTransition, transitionAudioFactor, transitionCuts, transitionLook, visibleRange, extendedSource } from "./transitions";
 import { gradeAt, setColorGrade } from "./colorGrade";
 import { deleteClip, insertFreeze, rippleDelete, clipEnd } from "./timeline";
 import { audioPlan, framePlan } from "../compositor/framePlan";
@@ -137,5 +137,51 @@ describe("轉場的聲音與清理（2026-11-02 補）", () => {
 
   it("後一段被刪掉：轉場紀錄一起拿掉", () => {
     expect(deleteClip(p, "v1b").transitions ?? []).toHaveLength(0);
+  });
+});
+
+// 新增的轉場（2026-11-02 第二輪）：每種在進度 0.25 的樣子；方向＝畫面或邊界往哪邊走
+describe("轉場種類（q＝0.25）", () => {
+  const full = { x: 0, y: 0, w: 1, h: 1 };
+  /** 套到全畫面後的框 */
+  const at = (kind: Parameters<typeof transitionLook>[0], who: "prev" | "next") => applySide(full, undefined, transitionLook(kind, 0.25)[who]);
+
+  it("推移四向：兩段一起往那個方向走", () => {
+    expect(at("pushUp", "prev").rect.y).toBeCloseTo(-0.25);
+    expect(at("pushUp", "next").rect.y).toBeCloseTo(0.75);
+    expect(at("pushDown", "prev").rect.y).toBeCloseTo(0.25);
+    expect(at("pushDown", "next").rect.y).toBeCloseTo(-0.75);
+  });
+
+  it("滑入：前一段不動，後一段從反方向蓋進來", () => {
+    expect(at("slideLeft", "prev").rect).toEqual(full);
+    expect(at("slideLeft", "next").rect.x).toBeCloseTo(0.75);
+    expect(at("slideRight", "next").rect.x).toBeCloseTo(-0.75);
+  });
+
+  it("擦除：後一段只露出邊界走過的那塊，畫面框和素材裁切同一塊", () => {
+    expect(at("wipeLeft", "next")).toEqual({ rect: { x: 0.75, y: 0, w: 0.25, h: 1 }, crop: { x: 0.75, y: 0, w: 0.25, h: 1 } });
+    expect(at("wipeRight", "next").rect).toEqual({ x: 0, y: 0, w: 0.25, h: 1 });
+    expect(at("wipeUp", "next").rect).toEqual({ x: 0, y: 0.75, w: 1, h: 0.25 });
+    expect(at("wipeDown", "next").rect).toEqual({ x: 0, y: 0, w: 1, h: 0.25 });
+  });
+
+  it("擦除和局部放大的裁切疊乘", () => {
+    const r = applySide(full, { x: 0.5, y: 0.5, w: 0.5, h: 0.5 }, transitionLook("wipeRight", 0.5).next);
+    expect(r.crop).toEqual({ x: 0.5, y: 0.5, w: 0.25, h: 0.5 });
+  });
+
+  it("推近：前一段以中心放大；拉遠：後一段從 1.5 倍縮回並淡入", () => {
+    expect(at("zoomIn", "prev").rect).toEqual({ x: -0.0625, y: -0.0625, w: 1.125, h: 1.125 });
+    expect(transitionLook("zoomIn", 0.25).next.opacity).toBe(0.25);
+    expect(at("zoomOut", "next").rect.w).toBeCloseTo(1.375);
+    expect(transitionLook("zoomOut", 0.25).next.opacity).toBe(0.25);
+  });
+
+  it("framePlan 用擦除：接點時後一段只畫右半", () => {
+    const w = setTransition(makeProject(), "v1b", "wipeLeft", 1);
+    const next = framePlan(w, 10).find((l) => l.clipId === "v1b")!;
+    expect(next.rect.x).toBeCloseTo(0.5);
+    expect(next.crop!.x).toBeCloseTo(0.5);
   });
 });

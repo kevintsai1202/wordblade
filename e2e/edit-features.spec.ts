@@ -218,12 +218,16 @@ test("卡拉 OK 重配錄音：選範圍 → Record → 倒數 → 提詞器逐�
   await page.getByTestId("range-revoice").click();
   await expect(page.getByTestId("revoice-text")).toHaveValue(/word/);
 
+  // 「Hear original」預設關（錄音時預覽不出原聲）
+  await expect(page.getByTestId("karaoke-hear-original")).not.toBeChecked();
   await page.getByTestId("revoice-record").click();
   await expect(page.getByTestId("karaoke-countdown")).toHaveText("3");
   await expect(page.getByTestId("karaoke")).toHaveAttribute("data-phase", "recording", { timeout: 6_000 });
+  // 錄音時影片從範圍起點開始播：播放頭往前走、離開 6 秒
+  await expect(page.getByTestId("preview-timecode")).not.toHaveText("00:00:06:00", { timeout: 3_000 });
   // 錄音中有一個詞亮著
   await expect(page.locator('[data-testid="karaoke-text"] .now')).toHaveCount(1, { timeout: 3_000 });
-  // 範圍約 2.6 秒，自動停並放上 Voice 軌
+  // 範圍約 2.6 秒，播到範圍結尾自動停並放上 Voice 軌
   await expect(page.getByTestId("revoice-item")).toHaveCount(1, { timeout: 20_000 });
   await expect(page.getByTestId("revoice-toggle")).toHaveText("Playing: Your take");
   const p = await project(page);
@@ -270,4 +274,42 @@ test("溶接轉場、前一段沒有多餘畫面（素材只有 4 秒）：匯�
     expect(m).toBeGreaterThan(60);
   }
   expect(errors.filter((e) => !e.includes("favicon"))).toEqual([]);
+});
+
+test("擦除轉場（往左擦）：接點那一格右半是新畫面（白色）、左半還是舊畫面", async ({ page }) => {
+  test.setTimeout(200_000);
+  await setup(page);
+  // 純白的圖當後一段
+  mkdirSync(OUT, { recursive: true });
+  const white = path.join(OUT, "white.png");
+  spawnSync("ffmpeg", ["-y", "-v", "error", "-f", "lavfi", "-i", "color=c=white:s=320x180", "-frames:v", "1", white]);
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByTestId("import-media").click();
+  await (await chooser).setFiles(white);
+  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
+  await page.evaluate(() => {
+    const hook = (window as unknown as { __wordblade: { project: () => any; dispatch: (a: unknown) => void } }).__wordblade;
+    const img = hook.project().media.find((m: any) => m.kind === "image");
+    hook.dispatch({ type: "commit", edits: [{ kind: "place", mediaId: img.id, trackId: "V1", t: 30 }] });
+  });
+  await expect(page.locator('.track-row[data-track-id="V1"] .clip')).toHaveCount(2);
+  const row = (await page.locator('.track-row[data-track-id="V1"]').boundingBox())!;
+  await page.mouse.click(row.x + 1 + 31 * PX, row.y + row.height / 2);
+  await openTab(page, "inspector");
+  await page.getByTestId("transition-kind").selectOption("wipeLeft");
+  await page.getByTestId("transition-duration").fill("1");
+
+  const file = await exportTo(page, "wipe-left");
+  /** 32×18 的格：左半、右半的平均 */
+  const halves = (px: Uint8Array) => {
+    let l = 0, r = 0;
+    for (let i = 0; i < px.length; i += 3) ((i / 3) % 32 < 16 ? (l += px[i] + px[i + 1] + px[i + 2]) : (r += px[i] + px[i + 1] + px[i + 2]));
+    return { left: l / (px.length / 2), right: r / (px.length / 2) };
+  };
+  const cut = halves(frameAt(file, 30));
+  console.log(`wipe at cut: left ${cut.left.toFixed(1)}, right ${cut.right.toFixed(1)}`);
+  expect(cut.right).toBeGreaterThan(235);
+  expect(cut.left).toBeLessThan(200);
+  // 擦完（30.5 秒後）整格白
+  expect(mean(frameAt(file, 30.6))).toBeGreaterThan(235);
 });

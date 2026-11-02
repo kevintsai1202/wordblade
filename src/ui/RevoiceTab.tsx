@@ -3,7 +3,9 @@
 // 文字與樣本會送到 WordBlade AI 服務與 Fish Audio 克隆聲音（第一次用要同意）。
 import { audioSourceFor } from "../core/stems";
 import { useEffect, useRef, useState, type Dispatch } from "react";
-import { startMic, type MicSession } from "../audio/micRecorder";
+import { CLIP_PEAK, shouldFallback, startMic, type MicSession } from "../audio/micRecorder";
+import { setMonitorMute } from "../audio/monitor";
+import { ensureAudioGraph } from "../audio/audioGraph";
 import { activeWordIndex, prompterWords, type PrompterWord } from "../ai/karaoke";
 import { GatewayClient, GatewayError, loadSettings } from "../ai/gateway";
 import { buildSeed, dialogueMedia, fitToRange, rangeText } from "../ai/revoice";
@@ -41,7 +43,7 @@ const COUNTDOWN = 3;
 const sec = (t: number) => `${t.toFixed(1)} s`;
 
 /** Re-voice 子頁籤 */
-export function RevoiceTab({ engine, project, range, importSources, dispatch }: {
+export function RevoiceTab({ engine, project, range, importSources, dispatch, playhead = 0, playing = false }: {
   engine: Engine;
   project: Project;
   /** 時間軸選的範圍（時間軸秒）：要重配音的那一段 */
@@ -49,6 +51,9 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
   /** 一般的匯入流程（useMediaLibrary）；回傳匯入成功的素材 */
   importSources: (sources: ImportSource[]) => Promise<Media[]>;
   dispatch: Dispatch<Action>;
+  /** 播放頭與是否播放中（卡拉 OK 的提詞器跟著播放頭走） */
+  playhead?: number;
+  playing?: boolean;
 }) {
   /** 要念的文字（選範圍時預設填入範圍內的逐字稿，可編輯） */
   const [text, setText] = useState("");
@@ -66,15 +71,19 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
   const token = loadSettings().token;
 
   /**
-   * 卡拉 OK 重配錄音（P1-9；2026-11-02）：倒數 → 錄音＋提詞器逐字高亮 → 到範圍長度自動停（也可手動停）
-   * → 放到 Voice 軌（同 AI 重配音：範圍內原聲靜音、可切回原聲）。只用瀏覽器的麥克風；不送到任何服務。
+   * 卡拉 OK 重配錄音（P1-9；2026-11-02）：倒數 → 開麥克風 → 從範圍起點播放影片（播到範圍結尾自動停）→ 提詞器跟著播放頭逐字高亮
+   * → 停止後放到 Voice 軌（同 AI 重配音：範圍內原聲靜音、可切回原聲）。「Hear original」關掉時，錄音期間預覽不出對白與先前的重配音
+   * （只影響預覽），免得被麥克風收進去。Windows 版麥克風被擋時改用內建錄音機（停止後才拿到檔案，可能有些微時間差）。
    */
-  const [karaoke, setKaraoke] = useState<{ phase: "countdown" | "recording"; left: number; elapsed: number; words: PrompterWord[]; target: { start: number; end: number }; said: string } | null>(null);
-  /** 錄音中的麥克風與計時器（停止時要收） */
-  const session = useRef<{ mic: MicSession | null; timer: ReturnType<typeof setInterval> | null; startedAt: number }>({ mic: null, timer: null, startedAt: 0 });
+  const [karaoke, setKaraoke] = useState<{ phase: "countdown" | "recording"; left: number; words: PrompterWord[]; target: { start: number; end: number }; said: string } | null>(null);
+  /** 錄音時要不要聽到原聲（預設不聽） */
+  const [hearOriginal, setHearOriginal] = useState(false);
+  /** 錄音中的來源與倒數計時器；sawPlaying：播放真的開始過（之後停下來才算自動停止） */
+  const session = useRef<{ mic: MicSession | null; recorder: boolean; timer: ReturnType<typeof setInterval> | null; sawPlaying: boolean }>({ mic: null, recorder: false, timer: null, sawPlaying: false });
   useEffect(() => () => {
     if (session.current.timer) clearInterval(session.current.timer);
     session.current.mic?.cancel();
+    setMonitorMute([]);
   }, []);
 
   /** 開始：先倒數，倒數完開麥克風開始錄 */
@@ -85,7 +94,7 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
     const said = text.trim();
     const words = prompterWords(project, target, said);
     let left = COUNTDOWN;
-    setKaraoke({ phase: "countdown", left, elapsed: 0, words, target, said });
+    setKaraoke({ phase: "countdown", left, words, target, said });
     session.current.timer = setInterval(() => {
       left--;
       if (left > 0) {
@@ -98,37 +107,63 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
     }, 1000);
   };
 
-  /** 倒數完：開麥克風、開始計時 */
+  /** 倒數完：開麥克風（不行就 Windows 錄音機），錄音開始後才從範圍起點播放 */
   const beginRecording = async (target: { start: number; end: number }, said: string, words: PrompterWord[]) => {
     try {
       session.current.mic = await startMic();
     } catch (e) {
-      setKaraoke(null);
-      setError(`Couldn't use the microphone: ${message(e)}`);
-      return;
+      const name = (e as { name?: string }).name ?? "";
+      if (!(shouldFallback(name, engine.kind) && engine.recorderFallback)) {
+        setKaraoke(null);
+        setError(name === "NotFoundError" ? "No microphone found." : `Couldn't use the microphone: ${message(e)}`);
+        return;
+      }
+      try {
+        await engine.recorderFallback.start();
+        session.current.recorder = true;
+      } catch (e2) {
+        setKaraoke(null);
+        setError(`Couldn't start Windows Sound Recorder: ${message(e2)}`);
+        return;
+      }
     }
-    session.current.startedAt = performance.now();
-    setKaraoke({ phase: "recording", left: 0, elapsed: 0, words, target, said });
-    const length = target.end - target.start;
-    session.current.timer = setInterval(() => {
-      const elapsed = (performance.now() - session.current.startedAt) / 1000;
-      setKaraoke((k) => (k ? { ...k, elapsed } : k));
-      if (elapsed >= length) void stopKaraoke(target, said);
-    }, 50);
+    setMonitorMute(hearOriginal ? [] : ["dialogue", "voice"]);
+    session.current.sawPlaying = false;
+    setKaraoke({ phase: "recording", left: 0, words, target, said });
+    // 從按鈕觸發播放，要先建好聲音圖（鍵盤播放在 App 裡做）
+    ensureAudioGraph();
+    dispatch({ type: "seek", time: target.start });
+    dispatch({ type: "play", rate: 1, stopAt: target.end });
   };
+
+  // 播放開始過、又停下來（播到範圍結尾或使用者按了暫停）：停止錄音
+  useEffect(() => {
+    if (karaoke?.phase !== "recording") return;
+    if (playing) session.current.sawPlaying = true;
+    else if (session.current.sawPlaying) void stopKaraoke(karaoke.target, karaoke.said);
+  }, [playing, karaoke?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** 停止（自動或手動）：錄好的放到 Voice 軌 */
   const stopKaraoke = async (target: { start: number; end: number }, said: string) => {
-    if (session.current.timer) clearInterval(session.current.timer);
-    session.current.timer = null;
     const mic = session.current.mic;
+    const recorder = session.current.recorder;
     session.current.mic = null;
+    session.current.recorder = false;
+    setMonitorMute([]);
     setKaraoke(null);
-    if (!mic) return;
+    if (playing) dispatch({ type: "pause" });
+    if (!mic && !recorder) return;
     setBusy("Adding your take…");
     try {
-      const take = await mic.stop();
-      const source = await engine.importGenerated(`take-${slug(said)}-${crypto.randomUUID().slice(0, 6)}.wav`, take.wav);
+      let source: ImportSource;
+      let peak = 0;
+      if (mic) {
+        const take = await mic.stop();
+        peak = take.peak;
+        source = await engine.importGenerated(`take-${slug(said)}-${crypto.randomUUID().slice(0, 6)}.wav`, take.wav);
+      } else {
+        source = await engine.recorderFallback!.stop();
+      }
       const [voice] = await importSources([source]);
       if (!voice) throw new Error("Couldn't add the recording to the media library.");
       const edit: Edit = {
@@ -136,7 +171,7 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
         voiceover: { id: `vo-${crypto.randomUUID().slice(0, 8)}`, start: target.start, end: target.end, text: said, mediaId: voice.id, source: "recorded" },
       };
       dispatch({ type: "commit", edits: [edit] });
-      if (take.peak >= 0.99) setError("The recording is clipping. Move back from the mic or lower the input level and try again.");
+      if (peak >= CLIP_PEAK) setError("The recording is clipping. Move back from the mic or lower the input level and try again.");
     } catch (e) {
       setError(message(e));
     } finally {
@@ -150,8 +185,15 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
     session.current.timer = null;
     session.current.mic?.cancel();
     session.current.mic = null;
+    if (session.current.recorder) void engine.recorderFallback?.stop().catch(() => undefined);
+    session.current.recorder = false;
+    setMonitorMute([]);
     setKaraoke(null);
+    if (playing) dispatch({ type: "pause" });
   };
+
+  /** 提詞器：錄音中依播放頭算念到第幾個字 */
+  const elapsed = karaoke?.phase === "recording" ? playhead - karaoke.target.start : -1;
 
   /** 產生：樣本 → 念（必要時再念一次加快語速）→ 進素材庫 → 放上 Voice 軌（一次提交，一次 Ctrl+Z 復原） */
   const generate = async (target: { start: number; end: number }, said: string) => {
@@ -219,6 +261,9 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
       <div className="vibe-actions">
         <span className="muted">The AI copies the speaker's voice and fits the range.</span>
         <span className="spacer" />
+        <label className="muted" title="Play the original voice while you record (use headphones so the mic doesn't pick it up)">
+          <input type="checkbox" data-testid="karaoke-hear-original" checked={hearOriginal} disabled={karaoke !== null} onChange={(e) => setHearOriginal(e.target.checked)} /> Hear original
+        </label>
         <button data-testid="revoice-record" disabled={busy !== null || karaoke !== null || !range || !text.trim()} title="Read the text yourself while it highlights word by word (karaoke)" onClick={startKaraoke}>● Record</button>
         <button data-testid="revoice-generate" disabled={busy !== null || karaoke !== null || !range || !text.trim() || !token} title={!token ? "Set the invite token in Effects → 2D → AI settings first" : undefined} onClick={onGenerate}>
           {busy ?? "Generate"}
@@ -228,10 +273,10 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
         <div className="karaoke" data-testid="karaoke" data-phase={karaoke.phase}>
           {karaoke.phase === "countdown"
             ? <p className="karaoke-countdown" data-testid="karaoke-countdown">{karaoke.left}</p>
-            : <p className="muted" data-testid="karaoke-time">Recording · {sec(karaoke.elapsed)} / {sec(karaoke.target.end - karaoke.target.start)}</p>}
+            : <p className="muted" data-testid="karaoke-time">Recording · {sec(Math.max(0, elapsed))} / {sec(karaoke.target.end - karaoke.target.start)}</p>}
           <p className="karaoke-text" data-testid="karaoke-text">
             {karaoke.words.map((w, k) => {
-              const at = karaoke.phase === "recording" ? activeWordIndex(karaoke.words, karaoke.elapsed) : -1;
+              const at = karaoke.phase === "recording" ? activeWordIndex(karaoke.words, elapsed) : -1;
               return <span key={k} className={k < at ? "said" : k === at ? "now" : ""} data-word={k}>{w.text} </span>;
             })}
           </p>

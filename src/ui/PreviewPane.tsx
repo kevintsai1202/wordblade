@@ -63,7 +63,7 @@ export function PreviewPane(props: {
       if (!p) requestAnimationFrame(() => playerRef.current?.render(latest.current.playhead ?? t, false, r));
     };
     const player = new PreviewPlayer(canvasRef.current!, (m) => engine.mediaUrl(m), redraw);
-    const images = createImageSource((m) => engine.mediaUrl(m), (id) => projectRef.current.media.find((m) => m.id === id));
+    const images = createImageSource((m) => engine.mediaUrl(m), (id) => projectRef.current.media.find((m) => m.id === id), (id) => !!projectRef.current.textures?.some((t) => t.kind === "background" && t.colorMediaId === id));
     const effects = new EffectRenderer(plugins.host, plugins.three, redraw, images);
     player.setEffectRenderer(effects, FPS);
     if (thumbs) player.setThumbs(thumbs);

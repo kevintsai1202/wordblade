@@ -4,7 +4,7 @@ import type { Clip, Project, Rect, Seconds } from "../core/model";
 import { clipDuration, clipEnd, timelineToSource } from "../core/timeline";
 import { zoomCrop, zoomState } from "../core/zoom";
 import { isMutedAt, mutedRangesFor } from "../core/voiceover";
-import { cutAt, extendedSource, shiftRect, transitionAudioFactor, transitionCuts, transitionLook, visibleRange } from "../core/transitions";
+import { applySide, type TransitionSide, cutAt, extendedSource, transitionAudioFactor, transitionCuts, transitionLook, visibleRange } from "../core/transitions";
 import { gradeAt, type GradeValues } from "../core/colorGrade";
 
 /** 全畫面的框 */
@@ -69,13 +69,15 @@ export function framePlan(project: Project, t: Seconds): VideoLayer[] {
     for (const clip of clips) {
       let rect = clip.transform ?? FULL;
       let factor = 1;
+      /** 轉場對這一段的影響（不在轉場裡就沒有） */
+      let sideLook: TransitionSide | null = null;
       if (track.id === v1 && inCut && look) {
         const role = inCut.cut.prev.id === clip.id ? "prev" : inCut.cut.next.id === clip.id ? "next" : null;
         if (role) {
           const range = visibleRange(cuts, clip);
           if (t < range.from || t >= range.to) continue;
           factor = look[role].opacity;
-          rect = shiftRect(rect, look[role].dx);
+          sideLook = look[role];
         } else if (!covers(clip, t)) continue;
       } else if (!covers(clip, t)) continue;
       if (factor <= 0) continue;
@@ -86,13 +88,15 @@ export function framePlan(project: Project, t: Seconds): VideoLayer[] {
       // 局部放大：這支素材啟用中、包含這個素材時間的那一段（§5.19）
       const region = project.zooms?.find((z) => z.enabled && z.mediaId === clip.mediaId && srcTime >= z.start && srcTime <= z.end);
       const zoom = region ? zoomState(region, srcTime) : null;
+      // 轉場：縮放、位移、只露出一塊（擦除）；和局部放大的裁切疊在一起
+      const placed = sideLook ? applySide(rect, zoom && zoom.scale > 1 ? zoomCrop(zoom) : undefined, sideLook) : { rect, ...(zoom && zoom.scale > 1 ? { crop: zoomCrop(zoom) } : {}) };
       layers.push({
         clipId: clip.id,
         mediaId: clip.mediaId,
         srcTime,
-        rect,
+        rect: placed.rect,
         opacity: clip.opacity * fadeFactor(clip, local) * factor,
-        ...(zoom && zoom.scale > 1 ? { crop: zoomCrop(zoom) } : {}),
+        ...(placed.crop ? { crop: placed.crop } : {}),
         ...(grade ? { grade } : {}),
       });
     }

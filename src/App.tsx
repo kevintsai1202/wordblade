@@ -172,14 +172,30 @@ function App() {
   const showWelcome = !folder.location && !isDemo && project.media.length === 0 && project.clips.length === 0 && project.effects.length === 0;
 
   /** 還原上次的工作：載入專案、素材照常在背景準備（桌面版路徑還在；網頁版要重新匯入檔案） */
-  const restoreLast = () => {
+  const restoreLast = async () => {
     if (!lastSession) return;
     reset(project.media);
-    dispatch({ type: "load", project: lastSession.project });
-    for (const m of lastSession.project.media) enqueuePrepare(m);
+    const restored = lastSession.project;
     setIsDemo(false);
     setLastSession(null);
-    if (engine.kind === "web") setNotice("Restored. On the web, import the video files again to see them.");
+    if (engine.kind !== "web") {
+      dispatch({ type: "load", project: restored });
+      for (const m of restored.media) enqueuePrepare(m);
+      return;
+    }
+    // 網頁版（2026-11-02）：重新整理後檔案要從記住的 handle 或授權的資料夾找回；找不到的先標成離線（顯示 Media Offline 卡），
+    // 交給「Locate…／Allow folder」重新連結，不要丟進準備佇列（會失敗）
+    const missing: { id: string; name: string }[] = [];
+    const media = await Promise.all(restored.media.map(async (m) => {
+      const hit = await engine.locateMedia(m, []).catch(() => null);
+      if (hit) return { ...hit, offline: undefined };
+      missing.push({ id: m.id, name: m.name ?? m.id });
+      return { ...m, offline: true };
+    }));
+    dispatch({ type: "load", project: { ...restored, media } });
+    for (const m of media) if (!m.offline) enqueuePrepare(m);
+    folder.markMissing(missing);
+    if (missing.length) setNotice(`Restored. ${missing.length} media file${missing.length > 1 ? "s" : ""} need to be located again.`);
   };
 
   // Resolve 風格熱鍵；焦點在輸入框時不攔
@@ -349,7 +365,7 @@ function App() {
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
             textures: <TextureTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
             color: <ColorTab project={project} range={state.range} dispatch={dispatch} />,
-            revoice: <RevoiceTab engine={engine} project={project} range={state.range} importSources={importSources} dispatch={dispatch} />,
+            revoice: <RevoiceTab engine={engine} project={project} range={state.range} importSources={importSources} dispatch={dispatch} playhead={state.playhead} playing={state.playing} />,
             intro: <IntroTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab suggestedName={exportPathFor(folder.location, "mp4")} project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} thumbnail={thumbnail?.blob ?? null} />,

@@ -9,6 +9,7 @@ import { captureFrame } from "./capture";
 import manifest from "../anim/anim_api_manifest.json";
 import { displayOf, type Component, type ParamDef } from "../anim/library";
 import type { CameraKey, Clip, Effect, Project, TextureAsset, TransitionKind } from "../core/model";
+import { paramVisible } from "../three/builtins";
 import { TRANSITION_DEFAULT, TRANSITION_MAX, TRANSITION_MIN } from "../core/transitions";
 import type { LayerFill, TextureRef } from "../anim/textureRefs";
 import { MAX_SPEED, MIN_SPEED } from "../core/speed";
@@ -309,7 +310,7 @@ function Inspector3D({ project, effect, playhead, dispatch, preview, onPreview, 
       <p className="muted">{effect.start.toFixed(2)}s – {effect.end.toFixed(2)}s · {effect.kind === "scene3d" ? "3D scene (replaces the main track)" : "3D overlay"}</p>
       <fieldset className="param-group">
         <legend>{component?.name ?? "Settings"}</legend>
-        {Object.entries(component?.params ?? {}).map(([key, def]) =>
+        {Object.entries(component?.params ?? {}).filter(([key]) => paramVisible((component as { id?: string } | undefined)?.id, key, values, component?.params ?? {})).map(([key, def]) =>
           ["keys", "float"].includes(def.type)
             ? <label key={key} className="param-field" data-param={key}><span>{def.label ?? key}</span><code className="muted">{JSON.stringify(values[key] ?? def.default)?.slice(0, 120)}</code></label>
             : <ParamField key={key} name={key} def={def} label={def.label ?? key} labels={def.labels} value={values[key]} onChange={(v) => set(key, v)} textures={project.textures} onNewTexture={() => onOpenTab?.("textures")} />)}
@@ -394,6 +395,16 @@ const TRANSITIONS: { kind: TransitionKind; label: string }[] = [
   { kind: "dipWhite", label: "Dip to white" },
   { kind: "pushLeft", label: "Push left" },
   { kind: "pushRight", label: "Push right" },
+  { kind: "pushUp", label: "Push up" },
+  { kind: "pushDown", label: "Push down" },
+  { kind: "slideLeft", label: "Slide in from right" },
+  { kind: "slideRight", label: "Slide in from left" },
+  { kind: "wipeLeft", label: "Wipe left" },
+  { kind: "wipeRight", label: "Wipe right" },
+  { kind: "wipeUp", label: "Wipe up" },
+  { kind: "wipeDown", label: "Wipe down" },
+  { kind: "zoomIn", label: "Zoom in" },
+  { kind: "zoomOut", label: "Zoom out" },
 ];
 
 /** 片段起點的轉場（和前一段之間）：種類下拉＋長度；不改總長度 */
