@@ -82,6 +82,25 @@ const mean = (px: Uint8Array) => px.reduce((s, v) => s + v, 0) / Math.max(1, px.
 /** 兩格的平均差 */
 const diff = (a: Uint8Array, b: Uint8Array) => a.reduce((s, v, i) => s + Math.abs(v - b[i]), 0) / Math.max(1, a.length);
 
+/** 預覽畫布某個範圍（0～1）裡白色像素的比例 */
+async function whiteRatio(page: Page, box: { x: number; y: number; w: number; h: number }): Promise<number> {
+  return page.getByTestId("preview-canvas").evaluate((c: HTMLCanvasElement, box) => {
+    const probe = document.createElement("canvas");
+    probe.width = 320;
+    probe.height = 180;
+    const ctx = probe.getContext("2d")!;
+    ctx.drawImage(c, 0, 0, 320, 180);
+    const x0 = Math.round(box.x * 320), y0 = Math.round(box.y * 180), w = Math.round(box.w * 320), h = Math.round(box.h * 180);
+    const d = ctx.getImageData(x0, y0, w, h).data;
+    let hit = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 200 && d[i + 1] > 200 && d[i + 2] > 200) hit++;
+    return hit / (w * h);
+  }, box);
+}
+
+/** 打字機標題字的範圍（畫面中央） */
+const TITLE = { x: 0.36, y: 0.44, w: 0.28, h: 0.12 };
+
 /** 檔案長度（秒） */
 function duration(file: string): number {
   const out = spawnSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file]).stdout.toString();
@@ -165,6 +184,9 @@ test("2D 圖層的圖片填色：選材質後同一格的預覽不一樣，Ctrl+
   await page.waitForTimeout(1000);
   const canvas = page.locator(".preview canvas").first();
   const before = await canvas.screenshot();
+  // 填色前：標題是白字（testsrc2 的底色沒有純白）
+  const whiteBefore = await whiteRatio(page, TITLE);
+  expect(whiteBefore).toBeGreaterThan(0.03);
 
   await page.locator(".effect-chip").click();
   await openTab(page, "inspector");
@@ -175,7 +197,8 @@ test("2D 圖層的圖片填色：選材質後同一格的預覽不一樣，Ctrl+
   mkdirSync(OUT, { recursive: true });
   writeFileSync(path.join(OUT, "fill-before.png"), before);
   writeFileSync(path.join(OUT, "fill-after.png"), filled);
-  expect(Buffer.compare(before, filled)).not.toBe(0);
+  // 填色後：字變成材質的顏色，白色像素少很多（截圖存檔供人工看）
+  await expect.poll(() => whiteRatio(page, TITLE), { timeout: 10_000 }).toBeLessThan(whiteBefore * 0.3);
 
   await page.keyboard.press("Control+z");
   const proj = await project(page);
@@ -211,4 +234,40 @@ test("卡拉 OK 重配錄音：選範圍 → Record → 倒數 → 提詞器逐�
   expect(clip.srcOut - clip.srcIn).toBeGreaterThan(vo.end - vo.start - 0.5);
   const track = p.tracks.find((t: any) => t.id === clip.trackId);
   expect(track.role).toBe("voice");
+});
+
+test("溶接轉場、前一段沒有多餘畫面（素材只有 4 秒）：匯出時停在最後一格，接點附近沒有黑格", async ({ page }) => {
+  test.setTimeout(200_000);
+  const errors: string[] = [];
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+  await setup(page);
+  // talk.mp4（4 秒）接在 speech30 前面：放在 V1 的 0 秒
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByTestId("import-media").click();
+  await (await chooser).setFiles(path.join(FIXTURES, "talk.mp4"));
+  await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 20_000 });
+  await page.evaluate(() => {
+    const hook = (window as unknown as { __wordblade: { project: () => any; dispatch: (a: unknown) => void } }).__wordblade;
+    const talk = hook.project().media.find((m: any) => m.name === "talk.mp4");
+    hook.dispatch({ type: "commit", edits: [{ kind: "place", mediaId: talk.id, trackId: "V1", t: 0 }] });
+  });
+  await expect(page.locator('.track-row[data-track-id="V1"] .clip')).toHaveCount(2);
+  // 第二段（speech30，4 秒起）加 1 秒溶接：talk 要延到 4.5 秒，但素材只到 4 秒 → 停在最後一格
+  // （DOM 順序不一定是時間順序，直接點 V1 上 10 秒的位置）
+  const row = (await page.locator('.track-row[data-track-id="V1"]').boundingBox())!;
+  await page.mouse.click(row.x + 1 + 10 * PX, row.y + row.height / 2);
+  await openTab(page, "inspector");
+  await page.getByTestId("transition-kind").selectOption("dissolve");
+  await page.getByTestId("transition-duration").fill("1");
+  const p = await project(page);
+  expect(p.transitions[0]).toMatchObject({ kind: "dissolve", duration: 1 });
+
+  const file = await exportTo(page, "dissolve-no-handles");
+  expect(duration(file)).toBeCloseTo(34, 0);
+  for (const t of [3.55, 3.8, 4.0, 4.2, 4.45]) {
+    const m = mean(frameAt(file, t));
+    console.log(`dissolve ${t}s mean ${m.toFixed(1)}`);
+    expect(m).toBeGreaterThan(60);
+  }
+  expect(errors.filter((e) => !e.includes("favicon"))).toEqual([]);
 });
