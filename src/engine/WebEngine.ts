@@ -1,4 +1,5 @@
 import type { InputFormat } from "mediabunny";
+import type { SampleId } from "../project/sample";
 import { EnvelopeBuilder } from "../audio/envelope";
 import type { Media } from "../core/model";
 import { TIERS, chunkCount, indicesInChunk, type DoneMap } from "../media/thumbs";
@@ -306,10 +307,10 @@ export class WebEngine implements Engine {
     return "samples";
   }
 
-  /** 範例專案：靜態網站的 /sample/project.json */
-  async openSample(): Promise<{ root: string; text: string } | null> {
-    const res = await fetch("/sample/project.json").catch(() => null);
-    return res?.ok ? { root: "sample", text: await res.text() } : null;
+  /** 範例專案：靜態網站的 /<id>/project.json */
+  async openSample(id: SampleId): Promise<{ root: string; text: string } | null> {
+    const res = await fetch(`/${id}/project.json`).catch(() => null);
+    return res?.ok ? { root: id, text: await res.text() } : null;
   }
 
   /** 開發用（範例專案打包腳本）：匯入或產生的檔案的位元組；不是這裡管的回 null */

@@ -2,6 +2,7 @@
 // 介面、TS 核心、合成器、沙盒只寫一份；讀寫檔、代理檔、中間檔、抽 ASR 音訊、聲音分離、錄音
 // 這些跟平台有關的事收在 Engine 後面，由 DesktopEngine（Tauri＋Rust）與 WebEngine（瀏覽器 API）各自實作。
 
+import type { SampleId } from "../project/sample";
 import type { Envelope } from "../audio/envelope";
 import type { Media } from "../core/model";
 import type { DoneMap } from "../media/thumbs";
@@ -110,10 +111,10 @@ export interface Engine {
   /** 示範專案的素材資料夾：網頁版是開發伺服器的 samples/；Windows 版找 repo 的 samples/，找不到（安裝版）回 null */
   demoMediaRoot(): Promise<string | null>;
   /**
-   * 範例專案（§5.22）：讀 sample/project.json，回傳範例資料夾（素材路徑改寫用，見 project/sample.ts）與檔案內容；找不到回 null。
-   * 網頁版從靜態網站讀（root 是 "sample"）；Windows 版讀安裝資料夾裡的 sample\（開發時是 repo 的 public\sample\）。
+   * 範例專案（§5.22）：讀 <id>/project.json，回傳範例資料夾（素材路徑改寫用，見 project/sample.ts）與檔案內容；找不到回 null。
+   * 網頁版從靜態網站讀（root 就是 id）；Windows 版讀安裝資料夾裡的 <id>\（開發時是 repo 的 public\<id>\）。
    */
-  openSample(): Promise<{ root: string; text: string } | null>;
+  openSample(id: SampleId): Promise<{ root: string; text: string } | null>;
   /** 匯出讀的素材來源（原檔或中間檔，不用代理檔）：網頁版是 File，Windows 版是 asset 協定的網址（mediabunny 分段讀） */
   exportSource(media: Media): Promise<Blob | string>;
   /** 選擇匯出位置（存檔對話框）；使用者取消回 null */

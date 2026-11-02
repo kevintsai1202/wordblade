@@ -13,7 +13,7 @@ import { TEMPLATES_3D, builtinPlugins3D } from "./three/builtins";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { Media, Project } from "./core/model";
 import { loadProjectText, relinkMissing } from "./project/session";
-import { loadSample } from "./project/sample";
+import { loadSample, type SampleId } from "./project/sample";
 import { emptyProject } from "./core/media";
 import { placeMedia } from "./core/timeline";
 import { mixAudio } from "./export/audioMix";
@@ -472,13 +472,13 @@ async function checkStems(paths: string[]): Promise<Record<string, unknown>> {
   }
 }
 
-/** 範例專案（§5.22）：找到打包（或 repo）的 sample 資料夾、讀 project.json、每個素材都讀得到（asset 協定） */
-async function checkSample(): Promise<Record<string, unknown>> {
+/** 範例專案（§5.22）：找到打包（或 repo）的範例資料夾、讀 project.json、每個素材都讀得到（asset 協定） */
+async function checkSample(id: SampleId): Promise<Record<string, unknown>> {
   const engine = createEngine();
   try {
-    const opened = await engine.openSample();
+    const opened = await engine.openSample(id);
     if (!opened) return { found: false };
-    const project = loadSample(opened.text, opened.root);
+    const project = loadSample(opened.text, opened.root, id);
     if (!project) return { found: true, root: opened.root, parsed: false };
     const missing: string[] = [];
     for (const m of project.media) {
@@ -539,7 +539,8 @@ export async function runSelftest(server: string) {
     report.directorClip = await checkDirectorClip(paths);
     report.grabJpegs = await checkGrabJpegs(paths);
     report.projectFolder = await checkProjectFolder(paths);
-    report.sample = await checkSample();
+    report.sample = await checkSample("sample");
+    report.sampleEffects = await checkSample("sample-effects");
     report.stems = await checkStems(paths);
   } catch (e) {
     report.error = String(e);

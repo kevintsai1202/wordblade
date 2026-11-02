@@ -47,7 +47,8 @@
     "resources": {
       "resources/ffmpeg/": "ffmpeg/",
       "resources/directml/DirectML.dll": "DirectML.dll",
-      "../public/sample/": "sample/"
+      "../public/sample/": "sample/",
+      "../public/sample-effects/": "sample-effects/"
     }
   }
 }

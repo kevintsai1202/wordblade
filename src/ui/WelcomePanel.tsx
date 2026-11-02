@@ -1,6 +1,7 @@
 // 歡迎畫面（2026-11-01 開發者要求，從 UI/UX 角度：一開始就知道怎麼建專案、怎麼回到上次的專案）：
 // 還沒開專案、素材庫也是空的時候蓋在預覽區上。新專案（輸入名稱 → 選放在哪裡）、開專案、最近專案（點一下就開）、
 // 還原瀏覽器裡沒存成專案的上次工作、範例專案。網頁版開最近專案要使用者點一下才能拿檔案權限，所以第一筆做成「繼續」大按鈕。
+import { SAMPLES, type SampleId } from "../project/sample";
 import { useState } from "react";
 import type { RecentProject } from "../project/session";
 
@@ -12,7 +13,8 @@ export function WelcomePanel({ recent, projectFolders, onNew, onOpen, onReopen, 
   onNew: (name: string) => void;
   onOpen: () => void;
   onReopen: (r: RecentProject) => void;
-  onSample: () => void;
+  /** 開範例專案（導演或特效） */
+  onSample: (id: SampleId) => void;
   /** 瀏覽器裡的上次工作（沒存成專案的）：片段數與時間；沒有就 null */
   lastSession: { clips: number; savedAt: number } | null;
   onRestore: () => void;
@@ -64,7 +66,7 @@ export function WelcomePanel({ recent, projectFolders, onNew, onOpen, onReopen, 
             Restore unsaved work ({lastSession.clips} clips, {new Date(lastSession.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })})
           </button>
         )}
-        <button className="link" onClick={onSample}>Try the sample project</button>
+        {SAMPLES.map((s) => <button key={s.id} className="link" title={s.title} onClick={() => onSample(s.id)}>{s.label}</button>)}
       </div>
       <p className="muted">Or just import media to start without a project.</p>
     </div>

@@ -346,18 +346,22 @@ pub fn find_samples_dir(app: AppHandle) -> Option<String> {
     None
 }
 
-/// 範例專案（spec §5.22）的資料夾：安裝版在資源資料夾的 sample\，開發時往上找 repo 的 public\sample\；
-/// 找到就放行 asset 協定讀取（project.json 與素材都從這裡讀），找不到回 None
+/// 範例專案（spec §5.22）的資料夾，name 是 sample（導演範例）或 sample-effects（特效範例）：安裝版在資源資料夾的 <name>\，
+/// 開發時往上找 repo 的 public\<name>\；找到就放行 asset 協定讀取（project.json 與素材都從這裡讀），找不到回 None
 #[tauri::command]
-pub fn find_sample_dir(app: AppHandle) -> Option<String> {
+pub fn find_sample_dir(app: AppHandle, name: String) -> Option<String> {
+    // 只接受固定的範例名稱（導演範例、特效範例），不讓前端指到別的資料夾
+    if !["sample", "sample-effects"].contains(&name.as_str()) {
+        return None;
+    }
     let mut candidates: Vec<PathBuf> = Vec::new();
     if let Ok(dir) = app.path().resource_dir() {
-        candidates.push(dir.join("sample"));
+        candidates.push(dir.join(&name));
     }
     let starts = [std::env::current_exe().ok().and_then(|p| p.parent().map(Path::to_path_buf)), std::env::current_dir().ok()];
     for start in starts.into_iter().flatten() {
         for dir in start.ancestors() {
-            candidates.push(dir.join("public").join("sample"));
+            candidates.push(dir.join("public").join(&name));
         }
     }
     let found = candidates.into_iter().find(|d| d.join("project.json").exists())?;

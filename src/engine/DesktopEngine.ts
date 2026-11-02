@@ -1,4 +1,5 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import type { SampleId } from "../project/sample";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open, save } from "@tauri-apps/plugin-dialog";
@@ -242,9 +243,9 @@ export class DesktopEngine implements Engine {
     return invoke<string | null>("find_samples_dir");
   }
 
-  /** 範例專案：Rust 找安裝資料夾（或 repo 的 public\sample\）並放行讀取，再經 asset 協定讀 project.json */
-  async openSample(): Promise<{ root: string; text: string } | null> {
-    const root = await invoke<string | null>("find_sample_dir");
+  /** 範例專案：Rust 找安裝資料夾（或 repo 的 public\<id>\）並放行讀取，再經 asset 協定讀 project.json */
+  async openSample(id: SampleId): Promise<{ root: string; text: string } | null> {
+    const root = await invoke<string | null>("find_sample_dir", { name: id });
     if (!root) return null;
     const res = await fetch(convertFileSrc(`${root}\\project.json`)).catch(() => null);
     return res?.ok ? { root, text: await res.text() } : null;

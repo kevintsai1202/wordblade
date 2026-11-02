@@ -742,6 +742,15 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 放在 `public/sample/`（project.json＋media/＋thumbnail.png，約 12 MB，進版控）：網頁版從靜態網站讀，標題列「Try the sample project」或網址 `?sample=1`；Windows 版讀安裝資料夾的 `sample\`（開發時是 repo 的 `public\sample\`）。示範狀態：沒編輯前不自動存。
 - 驗證：e2e `sample.spec.ts` 擋掉所有對外連線仍能開啟並匯出；安裝檔驗證時自我檢查讀到全部 16 個素材。
 
+**改成兩個範例（11/2，開發者決定）**
+
+- 原因：10/31 用新版 AI 導演（plain 風格，預設克制）重建範例時，特效全部交給導演提議，結果 Vibe 2D／3D、3D 場景、配樂、片頭都沒了，e2e 只看放大條所以沒抓到。導演只是其中一種能力，特效另外放一個範例。
+- **導演範例** `public/sample/`（不變）：標題列「Try the sample project」、`?sample=1`。內容是 AI 導演的剪輯、改字、遮罩、放大、字幕，加上發佈包與縮圖。
+- **特效範例** `public/sample-effects/`：標題列「Try the effects sample」、`?sample=effects`。同一支 2 分鐘影片（整支，素材多一份約 9 MB），不經過導演：Vibe 2D ×2、Vibe 3D ×1、3D 場景（桌上螢幕，鏡頭用說的）、吉祥物、內建 2D 範本 ×4、轉場 ×3（溶接、推移、推近）、整條色彩、音效、AI 配樂、翻頁片頭、逐字高亮字幕。
+- 建置：`$env:WORDBLADE_SAMPLE="effects"` 再跑 `e2e/sample-build.spec.ts`（live 走 `scripts/sam/live-local.ps1 -E2E -Spec e2e/sample-build.spec.ts`）；沒設就建導演範例。
+- Windows 版：`find_sample_dir` 帶範例名稱（只收 `sample`、`sample-effects`），安裝檔兩個資料夾都打包；自我檢查兩個都讀。
+- 驗證：`sample.spec.ts` 的特效範例測試擋掉對外連線仍能開啟，並逐項檢查每種特效都在（Vibe 2D／3D 插件、3D 場景、轉場種類、色彩、音效或配樂、片頭封面、逐字稿）。
+
 
 ### 5.23 一鍵片頭（P1-12，D34）
 

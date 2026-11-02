@@ -6,7 +6,7 @@ import { setEffectParams } from "./core/effects";
 import { PluginService } from "./anim/pluginService";
 import { createEngine } from "./engine/createEngine";
 import { demoProject } from "./ui/demoProject";
-import { loadSample, samplePath } from "./project/sample";
+import { loadSample, SAMPLES, samplePath, type SampleId } from "./project/sample";
 import { EditPanel } from "./ui/EditPanel";
 import { MediaTab } from "./ui/MediaTab";
 import { PreviewPane } from "./ui/PreviewPane";
@@ -218,9 +218,9 @@ function App() {
    * 開範例專案（§5.22）：預先算好的 2 分鐘範例（逐字稿、AI 結果、特效都在裡面），不用權杖、不呼叫 AI。
    * 和示範專案一樣是「示範狀態」：沒編輯前不自動存，不蓋掉上次的工作。
    */
-  const onLoadSample = async () => {
-    const opened = await engine.openSample();
-    const sample = opened && loadSample(opened.text, opened.root);
+  const onLoadSample = async (id: SampleId = "sample") => {
+    const opened = await engine.openSample(id);
+    const sample = opened && loadSample(opened.text, opened.root, id);
     if (!sample) {
       setNotice("The sample project isn't available here.");
       return;
@@ -232,7 +232,7 @@ function App() {
     dispatch({ type: "load", project: sample });
     for (const m of sample.media) enqueuePrepare(m);
     // 發佈包的縮圖不在專案裡：範例資料夾有 thumbnail.png 就一起載入（匯出時寫在影片旁邊）
-    const thumbUrl = engine.mediaUrl({ id: "sample-thumbnail", kind: "image", duration: 0, path: samplePath("sample/thumbnail.png", opened.root) });
+    const thumbUrl = engine.mediaUrl({ id: "sample-thumbnail", kind: "image", duration: 0, path: samplePath(`${id}/thumbnail.png`, opened.root, id) });
     const res = await fetch(thumbUrl).catch(() => null);
     if (res?.ok) {
       const blob = await res.blob();
@@ -240,9 +240,10 @@ function App() {
     }
   };
 
-  // 網址帶 ?sample=1 就直接開範例專案（e2e 與分享連結用）
+  // 網址帶 ?sample=1 就直接開導演範例、?sample=effects 開特效範例（e2e 與分享連結用）
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("sample")) void onLoadSample();
+    const q = new URLSearchParams(window.location.search).get("sample");
+    if (q !== null) void onLoadSample(q === "effects" ? "sample-effects" : "sample");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 開發用（範例專案打包腳本 e2e/sample-build.spec.ts）：localStorage wordblade.dev＝1 時提供目前的專案與素材檔的位元組
@@ -307,7 +308,9 @@ function App() {
             <button onClick={folder.dismissMissing}>✕</button>
           </span>
         )}
-        <button title="Open a ready-made 2-minute sample: transcript, AI suggestions and effects are already in it (no token needed)" data-testid="load-sample" onClick={() => void onLoadSample()}>Try the sample project</button>
+        {SAMPLES.map((s) => (
+          <button key={s.id} title={s.title} data-testid={s.id === "sample" ? "load-sample" : "load-sample-effects"} onClick={() => void onLoadSample(s.id)}>{s.label}</button>
+        ))}
         {lastSession && !project.media.length && (
           <span className="restore-bar" data-testid="restore-bar">
             Last session: {lastSession.project.clips.length} clips, saved {new Date(lastSession.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -327,7 +330,7 @@ function App() {
               onNew={(n) => void folder.saveAs(n)}
               onOpen={() => void folder.open().then((err) => err && setNotice(err))}
               onReopen={(r) => void folder.reopen(r).then((err) => err && setNotice(err))}
-              onSample={() => void onLoadSample()}
+              onSample={(id) => void onLoadSample(id)}
               lastSession={lastSession ? { clips: lastSession.project.clips.length, savedAt: lastSession.savedAt } : null}
               onRestore={restoreLast} />
           ) : undefined}

@@ -1,0 +1,4517 @@
+{
+ "format": "wordblade-project",
+ "v": 2,
+ "savedAt": 1793618387120,
+ "media": {
+  "m-cbaf8d4e": {
+   "name": "demo-2min.mp4",
+   "path": "sample-effects/media/demo-2min.mp4",
+   "rel": "sample-effects/media/demo-2min.mp4"
+  },
+  "m-196a3af7": {
+   "name": "sfx-whoosh-d17f60.wav",
+   "path": "sample-effects/media/sfx-whoosh-d17f60.wav",
+   "rel": "sample-effects/media/sfx-whoosh-d17f60.wav"
+  },
+  "m-d0fef679": {
+   "name": "music-light-upbeat-lo-fi-tech--eb4b37.wav",
+   "path": "sample-effects/media/music-light-upbeat-lo-fi-tech--eb4b37.wav",
+   "rel": "sample-effects/media/music-light-upbeat-lo-fi-tech--eb4b37.wav"
+  },
+  "m-96ef99ff": {
+   "name": "cover-01.webp",
+   "path": "sample-effects/media/cover-01.webp",
+   "rel": "sample-effects/media/cover-01.webp"
+  },
+  "m-3f0fff6b": {
+   "name": "cover-02.webp",
+   "path": "sample-effects/media/cover-02.webp",
+   "rel": "sample-effects/media/cover-02.webp"
+  },
+  "m-463e3177": {
+   "name": "cover-03.webp",
+   "path": "sample-effects/media/cover-03.webp",
+   "rel": "sample-effects/media/cover-03.webp"
+  },
+  "m-4f1a104e": {
+   "name": "cover-04.webp",
+   "path": "sample-effects/media/cover-04.webp",
+   "rel": "sample-effects/media/cover-04.webp"
+  },
+  "m-614ea618": {
+   "name": "cover-05.webp",
+   "path": "sample-effects/media/cover-05.webp",
+   "rel": "sample-effects/media/cover-05.webp"
+  },
+  "m-e789e2b9": {
+   "name": "cover-06.webp",
+   "path": "sample-effects/media/cover-06.webp",
+   "rel": "sample-effects/media/cover-06.webp"
+  },
+  "m-67c94470": {
+   "name": "cover-07.webp",
+   "path": "sample-effects/media/cover-07.webp",
+   "rel": "sample-effects/media/cover-07.webp"
+  },
+  "m-b6e97fc9": {
+   "name": "cover-08.webp",
+   "path": "sample-effects/media/cover-08.webp",
+   "rel": "sample-effects/media/cover-08.webp"
+  },
+  "m-6aa80882": {
+   "name": "intro-black.png",
+   "path": "sample-effects/media/intro-black.png",
+   "rel": "sample-effects/media/intro-black.png"
+  },
+  "m-d85a8b82": {
+   "name": "intro-flipSlow.wav",
+   "path": "sample-effects/media/intro-flipSlow.wav",
+   "rel": "sample-effects/media/intro-flipSlow.wav"
+  },
+  "m-eb4a6cea": {
+   "name": "intro-flipFast.wav",
+   "path": "sample-effects/media/intro-flipFast.wav",
+   "rel": "sample-effects/media/intro-flipFast.wav"
+  },
+  "m-d33ddcf9": {
+   "name": "intro-riser-2.20.wav",
+   "path": "sample-effects/media/intro-riser-2.20.wav",
+   "rel": "sample-effects/media/intro-riser-2.20.wav"
+  },
+  "m-04ddf344": {
+   "name": "intro-impact.wav",
+   "path": "sample-effects/media/intro-impact.wav",
+   "rel": "sample-effects/media/intro-impact.wav"
+  },
+  "m-5c3612e1": {
+   "name": "intro-music.wav",
+   "path": "sample-effects/media/intro-music.wav",
+   "rel": "sample-effects/media/intro-music.wav"
+  }
+ },
+ "project": {
+  "media": [
+   {
+    "id": "m-cbaf8d4e",
+    "name": "demo-2min.mp4",
+    "kind": "video",
+    "duration": 108.279,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "hasAlpha": false,
+    "audio": true,
+    "path": "sample-effects/media/demo-2min.mp4"
+   },
+   {
+    "id": "m-196a3af7",
+    "name": "sfx-whoosh-d17f60.wav",
+    "kind": "audio",
+    "duration": 0.7,
+    "audio": true,
+    "path": "sample-effects/media/sfx-whoosh-d17f60.wav"
+   },
+   {
+    "id": "m-d0fef679",
+    "name": "music-light-upbeat-lo-fi-tech--eb4b37.wav",
+    "kind": "audio",
+    "duration": 42.666666666666664,
+    "audio": true,
+    "path": "sample-effects/media/music-light-upbeat-lo-fi-tech--eb4b37.wav"
+   },
+   {
+    "id": "m-96ef99ff",
+    "name": "cover-01.webp",
+    "kind": "image",
+    "duration": 86400,
+    "width": 2016,
+    "height": 1152,
+    "hasAlpha": true,
+    "path": "sample-effects/media/cover-01.webp"
+   },
+   {
+    "id": "m-3f0fff6b",
+    "name": "cover-02.webp",
+    "kind": "image",
+    "duration": 86400,
+    "width": 2016,
+    "height": 1152,
+    "hasAlpha": true,
+    "path": "sample-effects/media/cover-02.webp"
+   },
+   {
+    "id": "m-463e3177",
+    "name": "cover-03.webp",
+    "kind": "image",
+    "duration": 86400,
+    "width": 2016,
+    "height": 1152,
+    "hasAlpha": true,
+    "path": "sample-effects/media/cover-03.webp"
+   },
+   {
+    "id": "m-4f1a104e",
+    "name": "cover-04.webp",
+    "kind": "image",
+    "duration": 86400,
+    "width": 2016,
+    "height": 1152,
+    "hasAlpha": true,
+    "path": "sample-effects/media/cover-04.webp"
+   },
+   {
+    "id": "m-614ea618",
+    "name": "cover-05.webp",
+    "kind": "image",
+    "duration": 86400,
+    "width": 2016,
+    "height": 1152,
+    "hasAlpha": true,
+    "path": "sample-effects/media/cover-05.webp"
+   },
+   {
+    "id": "m-e789e2b9",
+    "name": "cover-06.webp",
+    "kind": "image",
+    "duration": 86400,
+    "width": 2016,
+    "height": 1152,
+    "hasAlpha": true,
+    "path": "sample-effects/media/cover-06.webp"
+   },
+   {
+    "id": "m-67c94470",
+    "name": "cover-07.webp",
+    "kind": "image",
+    "duration": 86400,
+    "width": 2016,
+    "height": 1152,
+    "hasAlpha": true,
+    "path": "sample-effects/media/cover-07.webp"
+   },
+   {
+    "id": "m-b6e97fc9",
+    "name": "cover-08.webp",
+    "kind": "image",
+    "duration": 86400,
+    "width": 2016,
+    "height": 1152,
+    "hasAlpha": true,
+    "path": "sample-effects/media/cover-08.webp"
+   },
+   {
+    "id": "m-6aa80882",
+    "name": "intro-black.png",
+    "kind": "image",
+    "duration": 86400,
+    "width": 320,
+    "height": 180,
+    "hasAlpha": true,
+    "path": "sample-effects/media/intro-black.png"
+   },
+   {
+    "id": "m-d85a8b82",
+    "name": "intro-flipSlow.wav",
+    "kind": "audio",
+    "duration": 0.32,
+    "audio": true,
+    "path": "sample-effects/media/intro-flipSlow.wav"
+   },
+   {
+    "id": "m-eb4a6cea",
+    "name": "intro-flipFast.wav",
+    "kind": "audio",
+    "duration": 0.12,
+    "audio": true,
+    "path": "sample-effects/media/intro-flipFast.wav"
+   },
+   {
+    "id": "m-d33ddcf9",
+    "name": "intro-riser-2.20.wav",
+    "kind": "audio",
+    "duration": 2.2,
+    "audio": true,
+    "path": "sample-effects/media/intro-riser-2.20.wav"
+   },
+   {
+    "id": "m-04ddf344",
+    "name": "intro-impact.wav",
+    "kind": "audio",
+    "duration": 1.6,
+    "audio": true,
+    "path": "sample-effects/media/intro-impact.wav"
+   },
+   {
+    "id": "m-5c3612e1",
+    "name": "intro-music.wav",
+    "kind": "audio",
+    "duration": 8,
+    "audio": true,
+    "path": "sample-effects/media/intro-music.wav"
+   }
+  ],
+  "tracks": [
+   {
+    "id": "V1",
+    "kind": "video",
+    "index": 0,
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "V2",
+    "kind": "video",
+    "index": 1,
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A1",
+    "kind": "audio",
+    "index": 0,
+    "role": "dialogue",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A2",
+    "kind": "audio",
+    "index": 1,
+    "role": "music",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   },
+   {
+    "id": "A3",
+    "kind": "audio",
+    "index": 2,
+    "role": "sfx",
+    "muted": false,
+    "locked": false,
+    "volume": 1
+   }
+  ],
+  "clips": [
+   {
+    "id": "m-cbaf8d4e@V1",
+    "mediaId": "m-cbaf8d4e",
+    "trackId": "V1",
+    "srcIn": 0,
+    "srcOut": 30,
+    "start": 8,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-cbaf8d4e@V1-2",
+    "mediaId": "m-cbaf8d4e",
+    "trackId": "V1",
+    "srcIn": 30,
+    "srcOut": 55,
+    "start": 38,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-cbaf8d4e@V1-2-2",
+    "mediaId": "m-cbaf8d4e",
+    "trackId": "V1",
+    "srcIn": 55,
+    "srcOut": 80,
+    "start": 63,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-cbaf8d4e@V1-2-2-2",
+    "mediaId": "m-cbaf8d4e",
+    "trackId": "V1",
+    "srcIn": 80,
+    "srcOut": 108.279,
+    "start": 88,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-cbaf8d4e@A1",
+    "mediaId": "m-cbaf8d4e",
+    "trackId": "A1",
+    "srcIn": 0,
+    "srcOut": 108.279,
+    "start": 8,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-196a3af7@A3",
+    "mediaId": "m-196a3af7",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.7,
+    "start": 78,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "m-d0fef679@A2",
+    "mediaId": "m-d0fef679",
+    "trackId": "A2",
+    "srcIn": 0,
+    "srcOut": 1,
+    "start": 8,
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "volume": 1
+   },
+   {
+    "id": "intro@V1",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-6aa80882",
+    "trackId": "V1",
+    "srcIn": 0,
+    "srcOut": 8,
+    "start": 0,
+    "volume": 1
+   },
+   {
+    "id": "intro-sfx@A3",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-d85a8b82",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.32,
+    "start": 1.7,
+    "volume": 1
+   },
+   {
+    "id": "intro-sfx@A3-2",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-d85a8b82",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.32,
+    "start": 1.96,
+    "volume": 0.915
+   },
+   {
+    "id": "intro-sfx@A3-3",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-d85a8b82",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.32,
+    "start": 2.1836,
+    "volume": 0.842
+   },
+   {
+    "id": "intro-sfx@A3-4",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-d85a8b82",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.32,
+    "start": 2.375896,
+    "volume": 0.78
+   },
+   {
+    "id": "intro-sfx@A3-5",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-d85a8b82",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.32,
+    "start": 2.541271,
+    "volume": 0.726
+   },
+   {
+    "id": "intro-sfx@A3-6",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 2.683493,
+    "volume": 0.408
+   },
+   {
+    "id": "intro-sfx@A3-7",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 2.805804,
+    "volume": 0.384
+   },
+   {
+    "id": "intro-sfx@A3-8",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 2.910991,
+    "volume": 0.363
+   },
+   {
+    "id": "intro-sfx@A3-9",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 3.001452,
+    "volume": 0.346
+   },
+   {
+    "id": "intro-sfx@A3-10",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 3.079249,
+    "volume": 0.33
+   },
+   {
+    "id": "intro-sfx@A3-11",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 3.146154,
+    "volume": 0.33
+   },
+   {
+    "id": "intro-sfx@A3-12",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 3.212821,
+    "volume": 0.33
+   },
+   {
+    "id": "intro-sfx@A3-13",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 3.279488,
+    "volume": 0.33
+   },
+   {
+    "id": "intro-sfx@A3-14",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 3.346154,
+    "volume": 0.33
+   },
+   {
+    "id": "intro-sfx@A3-15",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 3.412821,
+    "volume": 0.33
+   },
+   {
+    "id": "intro-sfx@A3-16",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-eb4a6cea",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 0.12,
+    "start": 3.479488,
+    "volume": 0.33
+   },
+   {
+    "id": "intro-sfx@A3-17",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-d33ddcf9",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 2.2,
+    "start": 1.5,
+    "volume": 0.8
+   },
+   {
+    "id": "intro-sfx@A3-18",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0,
+    "mediaId": "m-04ddf344",
+    "trackId": "A3",
+    "srcIn": 0,
+    "srcOut": 1.6,
+    "start": 4,
+    "volume": 1
+   },
+   {
+    "id": "intro-music@A2",
+    "speed": 1,
+    "opacity": 1,
+    "fadeIn": 0,
+    "fadeOut": 0.6,
+    "mediaId": "m-5c3612e1",
+    "trackId": "A2",
+    "srcIn": 0,
+    "srcOut": 8,
+    "start": 0,
+    "volume": 0.8
+   }
+  ],
+  "words": [
+   {
+    "id": "m-cbaf8d4e:w0",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Hey",
+    "start": 0.85,
+    "end": 1.09
+   },
+   {
+    "id": "m-cbaf8d4e:w1",
+    "mediaId": "m-cbaf8d4e",
+    "text": "everyone,",
+    "start": 1.09,
+    "end": 1.48
+   },
+   {
+    "id": "m-cbaf8d4e:w2",
+    "mediaId": "m-cbaf8d4e",
+    "text": "in",
+    "start": 1.91,
+    "end": 2.21
+   },
+   {
+    "id": "m-cbaf8d4e:w3",
+    "mediaId": "m-cbaf8d4e",
+    "text": "this",
+    "start": 2.21,
+    "end": 2.37
+   },
+   {
+    "id": "m-cbaf8d4e:w4",
+    "mediaId": "m-cbaf8d4e",
+    "text": "short",
+    "start": 2.37,
+    "end": 2.69
+   },
+   {
+    "id": "m-cbaf8d4e:w5",
+    "mediaId": "m-cbaf8d4e",
+    "text": "video,",
+    "start": 2.69,
+    "end": 2.85
+   },
+   {
+    "id": "m-cbaf8d4e:w6",
+    "mediaId": "m-cbaf8d4e",
+    "text": "I'm",
+    "start": 3.23,
+    "end": 3.49
+   },
+   {
+    "id": "m-cbaf8d4e:w7",
+    "mediaId": "m-cbaf8d4e",
+    "text": "going",
+    "start": 3.49,
+    "end": 3.65
+   },
+   {
+    "id": "m-cbaf8d4e:w8",
+    "mediaId": "m-cbaf8d4e",
+    "text": "to",
+    "start": 3.65,
+    "end": 3.97
+   },
+   {
+    "id": "m-cbaf8d4e:w9",
+    "mediaId": "m-cbaf8d4e",
+    "text": "build",
+    "start": 3.97,
+    "end": 4.21
+   },
+   {
+    "id": "m-cbaf8d4e:w10",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 4.21,
+    "end": 4.29
+   },
+   {
+    "id": "m-cbaf8d4e:w11",
+    "mediaId": "m-cbaf8d4e",
+    "text": "tiny",
+    "start": 4.29,
+    "end": 4.45
+   },
+   {
+    "id": "m-cbaf8d4e:w12",
+    "mediaId": "m-cbaf8d4e",
+    "text": "command",
+    "start": 4.45,
+    "end": 4.69
+   },
+   {
+    "id": "m-cbaf8d4e:w13",
+    "mediaId": "m-cbaf8d4e",
+    "text": "line",
+    "start": 4.69,
+    "end": 5.17
+   },
+   {
+    "id": "m-cbaf8d4e:w15",
+    "mediaId": "m-cbaf8d4e",
+    "text": "tool",
+    "start": 5.17,
+    "end": 5.3
+   },
+   {
+    "id": "m-cbaf8d4e:w16",
+    "mediaId": "m-cbaf8d4e",
+    "text": "that",
+    "start": 5.65,
+    "end": 6.19
+   },
+   {
+    "id": "m-cbaf8d4e:w17",
+    "mediaId": "m-cbaf8d4e",
+    "text": "summarizes",
+    "start": 6.19,
+    "end": 6.69
+   },
+   {
+    "id": "m-cbaf8d4e:w18",
+    "mediaId": "m-cbaf8d4e",
+    "text": "your",
+    "start": 6.69,
+    "end": 6.77
+   },
+   {
+    "id": "m-cbaf8d4e:w19",
+    "mediaId": "m-cbaf8d4e",
+    "text": "meeting",
+    "start": 6.77,
+    "end": 7.09
+   },
+   {
+    "id": "m-cbaf8d4e:w20",
+    "mediaId": "m-cbaf8d4e",
+    "text": "notes",
+    "start": 7.09,
+    "end": 7.25
+   },
+   {
+    "id": "m-cbaf8d4e:w21",
+    "mediaId": "m-cbaf8d4e",
+    "text": "with",
+    "start": 7.25,
+    "end": 7.57
+   },
+   {
+    "id": "m-cbaf8d4e:w22",
+    "mediaId": "m-cbaf8d4e",
+    "text": "an",
+    "start": 7.57,
+    "end": 7.65
+   },
+   {
+    "id": "m-cbaf8d4e:w23",
+    "mediaId": "m-cbaf8d4e",
+    "text": "AI",
+    "start": 7.65,
+    "end": 7.95
+   },
+   {
+    "id": "m-cbaf8d4e:w24",
+    "mediaId": "m-cbaf8d4e",
+    "text": "model.",
+    "start": 7.95,
+    "end": 8.08
+   },
+   {
+    "id": "m-cbaf8d4e:w25",
+    "mediaId": "m-cbaf8d4e",
+    "text": "It",
+    "start": 8.74,
+    "end": 8.99
+   },
+   {
+    "id": "m-cbaf8d4e:w26",
+    "mediaId": "m-cbaf8d4e",
+    "text": "takes",
+    "start": 8.99,
+    "end": 9.71
+   },
+   {
+    "id": "m-cbaf8d4e:w27",
+    "mediaId": "m-cbaf8d4e",
+    "text": "about",
+    "start": 9.71,
+    "end": 10.21
+   },
+   {
+    "id": "m-cbaf8d4e:w28",
+    "mediaId": "m-cbaf8d4e",
+    "text": "two",
+    "start": 10.21,
+    "end": 10.37
+   },
+   {
+    "id": "m-cbaf8d4e:w29",
+    "mediaId": "m-cbaf8d4e",
+    "text": "minutes,",
+    "start": 10.37,
+    "end": 10.719
+   },
+   {
+    "id": "m-cbaf8d4e:w30",
+    "mediaId": "m-cbaf8d4e",
+    "text": "so",
+    "start": 10.719,
+    "end": 10.85
+   },
+   {
+    "id": "m-cbaf8d4e:w31",
+    "mediaId": "m-cbaf8d4e",
+    "text": "let's",
+    "start": 10.85,
+    "end": 11.01
+   },
+   {
+    "id": "m-cbaf8d4e:w32",
+    "mediaId": "m-cbaf8d4e",
+    "text": "jump",
+    "start": 11.01,
+    "end": 11.49
+   },
+   {
+    "id": "m-cbaf8d4e:w33",
+    "mediaId": "m-cbaf8d4e",
+    "text": "right",
+    "start": 11.49,
+    "end": 11.73
+   },
+   {
+    "id": "m-cbaf8d4e:w34",
+    "mediaId": "m-cbaf8d4e",
+    "text": "in.",
+    "start": 11.73,
+    "end": 11.79
+   },
+   {
+    "id": "m-cbaf8d4e:w35",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Here's",
+    "start": 12.63,
+    "end": 12.69
+   },
+   {
+    "id": "m-cbaf8d4e:w36",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 12.69,
+    "end": 12.77
+   },
+   {
+    "id": "m-cbaf8d4e:w37",
+    "mediaId": "m-cbaf8d4e",
+    "text": "kind",
+    "start": 12.77,
+    "end": 13.01
+   },
+   {
+    "id": "m-cbaf8d4e:w38",
+    "mediaId": "m-cbaf8d4e",
+    "text": "of",
+    "start": 13.01,
+    "end": 13.33
+   },
+   {
+    "id": "m-cbaf8d4e:w39",
+    "mediaId": "m-cbaf8d4e",
+    "text": "notes",
+    "start": 13.33,
+    "end": 13.73
+   },
+   {
+    "id": "m-cbaf8d4e:w40",
+    "mediaId": "m-cbaf8d4e",
+    "text": "I",
+    "start": 13.73,
+    "end": 13.81
+   },
+   {
+    "id": "m-cbaf8d4e:w41",
+    "mediaId": "m-cbaf8d4e",
+    "text": "mean.",
+    "start": 13.81,
+    "end": 13.88
+   },
+   {
+    "id": "m-cbaf8d4e:w42",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Just",
+    "start": 14.33,
+    "end": 14.53
+   },
+   {
+    "id": "m-cbaf8d4e:w43",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 14.53,
+    "end": 14.85
+   },
+   {
+    "id": "m-cbaf8d4e:w44",
+    "mediaId": "m-cbaf8d4e",
+    "text": "few",
+    "start": 14.85,
+    "end": 14.93
+   },
+   {
+    "id": "m-cbaf8d4e:w45",
+    "mediaId": "m-cbaf8d4e",
+    "text": "bullet",
+    "start": 14.93,
+    "end": 15.17
+   },
+   {
+    "id": "m-cbaf8d4e:w46",
+    "mediaId": "m-cbaf8d4e",
+    "text": "points",
+    "start": 15.17,
+    "end": 15.403
+   },
+   {
+    "id": "m-cbaf8d4e:w47",
+    "mediaId": "m-cbaf8d4e",
+    "text": "from",
+    "start": 15.403,
+    "end": 15.57
+   },
+   {
+    "id": "m-cbaf8d4e:w48",
+    "mediaId": "m-cbaf8d4e",
+    "text": "our",
+    "start": 15.57,
+    "end": 15.65
+   },
+   {
+    "id": "m-cbaf8d4e:w49",
+    "mediaId": "m-cbaf8d4e",
+    "text": "weekly",
+    "start": 15.65,
+    "end": 16.07
+   },
+   {
+    "id": "m-cbaf8d4e:w50",
+    "mediaId": "m-cbaf8d4e",
+    "text": "sync.",
+    "start": 16.07,
+    "end": 16.37
+   },
+   {
+    "id": "m-cbaf8d4e:w51",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Nothing",
+    "start": 16.9,
+    "end": 17.49
+   },
+   {
+    "id": "m-cbaf8d4e:w52",
+    "mediaId": "m-cbaf8d4e",
+    "text": "fancy,",
+    "start": 17.49,
+    "end": 17.75
+   },
+   {
+    "id": "m-cbaf8d4e:w53",
+    "mediaId": "m-cbaf8d4e",
+    "text": "just",
+    "start": 18.01,
+    "end": 18.69
+   },
+   {
+    "id": "m-cbaf8d4e:w54",
+    "mediaId": "m-cbaf8d4e",
+    "text": "plain",
+    "start": 18.69,
+    "end": 19.07
+   },
+   {
+    "id": "m-cbaf8d4e:w55",
+    "mediaId": "m-cbaf8d4e",
+    "text": "markdown",
+    "start": 19.07,
+    "end": 19.57
+   },
+   {
+    "id": "m-cbaf8d4e:w56",
+    "mediaId": "m-cbaf8d4e",
+    "text": "that",
+    "start": 19.57,
+    "end": 19.89
+   },
+   {
+    "id": "m-cbaf8d4e:w57",
+    "mediaId": "m-cbaf8d4e",
+    "text": "anyone",
+    "start": 19.89,
+    "end": 19.97
+   },
+   {
+    "id": "m-cbaf8d4e:w58",
+    "mediaId": "m-cbaf8d4e",
+    "text": "on",
+    "start": 19.97,
+    "end": 20.141
+   },
+   {
+    "id": "m-cbaf8d4e:w59",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 20.141,
+    "end": 20.37
+   },
+   {
+    "id": "m-cbaf8d4e:w60",
+    "mediaId": "m-cbaf8d4e",
+    "text": "team",
+    "start": 20.37,
+    "end": 20.61
+   },
+   {
+    "id": "m-cbaf8d4e:w61",
+    "mediaId": "m-cbaf8d4e",
+    "text": "can",
+    "start": 20.61,
+    "end": 20.69
+   },
+   {
+    "id": "m-cbaf8d4e:w62",
+    "mediaId": "m-cbaf8d4e",
+    "text": "write.",
+    "start": 20.69,
+    "end": 20.9
+   },
+   {
+    "id": "m-cbaf8d4e:w63",
+    "mediaId": "m-cbaf8d4e",
+    "text": "First",
+    "start": 22.09,
+    "end": 22.37
+   },
+   {
+    "id": "m-cbaf8d4e:w64",
+    "mediaId": "m-cbaf8d4e",
+    "text": "I'll",
+    "start": 22.37,
+    "end": 22.69
+   },
+   {
+    "id": "m-cbaf8d4e:w65",
+    "mediaId": "m-cbaf8d4e",
+    "text": "create",
+    "start": 22.69,
+    "end": 22.77
+   },
+   {
+    "id": "m-cbaf8d4e:w66",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 22.77,
+    "end": 22.820999999999998
+   },
+   {
+    "id": "m-cbaf8d4e:w67",
+    "mediaId": "m-cbaf8d4e",
+    "text": "new",
+    "start": 22.797,
+    "end": 22.99
+   },
+   {
+    "id": "m-cbaf8d4e:w68",
+    "mediaId": "m-cbaf8d4e",
+    "text": "folder",
+    "start": 22.99,
+    "end": 23.55
+   },
+   {
+    "id": "m-cbaf8d4e:w69",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 23.55,
+    "end": 24.05
+   },
+   {
+    "id": "m-cbaf8d4e:w70",
+    "mediaId": "m-cbaf8d4e",
+    "text": "install",
+    "start": 24.05,
+    "end": 24.21
+   },
+   {
+    "id": "m-cbaf8d4e:w71",
+    "mediaId": "m-cbaf8d4e",
+    "text": "two",
+    "start": 24.21,
+    "end": 24.45
+   },
+   {
+    "id": "m-cbaf8d4e:w72",
+    "mediaId": "m-cbaf8d4e",
+    "text": "packages,",
+    "start": 24.45,
+    "end": 24.8
+   },
+   {
+    "id": "m-cbaf8d4e:w73",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 25.28,
+    "end": 25.87
+   },
+   {
+    "id": "m-cbaf8d4e:w74",
+    "mediaId": "m-cbaf8d4e",
+    "text": "OpenAI",
+    "start": 25.87,
+    "end": 26.37
+   },
+   {
+    "id": "m-cbaf8d4e:w75",
+    "mediaId": "m-cbaf8d4e",
+    "text": "client",
+    "start": 26.37,
+    "end": 26.61
+   },
+   {
+    "id": "m-cbaf8d4e:w76",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 26.61,
+    "end": 27.31
+   },
+   {
+    "id": "m-cbaf8d4e:w77",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Daindov.",
+    "start": 27.31,
+    "end": 27.360999999999997
+   },
+   {
+    "id": "m-cbaf8d4e:w78",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Okay,",
+    "start": 27.91,
+    "end": 28.33
+   },
+   {
+    "id": "m-cbaf8d4e:w79",
+    "mediaId": "m-cbaf8d4e",
+    "text": "that's",
+    "start": 28.61,
+    "end": 28.93
+   },
+   {
+    "id": "m-cbaf8d4e:w80",
+    "mediaId": "m-cbaf8d4e",
+    "text": "done.",
+    "start": 28.93,
+    "end": 29.09
+   },
+   {
+    "id": "m-cbaf8d4e:w81",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Next",
+    "start": 30.27,
+    "end": 30.66
+   },
+   {
+    "id": "m-cbaf8d4e:w82",
+    "mediaId": "m-cbaf8d4e",
+    "text": "I'll",
+    "start": 31.13,
+    "end": 31.81
+   },
+   {
+    "id": "m-cbaf8d4e:w83",
+    "mediaId": "m-cbaf8d4e",
+    "text": "open",
+    "start": 31.81,
+    "end": 31.89
+   },
+   {
+    "id": "m-cbaf8d4e:w84",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 31.89,
+    "end": 32.19
+   },
+   {
+    "id": "m-cbaf8d4e:w85",
+    "mediaId": "m-cbaf8d4e",
+    "text": ".m",
+    "start": 32.19,
+    "end": 32.64
+   },
+   {
+    "id": "m-cbaf8d4e:w86",
+    "mediaId": "m-cbaf8d4e",
+    "text": "file",
+    "start": 33.01,
+    "end": 33.09
+   },
+   {
+    "id": "m-cbaf8d4e:w87",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 33.09,
+    "end": 33.17
+   },
+   {
+    "id": "m-cbaf8d4e:w88",
+    "mediaId": "m-cbaf8d4e",
+    "text": "paste",
+    "start": 33.17,
+    "end": 33.33
+   },
+   {
+    "id": "m-cbaf8d4e:w89",
+    "mediaId": "m-cbaf8d4e",
+    "text": "my",
+    "start": 33.33,
+    "end": 33.65
+   },
+   {
+    "id": "m-cbaf8d4e:w90",
+    "mediaId": "m-cbaf8d4e",
+    "text": "API",
+    "start": 33.65,
+    "end": 33.93
+   },
+   {
+    "id": "m-cbaf8d4e:w91",
+    "mediaId": "m-cbaf8d4e",
+    "text": "key",
+    "start": 33.93,
+    "end": 34.21
+   },
+   {
+    "id": "m-cbaf8d4e:w92",
+    "mediaId": "m-cbaf8d4e",
+    "text": "here.",
+    "start": 34.21,
+    "end": 34.6
+   },
+   {
+    "id": "m-cbaf8d4e:w93",
+    "mediaId": "m-cbaf8d4e",
+    "text": "You",
+    "start": 35.2,
+    "end": 35.41
+   },
+   {
+    "id": "m-cbaf8d4e:w94",
+    "mediaId": "m-cbaf8d4e",
+    "text": "know",
+    "start": 35.41,
+    "end": 35.68
+   },
+   {
+    "id": "m-cbaf8d4e:w95",
+    "mediaId": "m-cbaf8d4e",
+    "text": "you",
+    "start": 36.02,
+    "end": 36.21
+   },
+   {
+    "id": "m-cbaf8d4e:w96",
+    "mediaId": "m-cbaf8d4e",
+    "text": "should",
+    "start": 36.21,
+    "end": 36.61
+   },
+   {
+    "id": "m-cbaf8d4e:w97",
+    "mediaId": "m-cbaf8d4e",
+    "text": "never",
+    "start": 36.61,
+    "end": 36.77
+   },
+   {
+    "id": "m-cbaf8d4e:w98",
+    "mediaId": "m-cbaf8d4e",
+    "text": "hard",
+    "start": 36.77,
+    "end": 37.25
+   },
+   {
+    "id": "m-cbaf8d4e:w99",
+    "mediaId": "m-cbaf8d4e",
+    "text": "code",
+    "start": 37.25,
+    "end": 37.49
+   },
+   {
+    "id": "m-cbaf8d4e:w100",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 37.49,
+    "end": 37.543
+   },
+   {
+    "id": "m-cbaf8d4e:w101",
+    "mediaId": "m-cbaf8d4e",
+    "text": "key",
+    "start": 37.543,
+    "end": 37.65
+   },
+   {
+    "id": "m-cbaf8d4e:w102",
+    "mediaId": "m-cbaf8d4e",
+    "text": "in",
+    "start": 37.65,
+    "end": 38.05
+   },
+   {
+    "id": "m-cbaf8d4e:w103",
+    "mediaId": "m-cbaf8d4e",
+    "text": "your",
+    "start": 38.05,
+    "end": 38.13
+   },
+   {
+    "id": "m-cbaf8d4e:w104",
+    "mediaId": "m-cbaf8d4e",
+    "text": "source",
+    "start": 38.13,
+    "end": 38.33
+   },
+   {
+    "id": "m-cbaf8d4e:w105",
+    "mediaId": "m-cbaf8d4e",
+    "text": "code.",
+    "start": 38.93,
+    "end": 38.981
+   },
+   {
+    "id": "m-cbaf8d4e:w106",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 38.95,
+    "end": 39.25
+   },
+   {
+    "id": "m-cbaf8d4e:w107",
+    "mediaId": "m-cbaf8d4e",
+    "text": "please",
+    "start": 39.25,
+    "end": 39.73
+   },
+   {
+    "id": "m-cbaf8d4e:w108",
+    "mediaId": "m-cbaf8d4e",
+    "text": "don't",
+    "start": 39.73,
+    "end": 39.93
+   },
+   {
+    "id": "m-cbaf8d4e:w109",
+    "mediaId": "m-cbaf8d4e",
+    "text": "share",
+    "start": 39.93,
+    "end": 40.17
+   },
+   {
+    "id": "m-cbaf8d4e:w110",
+    "mediaId": "m-cbaf8d4e",
+    "text": "it",
+    "start": 40.17,
+    "end": 40.29
+   },
+   {
+    "id": "m-cbaf8d4e:w111",
+    "mediaId": "m-cbaf8d4e",
+    "text": "on",
+    "start": 40.29,
+    "end": 40.53
+   },
+   {
+    "id": "m-cbaf8d4e:w112",
+    "mediaId": "m-cbaf8d4e",
+    "text": "screen",
+    "start": 40.53,
+    "end": 40.85
+   },
+   {
+    "id": "m-cbaf8d4e:w113",
+    "mediaId": "m-cbaf8d4e",
+    "text": "like",
+    "start": 40.85,
+    "end": 41.01
+   },
+   {
+    "id": "m-cbaf8d4e:w114",
+    "mediaId": "m-cbaf8d4e",
+    "text": "I",
+    "start": 41.01,
+    "end": 41.23
+   },
+   {
+    "id": "m-cbaf8d4e:w115",
+    "mediaId": "m-cbaf8d4e",
+    "text": "just",
+    "start": 41.23,
+    "end": 41.73
+   },
+   {
+    "id": "m-cbaf8d4e:w116",
+    "mediaId": "m-cbaf8d4e",
+    "text": "did",
+    "start": 41.73,
+    "end": 41.9
+   },
+   {
+    "id": "m-cbaf8d4e:w117",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Now",
+    "start": 42.99,
+    "end": 43.27
+   },
+   {
+    "id": "m-cbaf8d4e:w118",
+    "mediaId": "m-cbaf8d4e",
+    "text": "let's",
+    "start": 43.27,
+    "end": 43.43
+   },
+   {
+    "id": "m-cbaf8d4e:w119",
+    "mediaId": "m-cbaf8d4e",
+    "text": "write",
+    "start": 43.43,
+    "end": 43.75
+   },
+   {
+    "id": "m-cbaf8d4e:w120",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 43.75,
+    "end": 43.83
+   },
+   {
+    "id": "m-cbaf8d4e:w121",
+    "mediaId": "m-cbaf8d4e",
+    "text": "main",
+    "start": 43.83,
+    "end": 44.45
+   },
+   {
+    "id": "m-cbaf8d4e:w122",
+    "mediaId": "m-cbaf8d4e",
+    "text": "script.",
+    "start": 44.45,
+    "end": 44.58
+   },
+   {
+    "id": "m-cbaf8d4e:w123",
+    "mediaId": "m-cbaf8d4e",
+    "text": "We",
+    "start": 44.93,
+    "end": 45.27
+   },
+   {
+    "id": "m-cbaf8d4e:w124",
+    "mediaId": "m-cbaf8d4e",
+    "text": "load",
+    "start": 45.27,
+    "end": 45.448
+   },
+   {
+    "id": "m-cbaf8d4e:w125",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 45.448,
+    "end": 45.59
+   },
+   {
+    "id": "m-cbaf8d4e:w126",
+    "mediaId": "m-cbaf8d4e",
+    "text": "key",
+    "start": 45.59,
+    "end": 45.67
+   },
+   {
+    "id": "m-cbaf8d4e:w127",
+    "mediaId": "m-cbaf8d4e",
+    "text": "with",
+    "start": 45.67,
+    "end": 46.13
+   },
+   {
+    "id": "m-cbaf8d4e:w128",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Dandov",
+    "start": 46.13,
+    "end": 46.42
+   },
+   {
+    "id": "m-cbaf8d4e:w129",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 46.88,
+    "end": 47.11
+   },
+   {
+    "id": "m-cbaf8d4e:w130",
+    "mediaId": "m-cbaf8d4e",
+    "text": "read",
+    "start": 47.11,
+    "end": 47.27
+   },
+   {
+    "id": "m-cbaf8d4e:w131",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 47.27,
+    "end": 47.35
+   },
+   {
+    "id": "m-cbaf8d4e:w132",
+    "mediaId": "m-cbaf8d4e",
+    "text": "notes",
+    "start": 47.35,
+    "end": 47.59
+   },
+   {
+    "id": "m-cbaf8d4e:w133",
+    "mediaId": "m-cbaf8d4e",
+    "text": "file",
+    "start": 47.59,
+    "end": 47.79
+   },
+   {
+    "id": "m-cbaf8d4e:w134",
+    "mediaId": "m-cbaf8d4e",
+    "text": "from",
+    "start": 47.79,
+    "end": 47.99
+   },
+   {
+    "id": "m-cbaf8d4e:w135",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 47.99,
+    "end": 48.15
+   },
+   {
+    "id": "m-cbaf8d4e:w136",
+    "mediaId": "m-cbaf8d4e",
+    "text": "first",
+    "start": 48.15,
+    "end": 48.63
+   },
+   {
+    "id": "m-cbaf8d4e:w137",
+    "mediaId": "m-cbaf8d4e",
+    "text": "argument.",
+    "start": 48.63,
+    "end": 48.8
+   },
+   {
+    "id": "m-cbaf8d4e:w138",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Then",
+    "start": 49.37,
+    "end": 49.421
+   },
+   {
+    "id": "m-cbaf8d4e:w139",
+    "mediaId": "m-cbaf8d4e",
+    "text": "we",
+    "start": 49.39,
+    "end": 49.51
+   },
+   {
+    "id": "m-cbaf8d4e:w140",
+    "mediaId": "m-cbaf8d4e",
+    "text": "call",
+    "start": 49.51,
+    "end": 49.75
+   },
+   {
+    "id": "m-cbaf8d4e:w141",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 49.75,
+    "end": 49.83
+   },
+   {
+    "id": "m-cbaf8d4e:w142",
+    "mediaId": "m-cbaf8d4e",
+    "text": "chat",
+    "start": 49.83,
+    "end": 50.23
+   },
+   {
+    "id": "m-cbaf8d4e:w143",
+    "mediaId": "m-cbaf8d4e",
+    "text": "endpoint",
+    "start": 50.23,
+    "end": 50.71
+   },
+   {
+    "id": "m-cbaf8d4e:w144",
+    "mediaId": "m-cbaf8d4e",
+    "text": "with",
+    "start": 50.71,
+    "end": 51.67
+   },
+   {
+    "id": "m-cbaf8d4e:w147",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 51.67,
+    "end": 51.766
+   },
+   {
+    "id": "m-cbaf8d4e:w148",
+    "mediaId": "m-cbaf8d4e",
+    "text": "wrong",
+    "start": 51.766,
+    "end": 52.03
+   },
+   {
+    "id": "m-cbaf8d4e:w149",
+    "mediaId": "m-cbaf8d4e",
+    "text": "sorry",
+    "start": 52.7,
+    "end": 53.501000000000005
+   },
+   {
+    "id": "m-cbaf8d4e:w151",
+    "mediaId": "m-cbaf8d4e",
+    "text": "let",
+    "start": 53.47,
+    "end": 53.533
+   },
+   {
+    "id": "m-cbaf8d4e:w152",
+    "mediaId": "m-cbaf8d4e",
+    "text": "me",
+    "start": 53.533,
+    "end": 53.67
+   },
+   {
+    "id": "m-cbaf8d4e:w153",
+    "mediaId": "m-cbaf8d4e",
+    "text": "say",
+    "start": 53.67,
+    "end": 53.91
+   },
+   {
+    "id": "m-cbaf8d4e:w154",
+    "mediaId": "m-cbaf8d4e",
+    "text": "that",
+    "start": 53.91,
+    "end": 54.128
+   },
+   {
+    "id": "m-cbaf8d4e:w155",
+    "mediaId": "m-cbaf8d4e",
+    "text": "again.",
+    "start": 54.128,
+    "end": 54.36
+   },
+   {
+    "id": "m-cbaf8d4e:w156",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Then",
+    "start": 55.09,
+    "end": 55.27
+   },
+   {
+    "id": "m-cbaf8d4e:w157",
+    "mediaId": "m-cbaf8d4e",
+    "text": "we",
+    "start": 55.27,
+    "end": 55.59
+   },
+   {
+    "id": "m-cbaf8d4e:w158",
+    "mediaId": "m-cbaf8d4e",
+    "text": "call",
+    "start": 55.59,
+    "end": 55.641000000000005
+   },
+   {
+    "id": "m-cbaf8d4e:w159",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 55.634,
+    "end": 55.685
+   },
+   {
+    "id": "m-cbaf8d4e:w160",
+    "mediaId": "m-cbaf8d4e",
+    "text": "chat",
+    "start": 55.67,
+    "end": 56.37
+   },
+   {
+    "id": "m-cbaf8d4e:w161",
+    "mediaId": "m-cbaf8d4e",
+    "text": "completions",
+    "start": 56.37,
+    "end": 56.87
+   },
+   {
+    "id": "m-cbaf8d4e:w162",
+    "mediaId": "m-cbaf8d4e",
+    "text": "endpoint",
+    "start": 56.87,
+    "end": 57.03
+   },
+   {
+    "id": "m-cbaf8d4e:w163",
+    "mediaId": "m-cbaf8d4e",
+    "text": "with",
+    "start": 57.03,
+    "end": 57.43
+   },
+   {
+    "id": "m-cbaf8d4e:w164",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 57.43,
+    "end": 57.526
+   },
+   {
+    "id": "m-cbaf8d4e:w165",
+    "mediaId": "m-cbaf8d4e",
+    "text": "model",
+    "start": 57.526,
+    "end": 57.67
+   },
+   {
+    "id": "m-cbaf8d4e:w166",
+    "mediaId": "m-cbaf8d4e",
+    "text": "name",
+    "start": 57.67,
+    "end": 57.91
+   },
+   {
+    "id": "m-cbaf8d4e:w167",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 58.2,
+    "end": 58.251000000000005
+   },
+   {
+    "id": "m-cbaf8d4e:w168",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 58.22,
+    "end": 58.31
+   },
+   {
+    "id": "m-cbaf8d4e:w169",
+    "mediaId": "m-cbaf8d4e",
+    "text": "short",
+    "start": 58.31,
+    "end": 58.71
+   },
+   {
+    "id": "m-cbaf8d4e:w170",
+    "mediaId": "m-cbaf8d4e",
+    "text": "system",
+    "start": 58.71,
+    "end": 59.19
+   },
+   {
+    "id": "m-cbaf8d4e:w171",
+    "mediaId": "m-cbaf8d4e",
+    "text": "prompt.",
+    "start": 59.19,
+    "end": 59.48
+   },
+   {
+    "id": "m-cbaf8d4e:w172",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Finally",
+    "start": 60,
+    "end": 60.71
+   },
+   {
+    "id": "m-cbaf8d4e:w173",
+    "mediaId": "m-cbaf8d4e",
+    "text": "we",
+    "start": 60.71,
+    "end": 60.87
+   },
+   {
+    "id": "m-cbaf8d4e:w175",
+    "mediaId": "m-cbaf8d4e",
+    "text": "print",
+    "start": 60.87,
+    "end": 61.19
+   },
+   {
+    "id": "m-cbaf8d4e:w176",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 61.19,
+    "end": 61.27
+   },
+   {
+    "id": "m-cbaf8d4e:w177",
+    "mediaId": "m-cbaf8d4e",
+    "text": "summary.",
+    "start": 61.27,
+    "end": 61.45
+   },
+   {
+    "id": "m-cbaf8d4e:w178",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Let's",
+    "start": 62.61,
+    "end": 63.25
+   },
+   {
+    "id": "m-cbaf8d4e:w179",
+    "mediaId": "m-cbaf8d4e",
+    "text": "try",
+    "start": 63.25,
+    "end": 63.75
+   },
+   {
+    "id": "m-cbaf8d4e:w180",
+    "mediaId": "m-cbaf8d4e",
+    "text": "it",
+    "start": 63.75,
+    "end": 63.83
+   },
+   {
+    "id": "m-cbaf8d4e:w181",
+    "mediaId": "m-cbaf8d4e",
+    "text": "on",
+    "start": 63.83,
+    "end": 63.91
+   },
+   {
+    "id": "m-cbaf8d4e:w182",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 63.91,
+    "end": 64.23
+   },
+   {
+    "id": "m-cbaf8d4e:w183",
+    "mediaId": "m-cbaf8d4e",
+    "text": "real",
+    "start": 64.23,
+    "end": 64.55
+   },
+   {
+    "id": "m-cbaf8d4e:w185",
+    "mediaId": "m-cbaf8d4e",
+    "text": "meeting.",
+    "start": 64.55,
+    "end": 64.62
+   },
+   {
+    "id": "m-cbaf8d4e:w186",
+    "mediaId": "m-cbaf8d4e",
+    "text": "And",
+    "start": 65.33,
+    "end": 65.57
+   },
+   {
+    "id": "m-cbaf8d4e:w187",
+    "mediaId": "m-cbaf8d4e",
+    "text": "there",
+    "start": 65.57,
+    "end": 66.06
+   },
+   {
+    "id": "m-cbaf8d4e:w188",
+    "mediaId": "m-cbaf8d4e",
+    "text": "it",
+    "start": 66.47,
+    "end": 66.521
+   },
+   {
+    "id": "m-cbaf8d4e:w189",
+    "mediaId": "m-cbaf8d4e",
+    "text": "is",
+    "start": 66.49,
+    "end": 66.541
+   },
+   {
+    "id": "m-cbaf8d4e:w190",
+    "mediaId": "m-cbaf8d4e",
+    "text": "three",
+    "start": 66.51,
+    "end": 66.79
+   },
+   {
+    "id": "m-cbaf8d4e:w191",
+    "mediaId": "m-cbaf8d4e",
+    "text": "bullet",
+    "start": 66.79,
+    "end": 67.11
+   },
+   {
+    "id": "m-cbaf8d4e:w192",
+    "mediaId": "m-cbaf8d4e",
+    "text": "points",
+    "start": 67.11,
+    "end": 67.35
+   },
+   {
+    "id": "m-cbaf8d4e:w193",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 67.35,
+    "end": 67.45
+   },
+   {
+    "id": "m-cbaf8d4e:w194",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 67.8,
+    "end": 67.91
+   },
+   {
+    "id": "m-cbaf8d4e:w195",
+    "mediaId": "m-cbaf8d4e",
+    "text": "list",
+    "start": 67.91,
+    "end": 68.31
+   },
+   {
+    "id": "m-cbaf8d4e:w196",
+    "mediaId": "m-cbaf8d4e",
+    "text": "of",
+    "start": 68.31,
+    "end": 68.39
+   },
+   {
+    "id": "m-cbaf8d4e:w197",
+    "mediaId": "m-cbaf8d4e",
+    "text": "action",
+    "start": 68.39,
+    "end": 68.79
+   },
+   {
+    "id": "m-cbaf8d4e:w198",
+    "mediaId": "m-cbaf8d4e",
+    "text": "items.",
+    "start": 68.79,
+    "end": 69.15
+   },
+   {
+    "id": "m-cbaf8d4e:w199",
+    "mediaId": "m-cbaf8d4e",
+    "text": "That",
+    "start": 69.64,
+    "end": 69.99
+   },
+   {
+    "id": "m-cbaf8d4e:w200",
+    "mediaId": "m-cbaf8d4e",
+    "text": "took",
+    "start": 69.99,
+    "end": 70.07
+   },
+   {
+    "id": "m-cbaf8d4e:w201",
+    "mediaId": "m-cbaf8d4e",
+    "text": "about",
+    "start": 70.07,
+    "end": 70.93
+   },
+   {
+    "id": "m-cbaf8d4e:w202",
+    "mediaId": "m-cbaf8d4e",
+    "text": "four",
+    "start": 70.93,
+    "end": 71.43
+   },
+   {
+    "id": "m-cbaf8d4e:w203",
+    "mediaId": "m-cbaf8d4e",
+    "text": "seconds",
+    "start": 71.43,
+    "end": 71.59
+   },
+   {
+    "id": "m-cbaf8d4e:w204",
+    "mediaId": "m-cbaf8d4e",
+    "text": "which",
+    "start": 71.59,
+    "end": 71.66
+   },
+   {
+    "id": "m-cbaf8d4e:w205",
+    "mediaId": "m-cbaf8d4e",
+    "text": "is",
+    "start": 71.94,
+    "end": 72.23
+   },
+   {
+    "id": "m-cbaf8d4e:w206",
+    "mediaId": "m-cbaf8d4e",
+    "text": "fast",
+    "start": 72.23,
+    "end": 72.47
+   },
+   {
+    "id": "m-cbaf8d4e:w207",
+    "mediaId": "m-cbaf8d4e",
+    "text": "enough",
+    "start": 72.47,
+    "end": 72.71
+   },
+   {
+    "id": "m-cbaf8d4e:w208",
+    "mediaId": "m-cbaf8d4e",
+    "text": "for",
+    "start": 72.71,
+    "end": 72.79
+   },
+   {
+    "id": "m-cbaf8d4e:w209",
+    "mediaId": "m-cbaf8d4e",
+    "text": "me",
+    "start": 72.79,
+    "end": 73.22
+   },
+   {
+    "id": "m-cbaf8d4e:w210",
+    "mediaId": "m-cbaf8d4e",
+    "text": "one",
+    "start": 74.41,
+    "end": 74.55
+   },
+   {
+    "id": "m-cbaf8d4e:w211",
+    "mediaId": "m-cbaf8d4e",
+    "text": "more",
+    "start": 74.55,
+    "end": 74.95
+   },
+   {
+    "id": "m-cbaf8d4e:w212",
+    "mediaId": "m-cbaf8d4e",
+    "text": "thing",
+    "start": 74.95,
+    "end": 75.06
+   },
+   {
+    "id": "m-cbaf8d4e:w213",
+    "mediaId": "m-cbaf8d4e",
+    "text": "if",
+    "start": 75.67,
+    "end": 75.75
+   },
+   {
+    "id": "m-cbaf8d4e:w214",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 75.75,
+    "end": 75.91
+   },
+   {
+    "id": "m-cbaf8d4e:w215",
+    "mediaId": "m-cbaf8d4e",
+    "text": "file",
+    "start": 75.91,
+    "end": 76.36
+   },
+   {
+    "id": "m-cbaf8d4e:w216",
+    "mediaId": "m-cbaf8d4e",
+    "text": "is",
+    "start": 76.36,
+    "end": 76.63
+   },
+   {
+    "id": "m-cbaf8d4e:w217",
+    "mediaId": "m-cbaf8d4e",
+    "text": "missing",
+    "start": 76.63,
+    "end": 76.79
+   },
+   {
+    "id": "m-cbaf8d4e:w218",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 76.79,
+    "end": 76.935
+   },
+   {
+    "id": "m-cbaf8d4e:w219",
+    "mediaId": "m-cbaf8d4e",
+    "text": "script",
+    "start": 76.935,
+    "end": 77.19
+   },
+   {
+    "id": "m-cbaf8d4e:w220",
+    "mediaId": "m-cbaf8d4e",
+    "text": "crashes",
+    "start": 77.19,
+    "end": 77.781
+   },
+   {
+    "id": "m-cbaf8d4e:w221",
+    "mediaId": "m-cbaf8d4e",
+    "text": "with",
+    "start": 77.781,
+    "end": 78.15
+   },
+   {
+    "id": "m-cbaf8d4e:w222",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 78.15,
+    "end": 78.203
+   },
+   {
+    "id": "m-cbaf8d4e:w223",
+    "mediaId": "m-cbaf8d4e",
+    "text": "pretty",
+    "start": 78.203,
+    "end": 78.39
+   },
+   {
+    "id": "m-cbaf8d4e:w224",
+    "mediaId": "m-cbaf8d4e",
+    "text": "ugly",
+    "start": 78.39,
+    "end": 78.71
+   },
+   {
+    "id": "m-cbaf8d4e:w225",
+    "mediaId": "m-cbaf8d4e",
+    "text": "stack",
+    "start": 78.71,
+    "end": 79.03
+   },
+   {
+    "id": "m-cbaf8d4e:w226",
+    "mediaId": "m-cbaf8d4e",
+    "text": "trace",
+    "start": 79.03,
+    "end": 79.49
+   },
+   {
+    "id": "m-cbaf8d4e:w227",
+    "mediaId": "m-cbaf8d4e",
+    "text": "so",
+    "start": 79.97,
+    "end": 80.021
+   },
+   {
+    "id": "m-cbaf8d4e:w228",
+    "mediaId": "m-cbaf8d4e",
+    "text": "let's",
+    "start": 79.99,
+    "end": 80.23
+   },
+   {
+    "id": "m-cbaf8d4e:w229",
+    "mediaId": "m-cbaf8d4e",
+    "text": "add",
+    "start": 80.23,
+    "end": 80.443
+   },
+   {
+    "id": "m-cbaf8d4e:w230",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 80.443,
+    "end": 80.55
+   },
+   {
+    "id": "m-cbaf8d4e:w231",
+    "mediaId": "m-cbaf8d4e",
+    "text": "small",
+    "start": 80.55,
+    "end": 80.87
+   },
+   {
+    "id": "m-cbaf8d4e:w232",
+    "mediaId": "m-cbaf8d4e",
+    "text": "error",
+    "start": 80.87,
+    "end": 81.25
+   },
+   {
+    "id": "m-cbaf8d4e:w233",
+    "mediaId": "m-cbaf8d4e",
+    "text": "handler",
+    "start": 81.25,
+    "end": 81.75
+   },
+   {
+    "id": "m-cbaf8d4e:w234",
+    "mediaId": "m-cbaf8d4e",
+    "text": "that",
+    "start": 81.75,
+    "end": 81.983
+   },
+   {
+    "id": "m-cbaf8d4e:w235",
+    "mediaId": "m-cbaf8d4e",
+    "text": "prints",
+    "start": 81.983,
+    "end": 82.31
+   },
+   {
+    "id": "m-cbaf8d4e:w236",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 82.31,
+    "end": 82.47
+   },
+   {
+    "id": "m-cbaf8d4e:w237",
+    "mediaId": "m-cbaf8d4e",
+    "text": "friendly",
+    "start": 82.47,
+    "end": 82.93
+   },
+   {
+    "id": "m-cbaf8d4e:w238",
+    "mediaId": "m-cbaf8d4e",
+    "text": "message",
+    "start": 82.93,
+    "end": 83.43
+   },
+   {
+    "id": "m-cbaf8d4e:w239",
+    "mediaId": "m-cbaf8d4e",
+    "text": "instead",
+    "start": 83.43,
+    "end": 83.52
+   },
+   {
+    "id": "m-cbaf8d4e:w240",
+    "mediaId": "m-cbaf8d4e",
+    "text": "And",
+    "start": 84.1,
+    "end": 84.5
+   },
+   {
+    "id": "m-cbaf8d4e:w241",
+    "mediaId": "m-cbaf8d4e",
+    "text": "now,",
+    "start": 84.97,
+    "end": 85.021
+   },
+   {
+    "id": "m-cbaf8d4e:w242",
+    "mediaId": "m-cbaf8d4e",
+    "text": "when",
+    "start": 84.99,
+    "end": 85.12
+   },
+   {
+    "id": "m-cbaf8d4e:w243",
+    "mediaId": "m-cbaf8d4e",
+    "text": "I",
+    "start": 85.12,
+    "end": 85.36
+   },
+   {
+    "id": "m-cbaf8d4e:w244",
+    "mediaId": "m-cbaf8d4e",
+    "text": "run",
+    "start": 85.36,
+    "end": 85.6
+   },
+   {
+    "id": "m-cbaf8d4e:w245",
+    "mediaId": "m-cbaf8d4e",
+    "text": "it",
+    "start": 85.6,
+    "end": 85.651
+   },
+   {
+    "id": "m-cbaf8d4e:w246",
+    "mediaId": "m-cbaf8d4e",
+    "text": "again",
+    "start": 85.627,
+    "end": 85.68
+   },
+   {
+    "id": "m-cbaf8d4e:w247",
+    "mediaId": "m-cbaf8d4e",
+    "text": "with",
+    "start": 85.68,
+    "end": 86.08
+   },
+   {
+    "id": "m-cbaf8d4e:w248",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 86.08,
+    "end": 86.16
+   },
+   {
+    "id": "m-cbaf8d4e:w249",
+    "mediaId": "m-cbaf8d4e",
+    "text": "wrong",
+    "start": 86.16,
+    "end": 86.64
+   },
+   {
+    "id": "m-cbaf8d4e:w250",
+    "mediaId": "m-cbaf8d4e",
+    "text": "file",
+    "start": 86.64,
+    "end": 86.83
+   },
+   {
+    "id": "m-cbaf8d4e:w252",
+    "mediaId": "m-cbaf8d4e",
+    "text": "name,",
+    "start": 87.28,
+    "end": 87.331
+   },
+   {
+    "id": "m-cbaf8d4e:w253",
+    "mediaId": "m-cbaf8d4e",
+    "text": "we",
+    "start": 87.3,
+    "end": 87.44
+   },
+   {
+    "id": "m-cbaf8d4e:w254",
+    "mediaId": "m-cbaf8d4e",
+    "text": "get",
+    "start": 87.44,
+    "end": 87.68
+   },
+   {
+    "id": "m-cbaf8d4e:w255",
+    "mediaId": "m-cbaf8d4e",
+    "text": "one",
+    "start": 87.68,
+    "end": 87.92
+   },
+   {
+    "id": "m-cbaf8d4e:w256",
+    "mediaId": "m-cbaf8d4e",
+    "text": "clear",
+    "start": 87.92,
+    "end": 88.14
+   },
+   {
+    "id": "m-cbaf8d4e:w257",
+    "mediaId": "m-cbaf8d4e",
+    "text": "line.",
+    "start": 88.14,
+    "end": 89.781
+   },
+   {
+    "id": "m-cbaf8d4e:w259",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Let",
+    "start": 89.75,
+    "end": 90
+   },
+   {
+    "id": "m-cbaf8d4e:w260",
+    "mediaId": "m-cbaf8d4e",
+    "text": "me",
+    "start": 90,
+    "end": 90.087
+   },
+   {
+    "id": "m-cbaf8d4e:w261",
+    "mediaId": "m-cbaf8d4e",
+    "text": "quickly",
+    "start": 90.087,
+    "end": 90.32
+   },
+   {
+    "id": "m-cbaf8d4e:w262",
+    "mediaId": "m-cbaf8d4e",
+    "text": "recap.",
+    "start": 90.32,
+    "end": 90.73
+   },
+   {
+    "id": "m-cbaf8d4e:w263",
+    "mediaId": "m-cbaf8d4e",
+    "text": "We",
+    "start": 91.15,
+    "end": 91.44
+   },
+   {
+    "id": "m-cbaf8d4e:w264",
+    "mediaId": "m-cbaf8d4e",
+    "text": "installed",
+    "start": 91.44,
+    "end": 91.84
+   },
+   {
+    "id": "m-cbaf8d4e:w265",
+    "mediaId": "m-cbaf8d4e",
+    "text": "two",
+    "start": 91.84,
+    "end": 92
+   },
+   {
+    "id": "m-cbaf8d4e:w266",
+    "mediaId": "m-cbaf8d4e",
+    "text": "packages,",
+    "start": 92,
+    "end": 92.51
+   },
+   {
+    "id": "m-cbaf8d4e:w267",
+    "mediaId": "m-cbaf8d4e",
+    "text": "stored",
+    "start": 92.95,
+    "end": 93.36
+   },
+   {
+    "id": "m-cbaf8d4e:w268",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 93.36,
+    "end": 93.44
+   },
+   {
+    "id": "m-cbaf8d4e:w269",
+    "mediaId": "m-cbaf8d4e",
+    "text": "key",
+    "start": 93.44,
+    "end": 93.84
+   },
+   {
+    "id": "m-cbaf8d4e:w270",
+    "mediaId": "m-cbaf8d4e",
+    "text": "in",
+    "start": 93.84,
+    "end": 93.92
+   },
+   {
+    "id": "m-cbaf8d4e:w271",
+    "mediaId": "m-cbaf8d4e",
+    "text": "a",
+    "start": 93.92,
+    "end": 94.08
+   },
+   {
+    "id": "m-cbaf8d4e:w272",
+    "mediaId": "m-cbaf8d4e",
+    "text": ".env",
+    "start": 94.08,
+    "end": 94.56
+   },
+   {
+    "id": "m-cbaf8d4e:w273",
+    "mediaId": "m-cbaf8d4e",
+    "text": "file,",
+    "start": 94.56,
+    "end": 94.77
+   },
+   {
+    "id": "m-cbaf8d4e:w274",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 95.12,
+    "end": 95.171
+   },
+   {
+    "id": "m-cbaf8d4e:w275",
+    "mediaId": "m-cbaf8d4e",
+    "text": "called",
+    "start": 95.14,
+    "end": 95.4
+   },
+   {
+    "id": "m-cbaf8d4e:w276",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 95.4,
+    "end": 95.56
+   },
+   {
+    "id": "m-cbaf8d4e:w277",
+    "mediaId": "m-cbaf8d4e",
+    "text": "chat",
+    "start": 95.56,
+    "end": 96.06
+   },
+   {
+    "id": "m-cbaf8d4e:w278",
+    "mediaId": "m-cbaf8d4e",
+    "text": "completions",
+    "start": 96.06,
+    "end": 96.56
+   },
+   {
+    "id": "m-cbaf8d4e:w279",
+    "mediaId": "m-cbaf8d4e",
+    "text": "endpoint",
+    "start": 96.56,
+    "end": 96.88
+   },
+   {
+    "id": "m-cbaf8d4e:w280",
+    "mediaId": "m-cbaf8d4e",
+    "text": "with",
+    "start": 96.88,
+    "end": 97.058
+   },
+   {
+    "id": "m-cbaf8d4e:w281",
+    "mediaId": "m-cbaf8d4e",
+    "text": "our",
+    "start": 97.058,
+    "end": 97.2
+   },
+   {
+    "id": "m-cbaf8d4e:w282",
+    "mediaId": "m-cbaf8d4e",
+    "text": "notes.",
+    "start": 97.2,
+    "end": 97.58
+   },
+   {
+    "id": "m-cbaf8d4e:w283",
+    "mediaId": "m-cbaf8d4e",
+    "text": "In",
+    "start": 98.47,
+    "end": 98.521
+   },
+   {
+    "id": "m-cbaf8d4e:w284",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 98.49,
+    "end": 98.72
+   },
+   {
+    "id": "m-cbaf8d4e:w285",
+    "mediaId": "m-cbaf8d4e",
+    "text": "next",
+    "start": 98.72,
+    "end": 98.86
+   },
+   {
+    "id": "m-cbaf8d4e:w286",
+    "mediaId": "m-cbaf8d4e",
+    "text": "video,",
+    "start": 98.86,
+    "end": 99.3
+   },
+   {
+    "id": "m-cbaf8d4e:w287",
+    "mediaId": "m-cbaf8d4e",
+    "text": "I'll",
+    "start": 99.65,
+    "end": 99.92
+   },
+   {
+    "id": "m-cbaf8d4e:w288",
+    "mediaId": "m-cbaf8d4e",
+    "text": "add",
+    "start": 99.92,
+    "end": 100.14
+   },
+   {
+    "id": "m-cbaf8d4e:w289",
+    "mediaId": "m-cbaf8d4e",
+    "text": "streaming",
+    "start": 100.14,
+    "end": 100.53
+   },
+   {
+    "id": "m-cbaf8d4e:w290",
+    "mediaId": "m-cbaf8d4e",
+    "text": "so",
+    "start": 100.9,
+    "end": 100.95100000000001
+   },
+   {
+    "id": "m-cbaf8d4e:w291",
+    "mediaId": "m-cbaf8d4e",
+    "text": "the",
+    "start": 100.92,
+    "end": 100.971
+   },
+   {
+    "id": "m-cbaf8d4e:w292",
+    "mediaId": "m-cbaf8d4e",
+    "text": "summary",
+    "start": 100.96,
+    "end": 101.463
+   },
+   {
+    "id": "m-cbaf8d4e:w293",
+    "mediaId": "m-cbaf8d4e",
+    "text": "shows",
+    "start": 101.463,
+    "end": 101.84
+   },
+   {
+    "id": "m-cbaf8d4e:w294",
+    "mediaId": "m-cbaf8d4e",
+    "text": "up",
+    "start": 101.84,
+    "end": 101.99
+   },
+   {
+    "id": "m-cbaf8d4e:w295",
+    "mediaId": "m-cbaf8d4e",
+    "text": "word",
+    "start": 101.99,
+    "end": 102.4
+   },
+   {
+    "id": "m-cbaf8d4e:w297",
+    "mediaId": "m-cbaf8d4e",
+    "text": "by",
+    "start": 102.4,
+    "end": 102.8
+   },
+   {
+    "id": "m-cbaf8d4e:w298",
+    "mediaId": "m-cbaf8d4e",
+    "text": "word.",
+    "start": 102.8,
+    "end": 102.851
+   },
+   {
+    "id": "m-cbaf8d4e:w299",
+    "mediaId": "m-cbaf8d4e",
+    "text": "Thanks",
+    "start": 103.48,
+    "end": 103.531
+   },
+   {
+    "id": "m-cbaf8d4e:w300",
+    "mediaId": "m-cbaf8d4e",
+    "text": "for",
+    "start": 103.52,
+    "end": 103.9
+   },
+   {
+    "id": "m-cbaf8d4e:w301",
+    "mediaId": "m-cbaf8d4e",
+    "text": "watching",
+    "start": 103.9,
+    "end": 104.32
+   },
+   {
+    "id": "m-cbaf8d4e:w302",
+    "mediaId": "m-cbaf8d4e",
+    "text": "and",
+    "start": 104.61,
+    "end": 104.78
+   },
+   {
+    "id": "m-cbaf8d4e:w303",
+    "mediaId": "m-cbaf8d4e",
+    "text": "you",
+    "start": 104.78,
+    "end": 104.85
+   },
+   {
+    "id": "m-cbaf8d4e:w304",
+    "mediaId": "m-cbaf8d4e",
+    "text": "know,",
+    "start": 105.18,
+    "end": 105.5
+   },
+   {
+    "id": "m-cbaf8d4e:w305",
+    "mediaId": "m-cbaf8d4e",
+    "text": "see",
+    "start": 105.5,
+    "end": 106
+   },
+   {
+    "id": "m-cbaf8d4e:w306",
+    "mediaId": "m-cbaf8d4e",
+    "text": "you",
+    "start": 106,
+    "end": 106.32
+   },
+   {
+    "id": "m-cbaf8d4e:w307",
+    "mediaId": "m-cbaf8d4e",
+    "text": "next",
+    "start": 106.32,
+    "end": 106.61
+   },
+   {
+    "id": "m-cbaf8d4e:w308",
+    "mediaId": "m-cbaf8d4e",
+    "text": "time.",
+    "start": 106.64,
+    "end": 107.14
+   }
+  ],
+  "captionBreaks": [],
+  "masks": [],
+  "effects": [
+   {
+    "id": "fx-d98b41e3",
+    "kind": "anim2d",
+    "start": 10,
+    "end": 15,
+    "pluginId": "8e4fc16a882f786fec91588ddc52383e",
+    "anchorIds": [],
+    "params": {
+     "title": "Lower-third title card",
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.3,
+      "h": 0.2
+     },
+     "layers": [
+      {
+       "component": "8e4fc16a882f786fec91588ddc52383e",
+       "params": {
+        "text": "Meeting notes → summary in 2 minutes",
+        "accent": "#ffd400",
+        "size": 46
+       },
+       "start": 0,
+       "end": null,
+       "fade": {
+        "out": 0.4
+       }
+      }
+     ],
+     "sounds": [],
+     "vibe": {
+      "description": "A bold lower-third title card that slides in from the left: 'Meeting notes → summary in 2 minutes', with a thin accent line",
+      "mode": "new"
+     }
+    }
+   },
+   {
+    "id": "fx-2b3cd806",
+    "kind": "anim2d",
+    "start": 70,
+    "end": 75,
+    "pluginId": "6afa3595f3f332624c5e1066d3ca9d3c",
+    "anchorIds": [],
+    "params": {
+     "title": "Glowing swoop arrow to termina",
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.3,
+      "h": 0.2
+     },
+     "layers": [
+      {
+       "component": "6afa3595f3f332624c5e1066d3ca9d3c",
+       "params": {
+        "color": "#ffd400",
+        "inDur": 0.9,
+        "width": 14
+       },
+       "start": 0,
+       "end": null,
+       "fade": {
+        "out": 0.3
+       }
+      },
+      {
+       "component": "51ced339d620eba48c01a6df22c12924",
+       "params": {
+        "text": "it works!",
+        "side": "above",
+        "color": "#111827",
+        "textColor": "#ffffff",
+        "size": 40,
+        "inDur": 0.35
+       },
+       "start": 0.85,
+       "end": null,
+       "enter": {
+        "type": "pop",
+        "duration": 0.35,
+        "ease": "outBack"
+       }
+      }
+     ],
+     "sounds": [],
+     "vibe": {
+      "description": "A glowing arrow that swoops in and points at the terminal output, with a small 'it works!' label that pops in",
+      "mode": "new"
+     }
+    }
+   },
+   {
+    "id": "fx-e6cd4190",
+    "kind": "anim3d",
+    "start": 53,
+    "end": 59,
+    "pluginId": "40ed67361c57329dfadc3eb7cbbcf0ed",
+    "anchorIds": [],
+    "params": {
+     "title": "Golden trophy with sparkles",
+     "params": {
+      "color": "#ffc933",
+      "spinSpeed": 0.7,
+      "sparkleCount": 24,
+      "size": 1
+     },
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.3,
+      "h": 0.2
+     },
+     "vibe": {
+      "description": "A glossy 3D golden trophy spinning slowly in the top-right corner, with small sparkles orbiting it",
+      "mode": "new"
+     }
+    }
+   },
+   {
+    "id": "fx-6f27af01",
+    "kind": "anim2d",
+    "start": 20,
+    "end": 23,
+    "pluginId": "b5890a7c7b38beb3df0cbd0a65ff37af",
+    "anchorIds": [],
+    "params": {
+     "template": "highlighter",
+     "title": "Highlight",
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.3,
+      "h": 0.06
+     },
+     "layers": [
+      {
+       "component": "b5890a7c7b38beb3df0cbd0a65ff37af",
+       "params": {}
+      }
+     ],
+     "sounds": []
+    }
+   },
+   {
+    "id": "fx-e4aceb57",
+    "kind": "anim2d",
+    "start": 46,
+    "end": 49,
+    "pluginId": "5af9543a205a9e5a95195e51a9a46532",
+    "anchorIds": [],
+    "params": {
+     "template": "circle-pop",
+     "title": "Circle",
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.24,
+      "h": 0.14
+     },
+     "layers": [
+      {
+       "component": "5af9543a205a9e5a95195e51a9a46532",
+       "params": {}
+      }
+     ],
+     "sounds": [
+      {
+       "component": "d28a45922dbed8276655007b227c032f",
+       "params": {},
+       "at": 0.6
+      }
+     ]
+    }
+   },
+   {
+    "id": "fx-65e997b4",
+    "kind": "anim2d",
+    "start": 78,
+    "end": 81,
+    "pluginId": "ed1ee1aac3c030fc385151706282c7ed",
+    "anchorIds": [],
+    "params": {
+     "template": "check-success",
+     "title": "Checkmark",
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.12,
+      "h": 0.2
+     },
+     "layers": [
+      {
+       "component": "ed1ee1aac3c030fc385151706282c7ed",
+       "params": {}
+      }
+     ],
+     "sounds": [
+      {
+       "component": "054a888814fbe50cd47cab2b6c50f953",
+       "params": {},
+       "at": 0.25
+      }
+     ]
+    }
+   },
+   {
+    "id": "fx-63fb7b41",
+    "kind": "anim2d",
+    "start": 112,
+    "end": 115,
+    "pluginId": "74d49e26b88148c6c2b0a5f1c664cc6c",
+    "anchorIds": [],
+    "params": {
+     "template": "confetti-burst",
+     "title": "Celebrate",
+     "box": {
+      "cx": 0.5,
+      "cy": 0.5,
+      "w": 0.2,
+      "h": 0.2
+     },
+     "layers": [
+      {
+       "component": "74d49e26b88148c6c2b0a5f1c664cc6c",
+       "params": {}
+      }
+     ],
+     "sounds": [
+      {
+       "component": "5be33fe12db0e6e0b3d4a1d73ff9caa9",
+       "params": {},
+       "at": 0
+      }
+     ]
+    }
+   },
+   {
+    "id": "fx-e2ba7947",
+    "kind": "scene3d",
+    "start": 28,
+    "end": 34,
+    "pluginId": "04970780fbd8a035cd13bf06c5a6ce72",
+    "anchorIds": [],
+    "params": {
+     "title": "Desk screen",
+     "template": "desk-reveal",
+     "params": {
+      "scene": "desk",
+      "motion": "reveal",
+      "tilt": 7,
+      "ramp": 1.2,
+      "deskTexture": null,
+      "wallTexture": null,
+      "floorTexture": null,
+      "frameTexture": null,
+      "backgroundImage": null
+     }
+    }
+   },
+   {
+    "id": "fx-380dc019",
+    "kind": "scene3d",
+    "start": 103,
+    "end": 109,
+    "pluginId": "09884377e2aa9edca7ee4760192b2088",
+    "anchorIds": [],
+    "params": {
+     "title": "Float",
+     "template": "board-float",
+     "params": {
+      "keys": [
+       {
+        "anchor": "start",
+        "t": 0,
+        "rx": 12,
+        "ry": -35,
+        "rz": 0,
+        "size": 0.55,
+        "px": -0.22,
+        "py": 0.12,
+        "ease": "inOut"
+       },
+       {
+        "anchor": "start",
+        "t": 6,
+        "rx": 0,
+        "ry": 0,
+        "rz": 0,
+        "size": 1,
+        "px": 0,
+        "py": 0,
+        "ease": "inOut"
+       }
+      ],
+      "float": null,
+      "edges": false,
+      "background": "studio",
+      "color": "#202020",
+      "backgroundImage": null,
+      "shadow": 0.55
+     }
+    }
+   },
+   {
+    "id": "fx-84072770",
+    "kind": "anim3d",
+    "start": 96,
+    "end": 101,
+    "pluginId": "4a29e802ab3be078665d61ca086b59a7",
+    "anchorIds": [],
+    "params": {
+     "title": "Mascot points",
+     "template": "mascot-point",
+     "params": {
+      "action": "point",
+      "from": "left",
+      "color": "#ffb020",
+      "height": 0.35,
+      "walk": 1.6
+     },
+     "box": {
+      "cx": 0.6,
+      "cy": 0.45,
+      "w": 0.25,
+      "h": 0.25
+     }
+    }
+   },
+   {
+    "id": "intro-d417e342",
+    "kind": "scene3d",
+    "start": 0,
+    "end": 8,
+    "pluginId": "8441c1cee950988d1c40923c96cbf4d2",
+    "anchorIds": [],
+    "params": {
+     "title": "Flip intro",
+     "template": "flip-intro",
+     "params": {
+      "tone": "duotone",
+      "accent": "#2f5bff",
+      "dark": "#141a4a",
+      "light": "#a9b8ff",
+      "imageIds": [
+       "m-463e3177",
+       "m-3f0fff6b",
+       "m-67c94470",
+       "m-b6e97fc9",
+       "m-614ea618",
+       "m-4f1a104e",
+       "m-96ef99ff",
+       "m-e789e2b9"
+      ],
+      "pages": [
+       {
+        "t": 1.7,
+        "img": 0,
+        "strength": 1
+       },
+       {
+        "t": 1.96,
+        "img": 1,
+        "strength": 0.9152758620689655
+       },
+       {
+        "t": 2.1835999999999998,
+        "img": 2,
+        "strength": 0.8424131034482758
+       },
+       {
+        "t": 2.3758959999999996,
+        "img": 3,
+        "strength": 0.7797511310344828
+       },
+       {
+        "t": 2.5412705599999996,
+        "img": 4,
+        "strength": 0.7258618347586208
+       },
+       {
+        "t": 2.6834926815999998,
+        "img": 5,
+        "strength": 0.6795170399613794
+       },
+       {
+        "t": 2.805803706176,
+        "img": 6,
+        "strength": 0.6396605164357518
+       },
+       {
+        "t": 2.91099118731136,
+        "img": 7,
+        "strength": 0.6053839062037121
+       },
+       {
+        "t": 3.0014524210877696,
+        "img": 5,
+        "strength": 0.5759060214041578
+       },
+       {
+        "t": 3.079249082135482,
+        "img": 4,
+        "strength": 0.5505550404765412
+       },
+       {
+        "t": 3.1461542106365146,
+        "img": 6,
+        "strength": 0.55
+       },
+       {
+        "t": 3.2128208773031814,
+        "img": 1,
+        "strength": 0.55
+       },
+       {
+        "t": 3.2794875439698483,
+        "img": 2,
+        "strength": 0.55
+       },
+       {
+        "t": 3.346154210636515,
+        "img": 3,
+        "strength": 0.55
+       },
+       {
+        "t": 3.412820877303182,
+        "img": 0,
+        "strength": 0.55
+       },
+       {
+        "t": 3.479487543969849,
+        "img": 7,
+        "strength": 0.55
+       }
+      ],
+      "titleFills": [
+       5,
+       4,
+       7,
+       2,
+       6,
+       0,
+       3
+      ],
+      "icon": null,
+      "montageStart": 1.7,
+      "flash": 3.46,
+      "titleIn": 3.5,
+      "reveal": 4,
+      "title": "Meeting Notes AI",
+      "subtitle": "a CLI tool in 2 minutes"
+     }
+    }
+   }
+  ],
+  "anchors": [],
+  "suggestions": [],
+  "plugins": [
+   {
+    "hash": "8e4fc16a882f786fec91588ddc52383e",
+    "kind": "2d",
+    "source": "vibe",
+    "component": {
+     "id": "ai-draft",
+     "version": 1,
+     "kind": "visual",
+     "name": "Lower-third title card",
+     "description": "A bold title card slides in from the left with a dark panel and a thin accent line growing beneath the text",
+     "tags": [
+      "lower-third",
+      "title",
+      "slide-in",
+      "card"
+     ],
+     "params": {
+      "text": {
+       "type": "text",
+       "label": "Text",
+       "default": "Meeting notes → summary in 2 minutes",
+       "maxLength": 80
+      },
+      "accent": {
+       "type": "color",
+       "label": "Accent color",
+       "default": "#ffd400",
+       "role": "primary"
+      },
+      "cardColor": {
+       "type": "color",
+       "label": "Card color",
+       "default": "#111827"
+      },
+      "textColor": {
+       "type": "color",
+       "label": "Text color",
+       "default": "#ffffff",
+       "role": "text"
+      },
+      "size": {
+       "type": "number",
+       "label": "Text size",
+       "min": 24,
+       "max": 80,
+       "default": 46,
+       "step": 1
+      },
+      "inDur": {
+       "type": "duration",
+       "label": "Slide duration",
+       "min": 0.2,
+       "max": 1.5,
+       "default": 0.6
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box;\n  const u = clamp(t / p.inDur, 0, 1);\n  const e = ease.outCubic(u);\n  const x = b.x - (1 - e) * (b.w + 120);\n  const y = b.y;\n  g.begin();\n  g.roundRect(x, y, b.w, b.h, 18);\n  g.fill({color: p.cardColor, alpha: 0.94});\n  g.begin();\n  g.roundRect(x + 24, y + 30, 6, b.h - 60, 3);\n  g.fill({color: p.accent});\n  const avail = b.w - 108;\n  let fs = p.size;\n  const tw = g.measure(p.text, {size: fs, weight: 800, font: 'sans'});\n  if (tw > avail && tw > 0) fs = Math.max(20, fs * avail / tw);\n  g.text(p.text, x + 52, y + b.h / 2 - 14, {size: fs, weight: 800, font: 'sans', color: p.textColor, align: 'left', baseline: 'middle'});\n  const u2 = clamp((t - p.inDur * 0.7) / 0.5, 0, 1);\n  const lw = avail * ease.outCubic(u2);\n  if (lw > 1) {\n    g.begin();\n    g.rect(x + 52, y + b.h - 48, lw, 4);\n    g.fill({color: p.accent});\n  }\n}",
+     "schema": 2,
+     "category": "text"
+    }
+   },
+   {
+    "hash": "6afa3595f3f332624c5e1066d3ca9d3c",
+    "kind": "2d",
+    "source": "vibe",
+    "component": {
+     "id": "ai-draft",
+     "version": 1,
+     "kind": "visual",
+     "name": "Glowing swooping arrow",
+     "description": "A glowing arrow swoops in along a curved path, points at the center of the box, then bobs gently with a pulsing glow.",
+     "tags": [
+      "arrow",
+      "glow",
+      "swoop",
+      "point"
+     ],
+     "params": {
+      "color": {
+       "type": "color",
+       "label": "Glow color",
+       "default": "#ffd400",
+       "role": "primary"
+      },
+      "inDur": {
+       "type": "duration",
+       "label": "Swoop duration",
+       "min": 0.2,
+       "max": 2,
+       "default": 0.9
+      },
+      "width": {
+       "type": "number",
+       "label": "Line width",
+       "min": 4,
+       "max": 30,
+       "default": 14,
+       "step": 1
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box;\n  const u = clamp(t / p.inDur, 0, 1);\n  const e = ease.outCubic(u);\n  const bob = u >= 1 ? Math.sin((t - p.inDur) * 3) * 6 : 0;\n  const pulse = u >= 1 ? 0.75 + 0.25 * Math.sin((t - p.inDur) * 4) : 1;\n  const tipX = b.x + b.w * 0.5;\n  const tipY = b.y + b.h * 0.5;\n  const x0 = b.x - 300, y0 = b.y - 190;\n  const cx = b.x - 60, cy = b.y - 230;\n  const x1 = tipX, y1 = tipY;\n  const steps = Math.max(2, Math.floor(e * 28));\n  g.save();\n  g.translate(0, bob);\n  g.glow({color: p.color, blur: 26 * pulse});\n  g.begin();\n  for (let i = 0; i <= steps; i++) {\n    const s = i / 28, ix = 1 - s;\n    const x = ix * ix * x0 + 2 * ix * s * cx + s * s * x1;\n    const y = ix * ix * y0 + 2 * ix * s * cy + s * s * y1;\n    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);\n  }\n  g.stroke({color: p.color, width: p.width + 8, cap: 'round', join: 'round', alpha: 0.35 * pulse});\n  g.begin();\n  for (let i = 0; i <= steps; i++) {\n    const s = i / 28, ix = 1 - s;\n    const x = ix * ix * x0 + 2 * ix * s * cx + s * s * x1;\n    const y = ix * ix * y0 + 2 * ix * s * cy + s * s * y1;\n    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);\n  }\n  g.stroke({color: p.color, width: p.width, cap: 'round', join: 'round'});\n  g.glow(null);\n  g.begin();\n  for (let i = 0; i <= steps; i++) {\n    const s = i / 28, ix = 1 - s;\n    const x = ix * ix * x0 + 2 * ix * s * cx + s * s * x1;\n    const y = ix * ix * y0 + 2 * ix * s * cy + s * s * y1;\n    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);\n  }\n  g.stroke({color: '#ffffff', width: Math.max(3, p.width * 0.38), cap: 'round', join: 'round', alpha: 0.85});\n  if (e > 0.8) {\n    const hs = clamp((e - 0.8) / 0.2, 0, 1);\n    const tx = 2 * (x1 - cx), ty = 2 * (y1 - cy);\n    const ang = Math.atan2(ty, tx);\n    const len = 52 * hs, wid = 26 * hs;\n    const bx = tipX - Math.cos(ang) * len, by = tipY - Math.sin(ang) * len;\n    const px = Math.cos(ang + Math.PI / 2), py = Math.sin(ang + Math.PI / 2);\n    g.glow({color: p.color, blur: 22 * pulse});\n    g.begin();\n    g.moveTo(tipX, tipY);\n    g.lineTo(bx + px * wid, by + py * wid);\n    g.lineTo(bx - px * wid, by - py * wid);\n    g.close();\n    g.fill({color: p.color});\n    g.glow(null);\n  }\n  g.restore();\n}",
+     "schema": 2,
+     "category": "pointer"
+    }
+   },
+   {
+    "hash": "51ced339d620eba48c01a6df22c12924",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "label",
+     "version": 2,
+     "schema": 2,
+     "category": "pointer",
+     "preview": {
+      "t": 1,
+      "box": {
+       "w": 0.2,
+       "h": 0.1
+      }
+     },
+     "kind": "visual",
+     "name": "文字標籤",
+     "description": "在框的上下左右彈出一個小對話框，尖角指向框",
+     "tags": [
+      "標籤",
+      "說明",
+      "對話框"
+     ],
+     "params": {
+      "text": {
+       "type": "text",
+       "maxLength": 30,
+       "default": "Here",
+       "label": "文字"
+      },
+      "side": {
+       "type": "enum",
+       "values": [
+        "above",
+        "below",
+        "left",
+        "right"
+       ],
+       "labels": [
+        "上方",
+        "下方",
+        "左邊",
+        "右邊"
+       ],
+       "default": "above",
+       "label": "位置"
+      },
+      "color": {
+       "type": "color",
+       "role": "primary",
+       "default": "#111827",
+       "label": "底色"
+      },
+      "textColor": {
+       "type": "color",
+       "role": "text",
+       "default": "#ffffff",
+       "label": "字色"
+      },
+      "size": {
+       "type": "number",
+       "min": 16,
+       "max": 120,
+       "step": 2,
+       "default": 40,
+       "label": "字級"
+      },
+      "inDur": {
+       "type": "duration",
+       "min": 0.1,
+       "max": 3,
+       "default": 0.4,
+       "label": "彈出秒數"
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box, u = clamp(t / p.inDur, 0, 1), s = ease.outBack(u), fade = clamp((env.duration - t) / 0.25, 0, 1);\n  if (s <= 0.001) return;\n  const font = {size: p.size, weight: 700};\n  const w = g.measure(p.text, font) + p.size * 1.2, h = p.size * 1.7, tail = p.size * 0.55;\n  const cx = b.x + b.w / 2, cy = b.y + b.h / 2;\n  let x = cx, y = cy, tx = cx, ty = cy;  // 標籤中心與尖角指的點\n  if (p.side === 'above') { y = b.y - tail - h / 2; ty = b.y - 4; }\n  else if (p.side === 'below') { y = b.y + b.h + tail + h / 2; ty = b.y + b.h + 4; }\n  else if (p.side === 'left') { x = b.x - tail - w / 2; tx = b.x - 4; }\n  else { x = b.x + b.w + tail + w / 2; tx = b.x + b.w + 4; }\n  x = clamp(x, w / 2 + 8, env.width - w / 2 - 8); y = clamp(y, h / 2 + 8, env.height - h / 2 - 8);\n  const ax = tx - x, ay = ty - y, vertical = p.side === 'above' || p.side === 'below';\n  // 以尖角為中心彈出，再把原點移回標籤中心\n  g.save(); g.alpha(fade); g.translate(tx, ty); g.scale(s, s); g.translate(-ax, -ay);\n  g.glow({color: '#00000066', blur: 14});\n  g.begin(); g.roundRect(-w / 2, -h / 2, w, h, h * 0.3); g.fill({color: p.color});\n  g.begin();\n  if (vertical) { const by = Math.sign(ay) * (h / 2 - 1); g.moveTo(-tail * 0.6, by); g.lineTo(ax, ay); g.lineTo(tail * 0.6, by); }\n  else { const bx = Math.sign(ax) * (w / 2 - 1); g.moveTo(bx, -tail * 0.6); g.lineTo(ax, ay); g.lineTo(bx, tail * 0.6); }\n  g.close(); g.fill({color: p.color});\n  g.glow(null);\n  g.text(p.text, 0, 0, {size: p.size, weight: 700, color: p.textColor});\n  g.restore();\n}"
+    }
+   },
+   {
+    "hash": "40ed67361c57329dfadc3eb7cbbcf0ed",
+    "kind": "3d",
+    "source": "vibe",
+    "component": {
+     "id": "ai-3d-40ed6736",
+     "kind": "3d",
+     "effectKind": "anim3d",
+     "name": "Golden Trophy Sparkles",
+     "description": "A glossy golden trophy built from lathe, torus and cylinder geometry spins and bobs in the top-right corner while small sparkles orbit and twinkle around it.",
+     "params": {
+      "color": {
+       "type": "color",
+       "default": "#ffc933",
+       "label": "Trophy color"
+      },
+      "spinSpeed": {
+       "type": "number",
+       "min": 0.2,
+       "max": 2,
+       "step": 0.1,
+       "default": 0.7,
+       "label": "Spin speed"
+      },
+      "sparkleCount": {
+       "type": "number",
+       "min": 8,
+       "max": 40,
+       "step": 1,
+       "default": 24,
+       "label": "Sparkle count"
+      },
+      "size": {
+       "type": "number",
+       "min": 0.5,
+       "max": 1.8,
+       "step": 0.1,
+       "default": 1,
+       "label": "Trophy size"
+      }
+     },
+     "code": "const pure = true;\nconst S = {};\nfunction setup(THREE, scene, camera, env) {\n  camera.position.set(0, 0, 20); camera.lookAt(0, 0, 0);\n  scene.add(new THREE.AmbientLight(0xffffff, 1.1));\n  const sun = new THREE.DirectionalLight(0xffffff, 2.4); sun.position.set(4, 6, 9); scene.add(sun);\n  const fill = new THREE.DirectionalLight(0xffe9a8, 1.0); fill.position.set(-5, 2, 6); scene.add(fill);\n  const gold = new THREE.MeshStandardMaterial({ color: new THREE.Color(env.params.color), metalness: 0.9, roughness: 0.22 });\n  const darkGold = new THREE.MeshStandardMaterial({ color: new THREE.Color(env.params.color).multiplyScalar(0.72), metalness: 0.9, roughness: 0.3 });\n  const trophy = new THREE.Group();\n  const pts = [];\n  pts.push(new THREE.Vector2(0.02, -0.55));\n  pts.push(new THREE.Vector2(0.42, -0.52));\n  pts.push(new THREE.Vector2(0.62, -0.28));\n  pts.push(new THREE.Vector2(0.74, 0.12));\n  pts.push(new THREE.Vector2(0.78, 0.62));\n  pts.push(new THREE.Vector2(0.76, 0.88));\n  pts.push(new THREE.Vector2(0.62, 0.9));\n  pts.push(new THREE.Vector2(0.6, 0.55));\n  pts.push(new THREE.Vector2(0.55, 0.05));\n  pts.push(new THREE.Vector2(0.35, -0.3));\n  pts.push(new THREE.Vector2(0.02, -0.38));\n  const cup = new THREE.Mesh(new THREE.LatheGeometry(pts, 48), gold); trophy.add(cup);\n  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.77, 0.07, 14, 48), gold); rim.rotation.x = Math.PI / 2; rim.position.y = 0.88; trophy.add(rim);\n  const handleGeo = new THREE.TorusGeometry(0.42, 0.08, 12, 32, Math.PI);\n  const hL = new THREE.Mesh(handleGeo, gold); hL.position.set(-0.78, 0.38, 0); hL.rotation.z = Math.PI / 2; trophy.add(hL);\n  const hR = new THREE.Mesh(handleGeo, gold); hR.position.set(0.78, 0.38, 0); hR.rotation.z = -Math.PI / 2; trophy.add(hR);\n  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 0.5, 24), darkGold); stem.position.y = -0.78; trophy.add(stem);\n  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.14, 32), gold); collar.position.y = -0.58; trophy.add(collar);\n  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.78, 0.28, 32), darkGold); base.position.y = -1.12; trophy.add(base);\n  const baseTop = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.58, 0.12, 32), gold); baseTop.position.y = -0.94; trophy.add(baseTop);\n  trophy.scale.setScalar(env.params.size);\n  scene.add(trophy); S.trophy = trophy;\n  S.center = env.toWorld(0.86, 0.24);\n  const n = Math.round(env.params.sparkleCount);\n  const sparkGeo = new THREE.OctahedronGeometry(0.1, 0);\n  const sparkMat = new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 });\n  S.sparkles = new THREE.InstancedMesh(sparkGeo, sparkMat, n); S.sparkles.count = n; scene.add(S.sparkles);\n  S.dummy = new THREE.Object3D(); S.count = n;\n}\nfunction update(t, env) {\n  const pop = Math.min(1, t / 0.55); const ease = 1 - Math.pow(1 - pop, 3);\n  const s = env.params.size * ease * (1 + 0.08 * Math.sin(Math.min(1, pop) * Math.PI));\n  S.trophy.scale.setScalar(Math.max(0.001, s));\n  S.trophy.position.set(S.center.x, S.center.y + Math.sin(t * 1.3) * 0.16, S.center.z);\n  S.trophy.rotation.y = t * env.params.spinSpeed * Math.PI * 2 * 0.45;\n  S.trophy.rotation.z = Math.sin(t * 1.1) * 0.05;\n  for (let i = 0; i < S.count; i++) {\n    const r1 = env.rand(i * 3 + 1); const r2 = env.rand(i * 3 + 2); const r3 = env.rand(i * 3 + 3);\n    const ang = t * (0.7 + r3 * 0.7) + i * 2.39996;\n    const rad = (1.35 + r1 * 0.85) * env.params.size;\n    const yOff = (r2 - 0.5) * 2.4 * env.params.size + Math.sin(t * 1.7 + i) * 0.12;\n    S.dummy.position.set(S.center.x + Math.cos(ang) * rad, S.center.y + yOff, S.center.z + Math.sin(ang) * rad * 0.45);\n    const tw = 0.55 + 0.65 * (0.5 + 0.5 * Math.sin(t * 3.2 + i * 1.7));\n    S.dummy.scale.set(tw * ease, tw * ease * 1.7, tw * ease);\n    S.dummy.rotation.set(t * 1.5 + i, t * 2.0 + i * 0.6, 0);\n    S.dummy.updateMatrix(); S.sparkles.setMatrixAt(i, S.dummy.matrix);\n  }\n  S.sparkles.instanceMatrix.needsUpdate = true;\n  S.sparkles.material.opacity = 0.75 + 0.25 * Math.sin(t * 2.4);\n}"
+    }
+   },
+   {
+    "hash": "b5890a7c7b38beb3df0cbd0a65ff37af",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "highlighter",
+     "version": 2,
+     "schema": 2,
+     "category": "emphasis",
+     "preview": {
+      "t": 1,
+      "box": {
+       "w": 0.3,
+       "h": 0.06
+      }
+     },
+     "kind": "visual",
+     "name": "螢光筆劃記",
+     "description": "半透明的螢光筆由左到右劃過框裡的字，邊緣略帶手繪感",
+     "tags": [
+      "螢光筆",
+      "劃記",
+      "強調"
+     ],
+     "params": {
+      "color": {
+       "type": "color",
+       "role": "primary",
+       "default": "#ffe14d",
+       "label": "顏色"
+      },
+      "opacity": {
+       "type": "number",
+       "min": 0.15,
+       "max": 0.8,
+       "step": 0.05,
+       "default": 0.45,
+       "label": "濃淡"
+      },
+      "thickness": {
+       "type": "number",
+       "min": 0.3,
+       "max": 1.2,
+       "step": 0.05,
+       "default": 0.85,
+       "label": "粗細（框高的比例）"
+      },
+      "inDur": {
+       "type": "duration",
+       "min": 0.1,
+       "max": 3,
+       "default": 0.6,
+       "label": "劃過秒數"
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box, u = ease.outCubic(clamp(t / p.inDur, 0, 1)), fade = clamp((env.duration - t) / 0.25, 0, 1);\n  const h = b.h * p.thickness, y = b.y + (b.h - h) / 2, x0 = b.x - 6, w = (b.w + 12) * u;\n  if (w <= 1) return;\n  g.save(); g.alpha(fade * p.opacity);\n  g.begin();\n  g.moveTo(x0, y + env.rand(1) * 4); g.lineTo(x0 + w, y + env.rand(2) * 4);\n  g.lineTo(x0 + w - 4, y + h - env.rand(3) * 4); g.lineTo(x0 + 3, y + h - env.rand(4) * 4); g.close();\n  g.fill({color: p.color});\n  g.restore();\n}"
+    }
+   },
+   {
+    "hash": "5af9543a205a9e5a95195e51a9a46532",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "circle",
+     "version": 2,
+     "schema": 2,
+     "category": "emphasis",
+     "preview": {
+      "t": 1,
+      "box": {
+       "w": 0.24,
+       "h": 0.14
+      }
+     },
+     "kind": "visual",
+     "name": "圈選",
+     "description": "像用筆隨手圈起來的橢圓，筆畫略有起伏、結尾稍微超過起點",
+     "tags": [
+      "圈",
+      "強調",
+      "手繪"
+     ],
+     "params": {
+      "color": {
+       "type": "color",
+       "role": "primary",
+       "default": "#ff3b30",
+       "label": "顏色"
+      },
+      "width": {
+       "type": "number",
+       "min": 3,
+       "max": 24,
+       "step": 1,
+       "default": 7,
+       "label": "粗細"
+      },
+      "padding": {
+       "type": "number",
+       "min": 0,
+       "max": 80,
+       "step": 1,
+       "default": 18,
+       "label": "外擴"
+      },
+      "inDur": {
+       "type": "duration",
+       "min": 0.1,
+       "max": 3,
+       "default": 0.7,
+       "label": "畫出秒數"
+      },
+      "shadow": {
+       "type": "boolean",
+       "default": true,
+       "label": "陰影"
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box, u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);\n  const cx = b.x + b.w / 2, cy = b.y + b.h / 2, rx = b.w / 2 + p.padding, ry = b.h / 2 + p.padding;\n  // 起伏與起點由 env.rand 決定：同一段動畫每一格都一樣，預覽與輸出相同\n  const ph = env.rand(1) * 6.28, start = -2.2 + env.rand(2) * 0.4, steps = 56;\n  g.save(); g.alpha(fade);\n  if (p.shadow) g.glow({color: '#00000066', blur: 8});\n  g.begin();\n  for (let i = 0; i <= steps; i++) {\n    const a = start + (i / steps) * Math.PI * 2 * 1.1;\n    const k = 1 + 0.045 * Math.sin(a * 3 + ph) + 0.02 * Math.sin(a * 7 + ph * 2) + (i / steps) * 0.06;\n    const x = cx + Math.cos(a) * rx * k, y = cy + Math.sin(a) * ry * k;\n    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);\n  }\n  g.stroke({color: p.color, width: p.width, progress: ease.inOutQuad(u)});\n  g.restore();\n}"
+    }
+   },
+   {
+    "hash": "d28a45922dbed8276655007b227c032f",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "pop",
+     "version": 2,
+     "schema": 2,
+     "category": "sound",
+     "kind": "sound",
+     "name": "啵",
+     "description": "短促的啵一聲：音高快速往下掉，加一點點擊感",
+     "tags": [
+      "啵",
+      "彈出"
+     ],
+     "params": {
+      "volume": {
+       "type": "number",
+       "min": 0,
+       "max": 1,
+       "step": 0.05,
+       "default": 0.7,
+       "label": "音量"
+      },
+      "pitch": {
+       "type": "number",
+       "min": 200,
+       "max": 1500,
+       "step": 10,
+       "default": 650,
+       "label": "音高"
+      }
+     },
+     "code": "function sound(a, p, env) {\n  a.tone({type: 'sine', freq: p.pitch, freqEnd: p.pitch * 0.3, dur: 0.13, gain: p.volume, attack: 0.002, release: 0.09});\n  a.noise({dur: 0.02, gain: p.volume * 0.35, attack: 0.001, release: 0.015, filter: {type: 'highpass', freq: 2500}});\n}"
+    }
+   },
+   {
+    "hash": "ed1ee1aac3c030fc385151706282c7ed",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "check",
+     "version": 2,
+     "schema": 2,
+     "category": "feedback",
+     "preview": {
+      "t": 1,
+      "box": {
+       "w": 0.12,
+       "h": 0.2
+      }
+     },
+     "kind": "visual",
+     "name": "打勾",
+     "description": "在框的中央畫出一個勾，可帶外圈",
+     "tags": [
+      "打勾",
+      "正確",
+      "完成"
+     ],
+     "params": {
+      "color": {
+       "type": "color",
+       "role": "primary",
+       "default": "#34c759",
+       "label": "顏色"
+      },
+      "width": {
+       "type": "number",
+       "min": 4,
+       "max": 30,
+       "step": 1,
+       "default": 12,
+       "label": "粗細"
+      },
+      "ring": {
+       "type": "boolean",
+       "default": true,
+       "label": "外圈"
+      },
+      "inDur": {
+       "type": "duration",
+       "min": 0.1,
+       "max": 3,
+       "default": 0.6,
+       "label": "畫出秒數"
+      },
+      "shadow": {
+       "type": "boolean",
+       "default": true,
+       "label": "陰影"
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box, s = Math.min(b.w, b.h) * 0.8, cx = b.x + b.w / 2, cy = b.y + b.h / 2;\n  const u = clamp(t / p.inDur, 0, 1), fade = clamp((env.duration - t) / 0.25, 0, 1);\n  g.save(); g.alpha(fade);\n  if (p.shadow) g.glow({color: '#00000080', blur: 10});\n  if (p.ring) {\n    g.begin(); g.circle(cx, cy, s / 2); g.fill({color: p.color, alpha: 0.2 * ease.outCubic(u)});\n    g.begin(); g.circle(cx, cy, s / 2); g.stroke({color: p.color, width: p.width * 0.6, progress: ease.outCubic(u)});\n  }\n  const k = ease.outCubic(clamp((t - p.inDur * 0.35) / (p.inDur * 0.65), 0, 1));\n  if (k > 0) {\n    g.begin(); g.moveTo(cx - s * 0.27, cy + s * 0.02); g.lineTo(cx - s * 0.07, cy + s * 0.22); g.lineTo(cx + s * 0.29, cy - s * 0.2);\n    g.stroke({color: p.color, width: p.width, cap: 'round', join: 'round', progress: k});\n  }\n  g.restore();\n}"
+    }
+   },
+   {
+    "hash": "054a888814fbe50cd47cab2b6c50f953",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "success",
+     "version": 2,
+     "schema": 2,
+     "category": "sound",
+     "kind": "sound",
+     "name": "成功",
+     "description": "三個音往上的和弦琶音，表示完成或答對",
+     "tags": [
+      "成功",
+      "完成",
+      "正確"
+     ],
+     "params": {
+      "volume": {
+       "type": "number",
+       "min": 0,
+       "max": 1,
+       "step": 0.05,
+       "default": 0.5,
+       "label": "音量"
+      }
+     },
+     "code": "function sound(a, p, env) {\n  const notes = [1047, 1319, 1568];\n  for (let i = 0; i < notes.length; i++) {\n    const last = i === notes.length - 1;\n    a.tone({type: 'triangle', freq: notes[i], at: i * 0.09, dur: last ? 0.5 : 0.22, gain: p.volume, attack: 0.004, release: last ? 0.42 : 0.15});\n  }\n}"
+    }
+   },
+   {
+    "hash": "74d49e26b88148c6c2b0a5f1c664cc6c",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "particles",
+     "version": 2,
+     "schema": 2,
+     "category": "fx",
+     "preview": {
+      "t": 0.5,
+      "box": {
+       "w": 0.2,
+       "h": 0.2
+      }
+     },
+     "kind": "visual",
+     "name": "粒子迸發",
+     "description": "從框的中心迸出一圈彩色紙片，往外飛散、受重力落下並淡出，用在完成或慶祝的時刻",
+     "tags": [
+      "粒子",
+      "彩帶",
+      "慶祝"
+     ],
+     "params": {
+      "color": {
+       "type": "color",
+       "role": "primary",
+       "default": "#f59e0b",
+       "label": "主色"
+      },
+      "accent": {
+       "type": "color",
+       "role": "secondary",
+       "default": "#38bdf8",
+       "label": "副色"
+      },
+      "count": {
+       "type": "number",
+       "min": 10,
+       "max": 80,
+       "step": 1,
+       "default": 40,
+       "label": "數量"
+      },
+      "spread": {
+       "type": "number",
+       "min": 0.5,
+       "max": 3,
+       "step": 0.1,
+       "default": 1.2,
+       "label": "飛散範圍"
+      },
+      "gravity": {
+       "type": "number",
+       "min": 0,
+       "max": 2,
+       "step": 0.1,
+       "default": 0.8,
+       "label": "重力"
+      },
+      "life": {
+       "type": "number",
+       "min": 0.4,
+       "max": 3,
+       "step": 0.1,
+       "default": 1.4,
+       "label": "每片停留（秒）"
+      }
+     },
+     "code": "function draw(g, t, p, env) {\n  const b = env.box, cx = b.x + b.w / 2, cy = b.y + b.h / 2;\n  const reach = Math.max(120, Math.max(b.w, b.h)) * p.spread;\n  const end = clamp((env.duration - t) / 0.3, 0, 1);\n  g.save(); g.alpha(end);\n  for (let i = 0; i < p.count; i++) {\n    const delay = env.rand(i * 5) * 0.15, local = t - delay;\n    if (local < 0 || local > p.life) continue;\n    const u = local / p.life, a = env.rand(i * 5 + 1) * Math.PI * 2, speed = 0.55 + env.rand(i * 5 + 2) * 0.45;\n    const dist = reach * speed * ease.outCubic(clamp(u * 1.6, 0, 1));\n    const x = cx + Math.cos(a) * dist, y = cy + Math.sin(a) * dist * 0.8 + p.gravity * 900 * local * local * 0.35;\n    const size = 18 + env.rand(i * 5 + 3) * 16, spin = (env.rand(i * 5 + 4) - 0.5) * 14 * local;\n    g.save(); g.translate(x, y); g.rotate(spin); g.scale(1, Math.cos(local * 9 + i));\n    g.begin(); g.rect(-size / 2, -size / 4, size, size / 2);\n    g.fill({color: i % 2 === 0 ? p.color : p.accent, alpha: 1 - ease.inCubic(u)});\n    g.restore();\n  }\n  g.restore();\n}"
+    }
+   },
+   {
+    "hash": "5be33fe12db0e6e0b3d4a1d73ff9caa9",
+    "kind": "2d",
+    "source": "builtin",
+    "component": {
+     "id": "sparkle",
+     "version": 2,
+     "schema": 2,
+     "category": "sound",
+     "kind": "sound",
+     "name": "閃亮",
+     "description": "一串細碎的高音，像星星閃一下",
+     "tags": [
+      "閃亮",
+      "魔法"
+     ],
+     "params": {
+      "volume": {
+       "type": "number",
+       "min": 0,
+       "max": 1,
+       "step": 0.05,
+       "default": 0.35,
+       "label": "音量"
+      }
+     },
+     "code": "function sound(a, p, env) {\n  const notes = [2093, 2637, 3136, 3951, 2349, 2794, 3520];\n  for (let i = 0; i < notes.length; i++) {\n    a.tone({type: 'sine', freq: notes[i], at: i * 0.055, dur: 0.18, gain: p.volume * (1 - i * 0.1), attack: 0.002, release: 0.16, pan: (i % 2 ? 0.4 : -0.4)});\n  }\n}"
+    }
+   },
+   {
+    "hash": "04970780fbd8a035cd13bf06c5a6ce72",
+    "kind": "3d",
+    "source": "builtin",
+    "component": {
+     "id": "desk-screen",
+     "kind": "3d",
+     "effectKind": "scene3d",
+     "name": "Screen in a scene",
+     "description": "The video plays on a screen in a 3D scene (desk, classroom board or studio); starts and ends full-frame so it cuts in seamlessly",
+     "params": {
+      "scene": {
+       "type": "enum",
+       "values": [
+        "desk",
+        "classroom",
+        "studio"
+       ],
+       "labels": [
+        "Wooden desk",
+        "Classroom board",
+        "Studio"
+       ],
+       "default": "desk",
+       "label": "Scene"
+      },
+      "motion": {
+       "type": "enum",
+       "values": [
+        "reveal",
+        "push",
+        "orbit"
+       ],
+       "labels": [
+        "Pull back and return",
+        "Slow push in",
+        "Orbit"
+       ],
+       "default": "reveal",
+       "label": "Camera (no keyframes)"
+      },
+      "tilt": {
+       "type": "number",
+       "min": 0,
+       "max": 20,
+       "step": 1,
+       "default": 7,
+       "label": "Screen tilt (°)"
+      },
+      "ramp": {
+       "type": "duration",
+       "min": 0.3,
+       "max": 3,
+       "default": 1.2,
+       "label": "In/out (sec)"
+      },
+      "deskTexture": {
+       "type": "texture",
+       "kind": "texture",
+       "default": null,
+       "label": "Desk top texture (wooden desk)"
+      },
+      "wallTexture": {
+       "type": "texture",
+       "kind": "texture",
+       "default": null,
+       "label": "Wall texture (classroom)"
+      },
+      "floorTexture": {
+       "type": "texture",
+       "kind": "texture",
+       "default": null,
+       "label": "Floor texture (classroom, studio)"
+      },
+      "frameTexture": {
+       "type": "texture",
+       "kind": "texture",
+       "default": null,
+       "label": "Board frame texture (classroom)"
+      },
+      "backgroundImage": {
+       "type": "texture",
+       "kind": "background",
+       "default": null,
+       "label": "3D background image"
+      }
+     },
+     "code": "'use strict';\r\n/** 3D 場景的鏡頭關鍵幀內插（spec §5.8；經典腳本，全域 CAMERA3D，串在場景插件前面送進沙盒，Vitest 用 vm 測）。\r\n *  關鍵幀 {t（相對區段開頭的秒數）, position [x,y,z], target [x,y,z]（看向的點）, fov（垂直視角，度）}；\r\n *  兩個關鍵幀之間用 smoothstep（慢進慢出），第一個之前停在第一個、最後一個之後停在最後一個。 */\r\nconst CAMERA3D = (() => {\r\n  /** 慢進慢出 */\r\n  const smooth = (u) => { const x = Math.min(1, Math.max(0, u)); return x * x * (3 - 2 * x); };\r\n  /** 向量線性內插 */\r\n  const mix = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);\r\n\r\n  /** 時間 t 的鏡頭；沒有關鍵幀回 null */\r\n  function cameraAt(keys, t) {\r\n    if (!keys || !keys.length) return null;\r\n    const ks = [...keys].sort((a, b) => a.t - b.t);\r\n    const pick = (k) => ({ position: [...k.position], target: [...k.target], fov: k.fov });\r\n    if (t <= ks[0].t) return pick(ks[0]);\r\n    for (let i = 1; i < ks.length; i++) {\r\n      const a = ks[i - 1], b = ks[i];\r\n      if (t < b.t) {\r\n        const k = smooth((t - a.t) / (b.t - a.t));\r\n        return { position: mix(a.position, b.position, k), target: mix(a.target, b.target, k), fov: a.fov + (b.fov - a.fov) * k };\r\n      }\r\n    }\r\n    return pick(ks[ks.length - 1]);\r\n  }\r\n\r\n  return { cameraAt };\r\n})();\r\n\n;\n// 內建 3D 範本「Screen in a scene」（spec §5.8）：螢幕播當格畫面（V1），放在三種程式畫的場景裡：\r\n//   desk（木紋桌上的螢幕）、classroom（教室黑板，影片就是板面）、studio（攝影棚，螢幕立在架上、聚光）。\r\n// 場景全部用程式畫（沒有外部素材，開發者 2026-10-27 決定）；桌上螢幕移植自 spikes/export-bench/src/scene3d.ts。\r\n// 三個場景的螢幕位置、大小相同，運鏡共用。頭尾接回滿版：區段開頭與結尾鏡頭正對螢幕、螢幕剛好填滿畫面。\r\n// 鏡頭：有鏡頭關鍵幀（env.params.cameraKeys，前面串了 cameraPath.js 的 CAMERA3D）就照關鍵幀走，否則用 motion 預設運鏡。\r\n// 參數：scene、motion（reveal 拉遠再推回／push 慢慢推近／orbit 繞半圈）、tilt（螢幕後仰度數）、ramp（頭尾過場秒數）。\r\n// 材質欄位（P1-14，型別 texture，env.textures[欄位]；沒選就用程式畫的預設）：deskTexture（桌面）、wallTexture／floorTexture／frameTexture\r\n//   （教室的牆、地板、黑板框與講桌）、floorTexture（攝影棚地面）；backgroundImage（3D 背景圖，當 scene.background）。\r\n/* global CAMERA3D */\r\n\r\n/** 畫面只由 t 決定（跳格不必從頭推） */\r\nconst pure = true;\r\n\r\n/** 螢幕寬高（場景單位）與中心高度 */\r\nconst SCREEN_W = 4.0;\r\nconst SCREEN_H = SCREEN_W * 9 / 16;\r\nconst CENTER_Y = 1.25;\r\n\r\n/** 場景物件（setup 建、update 用） */\r\nconst S = {};\r\n\r\n/** 木紋程序貼圖：幾個頻率的正弦疊成年輪＋固定偽雜訊（每次都一樣）；tone 調深淺 */\r\nfunction woodTexture(THREE, tone) {\r\n  const size = 256;\r\n  const data = new Uint8Array(size * size * 4);\r\n  for (let y = 0; y < size; y++) {\r\n    const ring = Math.sin(y * 0.21) * 0.5 + Math.sin(y * 0.047 + 1.3) * 0.35 + Math.sin(y * 0.9) * 0.15;\r\n    for (let x = 0; x < size; x++) {\r\n      const noise = ((x * 7919 + y * 104729) % 97) / 97 - 0.5;\r\n      const k = (0.62 + ring * 0.16 + noise * 0.05) * tone;\r\n      const i = (y * size + x) * 4;\r\n      data[i] = Math.min(255, 168 * k + 20);\r\n      data[i + 1] = Math.min(255, 112 * k + 12);\r\n      data[i + 2] = Math.min(255, 66 * k + 8);\r\n      data[i + 3] = 255;\r\n    }\r\n  }\r\n  const tex = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);\r\n  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;\r\n  tex.repeat.set(4, 3);\r\n  tex.colorSpace = THREE.SRGBColorSpace;\r\n  tex.generateMipmaps = true;\r\n  tex.minFilter = THREE.LinearMipmapLinearFilter;\r\n  tex.needsUpdate = true;\r\n  return tex;\r\n}\r\n\r\n/**\r\n * 材質欄位 → MeshStandardMaterial：使用者在 Inspector 選了材質才有（env.textures[field]），沒選回 null 由呼叫端用預設。\r\n * repeat 是這個表面的基本平鋪次數 [橫, 縱]，再乘上使用者設的倍數；法線強度用 normalScale 套。\r\n */\r\nfunction texturedMaterial(THREE, env, field, repeat) {\r\n  const t = env.textures && env.textures[field];\r\n  if (!t) return null;\r\n  t.map.repeat.set(repeat[0] * t.repeat, repeat[1] * t.repeat);\r\n  const mat = new THREE.MeshStandardMaterial({ map: t.map, roughness: 0.8 });\r\n  if (t.normalMap) {\r\n    t.normalMap.repeat.set(repeat[0] * t.repeat, repeat[1] * t.repeat);\r\n    mat.normalMap = t.normalMap;\r\n    mat.normalScale = new THREE.Vector2(t.normalStrength, t.normalStrength);\r\n  }\r\n  return mat;\r\n}\r\n\r\n/** 使用者選了 3D 背景圖（env.textures.backgroundImage）就拿它當 scene.background（2D 貼圖、sRGB），蓋過各場景的純色 */\r\nfunction applyBackgroundImage(THREE, scene, env) {\r\n  const t = env.textures && env.textures.backgroundImage;\r\n  if (!t) return;\r\n  t.map.wrapS = t.map.wrapT = THREE.ClampToEdgeWrapping;\r\n  t.map.repeat.set(1, 1);\r\n  scene.background = t.map;\r\n}\r\n\r\n/** 垂直漸層貼圖（攝影棚背景） */\r\nfunction gradientTexture(THREE, top, bottom) {\r\n  const c = new OffscreenCanvas(4, 256);\r\n  const g = c.getContext('2d');\r\n  const grad = g.createLinearGradient(0, 0, 0, 256);\r\n  grad.addColorStop(0, top);\r\n  grad.addColorStop(1, bottom);\r\n  g.fillStyle = grad;\r\n  g.fillRect(0, 0, 4, 256);\r\n  const tex = new THREE.CanvasTexture(c);\r\n  tex.colorSpace = THREE.SRGBColorSpace;\r\n  return tex;\r\n}\r\n\r\n/** 木紋桌：桌面、螢幕邊框與底座、桌上的方塊和杯子 */\r\nfunction buildDesk(THREE, scene, group, env) {\r\n  scene.background = new THREE.Color(0x1a1410);\r\n  const desk = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), texturedMaterial(THREE, env, 'deskTexture', [5, 3]) || new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 1), roughness: 0.75 }));\r\n  desk.rotation.x = -Math.PI / 2;\r\n  scene.add(desk);\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.22, SCREEN_H + 0.22, 0.1), new THREE.MeshStandardMaterial({ color: 0x15171c, roughness: 0.4, metalness: 0.3 })));\r\n  const stand = new THREE.MeshStandardMaterial({ color: 0x2a2d35, roughness: 0.5, metalness: 0.4 });\r\n  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.2, 0.12), stand);\r\n  neck.position.set(0, -0.95, -0.1);\r\n  group.add(neck);\r\n  const base = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.0), stand);\r\n  base.position.set(0, 0.03, 0.15);\r\n  scene.add(base);\r\n  const block = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.7), new THREE.MeshStandardMaterial({ color: 0x3b7ddd, roughness: 0.6 }));\r\n  block.position.set(-3.2, 0.25, 1.2);\r\n  block.rotation.y = 0.5;\r\n  scene.add(block);\r\n  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 0.6, 32), new THREE.MeshStandardMaterial({ color: 0xe9e6df, roughness: 0.3 }));\r\n  cup.position.set(3.1, 0.3, 1.6);\r\n  scene.add(cup);\r\n}\r\n\r\n/** 教室：牆、木地板、黑板邊框與粉筆槽（影片就是板面）、講桌 */\r\nfunction buildClassroom(THREE, scene, group, env) {\r\n  scene.background = new THREE.Color(0xd9d2c3);\r\n  const wall = new THREE.Mesh(new THREE.PlaneGeometry(30, 12), texturedMaterial(THREE, env, 'wallTexture', [6, 2.4]) || new THREE.MeshStandardMaterial({ color: 0xe8e0cf, roughness: 0.95 }));\r\n  wall.position.set(0, 4, -0.3);\r\n  scene.add(wall);\r\n  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 16), texturedMaterial(THREE, env, 'floorTexture', [6, 3]) || new THREE.MeshStandardMaterial({ map: woodTexture(THREE, 0.75), roughness: 0.8 }));\r\n  floor.rotation.x = -Math.PI / 2;\r\n  floor.position.y = -0.6;\r\n  scene.add(floor);\r\n  // 黑板木框（比螢幕大一圈）與粉筆槽\r\n  const frame = texturedMaterial(THREE, env, 'frameTexture', [1, 1]) || new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 0.7 });\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.5, SCREEN_H + 0.5, 0.08), frame));\r\n  const tray = new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.5, 0.08, 0.25), frame);\r\n  tray.position.set(0, -SCREEN_H / 2 - 0.28, 0.12);\r\n  group.add(tray);\r\n  for (let i = 0; i < 3; i++) {\r\n    const chalk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.22, 10), new THREE.MeshStandardMaterial({ color: [0xffffff, 0xf7e27a, 0xf2a3b3][i], roughness: 0.9 }));\r\n    chalk.rotation.z = Math.PI / 2;\r\n    chalk.position.set(-1.2 + i * 0.35, -SCREEN_H / 2 - 0.2, 0.15);\r\n    group.add(chalk);\r\n  }\r\n  // 講桌\r\n  const lectern = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.1, 0.8), frame);\r\n  lectern.position.set(2.8, -0.05, 2.2);\r\n  scene.add(lectern);\r\n}\r\n\r\n/** 攝影棚：漸層背幕、地面、螢幕立架、兩盞聚光的光錐 */\r\nfunction buildStudio(THREE, scene, group, env) {\r\n  scene.background = new THREE.Color(0x101318);\r\n  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(40, 16), new THREE.MeshBasicMaterial({ map: gradientTexture(THREE, '#2c3240', '#0d0f14') }));\r\n  backdrop.position.set(0, 4, -6);\r\n  scene.add(backdrop);\r\n  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), texturedMaterial(THREE, env, 'floorTexture', [8, 4]) || new THREE.MeshStandardMaterial({ color: 0x1b1f27, roughness: 0.35, metalness: 0.2 }));\r\n  floor.rotation.x = -Math.PI / 2;\r\n  floor.position.y = -0.6;\r\n  scene.add(floor);\r\n  group.add(new THREE.Mesh(new THREE.BoxGeometry(SCREEN_W + 0.14, SCREEN_H + 0.14, 0.08), new THREE.MeshStandardMaterial({ color: 0x0b0c10, roughness: 0.3, metalness: 0.5 })));\r\n  // 立架：從螢幕下緣到地面（沒有環境貼圖，金屬感調低免得暗掉），底下一塊圓底座\r\n  const steel = new THREE.MeshStandardMaterial({ color: 0x9aa3b2, metalness: 0.3, roughness: 0.4 });\r\n  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 16), steel);\r\n  pole.position.set(0, -0.6 + 0.9 - CENTER_Y, -0.1);\r\n  group.add(pole);\r\n  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.05, 32), steel);\r\n  foot.position.set(0, -0.575, 0);\r\n  scene.add(foot);\r\n  for (const x of [-4.5, 4.5]) {\r\n    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.8, 7, 32, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff3d6, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));\r\n    cone.position.set(x, 3, -1);\r\n    cone.rotation.z = x < 0 ? -0.35 : 0.35;\r\n    scene.add(cone);\r\n  }\r\n}\r\n\r\n/** 建場景 */\r\nfunction setup(THREE, scene, camera, env) {\r\n  scene.add(new THREE.AmbientLight(0xffffff, 1.1));\r\n  const sun = new THREE.DirectionalLight(0xfff1dd, 2.2);\r\n  sun.position.set(-4, 8, 6);\r\n  scene.add(sun);\r\n\r\n  const tilt = -(env.params.tilt ?? 7) * Math.PI / 180;\r\n  const group = new THREE.Group();\r\n  group.position.set(0, CENTER_Y, 0);\r\n  group.rotation.x = tilt;\r\n  scene.add(group);\r\n  const kind = env.params.scene || 'desk';\r\n  if (kind === 'classroom') buildClassroom(THREE, scene, group, env);\r\n  else if (kind === 'studio') buildStudio(THREE, scene, group, env);\r\n  else buildDesk(THREE, scene, group, env);\r\n  applyBackgroundImage(THREE, scene, env);\r\n  const screen = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN_W, SCREEN_H), env.frameMaterial());\r\n  screen.position.z = 0.056;\r\n  group.add(screen);\r\n\r\n  // 滿版位置：正對螢幕、沿螢幕法線退到剛好填滿畫面的距離（畫面比螢幕寬時以高度為準）\r\n  S.fov0 = camera.fov;\r\n  const fov = camera.fov * Math.PI / 180;\r\n  const aspect = env.width / env.height;\r\n  const dist = Math.max(SCREEN_H / 2, SCREEN_W / 2 / aspect) / Math.tan(fov / 2) + 0.056;\r\n  const normal = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(1, 0, 0), tilt);\r\n  const center = new THREE.Vector3(0, CENTER_Y, 0).add(normal.clone().multiplyScalar(0.056));\r\n  S.THREE = THREE;\r\n  S.camera = camera;\r\n  S.flat = { pos: center.clone().add(normal.clone().multiplyScalar(dist - 0.056)), look: center.clone(), up: new THREE.Vector3(0, 1, 0).applyAxisAngle(new THREE.Vector3(1, 0, 0), tilt), fov: camera.fov };\r\n}\r\n\r\n/** 平滑（頭尾慢、中間快） */\r\nfunction smooth(u) {\r\n  const x = Math.min(1, Math.max(0, u));\r\n  return x * x * (3 - 2 * x);\r\n}\r\n\r\n/** 預設運鏡的中間段（u：0～1） */\r\nfunction presetCamera(THREE, motion, u) {\r\n  const look = new THREE.Vector3(0, CENTER_Y * 0.8, 0);\r\n  if (motion === 'orbit') {\r\n    const a = -0.8 + u * 1.6;\r\n    return { pos: new THREE.Vector3(Math.sin(a) * 9, 4.2, Math.cos(a) * 9), look, fov: S.fov0 };\r\n  }\r\n  if (motion === 'push') return { pos: new THREE.Vector3(0.8 - u * 0.8, 3.6 - u * 1.2, 10 - u * 3.5), look, fov: S.fov0 };\r\n  return { pos: new THREE.Vector3(-1.2 + u * 2.4, 4.4, 9.5), look, fov: S.fov0 };\r\n}\r\n\r\n/** 中間段在時間 t 的鏡頭：有關鍵幀照關鍵幀，否則預設運鏡 */\r\nfunction middleCamera(THREE, env, t, ramp) {\r\n  const keys = env.params.cameraKeys;\r\n  if (keys && keys.length) {\r\n    const c = CAMERA3D.cameraAt(keys, t);\r\n    return { pos: new THREE.Vector3(...c.position), look: new THREE.Vector3(...c.target), fov: c.fov };\r\n  }\r\n  const L = env.duration;\r\n  return presetCamera(THREE, env.params.motion || 'reveal', L > 2 * ramp ? (t - ramp) / (L - 2 * ramp) : 0.5);\r\n}\r\n\r\n/** 每格更新鏡頭：頭尾在滿版與中間段之間過場 */\r\nfunction update(t, env) {\r\n  const THREE = S.THREE;\r\n  const camera = S.camera;\r\n  const L = env.duration;\r\n  const ramp = Math.min(env.params.ramp ?? 1.2, L / 3);\r\n  let k = 1;\r\n  let target;\r\n  if (t < ramp) { k = smooth(t / ramp); target = middleCamera(THREE, env, ramp, ramp); }\r\n  else if (t > L - ramp) { k = smooth((L - t) / ramp); target = middleCamera(THREE, env, L - ramp, ramp); }\r\n  else target = middleCamera(THREE, env, t, ramp);\r\n  camera.position.copy(S.flat.pos).lerp(target.pos, k);\r\n  camera.up.copy(S.flat.up).lerp(new THREE.Vector3(0, 1, 0), k).normalize();\r\n  camera.lookAt(S.flat.look.clone().lerp(target.look, k));\r\n  camera.fov = S.flat.fov + (target.fov - S.flat.fov) * k;\r\n  camera.updateProjectionMatrix();\r\n}\r\n"
+    }
+   },
+   {
+    "hash": "09884377e2aa9edca7ee4760192b2088",
+    "kind": "3d",
+    "source": "builtin",
+    "component": {
+     "id": "floating-board",
+     "kind": "3d",
+     "effectKind": "scene3d",
+     "name": "Floating board",
+     "description": "The video becomes a board that turns, pushes in and pulls back in space; starts and ends full-frame",
+     "params": {
+      "keys": {
+       "type": "keys",
+       "default": [
+        {
+         "anchor": "start",
+         "t": 0,
+         "rx": 0,
+         "ry": 0,
+         "rz": 0,
+         "size": 1,
+         "px": 0,
+         "py": 0,
+         "ease": "inOut"
+        }
+       ],
+       "label": "Board keyframes"
+      },
+      "float": {
+       "type": "float",
+       "default": null,
+       "label": "Gentle sway"
+      },
+      "edges": {
+       "type": "boolean",
+       "default": true,
+       "label": "Return to full frame at both ends"
+      },
+      "background": {
+       "type": "enum",
+       "values": [
+        "studio",
+        "grid",
+        "blur",
+        "color",
+        "image"
+       ],
+       "labels": [
+        "Studio",
+        "Tech grid",
+        "Blurred video",
+        "Solid color",
+        "AI image"
+       ],
+       "default": "studio",
+       "label": "Background"
+      },
+      "color": {
+       "type": "color",
+       "default": "#202020",
+       "label": "Background color"
+      },
+      "backgroundImage": {
+       "type": "texture",
+       "kind": "background",
+       "default": null,
+       "label": "Background image (when Background is AI image)"
+      },
+      "shadow": {
+       "type": "number",
+       "min": 0,
+       "max": 1,
+       "step": 0.05,
+       "default": 0.55,
+       "label": "Shadow"
+      }
+     },
+     "code": "'use strict';\r\n/** 平面轉 3D 共用數學（純函式：沒有 DOM、沒有全域狀態，node 可直接載入測試）。\r\n *  與 backend/plane3d_math.py 對稱實作，scripts/plane3d-math-parity.js 比對兩邊輸出；改一邊一定要同步改另一邊，\r\n *  否則工作台預覽、MP4 與 XML 的板子位置會對不上。設計見 docs/superpowers/specs/2026-10-25-plane3d-design.md §2、§3。\r\n *  ffmpeg 運算式只有引擎需要，這裡沒有。\r\n *\r\n *  座標約定：姿勢 pose＝{rx, ry, rz, size, px, py}，角度用度；size＝正對鏡頭時板子寬佔畫面寬的比例（1＝滿版）；\r\n *  px／py 以畫面寬、高為 1。旋轉順序 Rz → Rx → Ry，四角順序左上、右上、左下、右下。 */\r\nconst PLANE3D = (() => {\r\n  const FOV_DEG = 40;\r\n  const D0 = 1 / Math.tan(FOV_DEG * Math.PI / 180 / 2);   // size=1（滿版）時的距離\r\n  const PAD = 4;              // 輸出時來源外圍的透明邊（px）；預覽不用\r\n  const EDGE_RAMP = 0.6;      // 頭尾接回平面的秒數（區間太短時取 L/4）\r\n  const MAX_KEYS = 20;\r\n  const MIN_Z = 0.3 * D0;     // 任一角離鏡頭的最近距離\r\n  const MAX_SPREAD = 4;       // 投影點離畫面中心最多幾倍畫面寬／高\r\n  const SHADOW_DY = 0.026;   // 陰影往下偏移（以畫面高為 1）；預覽與輸出共用\r\n  const SHADOW_SIGMA = 0.02; // 陰影模糊的標準差（以畫面高為 1）\r\n  const FLAT = {rx: 0, ry: 0, rz: 0, size: 1, px: 0, py: 0};\r\n  const PARAMS = ['rz', 'rx', 'ry', 'size', 'px', 'py'];\r\n  const RANGES = {rx: [-80, 80], ry: [-80, 80], rz: [-180, 180], size: [0.15, 1.5], px: [-1, 1], py: [-1, 1]};\r\n  const FLOAT_RANGES = {rx: [0, 15], ry: [0, 15], period: [1, 10]};\r\n  const EASES = ['inOut', 'linear', 'in', 'out'];\r\n  const rad = (deg) => deg * Math.PI / 180;\r\n\r\n  /** 緩動：inOut＝easeInOutCubic、in＝u³、out＝1−(1−u)³、linear。u 夾在 0～1。 */\r\n  function ease(kind, u) {\r\n    u = Math.min(1, Math.max(0, u));\r\n    if (kind === 'linear') return u;\r\n    if (kind === 'in') return u ** 3;\r\n    if (kind === 'out') return 1 - (1 - u) ** 3;\r\n    return u < 0.5 ? 4 * u ** 3 : 1 - (2 - 2 * u) ** 3 / 2;\r\n  }\r\n\r\n  /** 頭尾接回平面的秒數。 */\r\n  const edgeRamp = (L) => Math.min(EDGE_RAMP, L / 4);\r\n\r\n  /** 每個使用者關鍵幀的剪後時間（秒，相對區段開頭）；edges 開時 ramp 加在使用者關鍵幀外面。不是嚴格遞增時丟錯。 */\r\n  function keyTimes(effect, L) {\r\n    const r = effect.edges ? edgeRamp(L) : 0;\r\n    const out = effect.keys.map((k) => Math.min(L - r, Math.max(r, (k.anchor || 'start') === 'start' ? r + k.t : L - r - k.t)));\r\n    for (let i = 1; i < out.length; i++) if (out[i] <= out[i - 1]) throw new Error('plane3d: key times not increasing');\r\n    return out;\r\n  }\r\n\r\n  /** 實際使用的關鍵幀時間：keyTimes 不遞增時（區間剪到太短）照順序平均排在 [r, L−r]。 */\r\n  function resolvedTimes(effect, L) {\r\n    try { return keyTimes(effect, L); } catch (err) {\r\n      const r = effect.edges ? edgeRamp(L) : 0, n = effect.keys.length;\r\n      return n > 1 ? effect.keys.map((_, i) => r + (L - 2 * r) * i / (n - 1)) : [r];\r\n    }\r\n  }\r\n\r\n  /** 關鍵幀路徑可不可以用：每個點與相鄰兩點之間每 0.1 取樣（有 float 再加四個擺動極端），全部 poseValid。 */\r\n  function pathValid(keys, float, w, h) {\r\n    const poses = keys.map((k) => Object.fromEntries(PARAMS.map((p) => [p, k[p]])));\r\n    let samples = [...poses];\r\n    for (let i = 1; i < poses.length; i++) {\r\n      const a = poses[i - 1], b = poses[i];\r\n      for (let j = 1; j < 10; j++) samples.push(Object.fromEntries(PARAMS.map((p) => [p, a[p] + (b[p] - a[p]) * j / 10])));\r\n    }\r\n    if (float) samples = samples.flatMap((s) => [-1, 1].flatMap((sx) => [-1, 1].map((sy) => ({...s, rx: s.rx + sx * float.rx, ry: s.ry + sy * float.ry}))));\r\n    return samples.every((s) => poseValid(s, w, h));\r\n  }\r\n\r\n  /** 內插節點 [{T, pose, ease}]；edges 開時頭尾各加滿版平面與 ramp（一律 inOut），同一時間點留前面那個。 */\r\n  function nodes(effect, L) {\r\n    const ts = resolvedTimes(effect, L);\r\n    let ns = effect.keys.map((k, i) => ({T: ts[i], pose: Object.fromEntries(PARAMS.map((p) => [p, k[p]])), ease: k.ease || 'inOut'}));\r\n    const r = effect.edges ? edgeRamp(L) : 0;\r\n    if (effect.edges && r > 0) {\r\n      ns = [{T: 0, pose: {...FLAT}, ease: 'inOut'}, {T: r, pose: {...ns[0].pose}, ease: 'inOut'}, ...ns,\r\n        {T: L - r, pose: {...ns[ns.length - 1].pose}, ease: 'inOut'}, {T: L, pose: {...FLAT}, ease: 'inOut'}];\r\n      ns = ns.filter((n, i) => i === 0 || n.T > ns[i - 1].T);\r\n    }\r\n    return ns;\r\n  }\r\n\r\n  /** 擺動權重：edges 開時頭尾 ramp 內從 0 漸到 1。 */\r\n  function floatWeight(effect, L, T) {\r\n    if (!effect.edges) return 1;\r\n    const r = edgeRamp(L);\r\n    return r <= 0 ? 1 : ease('inOut', T / r) * ease('inOut', (L - T) / r);\r\n  }\r\n\r\n  /** 剪後時間 T 的姿勢：關鍵幀分段內插＋float 擺動。 */\r\n  function poseAt(effect, L, T) {\r\n    const ns = nodes(effect, L);\r\n    let pose = {...ns[ns.length - 1].pose};\r\n    if (T <= ns[0].T) pose = {...ns[0].pose};\r\n    else {\r\n      for (let i = 1; i < ns.length; i++) {\r\n        const a = ns[i - 1], b = ns[i];\r\n        if (T < b.T) {\r\n          const e = ease(b.ease, (T - a.T) / (b.T - a.T));\r\n          pose = Object.fromEntries(PARAMS.map((p) => [p, a.pose[p] + (b.pose[p] - a.pose[p]) * e]));\r\n          break;\r\n        }\r\n      }\r\n    }\r\n    const fl = effect.float;\r\n    if (fl) {\r\n      const w = floatWeight(effect, L, T);\r\n      const phase = 2 * Math.PI * (T - (effect.edges ? edgeRamp(L) : 0)) / fl.period;\r\n      pose.rx = pose.rx + fl.rx * Math.cos(phase) * w;\r\n      pose.ry = pose.ry + fl.ry * Math.sin(phase) * w;\r\n    }\r\n    return pose;\r\n  }\r\n\r\n  /** 圓角與陰影的強度 0～1：edges 開時頭尾 ramp 內線性 0→1、1→0，中段 1；edges 關恆為 1（同引擎 edge_weight）。 */\r\n  function edgeWeight(effect, L, T) {\r\n    if (!effect.edges) return 1;\r\n    const r = edgeRamp(L);\r\n    if (r <= 0) return 1;\r\n    return Math.min(1, Math.max(0, T / r)) * Math.min(1, Math.max(0, (L - T) / r));\r\n  }\r\n\r\n  /** 四角的 [螢幕 x, 螢幕 y, Z]。 */\r\n  function project(pose, w, h, pad) {\r\n    const rz = rad(pose.rz), rx = rad(pose.rx), ry = rad(pose.ry);\r\n    const f = w / 2 * D0, d = D0 / pose.size;\r\n    const hw = w / (w - 2 * pad), hh = h / w * h / (h - 2 * pad);\r\n    const tx = pose.px * 2 / pose.size, ty = pose.py * 2 * (h / w) / pose.size;\r\n    return [[-hw, -hh], [hw, -hh], [-hw, hh], [hw, hh]].map(([lx, ly]) => {\r\n      const x1 = lx * Math.cos(rz) - ly * Math.sin(rz), y1 = lx * Math.sin(rz) + ly * Math.cos(rz);\r\n      const y2 = y1 * Math.cos(rx), z2 = y1 * Math.sin(rx);\r\n      const x3 = x1 * Math.cos(ry) + z2 * Math.sin(ry), z3 = -x1 * Math.sin(ry) + z2 * Math.cos(ry);\r\n      const X = x3 + tx, Y = y2 + ty, Z = z3 + d;\r\n      return [w / 2 + f * X / Z, h / 2 + f * Y / Z, Z];\r\n    });\r\n  }\r\n\r\n  /** 四角投影到畫面上的像素座標 [[x, y]]×4。pad：輸出用 PAD，預覽用 0。 */\r\n  const corners = (pose, w, h, pad = 0) => project(pose, w, h, pad).map(([x, y]) => [x, y]);\r\n\r\n  /** 姿勢可不可以用：範圍、離鏡頭夠遠、投影點不離畫面太遠、凸四邊形。 */\r\n  function poseValid(pose, w, h) {\r\n    for (const [k, [lo, hi]] of Object.entries(RANGES)) {\r\n      const v = pose[k];\r\n      if (typeof v !== 'number' || !Number.isFinite(v) || v < lo || v > hi) return false;\r\n    }\r\n    const pts = project(pose, w, h, 0);\r\n    if (pts.some(([, , z]) => z < MIN_Z)) return false;\r\n    if (pts.some(([x, y]) => Math.abs(x - w / 2) > MAX_SPREAD * w || Math.abs(y - h / 2) > MAX_SPREAD * h)) return false;\r\n    const ring = [pts[0], pts[1], pts[3], pts[2]];\r\n    const cross = ring.map((p, i) => {\r\n      const q = ring[(i + 1) % 4], r = ring[(i + 2) % 4];\r\n      return (q[0] - p[0]) * (r[1] - q[1]) - (q[1] - p[1]) * (r[0] - q[0]);\r\n    });\r\n    return cross.every((c) => c > 0) || cross.every((c) => c < 0);\r\n  }\r\n\r\n  /** 來源矩形 (0,0)-(w,h) → 四角 dst 的 3×3 投影矩陣（h33=1），列優先（同引擎的高斯消去）。 */\r\n  function homography(dst, w, h) {\r\n    const src = [[0, 0], [w, 0], [0, h], [w, h]];\r\n    const rows = [];\r\n    src.forEach(([x, y], i) => {\r\n      const [u, v] = dst[i];\r\n      rows.push([x, y, 1, 0, 0, 0, -u * x, -u * y, u]);\r\n      rows.push([0, 0, 0, x, y, 1, -v * x, -v * y, v]);\r\n    });\r\n    const n = 8;\r\n    for (let c = 0; c < n; c++) {\r\n      let p = c;\r\n      for (let r = c + 1; r < n; r++) if (Math.abs(rows[r][c]) > Math.abs(rows[p][c])) p = r;\r\n      [rows[c], rows[p]] = [rows[p], rows[c]];\r\n      for (let r = 0; r < n; r++) {\r\n        if (r !== c && rows[r][c]) {\r\n          const k = rows[r][c] / rows[c][c];\r\n          rows[r] = rows[r].map((a, j) => a - k * rows[c][j]);\r\n        }\r\n      }\r\n    }\r\n    const hv = [...Array.from({length: n}, (_, i) => rows[i][8] / rows[i][i]), 1];\r\n    return [hv.slice(0, 3), hv.slice(3, 6), hv.slice(6, 9)];\r\n  }\r\n\r\n  /** CSS transform 字串：把 (0,0)-(w,h) 的元素（transform-origin: 0 0）映射到四角。 */\r\n  function cssMatrix3d(dst, w, h) {\r\n    const m = homography(dst, w, h);\r\n    const v = [m[0][0], m[1][0], 0, m[2][0], m[0][1], m[1][1], 0, m[2][1], 0, 0, 1, 0, m[0][2], m[1][2], 0, m[2][2]];\r\n    return `matrix3d(${v.map((x) => +x.toPrecision(12)).join(',')})`;\r\n  }\r\n\r\n  return {FOV_DEG, D0, PAD, EDGE_RAMP, MAX_KEYS, MIN_Z, MAX_SPREAD, SHADOW_DY, SHADOW_SIGMA, FLAT, PARAMS, RANGES, FLOAT_RANGES, EASES,\r\n    ease, edgeRamp, keyTimes, resolvedTimes, poseAt, edgeWeight, corners, poseValid, pathValid, homography, cssMatrix3d};\r\n})();\r\n\r\n// 瀏覽器：傳統 script，PLANE3D 在全域（index.html 於 plane3d.js 之前載入）。Node：scripts/plane3d-math-parity.js 以 vm 載入。\r\nif (typeof module !== 'undefined' && module.exports) module.exports = PLANE3D;\r\n\n;\n'use strict';\r\n/** 「漂浮的板子」的 three.js 幾何（經典腳本，全域 BOARD3D；串在 3D 插件前面送進沙盒，Vitest 用 node vm 載入）。\r\n *  原專案（vendor/plane3d_math.js）的投影：鏡頭在原點看 +Z、畫面 y 往下、水平視角 40°（f＝w/2×D0），板子四角在相機座標 (X, Y, Z)。\r\n *  three.js 的鏡頭看 −Z、y 往上，所以四角換成 (X, −Y, −Z)，垂直視角取 2·atan(tan(20°)·h/w)；這樣投影出來的四角和 PLANE3D.corners 完全一樣\r\n *  （boardGeometry.test.ts 用 PerspectiveCamera 對照驗證）。依賴 PLANE3D。 */\r\nconst BOARD3D = (() => {\r\n  const P = PLANE3D;\r\n  const rad = (deg) => deg * Math.PI / 180;\r\n\r\n  /** three.js 鏡頭的垂直視角（度）：原專案用水平 40° */\r\n  function verticalFov(w, h) {\r\n    return 2 * Math.atan(Math.tan(rad(P.FOV_DEG / 2)) * h / w) * 180 / Math.PI;\r\n  }\r\n\r\n  /** 板子四角在 three.js 相機座標（鏡頭在原點、看 −Z）的位置：左上、右上、左下、右下，各 [x, y, z] */\r\n  function cornersInCamera(pose, w, h) {\r\n    const rz = rad(pose.rz), rx = rad(pose.rx), ry = rad(pose.ry);\r\n    const d = P.D0 / pose.size;\r\n    const hw = 1, hh = h / w;\r\n    const tx = pose.px * 2 / pose.size, ty = pose.py * 2 * (h / w) / pose.size;\r\n    return [[-hw, -hh], [hw, -hh], [-hw, hh], [hw, hh]].map(([lx, ly]) => {\r\n      const x1 = lx * Math.cos(rz) - ly * Math.sin(rz), y1 = lx * Math.sin(rz) + ly * Math.cos(rz);\r\n      const y2 = y1 * Math.cos(rx), z2 = y1 * Math.sin(rx);\r\n      const x3 = x1 * Math.cos(ry) + z2 * Math.sin(ry), z3 = -x1 * Math.sin(ry) + z2 * Math.cos(ry);\r\n      return [x3 + tx, -(y2 + ty), -(z3 + d)];\r\n    });\r\n  }\r\n\r\n  return { verticalFov, cornersInCamera };\r\n})();\r\n\n;\n// 內建 3D 範本「Floating board」（spec §5.8 漂浮的板子）：V1 畫面變成一塊在空間中轉動、推近、拉遠的板子。\r\n// 姿勢關鍵幀沿用原專案（字導字演）的格式與數學：前面串了 vendor/plane3d_math.js（PLANE3D）與 boardGeometry.js（BOARD3D），\r\n// 投影結果和原專案逐點相同（boardGeometry.test.ts）。頭尾自動回滿版平面（edges），所以前後接原片看不出接縫。\r\n// 參數（env.params）：keys（[{anchor, t, rx, ry, rz, size, px, py, ease}]）、float（{rx, ry, period} 或 null）、edges、\r\n//   background（studio｜grid｜blur｜color｜image）、color（純色背景）、shadow（0～1）；\r\n//   backgroundImage（P1-14，型別 texture：env.textures.backgroundImage 是 AI 產生的 3D 背景圖，background 選 image 時鋪滿遠處的背景平面；沒選圖就畫攝影棚）。\r\n// 背景全部用程式畫（攝影棚、科技格線的畫法沿用原專案 scripts/plane3d-scenes-build.js）。\r\n/* global PLANE3D, BOARD3D */\r\n\r\n/** 畫面只由 t 決定 */\r\nconst pure = true;\r\n\r\n/** 場景物件 */\r\nconst B = {};\r\n\r\n/** 畫背景（2D canvas）：攝影棚、科技格線、純色；模糊原畫面每格另外畫 */\r\nfunction paintBackground(g, kind, color, w, h) {\r\n  if (kind === 'color') {\r\n    g.fillStyle = color || '#202020';\r\n    g.fillRect(0, 0, w, h);\r\n  } else if (kind === 'grid') {\r\n    const vy = h * 0.55;\r\n    const sky = g.createLinearGradient(0, 0, 0, vy);\r\n    sky.addColorStop(0, '#0a1226');\r\n    sky.addColorStop(1, '#132447');\r\n    g.fillStyle = sky;\r\n    g.fillRect(0, 0, w, vy);\r\n    g.fillStyle = '#0a1226';\r\n    g.fillRect(0, vy, w, h - vy);\r\n    g.strokeStyle = 'rgba(90,170,255,0.28)';\r\n    g.lineWidth = Math.max(1, h / 540);\r\n    g.beginPath();\r\n    for (let k = 1; k <= 12; k++) { const y = vy + (h - vy) * (k / 12) ** 2; g.moveTo(0, y); g.lineTo(w, y); }\r\n    for (let k = 0; k <= 24; k++) { const x = -w + 3 * w * k / 24; g.moveTo(w / 2, vy); g.lineTo(x, h); }\r\n    g.stroke();\r\n  } else {\r\n    const rg = g.createRadialGradient(w / 2, h * 0.35, 0, w / 2, h * 0.35, Math.max(w, h) * 0.8);\r\n    rg.addColorStop(0, '#5a6378');\r\n    rg.addColorStop(0.55, '#2c3240');\r\n    rg.addColorStop(1, '#14171f');\r\n    g.fillStyle = rg;\r\n    g.fillRect(0, 0, w, h);\r\n    const floor = g.createLinearGradient(0, h * 0.68, 0, h);\r\n    floor.addColorStop(0, 'rgba(255,255,255,0.07)');\r\n    floor.addColorStop(1, 'rgba(255,255,255,0)');\r\n    g.fillStyle = floor;\r\n    g.fillRect(0, h * 0.68, w, h * 0.32);\r\n  }\r\n}\r\n\r\n/** 建一個四邊形（四角由 update 依姿勢更新） */\r\nfunction quad(THREE, material) {\r\n  const geo = new THREE.BufferGeometry();\r\n  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12), 3));\r\n  geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]), 2));\r\n  geo.setIndex([0, 2, 1, 2, 3, 1]);\r\n  const mesh = new THREE.Mesh(geo, material);\r\n  mesh.frustumCulled = false;\r\n  return mesh;\r\n}\r\n\r\n/** 把四角寫進四邊形 */\r\nfunction setCorners(mesh, corners) {\r\n  const pos = mesh.geometry.attributes.position;\r\n  corners.forEach(([x, y, z], i) => pos.setXYZ(i, x, y, z));\r\n  pos.needsUpdate = true;\r\n}\r\n\r\n/** 建場景 */\r\nfunction setup(THREE, scene, camera, env) {\r\n  const { width: w, height: h } = env;\r\n  camera.fov = BOARD3D.verticalFov(w, h);\r\n  camera.aspect = w / h;\r\n  camera.position.set(0, 0, 0);\r\n  camera.lookAt(0, 0, -1);\r\n  camera.updateProjectionMatrix();\r\n\r\n  // 背景：遠處一片剛好填滿畫面的平面\r\n  const p = env.params;\r\n  B.kind = p.background || 'studio';\r\n  B.canvas = new OffscreenCanvas(Math.round(w / 2), Math.round(h / 2));\r\n  B.ctx = B.canvas.getContext('2d');\r\n  if (B.kind !== 'blur') paintBackground(B.ctx, B.kind, p.color, B.canvas.width, B.canvas.height);\r\n  const image = B.kind === 'image' && env.textures && env.textures.backgroundImage;\r\n  if (image) {\r\n    // 使用者的背景圖：2D 貼圖、sRGB、不平鋪\r\n    B.bgTexture = image.map;\r\n    B.bgTexture.wrapS = B.bgTexture.wrapT = THREE.ClampToEdgeWrapping;\r\n    B.bgTexture.repeat.set(1, 1);\r\n  } else {\r\n    B.bgTexture = new THREE.CanvasTexture(B.canvas);\r\n    B.bgTexture.colorSpace = THREE.SRGBColorSpace;\r\n  }\r\n  const far = 50;\r\n  const bh = 2 * far * Math.tan(camera.fov * Math.PI / 360);\r\n  const bg = new THREE.Mesh(new THREE.PlaneGeometry(bh * w / h, bh), new THREE.MeshBasicMaterial({ map: B.bgTexture, toneMapped: false }));\r\n  bg.position.set(0, 0, -far);\r\n  scene.add(bg);\r\n\r\n  // 陰影（板子後面一片半透明黑）與板子\r\n  B.shadow = quad(THREE, new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, depthWrite: false }));\r\n  scene.add(B.shadow);\r\n  B.board = quad(THREE, env.frameMaterial());\r\n  scene.add(B.board);\r\n  B.THREE = THREE;\r\n}\r\n\r\n/** 每格：依姿勢關鍵幀更新板子四角、陰影；模糊背景重畫 */\r\nfunction update(t, env) {\r\n  const p = env.params;\r\n  const w = env.width;\r\n  const h = env.height;\r\n  const effect = { keys: p.keys && p.keys.length ? p.keys : [PLANE3D.FLAT], float: p.float || null, edges: p.edges !== false };\r\n  const pose = PLANE3D.poseAt(effect, env.duration, t);\r\n  const corners = BOARD3D.cornersInCamera(pose, w, h);\r\n  setCorners(B.board, corners);\r\n  // 陰影：往下偏一點、稍微放大，強度隨頭尾漸變（滿版時沒有陰影）\r\n  const weight = PLANE3D.edgeWeight(effect, env.duration, t) * (p.shadow ?? 0.55);\r\n  const dy = PLANE3D.SHADOW_DY * 2 * (h / w);\r\n  setCorners(B.shadow, corners.map(([x, y, z]) => [x * 1.02, y * 1.02 - dy * (-z / PLANE3D.D0), z - 0.001]));\r\n  B.shadow.material.opacity = weight * 0.8;\r\n  if (B.kind === 'blur' && env.frameTexture.image && env.frameTexture.image.width > 1) {\r\n    // 模糊原畫面：放大 1.2 倍、強模糊、壓暗 20%（同原專案）\r\n    const g = B.ctx;\r\n    const cw = B.canvas.width;\r\n    const ch = B.canvas.height;\r\n    const img = env.frameTexture.image;\r\n    g.filter = `blur(${(ch * 0.03).toFixed(1)}px) brightness(0.8)`;\r\n    g.drawImage(img, img.width * 0.083, img.height * 0.083, img.width / 1.2, img.height / 1.2, -cw * 0.05, -ch * 0.05, cw * 1.1, ch * 1.1);\r\n    g.filter = 'none';\r\n    B.bgTexture.needsUpdate = true;\r\n  }\r\n}\r\n"
+    }
+   },
+   {
+    "hash": "4a29e802ab3be078665d61ca086b59a7",
+    "kind": "3d",
+    "source": "builtin",
+    "component": {
+     "id": "mascot",
+     "kind": "3d",
+     "effectKind": "anim3d",
+     "name": "Mascot",
+     "description": "A little 3D character walks in, stops next to the target box and waves or points at it",
+     "params": {
+      "action": {
+       "type": "enum",
+       "values": [
+        "point",
+        "wave",
+        "walk"
+       ],
+       "labels": [
+        "Point at the box",
+        "Wave",
+        "Walk to the box"
+       ],
+       "default": "point",
+       "label": "Action"
+      },
+      "from": {
+       "type": "enum",
+       "values": [
+        "left",
+        "right"
+       ],
+       "labels": [
+        "Left",
+        "Right"
+       ],
+       "default": "left",
+       "label": "Walks in from"
+      },
+      "color": {
+       "type": "color",
+       "default": "#ffb020",
+       "label": "Color"
+      },
+      "height": {
+       "type": "number",
+       "min": 0.15,
+       "max": 0.7,
+       "step": 0.05,
+       "default": 0.35,
+       "label": "Height (of frame)"
+      },
+      "walk": {
+       "type": "duration",
+       "min": 0.3,
+       "max": 4,
+       "default": 1.6,
+       "label": "Walk time (sec)"
+      }
+     },
+     "code": "// 內建 3D 範本「Mascot」（spec §5.7、§5.8 吉祥物）：基本幾何組成的小角色，疊在影片上（anim3d，透明背景）。\r\n// 從畫面一側走進來，停在目標框旁邊，然後揮手或指著目標框；目標框 env.box（0～1）可以在預覽上拖。\r\n// 畫面只由 t 決定（pure）；鏡頭固定，畫面座標用 z=0 平面換算（box 的位置對得上畫面）。\r\n// 參數：action（wave 揮手／point 指著框／walk 一路走到框旁、到了原地輕輕晃）、from（left／right 從哪邊走進來）、color、height（角色高度佔畫面高的比例）、\r\n// walk（走路秒數；walk 動作不看這個，整段幾乎都在走：片長 − 0.4 秒）。\r\n\r\n/** 畫面只由 t 決定 */\r\nconst pure = true;\r\n\r\n/** 場景物件 */\r\nconst M = {};\r\n\r\n/** 建角色：身體、頭、眼睛、手腳（每個關節一個 Group，方便轉） */\r\nfunction buildMascot(THREE, color) {\r\n  const body = new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.05 });\r\n  const dark = new THREE.MeshStandardMaterial({ color: 0x1b1d24, roughness: 0.6 });\r\n  const white = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });\r\n  const root = new THREE.Group();\r\n\r\n  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 0.55, 8, 16), body);\r\n  torso.position.y = 1.15;\r\n  root.add(torso);\r\n  const head = new THREE.Group();\r\n  head.position.y = 2.05;\r\n  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.48, 24, 16), body));\r\n  for (const side of [-1, 1]) {\r\n    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), white);\r\n    eye.position.set(0.17 * side, 0.06, 0.4);\r\n    head.add(eye);\r\n    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 8), dark);\r\n    pupil.position.set(0.17 * side, 0.06, 0.5);\r\n    head.add(pupil);\r\n  }\r\n  root.add(head);\r\n\r\n  /** 一條手或腳：肩（髖）關節 Group，裡面一根膠囊往下垂 */\r\n  const limb = (x, y, len, radius) => {\r\n    const joint = new THREE.Group();\r\n    joint.position.set(x, y, 0);\r\n    const m = new THREE.Mesh(new THREE.CapsuleGeometry(radius, len, 6, 12), body);\r\n    m.position.y = -len / 2 - radius;\r\n    joint.add(m);\r\n    root.add(joint);\r\n    return joint;\r\n  };\r\n  return {\r\n    root, head,\r\n    armL: limb(-0.52, 1.5, 0.55, 0.12), armR: limb(0.52, 1.5, 0.55, 0.12),\r\n    legL: limb(-0.2, 0.68, 0.42, 0.14), legR: limb(0.2, 0.68, 0.42, 0.14),\r\n  };\r\n}\r\n\r\n/** 建場景 */\r\nfunction setup(THREE, scene, camera, env) {\r\n  scene.add(new THREE.AmbientLight(0xffffff, 1.3));\r\n  const key = new THREE.DirectionalLight(0xffffff, 2.2);\r\n  key.position.set(3, 6, 8);\r\n  scene.add(key);\r\n  camera.position.set(0, 0, 20);\r\n  camera.lookAt(0, 0, 0);\r\n  camera.updateProjectionMatrix();\r\n  // z=0 平面上看得到的範圍（畫面座標換算用）\r\n  M.viewH = 2 * 20 * Math.tan(camera.fov * Math.PI / 360);\r\n  M.viewW = M.viewH * camera.aspect;\r\n  M.parts = buildMascot(THREE, new THREE.Color(env.params.color || '#ffb020'));\r\n  scene.add(M.parts.root);\r\n}\r\n\r\n/** 畫面座標（0～1，y 往下）→ z=0 平面的世界座標 */\r\nfunction toWorld(x, y) {\r\n  return { x: (x - 0.5) * M.viewW, y: (0.5 - y) * M.viewH };\r\n}\r\n\r\n/** 平滑（頭尾慢） */\r\nfunction smooth(u) {\r\n  const x = Math.min(1, Math.max(0, u));\r\n  return x * x * (3 - 2 * x);\r\n}\r\n\r\n/**\r\n * 站的位置（畫面座標 0～1，y 往下）：平常站在框靠入場那一側的外面、腳對齊框下緣；\r\n * 框上面放不下整個角色（框在畫面最上方）就站到框下面；靠邊放不下就往畫面內移，並保證從畫面外走一段路進來。\r\n * 回傳 startX（畫面外的起點）、standX、footY、halfW（角色半寬，畫面寬的比例）。\r\n * @param height 角色高度（畫面高的比例）；aspect 畫面寬高比\r\n */\r\nfunction standPose(box, fromLeft, height, aspect) {\r\n  const halfW = height * 0.25 / aspect;  // 模型半寬約 0.65（高 2.6）\r\n  const margin = 0.02;\r\n  const lo = halfW + margin;\r\n  const hi = 1 - halfW - margin;\r\n  const bottom = box.cy + box.h / 2;\r\n  // 框上面放得下就站框旁、腳對齊下緣；放不下站到框下面（頭在框下緣之下）\r\n  const below = bottom - height < margin;\r\n  const footY = Math.min(1 - margin, below ? bottom + height + margin : bottom);\r\n  let standX = fromLeft ? box.cx - box.w / 2 - halfW - 0.03 : box.cx + box.w / 2 + halfW + 0.03;\r\n  // 框旁邊放不下：站到框下面靠入場那側的邊緣（在框的範圍裡）\r\n  if (standX < lo || standX > hi) standX = fromLeft ? box.cx - box.w / 2 + halfW + 0.03 : box.cx + box.w / 2 - halfW - 0.03;\r\n  standX = Math.min(hi, Math.max(lo, standX));\r\n  // 起點在畫面外，至少走 0.2 個畫面寬\r\n  const startX = fromLeft ? Math.min(-halfW - margin, standX - 0.2) : Math.max(1 + halfW + margin, standX + 0.2);\r\n  return { startX, standX, footY, halfW };\r\n}\r\n\r\n/** 每格：走路 → 停在框旁 → 揮手、指著框，或（walk）原地輕輕晃 */\r\nfunction update(t, env) {\r\n  const p = env.params;\r\n  const box = env.box || { cx: 0.5, cy: 0.5, w: 0.3, h: 0.2 };\r\n  const P = M.parts;\r\n  const fromLeft = (p.from || 'left') === 'left';\r\n  const size = (p.height ?? 0.35) * M.viewH / 2.6;  // 角色模型高約 2.6\r\n  P.root.scale.setScalar(size);\r\n\r\n  // 站的位置（整個角色在畫面裡；見 standPose）\r\n  const pose = standPose(box, fromLeft, p.height ?? 0.35, M.viewW / M.viewH);\r\n  const start = toWorld(pose.startX, pose.footY);\r\n  const stand = toWorld(pose.standX, pose.footY);\r\n  const walkOnly = p.action === 'walk';\r\n  const walk = walkOnly ? Math.max(0.3, env.duration - 0.4) : Math.min(p.walk ?? 1.6, env.duration * 0.6);\r\n  const k = smooth(t / walk);\r\n  P.root.position.set(start.x + (stand.x - start.x) * k, stand.y, 0);\r\n\r\n  // 走路：腳前後擺、身體上下彈，面向前進方向；到了就轉正面向鏡頭\r\n  const walking = t < walk;\r\n  const phase = t * 9;\r\n  const swing = walking ? Math.sin(phase) * 0.7 : 0;\r\n  P.legL.rotation.x = swing;\r\n  P.legR.rotation.x = -swing;\r\n  P.root.rotation.y = walking ? (fromLeft ? 1 : -1) * 0.9 * (1 - smooth((t - walk + 0.3) / 0.3)) : 0;\r\n  P.root.position.y += walking ? Math.abs(Math.sin(phase)) * 0.08 * size : 0;\r\n\r\n  // 手：走路時跟著擺；到了以後揮手（靠框那隻手舉高左右揮）或指著框中心\r\n  const near = fromLeft ? P.armR : P.armL;\r\n  const far = fromLeft ? P.armL : P.armR;\r\n  if (walking) {\r\n    near.rotation.set(-swing * 0.8, 0, 0);\r\n    far.rotation.set(swing * 0.8, 0, 0);\r\n    P.head.rotation.z = 0;\r\n  } else if (walkOnly) {\r\n    // 走到了：兩手垂下、頭左右輕晃\r\n    near.rotation.set(0, 0, 0);\r\n    far.rotation.set(0, 0, 0);\r\n    P.head.rotation.z = Math.sin((t - walk) * 4) * 0.08;\r\n  } else {\r\n    const a = smooth((t - walk) / 0.35);\r\n    far.rotation.set(0, 0, (fromLeft ? 1 : -1) * 0.15 * a);\r\n    if ((p.action || 'point') === 'wave') {\r\n      near.rotation.set(0, 0, (fromLeft ? 1 : -1) * (2.6 * a + Math.sin((t - walk) * 10) * 0.35 * a));\r\n    } else {\r\n      // 指向框中心：從肩膀到框中心的角度（手臂預設朝下，所以加 90°）\r\n      const shoulder = P.root.localToWorld(near.position.clone());\r\n      const target = toWorld(box.cx, box.cy);\r\n      const angle = Math.atan2(target.y - shoulder.y, target.x - shoulder.x) + Math.PI / 2;\r\n      near.rotation.set(0, 0, angle * a);\r\n    }\r\n    P.head.rotation.z = Math.sin((t - walk) * 2.2) * 0.06;\r\n  }\r\n}\r\n"
+    }
+   },
+   {
+    "hash": "8441c1cee950988d1c40923c96cbf4d2",
+    "kind": "3d",
+    "source": "builtin",
+    "component": {
+     "id": "flip-intro",
+     "kind": "3d",
+     "effectKind": "scene3d",
+     "name": "Flip intro",
+     "description": "Cover images flip past faster and faster, a flash, then the title punches in",
+     "params": {
+      "tone": {
+       "type": "enum",
+       "values": [
+        "duotone",
+        "original"
+       ],
+       "labels": [
+        "Two-tone",
+        "Original colors"
+       ],
+       "default": "duotone",
+       "label": "Covers"
+      },
+      "accent": {
+       "type": "color",
+       "default": "#2f5bff",
+       "label": "Title block"
+      },
+      "dark": {
+       "type": "color",
+       "default": "#141a4a",
+       "label": "Two-tone dark"
+      },
+      "light": {
+       "type": "color",
+       "default": "#a9b8ff",
+       "label": "Two-tone light"
+      }
+     },
+     "code": "// 內建 3D 插件「翻頁式片頭」（spec §5.23、D34；節奏與畫面參數取自 brand-v2 短版，調查 docs/research/intro-styles.md §1.4～§1.5）。\n// 全畫面（scene3d）：封面一張張以上緣為軸翻下、越翻越快、舞台推近微轉 → 一次閃光 → 標題方塊縮入、字裡輪流透出封面 → 揭曉轉白字＋彈跳＋斜光 → 結尾淡出。\n// 時間表由主程式的 intro/flip.ts 算好放在參數裡（畫面與音效同一份），插件只依 t 畫，所以 pure。\n// 參數（env.params）：\n//   imageIds（主程式解碼成 env.images，順序相同）、pages [{t, img, strength}]（img 是 env.images 的索引）、titleFills [索引]、icon（索引或 null）、\n//   montageStart、titleIn、flash、reveal（秒）、title、subtitle、tone（duotone｜original）、dark、light（雙色調的暗色與亮色）、accent（標題方塊顏色）。\n// 圖片貼圖不做色彩轉換（同 frameMaterial），ImageBitmap 第一列在最上，所以在 shader 翻 v。\n\n/** 畫面只由 t 決定 */\nconst pure = true;\n\n/** 場景物件 */\nconst F = {};\n\n/** 頁面尺寸（世界單位；畫面高 1.08、鏡頭距離 1.8 時剛好是 brand-v2 的 1600×900 頁面在 1920×1080 舞台） */\nconst PAGE_W = 1.6;\nconst PAGE_H = 0.9;\n/** 舞台原點到鏡頭的距離（垂直視角 33.4° 時畫面高 1.08） */\nconst CAM_D = 1.8;\n\n/** GSAP 的 power 系列緩動 */\nconst easeIn = (p, n) => Math.pow(p, n + 1);\nconst easeOut = (p, n) => 1 - Math.pow(1 - p, n + 1);\nconst clamp01 = (x) => Math.max(0, Math.min(1, x));\n\n/** #rrggbb → [r, g, b]（0～1，不做色彩轉換） */\nfunction rgb(hex, fallback) {\n  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '') || /^#?([0-9a-f]{6})$/i.exec(fallback);\n  const n = parseInt(m[1], 16);\n  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];\n}\n\n/** 貼圖（ImageBitmap 或畫布）：不翻轉、不轉色彩、不做 mipmap */\nfunction rawTexture(THREE, image, Ctor) {\n  const tex = new (Ctor || THREE.Texture)(image);\n  tex.flipY = false;\n  tex.colorSpace = THREE.NoColorSpace;\n  tex.generateMipmaps = false;\n  tex.minFilter = THREE.LinearFilter;\n  tex.magFilter = THREE.LinearFilter;\n  tex.needsUpdate = true;\n  return tex;\n}\n\n/** 貼圖材質：可選雙色調（依亮度在 dark、light 之間上色）、整體透明度 */\nfunction pageMaterial(THREE, tex, duo, dark, light) {\n  return new THREE.ShaderMaterial({\n    transparent: true,\n    uniforms: { map: { value: tex }, duo: { value: duo }, dark: { value: new THREE.Vector3(...dark) }, light: { value: new THREE.Vector3(...light) }, opacity: { value: 1 } },\n    vertexShader: 'varying vec2 vUv; void main() { vUv = vec2(uv.x, 1.0 - uv.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',\n    fragmentShader: [\n      'uniform sampler2D map; uniform float duo; uniform vec3 dark; uniform vec3 light; uniform float opacity; varying vec2 vUv;',\n      'void main() {',\n      '  vec4 c = texture2D(map, vUv);',\n      '  float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));',\n      '  vec3 d = mix(dark, light, smoothstep(0.05, 0.95, l));',\n      '  gl_FragColor = vec4(mix(c.rgb, d, duo), c.a * opacity);',\n      '}',\n    ].join('\\n'),\n  });\n}\n\n/** 依 cover 方式把圖片畫進框（裁掉多的） */\nfunction drawCover(g, img, x, y, w, h) {\n  const s = Math.max(w / img.width, h / img.height);\n  const sw = w / s;\n  const sh = h / s;\n  g.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, x, y, w, h);\n}\n\n/** 圓角矩形路徑 */\nfunction roundRect(g, x, y, w, h, r) {\n  g.beginPath();\n  g.moveTo(x + r, y);\n  g.arcTo(x + w, y, x + w, y + h, r);\n  g.arcTo(x + w, y + h, x, y + h, r);\n  g.arcTo(x, y + h, x, y, r);\n  g.arcTo(x, y, x + w, y, r);\n  g.closePath();\n}\n\n/** 建場景 */\nfunction setup(THREE, scene, camera, env) {\n  const p = env.params;\n  const { width: w, height: h } = env;\n  camera.fov = 2 * Math.atan(540 / 1800) * 180 / Math.PI;\n  camera.aspect = w / h;\n  camera.position.set(0, 0, CAM_D);\n  camera.lookAt(0, 0, 0);\n  camera.updateProjectionMatrix();\n  scene.add(camera);\n  F.dark = rgb(p.dark, '#141a4a');\n  F.light = rgb(p.light, '#a9b8ff');\n\n  // 背景：遠處一片暗色漸層（全畫面不透明，蓋住 V1）\n  const bgCanvas = new OffscreenCanvas(64, 36);\n  const bg = bgCanvas.getContext('2d');\n  const grad = bg.createRadialGradient(32, 14, 0, 32, 14, 48);\n  grad.addColorStop(0, '#20264f');\n  grad.addColorStop(1, '#05060d');\n  bg.fillStyle = grad;\n  bg.fillRect(0, 0, 64, 36);\n  const far = 40;\n  const fh = 2 * (far + CAM_D) * Math.tan(camera.fov * Math.PI / 360) * 1.6;\n  const bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(fh * w / h, fh), pageMaterial(THREE, rawTexture(THREE, bgCanvas, THREE.CanvasTexture), 0, F.dark, F.light));\n  bgMesh.position.z = -far;\n  scene.add(bgMesh);\n\n  // 舞台與頁面：幾何往下平移半頁，原點在上緣（翻頁以上緣為軸）\n  F.stage = new THREE.Group();\n  scene.add(F.stage);\n  const textures = (env.images || []).map((b) => rawTexture(THREE, b));\n  const geo = new THREE.PlaneGeometry(PAGE_W, PAGE_H);\n  geo.translate(0, -PAGE_H / 2, 0);\n  const duo = p.tone === 'original' ? 0 : 1;\n  F.pages = (p.pages || []).map((page, i) => {\n    const tex = textures[page.img] || textures[0];\n    const mesh = new THREE.Mesh(geo, tex ? pageMaterial(THREE, tex, duo, F.dark, F.light) : new THREE.MeshBasicMaterial({ color: 0x333a66 }));\n    mesh.position.set(0, PAGE_H / 2, i * 0.002);\n    mesh.visible = false;\n    F.stage.add(mesh);\n    const next = (p.pages[i + 1] || {}).t;\n    const gap = next !== undefined ? next - page.t : (i > 0 ? page.t - p.pages[i - 1].t : 0.2);\n    return { mesh, t: page.t, dur: Math.min(0.55, gap * 1.5) };\n  });\n\n  // 鏡頭前的兩片：標題卡（畫在畫布上）與閃光\n  const dist = 1;\n  const vh = 2 * dist * Math.tan(camera.fov * Math.PI / 360);\n  F.cardCanvas = new OffscreenCanvas(w, h);\n  F.card = F.cardCanvas.getContext('2d');\n  F.cardTex = rawTexture(THREE, F.cardCanvas, THREE.CanvasTexture);\n  F.cardMesh = new THREE.Mesh(new THREE.PlaneGeometry(vh * w / h, vh), pageMaterial(THREE, F.cardTex, 0, F.dark, F.light));\n  F.cardMesh.position.z = -dist;\n  F.cardMesh.renderOrder = 10;\n  F.cardMesh.material.depthTest = false;\n  camera.add(F.cardMesh);\n  F.flash = new THREE.Mesh(new THREE.PlaneGeometry(vh * w / h * 1.1, vh * 1.1), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthTest: false }));\n  F.flash.position.z = -dist * 0.9;\n  F.flash.renderOrder = 11;\n  camera.add(F.flash);\n  // 標題的另一張畫布：先畫字、再用 source-in 把封面填進字裡\n  F.textCanvas = new OffscreenCanvas(w, h);\n  F.text = F.textCanvas.getContext('2d');\n  F.camera = camera;\n}\n\n/** 畫標題卡（t ≥ titleIn） */\nfunction drawCard(t, env) {\n  const p = env.params;\n  const g = F.card;\n  const w = env.width;\n  const h = env.height;\n  g.clearRect(0, 0, w, h);\n  if (t < p.titleIn) return;\n  const imgs = env.images || [];\n  const title = String(p.title || '');\n  const fs = h * 0.13;\n  const font = `900 ${fs}px \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif`;\n  g.font = font;\n  const tw = Math.min(g.measureText(title).width, w * 0.7);\n  const bw = tw + fs * 1.2;\n  const bh = fs * 1.6;\n  const revealed = t >= p.reveal;\n  // 方塊：從 1.22 倍縮入（0.4 秒 power3.out）；揭曉時彈 1.04 倍\n  let scale = 1.22 - 0.22 * easeOut(clamp01((t - p.titleIn) / 0.4), 3);\n  if (revealed && t < p.reveal + 0.25) scale *= 1 + 0.04 * Math.sin(Math.PI * (t - p.reveal) / 0.25);\n  g.save();\n  g.translate(w / 2, h / 2);\n  g.scale(scale, scale);\n  g.globalAlpha = clamp01((t - p.titleIn) / 0.08);\n  const accent = rgb(p.accent, '#2f5bff').map((c) => Math.round(c * 255 * (revealed ? 1 : 0.62)));\n  g.fillStyle = `rgb(${accent.join(',')})`;\n  roundRect(g, -bw / 2, -bh / 2, bw, bh, fs * 0.18);\n  g.fill();\n  // 字：揭曉前每 2 格換一張封面透出，揭曉後白字\n  const tx = F.text;\n  tx.setTransform(1, 0, 0, 1, 0, 0);\n  tx.clearRect(0, 0, w, h);\n  tx.font = font;\n  tx.textAlign = 'center';\n  tx.textBaseline = 'middle';\n  tx.fillStyle = '#ffffff';\n  tx.fillText(title, w / 2, h / 2 + fs * 0.04, w * 0.7);\n  const fills = p.titleFills || [];\n  if (!revealed && fills.length && imgs.length) {\n    const k = Math.floor((t - p.titleIn) * env.fps / 2) % fills.length;\n    const img = imgs[fills[k]] || imgs[0];\n    tx.globalCompositeOperation = 'source-in';\n    drawCover(tx, img, w / 2 - bw / 2, h / 2 - bh / 2, bw, bh);\n    tx.globalCompositeOperation = 'source-over';\n  }\n  g.drawImage(F.textCanvas, -w / 2, -h / 2);\n  // icon：揭曉後彈入，放在方塊左邊\n  const icon = p.icon === null || p.icon === undefined ? null : imgs[p.icon];\n  if (icon && t >= p.reveal + 0.05) {\n    const q = clamp01((t - p.reveal - 0.05) / 0.25);\n    const s = q < 0.6 ? 1.1 * easeOut(q / 0.6, 2) : 1.1 - 0.1 * easeOut((q - 0.6) / 0.4, 1);\n    const size = bh * s;\n    g.save();\n    g.translate(-bw / 2 - bh * 0.7, 0);\n    roundRect(g, -size / 2, -size / 2, size, size, size * 0.2);\n    g.clip();\n    drawCover(g, icon, -size / 2, -size / 2, size, size);\n    g.restore();\n  }\n  // 斜光：揭曉後 0.6 秒掃過方塊（只亮在已畫的地方）\n  const sweep = (t - p.reveal - 0.6) / 0.5;\n  if (sweep > 0 && sweep < 1) {\n    g.globalCompositeOperation = 'source-atop';\n    const x = -bw / 2 - bh + (bw + bh * 2) * sweep;\n    const lg = g.createLinearGradient(x - bh * 0.5, 0, x + bh * 0.5, 0);\n    lg.addColorStop(0, 'rgba(255,255,255,0)');\n    lg.addColorStop(0.5, 'rgba(255,255,255,0.55)');\n    lg.addColorStop(1, 'rgba(255,255,255,0)');\n    g.fillStyle = lg;\n    g.fillRect(-bw, -bh, bw * 2, bh * 2);\n    g.globalCompositeOperation = 'source-over';\n  }\n  g.restore();\n  // 副標：揭曉後逐字出現（每字 0.04 秒）\n  const sub = String(p.subtitle || '');\n  if (sub && t >= p.reveal + 0.15) {\n    const n = Math.min(sub.length, Math.floor((t - p.reveal - 0.15) / 0.04) + 1);\n    g.font = `600 ${fs * 0.36}px \"Segoe UI\", \"Helvetica Neue\", Arial, sans-serif`;\n    g.textAlign = 'center';\n    g.textBaseline = 'top';\n    g.fillStyle = 'rgba(255,255,255,0.88)';\n    g.fillText(sub.slice(0, n), w / 2, h / 2 + bh * 0.5 * scale + fs * 0.35, w * 0.8);\n  }\n}\n\n/** 每格更新 */\nfunction update(t, env) {\n  const p = env.params;\n  const start = p.montageStart || 0;\n  const climax = p.titleIn;\n  // 舞台推近微轉：scale 0.72→1.32（鏡頭距離反比）、rotationY −10°→8°、rotationX 6°→−2°，power1.in\n  const m = easeIn(clamp01((t - start) / Math.max(0.01, climax - start)), 1);\n  const s = 0.72 + 0.6 * m;\n  F.camera.position.set(0, 0, CAM_D / s);\n  F.stage.rotation.y = (-10 + 18 * m) * Math.PI / 180;\n  F.stage.rotation.x = (6 - 8 * m) * Math.PI / 180;\n  // 頁面：到時間就整頁不透明（不漸變，避免兩頁半透明疊在一起），從 −105° 翻到 0°（power2.out）；標題進場後收掉\n  for (const page of F.pages) {\n    const on = t >= page.t && t < climax;\n    page.mesh.visible = on;\n    if (on) page.mesh.rotation.x = -105 * (1 - easeOut(clamp01((t - page.t) / page.dur), 2)) * Math.PI / 180;\n  }\n  // 閃光：0.06 秒升到 0.85，0.35 秒退\n  const f = t - p.flash;\n  F.flash.material.opacity = f < 0 ? 0 : f < 0.06 ? 0.85 * f / 0.06 : Math.max(0, 0.85 * (1 - (f - 0.06) / 0.35));\n  drawCard(t, env);\n  F.cardTex.needsUpdate = true;\n  // 結尾 0.35 秒淡出到背景\n  F.cardMesh.material.uniforms.opacity.value = clamp01((env.duration - t) / 0.35);\n}\n"
+    }
+   }
+  ],
+  "synths": [
+   {
+    "id": "synth-m-196a3af7",
+    "kind": "sound",
+    "spec": {
+     "length": 0.7,
+     "gain": 0.8,
+     "voices": [
+      {
+       "source": {
+        "type": "noise",
+        "color": "pink"
+       },
+       "filter": {
+        "type": "bandpass",
+        "cutoff": [
+         {
+          "t": 0,
+          "v": 300
+         },
+         {
+          "t": 0.35,
+          "v": 3000
+         },
+         {
+          "t": 0.7,
+          "v": 600
+         }
+        ],
+        "q": 1.5
+       },
+       "env": {
+        "attack": 0.25,
+        "decay": 0.2,
+        "sustain": 0.3,
+        "release": 0.2
+       },
+       "dur": 0.45,
+       "effects": {
+        "reverb": {
+         "decay": 0.8,
+         "mix": 0.2
+        }
+       }
+      }
+     ]
+    },
+    "source": "builtin",
+    "renderedMediaId": "m-196a3af7",
+    "label": "whoosh"
+   },
+   {
+    "id": "synth-m-d0fef679",
+    "kind": "music",
+    "spec": {
+     "bpm": 90,
+     "beatsPerBar": 4,
+     "bars": 16,
+     "chords": [
+      "Am7",
+      "Fmaj7",
+      "Cmaj7",
+      "G"
+     ],
+     "gain": 0.7,
+     "seed": 11,
+     "parts": [
+      {
+       "role": "pad",
+       "voice": {
+        "source": {
+         "type": "osc",
+         "wave": "triangle"
+        },
+        "filter": {
+         "type": "lowpass",
+         "cutoff": 1400
+        },
+        "env": {
+         "attack": 0.4,
+         "decay": 0.5,
+         "sustain": 0.8,
+         "release": 0.8
+        },
+        "effects": {
+         "reverb": {
+          "decay": 2,
+          "mix": 0.3
+         }
+        }
+       },
+       "gain": 0.3,
+       "loopBars": 1,
+       "notes": [
+        {
+         "at": 0,
+         "len": 4,
+         "chord": 0,
+         "octave": 4,
+         "vel": 0.5
+        },
+        {
+         "at": 0,
+         "len": 4,
+         "chord": 1,
+         "octave": 4,
+         "vel": 0.5
+        },
+        {
+         "at": 0,
+         "len": 4,
+         "chord": 2,
+         "octave": 4,
+         "vel": 0.5
+        }
+       ]
+      },
+      {
+       "role": "bass",
+       "voice": {
+        "source": {
+         "type": "osc",
+         "wave": "triangle"
+        },
+        "filter": {
+         "type": "lowpass",
+         "cutoff": 550
+        },
+        "env": {
+         "attack": 0.01,
+         "decay": 0.3,
+         "sustain": 0.6,
+         "release": 0.15
+        }
+       },
+       "gain": 0.6,
+       "loopBars": 1,
+       "notes": [
+        {
+         "at": 0,
+         "len": 1.5,
+         "chord": 0,
+         "octave": 2,
+         "vel": 0.8
+        },
+        {
+         "at": 2,
+         "len": 1,
+         "chord": 2,
+         "octave": 2,
+         "vel": 0.7
+        },
+        {
+         "at": 3,
+         "len": 1,
+         "chord": 0,
+         "octave": 2,
+         "vel": 0.7
+        }
+       ]
+      },
+      {
+       "role": "arp",
+       "voice": {
+        "source": {
+         "type": "osc",
+         "wave": "sine"
+        },
+        "filter": {
+         "type": "lowpass",
+         "cutoff": 2200
+        },
+        "env": {
+         "attack": 0.01,
+         "decay": 0.2,
+         "sustain": 0.3,
+         "release": 0.1
+        },
+        "effects": {
+         "delay": {
+          "time": 0.333,
+          "feedback": 0.3,
+          "mix": 0.25
+         }
+        }
+       },
+       "gain": 0.2,
+       "loopBars": 2,
+       "notes": [
+        {
+         "at": 0,
+         "len": 0.4,
+         "chord": 2,
+         "octave": 5,
+         "vel": 0.5
+        },
+        {
+         "at": 1,
+         "len": 0.4,
+         "chord": 1,
+         "octave": 5,
+         "vel": 0.45
+        },
+        {
+         "at": 2,
+         "len": 0.4,
+         "chord": 2,
+         "octave": 5,
+         "vel": 0.5
+        },
+        {
+         "at": 3,
+         "len": 0.4,
+         "chord": 3,
+         "octave": 5,
+         "vel": 0.45
+        },
+        {
+         "at": 4,
+         "len": 0.4,
+         "chord": 2,
+         "octave": 5,
+         "vel": 0.5
+        },
+        {
+         "at": 5,
+         "len": 0.4,
+         "chord": 1,
+         "octave": 5,
+         "vel": 0.45
+        },
+        {
+         "at": 6,
+         "len": 0.4,
+         "chord": 0,
+         "octave": 5,
+         "vel": 0.5
+        },
+        {
+         "at": 7,
+         "len": 0.4,
+         "chord": 1,
+         "octave": 5,
+         "vel": 0.4
+        }
+       ]
+      },
+      {
+       "role": "drums",
+       "gain": 0.6,
+       "loopBars": 2,
+       "notes": [
+        {
+         "at": 0,
+         "len": 0.5,
+         "drum": "kick",
+         "vel": 0.7
+        },
+        {
+         "at": 2.5,
+         "len": 0.5,
+         "drum": "kick",
+         "vel": 0.6
+        },
+        {
+         "at": 4,
+         "len": 0.5,
+         "drum": "kick",
+         "vel": 0.7
+        },
+        {
+         "at": 6.5,
+         "len": 0.5,
+         "drum": "kick",
+         "vel": 0.6
+        },
+        {
+         "at": 1,
+         "len": 0.5,
+         "drum": "snare",
+         "vel": 0.55
+        },
+        {
+         "at": 3,
+         "len": 0.5,
+         "drum": "snare",
+         "vel": 0.55
+        },
+        {
+         "at": 5,
+         "len": 0.5,
+         "drum": "snare",
+         "vel": 0.55
+        },
+        {
+         "at": 7,
+         "len": 0.5,
+         "drum": "snare",
+         "vel": 0.55
+        },
+        {
+         "at": 0,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.3
+        },
+        {
+         "at": 0.5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.28
+        },
+        {
+         "at": 1,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.3
+        },
+        {
+         "at": 1.5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.28
+        },
+        {
+         "at": 2,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.3
+        },
+        {
+         "at": 2.5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.28
+        },
+        {
+         "at": 3,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.3
+        },
+        {
+         "at": 3.5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.28
+        },
+        {
+         "at": 4,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.3
+        },
+        {
+         "at": 4.5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.28
+        },
+        {
+         "at": 5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.3
+        },
+        {
+         "at": 5.5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.28
+        },
+        {
+         "at": 6,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.3
+        },
+        {
+         "at": 6.5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.28
+        },
+        {
+         "at": 7,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.3
+        },
+        {
+         "at": 7.5,
+         "len": 0.25,
+         "drum": "hat",
+         "vel": 0.28
+        }
+       ]
+      }
+     ]
+    },
+    "source": "ai",
+    "renderedMediaId": "m-d0fef679",
+    "label": "Light, upbeat lo-fi tech background for a coding tutorial, soft drums, warm keys, unobtrusive under speech",
+    "prompt": "Light, upbeat lo-fi tech background for a coding tutorial, soft drums, warm keys, unobtrusive under speech"
+   }
+  ],
+  "stems": [],
+  "zooms": [],
+  "captionStyle": {
+   "preset": "outline",
+   "size": 0.055,
+   "bottom": 0.08,
+   "color": "#ffffff",
+   "karaoke": "fill",
+   "highlight": "#ffd400"
+  },
+  "transitions": [
+   {
+    "id": "tr-m-cbaf8d4e@V1-2",
+    "clipId": "m-cbaf8d4e@V1-2",
+    "kind": "dissolve",
+    "duration": 1
+   },
+   {
+    "id": "tr-m-cbaf8d4e@V1-2-2",
+    "clipId": "m-cbaf8d4e@V1-2-2",
+    "kind": "pushLeft",
+    "duration": 1
+   },
+   {
+    "id": "tr-m-cbaf8d4e@V1-2-2-2",
+    "clipId": "m-cbaf8d4e@V1-2-2-2",
+    "kind": "zoomIn",
+    "duration": 1
+   }
+  ],
+  "colorGrades": [
+   {
+    "id": "cg-sample",
+    "start": 8,
+    "brightness": 0.05,
+    "contrast": 0.1,
+    "saturation": 0.15,
+    "temperature": 0.15
+   }
+  ]
+ }
+}
