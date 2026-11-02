@@ -259,3 +259,17 @@ describe("播放中介入（開發者 2026-10-28：任何移動播放頭的操�
     expect(s.playSeq).toBe(seq + 1);
   });
 });
+
+// 滑桿拖動（色彩調整）：第一下 commit，拖動中 amend 改同一筆，只留一步復原（2026-11-02）
+describe("amend 動作", () => {
+  it("commit 後連續 amend，Ctrl+Z 一次回到原樣", () => {
+    let s = initialState(makeProject());
+    const v = (b: number) => ({ brightness: b, contrast: 0, saturation: 0, temperature: 0 });
+    s = reducer(s, { type: "commit", edits: [{ kind: "setColorGrade", id: "g", values: v(0.1) }] });
+    s = reducer(s, { type: "amend", edits: [{ kind: "setColorGrade", id: "g", values: v(0.5) }] });
+    s = reducer(s, { type: "amend", edits: [{ kind: "setColorGrade", id: "g", values: v(0.8) }] });
+    expect(s.history.present.colorGrades![0].brightness).toBe(0.8);
+    s = reducer(s, { type: "undo" });
+    expect(s.history.present.colorGrades ?? []).toHaveLength(0);
+  });
+});

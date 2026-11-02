@@ -1,7 +1,7 @@
 // 特效 → Color 子頁籤（P3 色彩調整；2026-11-02）：亮度、對比、飽和度、色溫。
 // 預設套整條（到結尾，之後加的片段也套）；時間軸有選範圍時新增的只調那段。重疊時後加的蓋前面的。
-// 滑桿拖動時只改畫面上的數字，放開才送一筆可復原的編輯（不會拖一次留幾十筆歷史）。
-import { useEffect, useState, type Dispatch } from "react";
+// 滑桿拖動時預覽即時跟著變；一次拖動只留一步復原（第一下 commit、之後 amend）。
+import { useEffect, useRef, useState, type Dispatch } from "react";
 import { NEUTRAL, type GradeValues } from "../core/colorGrade";
 import type { ColorGrade, Project } from "../core/model";
 import { formatTimecode, type Action } from "./state";
@@ -39,6 +39,19 @@ export function ColorTab({ project, range, dispatch }: {
     if (current) dispatch({ type: "commit", edits: [{ kind: "setColorGrade", id: current.id, values }] });
     else add(values);
   };
+  /** 這次拖動已經送過第一筆（之後改同一筆，不多留復原步驟） */
+  const dragging = useRef(false);
+  /** 拖動中：畫面即時跟著變；第一下 commit（一步復原），之後 amend 同一筆 */
+  const live = (values: GradeValues) => {
+    setDraft(values);
+    if (!current) {
+      add(values);
+      dragging.current = true;
+      return;
+    }
+    dispatch({ type: dragging.current ? "amend" : "commit", edits: [{ kind: "setColorGrade", id: current.id, values }] });
+    dragging.current = true;
+  };
   /** 新增一段：有選範圍只調那段，否則整條 */
   const add = (values: GradeValues = NEUTRAL) => {
     const id = `cg-${crypto.randomUUID().slice(0, 8)}`;
@@ -57,8 +70,8 @@ export function ColorTab({ project, range, dispatch }: {
           <span>{f.label}</span>
           <input
             type="range" min={-1} max={1} step={0.05} data-testid={`color-${f.key}`} value={draft[f.key]}
-            onChange={(e) => setDraft({ ...draft, [f.key]: Number(e.target.value) })}
-            onPointerUp={() => save(draft)} onKeyUp={() => save(draft)}
+            onChange={(e) => live({ ...draft, [f.key]: Number(e.target.value) })}
+            onPointerUp={() => { dragging.current = false; }} onKeyUp={() => { dragging.current = false; }}
           />
           <span className="muted">{draft[f.key].toFixed(2)}</span>
         </label>

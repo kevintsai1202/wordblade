@@ -46,6 +46,11 @@ export function layoutV1Draft(draft: Draft<Project>) {
     clip.start = cursor;
     cursor = roundTime(cursor + clipDuration(clip));
   }
+  // 片段被刪掉後，掛在它上面的轉場一起拿掉（2026-11-02）
+  if (draft.transitions?.length) {
+    const ids = new Set(draft.clips.map((c) => c.id));
+    if (draft.transitions.some((tr) => !ids.has(tr.clipId))) draft.transitions = draft.transitions.filter((tr) => ids.has(tr.clipId));
+  }
 }
 
 /** 依順序與長度重算 V1 起點（首尾相接） */

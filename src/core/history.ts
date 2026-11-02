@@ -158,6 +158,12 @@ export function amend(history: History, change: (project: Project) => Project): 
   return { past: history.past.map(change), present: change(history.present), future: history.future.map(change) };
 }
 
+/** 只改目前這一步（不動過去與未來、不新增步驟）：滑桿拖動中用；未來的快照清掉（同 commit） */
+export function replacePresent(history: History, edits: Edit[]): History {
+  const next = applyEdits(history.present, edits);
+  return next === history.present ? history : { ...history, present: next, future: [] };
+}
+
 /** 能不能復原 */
 export function canUndo(history: History): boolean {
   return history.past.length > 0;

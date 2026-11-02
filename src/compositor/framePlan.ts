@@ -4,7 +4,7 @@ import type { Clip, Project, Rect, Seconds } from "../core/model";
 import { clipDuration, clipEnd, timelineToSource } from "../core/timeline";
 import { zoomCrop, zoomState } from "../core/zoom";
 import { isMutedAt, mutedRangesFor } from "../core/voiceover";
-import { cutAt, extendedSource, shiftRect, transitionCuts, transitionLook, visibleRange } from "../core/transitions";
+import { cutAt, extendedSource, shiftRect, transitionAudioFactor, transitionCuts, transitionLook, visibleRange } from "../core/transitions";
 import { gradeAt, type GradeValues } from "../core/colorGrade";
 
 /** 全畫面的框 */
@@ -107,6 +107,7 @@ export function framePlan(project: Project, t: Seconds): VideoLayer[] {
 /** 時間軸時間 t 正在發聲的音訊片段（軌道靜音的不算）；重配音（§5.6）生效範圍內的對白、聽原音時的 AI 片段仍在清單裡但增益是 0（元素照常同步，離開範圍就接得上） */
 export function audioPlan(project: Project, t: Seconds): AudioVoice[] {
   const voices: AudioVoice[] = [];
+  const cuts = transitionCuts(project);
   for (const track of project.tracks) {
     if (track.kind !== "audio" || track.muted) continue;
     for (const clip of project.clips) {
@@ -115,7 +116,7 @@ export function audioPlan(project: Project, t: Seconds): AudioVoice[] {
         clipId: clip.id,
         mediaId: clip.mediaId,
         srcTime: timelineToSource(clip, t),
-        gain: isMutedAt(mutedRangesFor(project, clip, track), t) ? 0 : clip.volume * track.volume * fadeFactor(clip, t),
+        gain: isMutedAt(mutedRangesFor(project, clip, track), t) ? 0 : clip.volume * track.volume * fadeFactor(clip, t) * transitionAudioFactor(project, cuts, clip, t),
         speed: clip.speed,
       });
     }

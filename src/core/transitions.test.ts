@@ -1,10 +1,10 @@
 // 轉場（§5.9）、色彩調整（P3）、定格（§5.20）的純函式測試（2026-11-02）
 import { describe, expect, it } from "vitest";
 import { makeProject } from "./fixtures";
-import { setTransition, transitionCuts, transitionLook, visibleRange, extendedSource } from "./transitions";
+import { setTransition, transitionAudioFactor, transitionCuts, transitionLook, visibleRange, extendedSource } from "./transitions";
 import { gradeAt, setColorGrade } from "./colorGrade";
-import { insertFreeze, rippleDelete, clipEnd } from "./timeline";
-import { framePlan } from "../compositor/framePlan";
+import { deleteClip, insertFreeze, rippleDelete, clipEnd } from "./timeline";
+import { audioPlan, framePlan } from "../compositor/framePlan";
 import { clipFrames } from "../export/exportPlan";
 
 describe("轉場", () => {
@@ -116,5 +116,26 @@ describe("定格", () => {
   it("定格的連續格素材時間相同（匯出只解一次）", () => {
     const r = clipFrames(insertFreeze(makeProject(), 5, 2), 30, 960).find((x) => x.clipId.includes("freeze"))!;
     expect(new Set(r.srcTimes)).toEqual(new Set([5]));
+  });
+});
+
+describe("轉場的聲音與清理（2026-11-02 補）", () => {
+  const p = setTransition(makeProject(), "v1b", "dissolve", 1);
+
+  it("對白軌在接點前半段淡出、後半段淡入，不再硬切；窗外不變", () => {
+    const cuts = transitionCuts(p);
+    const a1a = p.clips.find((c) => c.id === "a1a")!;
+    const a1b = p.clips.find((c) => c.id === "a1b")!;
+    const a2 = p.clips.find((c) => c.id === "a2")!;
+    expect(transitionAudioFactor(p, cuts, a1a, 9.75)).toBeCloseTo(0.5);
+    expect(transitionAudioFactor(p, cuts, a1b, 10.25)).toBeCloseTo(0.5);
+    expect(transitionAudioFactor(p, cuts, a1a, 9)).toBe(1);
+    // 配樂軌（不是對白）不受影響
+    expect(transitionAudioFactor(p, cuts, a2, 10)).toBe(1);
+    expect(audioPlan(p, 9.75).find((v) => v.clipId === "a1a")!.gain).toBeCloseTo(0.5);
+  });
+
+  it("後一段被刪掉：轉場紀錄一起拿掉", () => {
+    expect(deleteClip(p, "v1b").transitions ?? []).toHaveLength(0);
   });
 });

@@ -133,3 +133,19 @@ export function setTransition(project: Project, clipId: string, kind: Transition
   };
   return produce(project, (d) => { d.transitions = [...others, record]; });
 }
+
+/**
+ * 轉場時對白的聲音（2026-11-02 補）：接點前半段前一段的對白淡出、後半段後一段的對白淡入，不再硬切。
+ * 只看對白軌（role="dialogue"）上終點／起點剛好在接點的片段；配樂、音效不動。回傳 0～1 的係數。
+ */
+export function transitionAudioFactor(project: Project, cuts: Cut[], clip: Clip, t: Seconds): number {
+  if (!cuts.length) return 1;
+  const track = project.tracks.find((tr) => tr.id === clip.trackId);
+  if (track?.kind !== "audio" || track.role !== "dialogue") return 1;
+  let f = 1;
+  for (const cut of cuts) {
+    if (Math.abs(clipEnd(clip) - cut.t) < 1e-6 && t >= cut.t - cut.half && t < cut.t) f = Math.min(f, (cut.t - t) / cut.half);
+    if (Math.abs(clip.start - cut.t) < 1e-6 && t >= cut.t && t < cut.t + cut.half) f = Math.min(f, (t - cut.t) / cut.half);
+  }
+  return Math.max(0, Math.min(1, f));
+}
