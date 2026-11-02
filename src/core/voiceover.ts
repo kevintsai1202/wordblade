@@ -1,4 +1,5 @@
 // AI 重配音（spec §5.6）的資料操作與靜音規則：全是「舊專案 → 新專案」的純函式，預覽（audioPlan）與匯出（mixSpan）共用同一套靜音判斷。
+import { roundTime } from "./time";
 import { produce } from "immer";
 import type { Clip, Project, Seconds, Track, Voiceover } from "./model";
 import { clipEnd, placeMedia } from "./timeline";
@@ -101,6 +102,10 @@ export function addVoiceover(project: Project, v: NewVoiceover, speed = 1): Proj
   const clip = p.clips.find((c) => !before.has(c.id));
   if (!clip) return project;
   if (speed !== 1) p = setClipSpeed(p, clip.id, speed);
+  // 自己錄的（卡拉 OK，P1-9）：錄音會比範圍多一點點（停止的延遲），剪到範圍長度
+  if (v.source === "recorded" && clip.srcOut - clip.srcIn > v.end - v.start) {
+    p = produce(p, (d) => { d.clips.find((c) => c.id === clip.id)!.srcOut = roundTime(clip.srcIn + (v.end - v.start)); });
+  }
   const record: Voiceover = { ...v, clipId: clip.id, active: true };
   return produce(p, (d) => { d.voiceovers = [...(d.voiceovers ?? []).filter((x) => x.id !== v.id), record]; });
 }

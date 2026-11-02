@@ -258,6 +258,8 @@ export interface Voiceover {
   clipId: string;
   /** true＝播 AI 的聲音（原音在這段靜音）；false＝播原音 */
   active: boolean;
+  /** 聲音來源：ai＝Fish 克隆（預設）；recorded＝卡拉 OK 自己錄（P1-9） */
+  source?: "ai" | "recorded";
 }
 
 /** 聲音分離的結果 */
@@ -288,6 +290,36 @@ export interface TextureAsset {
   repeat: number;
 }
 
+/** 轉場種類（§5.9）：溶接、穿黑、穿白、往左推、往右推 */
+export type TransitionKind = "dissolve" | "dipBlack" | "dipWhite" | "pushLeft" | "pushRight";
+
+/**
+ * 轉場（§5.9，P2；2026-11-02）：放在 V1 片段 clipId 的起點（和前一段的接點）。不改長度：
+ * 接點前後各 duration/2，前一段往後延、後一段往前提早出現（沒有多餘畫面就停在最後／第一格）。
+ */
+export interface Transition {
+  id: string;
+  /** V1 上「後面那段」的片段 id */
+  clipId: string;
+  kind: TransitionKind;
+  /** 總長（秒） */
+  duration: Seconds;
+}
+
+/**
+ * 色彩調整（P3；2026-11-02）：時間軸範圍內的影像圖層（影片、圖片）一起調。值 −1～1，0 是不變。
+ * end 沒設＝一直到結尾（「整條」），之後加的片段也套得到；重疊時後加的蓋前面的。
+ */
+export interface ColorGrade {
+  id: string;
+  start: Seconds;
+  end?: Seconds;
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  temperature: number;
+}
+
 export interface Project {
   media: Media[];
   tracks: Track[];
@@ -305,6 +337,10 @@ export interface Project {
   textures?: TextureAsset[];
   /** AI 重配音（§5.6；舊專案沒有這個欄位） */
   voiceovers?: Voiceover[];
+  /** 轉場（§5.9；舊專案沒有這個欄位） */
+  transitions?: Transition[];
+  /** 色彩調整（P3；舊專案沒有這個欄位） */
+  colorGrades?: ColorGrade[];
   /** 局部放大（§5.19；舊專案沒有這個欄位） */
   zooms?: ZoomRegion[];
   /** 燒進畫面的字幕樣式（§5.4、§5.18；沒設就用預設：白字黑描邊） */

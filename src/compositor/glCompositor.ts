@@ -21,7 +21,19 @@ uniform sampler2D tex;
 uniform float opacity;
 uniform vec4 uvRect;
 out vec4 color;
-void main() { color = texture(tex, uvRect.xy + uv * uvRect.zw) * opacity; }`;
+// 色彩調整（P3；2026-11-02）：grade＝(亮度, 對比, 飽和度, 色溫)，−1～1，0 不變。先還原預乘 alpha 再調，調完再乘回去。
+uniform vec4 grade;
+vec4 applyGrade(vec4 c) {
+  if (grade == vec4(0.0) || c.a <= 0.0) return c;
+  vec3 rgb = c.rgb / c.a;
+  rgb += grade.x * 0.4;
+  rgb = (rgb - 0.5) * (1.0 + grade.y) + 0.5;
+  float l = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+  rgb = mix(vec3(l), rgb, 1.0 + grade.z);
+  rgb += vec3(0.1, 0.0, -0.1) * grade.w;
+  return vec4(clamp(rgb, 0.0, 1.0) * c.a, c.a);
+}
+void main() { color = applyGrade(texture(tex, uvRect.xy + uv * uvRect.zw)) * opacity; }`;
 
 /**
  * 遮罩著色器（SAM，§5.3）：mask 貼圖蓋住整個來源畫面（素材座標），和影片用同一個 uvRect 取樣，放大裁切也對得上；
@@ -39,6 +51,18 @@ uniform vec2 block;
 uniform vec2 radius;
 uniform vec3 solid;
 out vec4 color;
+// 色彩調整（P3；2026-11-02）：grade＝(亮度, 對比, 飽和度, 色溫)，−1～1，0 不變。先還原預乘 alpha 再調，調完再乘回去。
+uniform vec4 grade;
+vec4 applyGrade(vec4 c) {
+  if (grade == vec4(0.0) || c.a <= 0.0) return c;
+  vec3 rgb = c.rgb / c.a;
+  rgb += grade.x * 0.4;
+  rgb = (rgb - 0.5) * (1.0 + grade.y) + 0.5;
+  float l = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+  rgb = mix(vec3(l), rgb, 1.0 + grade.z);
+  rgb += vec3(0.1, 0.0, -0.1) * grade.w;
+  return vec4(clamp(rgb, 0.0, 1.0) * c.a, c.a);
+}
 void main() {
   vec2 suv = uvRect.xy + uv * uvRect.zw;
   if (texture(mask, suv).r < 0.1) discard;
@@ -61,6 +85,7 @@ void main() {
   } else {
     c = vec4(solid, 1.0);
   }
+  if (mode != 2) c = applyGrade(c);
   color = c * opacity;
 }`;
 
@@ -75,6 +100,14 @@ export interface MaskEffect {
   solid: [number, number, number];
 }
 
+/** 色彩調整的四個值（−1～1） */
+export interface Grade {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  temperature: number;
+}
+
 /** 整張貼圖 */
 const FULL_UV: Rect = { x: 0, y: 0, w: 1, h: 1 };
 
@@ -84,7 +117,10 @@ export class GlCompositor {
   private readonly rectLoc: WebGLUniformLocation;
   private readonly opacityLoc: WebGLUniformLocation;
   private readonly uvRectLoc: WebGLUniformLocation;
+  private readonly gradeLoc: WebGLUniformLocation;
   private readonly program: WebGLProgram;
+  /** 純色用的 1×1 白色貼圖（穿黑／白轉場；第一次用到才建） */
+  private solidTex: WebGLTexture | null = null;
   /** 遮罩用的程式與貼圖（第一次用到才建） */
   private maskProgram: { program: WebGLProgram; loc: Record<string, WebGLUniformLocation>; maskTex: WebGLTexture; videoTex: WebGLTexture } | null = null;
   private readonly tex: WebGLTexture;
@@ -103,6 +139,7 @@ export class GlCompositor {
     this.rectLoc = gl.getUniformLocation(program, "rect")!;
     this.opacityLoc = gl.getUniformLocation(program, "opacity")!;
     this.uvRectLoc = gl.getUniformLocation(program, "uvRect")!;
+    this.gradeLoc = gl.getUniformLocation(program, "grade")!;
     this.tex = this.texture();
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
     gl.enable(gl.BLEND);
@@ -146,8 +183,8 @@ export class GlCompositor {
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
-  /** 把一個影像來源畫到 rect，透明度 opacity；crop：只取來源的這個範圍（0～1，左上原點；局部放大用） */
-  draw(source: TexImageSource, rect: Rect, opacity: number, crop: Rect = FULL_UV) {
+  /** 把一個影像來源畫到 rect，透明度 opacity；crop：只取來源的這個範圍（0～1，左上原點；局部放大用）；grade：色彩調整 */
+  draw(source: TexImageSource, rect: Rect, opacity: number, crop: Rect = FULL_UV, grade?: Grade) {
     const { gl } = this;
     gl.useProgram(this.program);
     gl.activeTexture(gl.TEXTURE0);
@@ -156,6 +193,23 @@ export class GlCompositor {
     gl.uniform4f(this.rectLoc, rect.x, rect.y, rect.w, rect.h);
     gl.uniform1f(this.opacityLoc, opacity);
     gl.uniform4f(this.uvRectLoc, crop.x, crop.y, crop.w, crop.h);
+    gl.uniform4f(this.gradeLoc, grade?.brightness ?? 0, grade?.contrast ?? 0, grade?.saturation ?? 0, grade?.temperature ?? 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  /** 整個畫面蓋一層純色（rgb 0～1），透明度 opacity（穿黑／白轉場，§5.9） */
+  drawSolid(rgb: [number, number, number], opacity: number) {
+    const { gl } = this;
+    gl.useProgram(this.program);
+    gl.activeTexture(gl.TEXTURE0);
+    if (!this.solidTex) this.solidTex = this.texture();
+    gl.bindTexture(gl.TEXTURE_2D, this.solidTex);
+    const px = new Uint8Array([Math.round(rgb[0] * 255), Math.round(rgb[1] * 255), Math.round(rgb[2] * 255), 255]);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    gl.uniform4f(this.rectLoc, 0, 0, 1, 1);
+    gl.uniform1f(this.opacityLoc, opacity);
+    gl.uniform4f(this.uvRectLoc, 0, 0, 1, 1);
+    gl.uniform4f(this.gradeLoc, 0, 0, 0, 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
@@ -163,12 +217,12 @@ export class GlCompositor {
    * 遮罩（SAM，§5.3）：在影像圖層上、遮罩範圍內再畫一次套了效果的影像。source、rect、opacity、crop 和那個圖層的 draw 一樣；
    * mask：蓋住整個來源畫面的遮罩圖（紅色通道 ≥ 0.1 的地方套效果）。
    */
-  drawMasked(source: TexImageSource, rect: Rect, opacity: number, crop: Rect, mask: TexImageSource, effect: MaskEffect) {
+  drawMasked(source: TexImageSource, rect: Rect, opacity: number, crop: Rect, mask: TexImageSource, effect: MaskEffect, grade?: Grade) {
     const { gl } = this;
     if (!this.maskProgram) {
       const program = this.link(MASK_FRAGMENT);
       const loc: Record<string, WebGLUniformLocation> = {};
-      for (const name of ["rect", "opacity", "uvRect", "tex", "mask", "mode", "block", "radius", "solid"]) loc[name] = gl.getUniformLocation(program, name)!;
+      for (const name of ["rect", "opacity", "uvRect", "tex", "mask", "mode", "block", "radius", "solid", "grade"]) loc[name] = gl.getUniformLocation(program, name)!;
       this.maskProgram = { program, loc, maskTex: this.texture(), videoTex: this.texture() };
     }
     const { program, loc, maskTex, videoTex } = this.maskProgram;
@@ -188,6 +242,7 @@ export class GlCompositor {
     gl.uniform2f(loc.block, effect.block[0], effect.block[1]);
     gl.uniform2f(loc.radius, effect.radius[0], effect.radius[1]);
     gl.uniform3f(loc.solid, effect.solid[0], effect.solid[1], effect.solid[2]);
+    gl.uniform4f(loc.grade, grade?.brightness ?? 0, grade?.contrast ?? 0, grade?.saturation ?? 0, grade?.temperature ?? 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.activeTexture(gl.TEXTURE0);
   }

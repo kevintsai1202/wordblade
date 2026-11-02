@@ -8,7 +8,7 @@ import type { EffectRenderer } from "../anim/effectRenderer";
 import { currentAudioGraph } from "../audio/audioGraph";
 import { gainAt, type DuckCurve } from "../audio/ducking";
 import type { Media, Project, Seconds } from "../core/model";
-import { audioPlan } from "./framePlan";
+import { audioPlan, type VideoLayer } from "./framePlan";
 import { layerPlan } from "./layerPlan";
 import { GlCompositor } from "./glCompositor";
 import { CaptionLayer } from "../captions/captionLayer";
@@ -17,6 +17,13 @@ import type { Caption, TimelineWord } from "../core/captions";
 
 /** 播放中，元素時間和該有的素材時間差超過這個值（秒）才重新對齊，避免一直跳 */
 const PLAY_DRIFT: Seconds = 0.15;
+
+/** 圖層的框、透明度與色彩（併進下層狀態：轉場推移、淡化或調色改了，讀下層畫面的特效才會重畫） */
+function layerLook(layer: VideoLayer): string {
+  const r = layer.rect;
+  const g = layer.grade;
+  return `:${r.x.toFixed(3)},${layer.opacity.toFixed(3)}${g ? `:g${g.brightness},${g.contrast},${g.saturation},${g.temperature}` : ""}`;
+}
 /** 暫停時差超過這個值（秒）就把元素拖到正確位置 */
 const SEEK_EPSILON: Seconds = 1 / 60;
 
@@ -187,6 +194,12 @@ export class PreviewPlayer {
         continue;
       }
       const layer = item.layer;
+      // 穿黑／白轉場的純色（§5.9）
+      if (layer.solid) {
+        this.compositor.drawSolid(layer.solid, layer.opacity);
+        below += `|${layer.clipId}:${layer.opacity.toFixed(3)}`;
+        continue;
+      }
       active.add(layer.clipId);
       const media = project.media.find((m) => m.id === layer.mediaId);
       // 原檔找不到：畫「Media Offline」卡代替（不擋播放與剪輯）
@@ -204,8 +217,8 @@ export class PreviewPlayer {
           return i;
         });
         const ready = !!img?.complete && (img?.naturalWidth ?? 0) > 0;
-        if (ready) this.compositor.draw(img!, layer.rect, layer.opacity, layer.crop);
-        below += `|${layer.clipId}:${ready ? "1" : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
+        if (ready) this.compositor.draw(img!, layer.rect, layer.opacity, layer.crop, layer.grade);
+        below += `|${layer.clipId}:${ready ? "1" : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}${layerLook(layer)}`;
         continue;
       }
       const clip = project.clips.find((c) => c.id === layer.clipId)!;
@@ -234,12 +247,12 @@ export class PreviewPlayer {
         drawn = el;
       }
       if (drawn) {
-        this.compositor.draw(drawn, layer.rect, layer.opacity, layer.crop);
+        this.compositor.draw(drawn, layer.rect, layer.opacity, layer.crop, layer.grade);
         // SAM 遮罩疊在這個影像圖層上（素材時間）；狀態併進 below，讀下層畫面的 3D 場景才會跟著重畫
         below += this.masks.draw(this.compositor, project, layer, drawn, width, height);
       }
       // 下層狀態含放大範圍：改了放大，讀下層畫面的特效（3D 場景）才會重畫
-      below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : useThumb ? `t${thumb.time}` : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
+      below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : useThumb ? `t${thumb.time}` : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}${layerLook(layer)}`;
     }
 
     this.canvas.dataset.offline = String(offline);

@@ -3,6 +3,7 @@
 // 再交給合成器的 drawMasked 套效果。效果大小以 1080p 為準：馬賽克格子＝strength 像素、模糊 sigma＝strength 像素，依輸出高度縮放。
 import type { GlCompositor, MaskEffect } from "../compositor/glCompositor";
 import type { MaskObject, MaskSample, Project, Rect } from "../core/model";
+import type { GradeValues } from "../core/colorGrade";
 import { decodeMask } from "./decoder";
 import { activeSample } from "./tracks";
 
@@ -18,6 +19,8 @@ export interface MaskTarget {
   rect: Rect;
   opacity: number;
   crop?: Rect;
+  /** 色彩調整（和影像圖層同一組，遮罩區才不會沒調色） */
+  grade?: GradeValues;
 }
 
 /** 顏色字串 #rrggbb → 0～1 */
@@ -125,7 +128,7 @@ export class MaskLayer {
         radius: [strength * px[0], strength * px[1]],
         solid: rgb(obj.effect.color),
       };
-      compositor.drawMasked(source, target.rect, target.opacity, crop, this.maskImage(obj, s, mw, mh), effect);
+      compositor.drawMasked(source, target.rect, target.opacity, crop, this.maskImage(obj, s, mw, mh), effect, target.grade);
       state += `|m:${obj.id}@${s.t}:${obj.effect.kind}${obj.effect.strength}${obj.expand}`;
     }
     return state;

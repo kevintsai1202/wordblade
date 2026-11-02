@@ -18,6 +18,7 @@ import { useMediaLibrary } from "./ui/useMediaLibrary";
 import { useSeparation } from "./ui/useSeparation";
 import { VibeTab } from "./ui/VibeTab";
 import { InspectorTab } from "./ui/InspectorTab";
+import { ColorTab } from "./ui/ColorTab";
 import { ExportTab } from "./ui/ExportTab";
 import { TranscribePanel } from "./ui/TranscribePanel";
 import { CaptionStyleTab } from "./ui/CaptionStyleTab";
@@ -347,6 +348,7 @@ function App() {
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
             textures: <TextureTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
+            color: <ColorTab project={project} range={state.range} dispatch={dispatch} />,
             revoice: <RevoiceTab engine={engine} project={project} range={state.range} importSources={importSources} dispatch={dispatch} />,
             intro: <IntroTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,

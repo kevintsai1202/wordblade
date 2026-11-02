@@ -73,3 +73,46 @@ export function rewriteTextureRefs(effectParams: Record<string, unknown>, textur
   }
   return changed ? { ...effectParams, params: next } : effectParams;
 }
+
+/** 2D 圖層的圖片填色（2026-11-02）：材質引用加上平鋪次數與蓋多少 */
+export interface LayerFill extends TextureRef {
+  /** 0～1，1 是完全換成材質圖 */
+  mix?: number;
+}
+
+/**
+ * 2D 特效的實例（Effect.params＋id）裡各圖層的 fill（材質引用）改寫成沙盒用的 {texture: 索引, repeat, mix}，
+ * 回傳改寫後的實例與要送進沙盒的圖（素材 id，依索引）。沒有填色就原樣回傳、ids 為空。
+ */
+export function resolveLayerFills(instance: Record<string, unknown>): { instance: Record<string, unknown>; ids: string[] } {
+  const layers = instance.layers;
+  if (!Array.isArray(layers) || !layers.some((l) => isTextureRef((l as { fill?: unknown })?.fill))) return { instance, ids: [] };
+  const ids: string[] = [];
+  const next = layers.map((l: Record<string, unknown>) => {
+    const fill = l?.fill as LayerFill | undefined;
+    if (!isTextureRef(fill)) return l;
+    let at = ids.indexOf(fill.color);
+    if (at < 0) at = ids.push(fill.color) - 1;
+    return { ...l, fill: { texture: at, repeat: fill.repeat ?? 2, mix: fill.mix ?? 1 } };
+  });
+  return { instance: { ...instance, layers: next }, ids };
+}
+
+/** 材質庫改了時，改寫 2D 特效各圖層 fill 裡指向這個材質的引用（change 回 null 就拿掉填色）；沒改到回傳原物件 */
+export function rewriteLayerFills(effectParams: Record<string, unknown>, textureId: string, change: (ref: TextureRef) => TextureRef | null): Record<string, unknown> {
+  const layers = effectParams.layers;
+  if (!Array.isArray(layers)) return effectParams;
+  let changed = false;
+  const next = layers.map((l: Record<string, unknown>) => {
+    const fill = l?.fill;
+    if (!isTextureRef(fill) || fill.textureId !== textureId) return l;
+    changed = true;
+    const ref = change(fill);
+    if (!ref) {
+      const { fill: _drop, ...rest } = l;
+      return rest;
+    }
+    return { ...l, fill: { ...fill, ...ref } };
+  });
+  return changed ? { ...effectParams, layers: next } : effectParams;
+}

@@ -130,3 +130,15 @@ describe("靜音範圍跟著 AI 片段", () => {
     // 長度是框選範圍（2 秒），不是 AI 片段的長度
   });
 });
+
+// 卡拉 OK 自己錄的（P1-9；2026-11-02）：錄音比範圍長時剪到範圍長度
+describe("addVoiceover：自己錄的", () => {
+  it("錄了 4.3 秒、範圍 4 秒：片段剪成 4 秒", () => {
+    const base = makeProject();
+    const p0 = { ...base, media: [...base.media, { id: "take", kind: "audio" as const, duration: 4.3, audio: true }] };
+    const p = addVoiceover(p0, { id: "k", start: 2, end: 6, text: "hi", mediaId: "take", source: "recorded" });
+    const clip = p.clips.find((c) => c.id === p.voiceovers![0].clipId)!;
+    expect(clip.srcOut - clip.srcIn).toBeCloseTo(4);
+    expect(p.voiceovers![0].source).toBe("recorded");
+  });
+});

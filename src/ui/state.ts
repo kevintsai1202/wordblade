@@ -205,6 +205,8 @@ export function keyToAction(e: KeyInput, state: AppState): Action | null {
     return clip ? { type: "commit", edits: [{ kind: "split", clipId: clip.id, t: state.playhead }] } : null;
   }
   if (e.ctrlKey) return null;
+  // Shift+F：在播放頭插入定格（§5.20，預設 2 秒）
+  if (e.shiftKey && key === "f") return { type: "commit", edits: [{ kind: "insertFreeze", t: state.playhead }] };
   // 播放：Space 切換；L 前進、J 倒退，同方向連按加速到 8 倍；K 停
   if (e.key === " ") return state.playing ? { type: "pause" } : { type: "play", rate: 1 };
   if (key === "k") return { type: "pause" };

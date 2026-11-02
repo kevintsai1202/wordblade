@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 /** 子頁籤屬於哪個大類別（和 src/ui/EditPanel.tsx 的 TAB_GROUPS 一致） */
 const GROUP: Record<string, string> = {
   media: "media", transcript: "transcript", style: "transcript",
-  vibe: "effects", vibe3d: "effects", zoom: "effects", mask: "effects", textures: "effects", audio: "effects", intro: "effects", revoice: "effects",
+  vibe: "effects", vibe3d: "effects", zoom: "effects", mask: "effects", textures: "effects", audio: "effects", intro: "effects", revoice: "effects", color: "effects",
   inspector: "inspector", director: "director", export: "export", publish: "export",
 };
 

@@ -4,7 +4,7 @@
 // AI 設定（閘道網址、邀請權杖）和 Vibe特效、音效共用；第一次產生時顯示同意說明（送什麼、送到哪）。
 import { useEffect, useState, type Dispatch } from "react";
 import { GatewayClient, GatewayError, loadSettings, saveSettings, type GatewaySettings } from "../ai/gateway";
-import { rewriteTextureRefs } from "../anim/textureRefs";
+import { rewriteLayerFills, rewriteTextureRefs } from "../anim/textureRefs";
 import type { Edit } from "../core/history";
 import type { Media, Project, TextureAsset } from "../core/model";
 import type { Engine, ImportSource } from "../engine/Engine";
@@ -118,7 +118,8 @@ export function TextureTab({ project, engine, importSources, dispatch }: {
   /** 專案裡每個特效的參數若有指向這個材質的引用，改寫成新的設定（change 回傳 null 就拿掉）；沒有引用的特效不產生編輯 */
   const refEdits = (textureId: string, change: Parameters<typeof rewriteTextureRefs>[2]): Edit[] =>
     project.effects.flatMap((e): Edit[] => {
-      const next = rewriteTextureRefs(e.params, textureId, change);
+      // 3D 參數裡的引用與 2D 圖層的圖片填色（2026-11-02）一起改
+      const next = rewriteLayerFills(rewriteTextureRefs(e.params, textureId, change), textureId, change);
       return next === e.params ? [] : [{ kind: "setEffectParams", effectId: e.id, params: next }];
     });
 

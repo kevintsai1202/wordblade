@@ -2,6 +2,9 @@
 // 例如「去贅詞 Remove all」、AI 導演採用一條建議，都只要一次 Ctrl+Z（§5.11、§5.16）。
 // 歷史存的是整份專案的快照；timeline 的函式用 Immer 做結構共享，快照之間沒改到的部分是同一個物件。
 import { addEffect, deleteEffect, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
+import { setTransition } from "./transitions";
+import { deleteColorGrade, setColorGrade, type GradeValues } from "./colorGrade";
+import type { TransitionKind } from "./model";
 import type { CameraKey, DirectorChapter, Effect, MaskObject, Plugin, Project, Seconds, Suggestion, Synth, TextureAsset, Word, ZoomRegion } from "./model";
 import { setSuggestionStatus, setSuggestions } from "./suggestions";
 import { addMasks, deleteMasks, setMask } from "./masks";
@@ -13,7 +16,7 @@ import { separateStems } from "./stems";
 import { addVoiceover, deleteVoiceover, setVoiceoverActive, type NewVoiceover } from "./voiceover";
 import { insertIntro, type IntroInsert } from "../intro/insert";
 import type { CaptionStyle } from "../captions/captionLayout";
-import { cutByWords, cutSourceRanges, deleteClip, layoutV1, moveClip, placeLoop, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
+import { cutByWords, cutSourceRanges, deleteClip, insertFreeze, layoutV1, moveClip, placeLoop, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
 
 /** 一個編輯動作 */
 export type Edit =
@@ -53,7 +56,11 @@ export type Edit =
   | { kind: "insertIntro"; intro: IntroInsert }
   | { kind: "addVoiceover"; voiceover: NewVoiceover; speed?: number }
   | { kind: "setVoiceoverActive"; id: string; active: boolean }
-  | { kind: "deleteVoiceover"; id: string };
+  | { kind: "deleteVoiceover"; id: string }
+  | { kind: "setTransition"; clipId: string; transition: TransitionKind | null; duration?: Seconds }
+  | { kind: "insertFreeze"; t: Seconds; hold?: Seconds }
+  | { kind: "setColorGrade"; id: string; values: GradeValues; range?: { start: Seconds; end: Seconds } | null }
+  | { kind: "deleteColorGrade"; id: string };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -95,6 +102,10 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "addVoiceover": return addVoiceover(project, edit.voiceover, edit.speed ?? 1);
     case "setVoiceoverActive": return setVoiceoverActive(project, edit.id, edit.active);
     case "deleteVoiceover": return deleteVoiceover(project, edit.id);
+    case "setTransition": return setTransition(project, edit.clipId, edit.transition, edit.duration);
+    case "insertFreeze": return insertFreeze(project, edit.t, edit.hold);
+    case "setColorGrade": return setColorGrade(project, edit.id, edit.values, edit.range);
+    case "deleteColorGrade": return deleteColorGrade(project, edit.id);
   }
 }
 

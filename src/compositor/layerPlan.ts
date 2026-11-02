@@ -18,14 +18,16 @@ export function layerPlan(project: Project, t: Seconds, fps: number): PlanItem[]
   const v1 = [...project.tracks].filter((tr) => tr.kind === "video").sort((a, b) => a.index - b.index)[0]?.id;
   const trackOf = new Map(project.clips.map((c) => [c.id, c.trackId]));
   const layers = framePlan(project, t);
+  /** 屬於 V1 的圖層（轉場的純色圖層也算 V1） */
+  const onV1 = (l: (typeof layers)[number]) => !!l.solid || trackOf.get(l.clipId) === v1;
   const active = project.effects.filter((e) => t >= e.start && t < e.end).sort((a, b) => a.start - b.start);
   /** 特效 → 一層（區段內的格數四捨五入，§5.1） */
   const item = <K extends "scene" | "overlay">(kind: K, e: (typeof active)[number]) =>
     ({ kind, effectId: e.id, frame: Math.round((t - e.start) * fps), duration: roundTime(e.end - e.start) }) as const;
   return [
-    ...layers.filter((l) => trackOf.get(l.clipId) === v1).map((layer) => ({ kind: "video" as const, layer })),
+    ...layers.filter(onV1).map((layer) => ({ kind: "video" as const, layer })),
     ...active.filter((e) => e.kind === "scene3d").map((e) => item("scene", e)),
-    ...layers.filter((l) => trackOf.get(l.clipId) !== v1).map((layer) => ({ kind: "video" as const, layer })),
+    ...layers.filter((l) => !onV1(l)).map((layer) => ({ kind: "video" as const, layer })),
     ...active.filter((e) => e.kind === "anim2d" || e.kind === "anim3d").map((e) => item("overlay", e)),
   ];
 }

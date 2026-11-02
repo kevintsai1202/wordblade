@@ -2,7 +2,9 @@
 // 範圍內原本的對白在「AI」狀態下靜音，可隨時切回原音。聲音樣本（約 60～90 秒）取自主對白素材的逐字稿講話區段，
 // 文字與樣本會送到 WordBlade AI 服務與 Fish Audio 克隆聲音（第一次用要同意）。
 import { audioSourceFor } from "../core/stems";
-import { useEffect, useState, type Dispatch } from "react";
+import { useEffect, useRef, useState, type Dispatch } from "react";
+import { startMic, type MicSession } from "../audio/micRecorder";
+import { activeWordIndex, prompterWords, type PrompterWord } from "../ai/karaoke";
 import { GatewayClient, GatewayError, loadSettings } from "../ai/gateway";
 import { buildSeed, dialogueMedia, fitToRange, rangeText } from "../ai/revoice";
 import type { Edit } from "../core/history";
@@ -32,6 +34,9 @@ function message(e: unknown): string {
   return e instanceof GatewayError ? e.message : e instanceof Error ? e.message : `Something went wrong: ${String(e)}`;
 }
 
+/** 開始錄之前倒數幾秒 */
+const COUNTDOWN = 3;
+
 /** 秒數顯示（一位小數） */
 const sec = (t: number) => `${t.toFixed(1)} s`;
 
@@ -59,6 +64,94 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
   }, [range?.start, range?.end]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const token = loadSettings().token;
+
+  /**
+   * 卡拉 OK 重配錄音（P1-9；2026-11-02）：倒數 → 錄音＋提詞器逐字高亮 → 到範圍長度自動停（也可手動停）
+   * → 放到 Voice 軌（同 AI 重配音：範圍內原聲靜音、可切回原聲）。只用瀏覽器的麥克風；不送到任何服務。
+   */
+  const [karaoke, setKaraoke] = useState<{ phase: "countdown" | "recording"; left: number; elapsed: number; words: PrompterWord[]; target: { start: number; end: number }; said: string } | null>(null);
+  /** 錄音中的麥克風與計時器（停止時要收） */
+  const session = useRef<{ mic: MicSession | null; timer: ReturnType<typeof setInterval> | null; startedAt: number }>({ mic: null, timer: null, startedAt: 0 });
+  useEffect(() => () => {
+    if (session.current.timer) clearInterval(session.current.timer);
+    session.current.mic?.cancel();
+  }, []);
+
+  /** 開始：先倒數，倒數完開麥克風開始錄 */
+  const startKaraoke = () => {
+    if (!range || !text.trim()) return;
+    setError(null);
+    const target = { ...range };
+    const said = text.trim();
+    const words = prompterWords(project, target, said);
+    let left = COUNTDOWN;
+    setKaraoke({ phase: "countdown", left, elapsed: 0, words, target, said });
+    session.current.timer = setInterval(() => {
+      left--;
+      if (left > 0) {
+        setKaraoke((k) => (k ? { ...k, left } : k));
+        return;
+      }
+      clearInterval(session.current.timer!);
+      session.current.timer = null;
+      void beginRecording(target, said, words);
+    }, 1000);
+  };
+
+  /** 倒數完：開麥克風、開始計時 */
+  const beginRecording = async (target: { start: number; end: number }, said: string, words: PrompterWord[]) => {
+    try {
+      session.current.mic = await startMic();
+    } catch (e) {
+      setKaraoke(null);
+      setError(`Couldn't use the microphone: ${message(e)}`);
+      return;
+    }
+    session.current.startedAt = performance.now();
+    setKaraoke({ phase: "recording", left: 0, elapsed: 0, words, target, said });
+    const length = target.end - target.start;
+    session.current.timer = setInterval(() => {
+      const elapsed = (performance.now() - session.current.startedAt) / 1000;
+      setKaraoke((k) => (k ? { ...k, elapsed } : k));
+      if (elapsed >= length) void stopKaraoke(target, said);
+    }, 50);
+  };
+
+  /** 停止（自動或手動）：錄好的放到 Voice 軌 */
+  const stopKaraoke = async (target: { start: number; end: number }, said: string) => {
+    if (session.current.timer) clearInterval(session.current.timer);
+    session.current.timer = null;
+    const mic = session.current.mic;
+    session.current.mic = null;
+    setKaraoke(null);
+    if (!mic) return;
+    setBusy("Adding your take…");
+    try {
+      const take = await mic.stop();
+      const source = await engine.importGenerated(`take-${slug(said)}-${crypto.randomUUID().slice(0, 6)}.wav`, take.wav);
+      const [voice] = await importSources([source]);
+      if (!voice) throw new Error("Couldn't add the recording to the media library.");
+      const edit: Edit = {
+        kind: "addVoiceover",
+        voiceover: { id: `vo-${crypto.randomUUID().slice(0, 8)}`, start: target.start, end: target.end, text: said, mediaId: voice.id, source: "recorded" },
+      };
+      dispatch({ type: "commit", edits: [edit] });
+      if (take.peak >= 0.99) setError("The recording is clipping. Move back from the mic or lower the input level and try again.");
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /** 放棄這次錄音 */
+  const cancelKaraoke = () => {
+    if (session.current.timer) clearInterval(session.current.timer);
+    session.current.timer = null;
+    session.current.mic?.cancel();
+    session.current.mic = null;
+    setKaraoke(null);
+  };
 
   /** 產生：樣本 → 念（必要時再念一次加快語速）→ 進素材庫 → 放上 Voice 軌（一次提交，一次 Ctrl+Z 復原） */
   const generate = async (target: { start: number; end: number }, said: string) => {
@@ -126,10 +219,28 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
       <div className="vibe-actions">
         <span className="muted">The AI copies the speaker's voice and fits the range.</span>
         <span className="spacer" />
-        <button data-testid="revoice-generate" disabled={busy !== null || !range || !text.trim() || !token} title={!token ? "Set the invite token in Effects → 2D → AI settings first" : undefined} onClick={onGenerate}>
+        <button data-testid="revoice-record" disabled={busy !== null || karaoke !== null || !range || !text.trim()} title="Read the text yourself while it highlights word by word (karaoke)" onClick={startKaraoke}>● Record</button>
+        <button data-testid="revoice-generate" disabled={busy !== null || karaoke !== null || !range || !text.trim() || !token} title={!token ? "Set the invite token in Effects → 2D → AI settings first" : undefined} onClick={onGenerate}>
           {busy ?? "Generate"}
         </button>
       </div>
+      {karaoke && (
+        <div className="karaoke" data-testid="karaoke" data-phase={karaoke.phase}>
+          {karaoke.phase === "countdown"
+            ? <p className="karaoke-countdown" data-testid="karaoke-countdown">{karaoke.left}</p>
+            : <p className="muted" data-testid="karaoke-time">Recording · {sec(karaoke.elapsed)} / {sec(karaoke.target.end - karaoke.target.start)}</p>}
+          <p className="karaoke-text" data-testid="karaoke-text">
+            {karaoke.words.map((w, k) => {
+              const at = karaoke.phase === "recording" ? activeWordIndex(karaoke.words, karaoke.elapsed) : -1;
+              return <span key={k} className={k < at ? "said" : k === at ? "now" : ""} data-word={k}>{w.text} </span>;
+            })}
+          </p>
+          <div className="vibe-actions">
+            {karaoke.phase === "recording" && <button data-testid="karaoke-stop" onClick={() => void stopKaraoke(karaoke.target, karaoke.said)}>■ Stop</button>}
+            <button data-testid="karaoke-cancel" onClick={cancelKaraoke}>Cancel</button>
+          </div>
+        </div>
+      )}
       {error && <p className="error" data-testid="revoice-error">{error}</p>}
       {pending && (
         <div className="consent" data-testid="revoice-consent">
@@ -145,9 +256,9 @@ export function RevoiceTab({ engine, project, range, importSources, dispatch }: 
               <li key={v.id} data-testid="revoice-item" data-voiceover-id={v.id} data-active={v.active}>
                 <span className="media-name" title={v.text}>{v.text}</span>
                 <span className="muted">{formatTimecode(v.start).slice(3)} – {formatTimecode(v.end).slice(3)}</span>
-                <button type="button" data-testid="revoice-toggle" title="Switch between the original audio and the AI voice"
+                <button type="button" data-testid="revoice-toggle" title="Switch between the original audio and the new voice"
                   onClick={() => dispatch({ type: "commit", edits: [{ kind: "setVoiceoverActive", id: v.id, active: !v.active }] })}>
-                  {v.active ? "Playing: AI" : "Playing: Original"}
+                  {v.active ? (v.source === "recorded" ? "Playing: Your take" : "Playing: AI") : "Playing: Original"}
                 </button>
                 <button type="button" data-testid="revoice-delete" onClick={() => dispatch({ type: "commit", edits: [{ kind: "deleteVoiceover", id: v.id }] })}>Delete</button>
               </li>

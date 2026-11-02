@@ -8,8 +8,9 @@ import { runPlane3d, type BoardParams } from "../ai/plane3d";
 import { captureFrame } from "./capture";
 import manifest from "../anim/anim_api_manifest.json";
 import { displayOf, type Component, type ParamDef } from "../anim/library";
-import type { CameraKey, Clip, Effect, Project, TextureAsset } from "../core/model";
-import type { TextureRef } from "../anim/textureRefs";
+import type { CameraKey, Clip, Effect, Project, TextureAsset, TransitionKind } from "../core/model";
+import { TRANSITION_DEFAULT, TRANSITION_MAX, TRANSITION_MIN } from "../core/transitions";
+import type { LayerFill, TextureRef } from "../anim/textureRefs";
 import { MAX_SPEED, MIN_SPEED } from "../core/speed";
 import { clipEnd } from "../core/timeline";
 import type { Action } from "./state";
@@ -126,7 +127,7 @@ export function InspectorTab({ project, effectId, clipId = null, playhead = 0, d
   const effect: Effect | undefined = project.effects.find((e) => e.id === effectId);
   if (!effect) {
     const clip = project.clips.find((c) => c.id === clipId);
-    if (clip) return <ClipInspector project={project} clip={clip} dispatch={dispatch} />;
+    if (clip) return <ClipInspector project={project} clip={clip} dispatch={dispatch} playhead={playhead} />;
     return <p className="muted placeholder">Select a clip or an effect on the timeline to edit it.</p>;
   }
   if (effect.kind !== "anim2d") return <Inspector3D project={project} effect={effect} playhead={playhead} dispatch={dispatch} preview={preview?.effectId === effect.id ? preview.params : null} onPreview={onPreview} onOpenTab={onOpenTab} />;
@@ -173,9 +174,57 @@ export function InspectorTab({ project, effectId, clipId = null, playhead = 0, d
             {Object.entries(component.params ?? {}).map(([key, def]) => (
               <ParamField key={key} name={key} def={def} label={display.params[key]?.label ?? key} labels={display.params[key]?.labels} value={layer.params[key]} onChange={(v) => setParam(i, key, v)} />
             ))}
+            <LayerFillField textures={(project.textures ?? []).filter((t) => t.kind === "texture")} fill={(layer as { fill?: LayerFill }).fill}
+              onChange={(fill) => update({ ...effect.params, layers: layers.map((l, j) => (j !== i ? l : fill ? { ...l, fill } : withoutFill(l))) })}
+              onNew={onOpenTab ? () => onOpenTab("textures") : undefined} />
           </fieldset>
         );
       })}
+    </div>
+  );
+}
+
+/** 拿掉圖層的 fill */
+function withoutFill<T extends object>(l: T): T {
+  const { fill: _drop, ...rest } = l as T & { fill?: unknown };
+  return rest as T;
+}
+
+/**
+ * 2D 圖層的圖片填色（2026-11-02）：選材質庫的一張材質，圖層的形狀（文字、圖形）改用材質圖平鋪上色（例如金屬字、木紋字）。
+ * 任何 2D 插件都能用，不用插件配合。
+ */
+function LayerFillField({ textures, fill, onChange, onNew }: {
+  textures: TextureAsset[];
+  fill: LayerFill | undefined;
+  onChange: (fill: LayerFill | null) => void;
+  /** 切到 Textures 頁籤產生新的材質 */
+  onNew?: () => void;
+}) {
+  /** 選一張材質（保留原本的平鋪與強度） */
+  const pick = (id: string) => {
+    const t = textures.find((x) => x.id === id);
+    onChange(t ? { textureId: t.id, color: t.colorMediaId, repeat: fill?.repeat ?? 2, mix: fill?.mix ?? 1 } : null);
+  };
+  return (
+    <div className="layer-fill" data-testid="layer-fill">
+      <label className="param-field"><span>Image fill</span>
+        <select data-testid="layer-fill-texture" value={fill?.textureId ?? ""} onChange={(e) => (e.target.value === "__new" ? onNew?.() : pick(e.target.value))}>
+          <option value="">None</option>
+          {textures.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          {onNew && <option value="__new">New texture…</option>}
+        </select>
+      </label>
+      {fill && (
+        <>
+          <label className="param-field"><span>Tiles</span>
+            <CommitInput type="number" data-testid="layer-fill-repeat" value={fill.repeat ?? 2} step={0.5} min={0.25} max={20} onCommit={(x) => onChange({ ...fill, repeat: Math.min(20, Math.max(0.25, Number(x) || 2)) })} />
+          </label>
+          <label className="param-field"><span>Strength</span>
+            <CommitInput type="number" data-testid="layer-fill-mix" value={fill.mix ?? 1} step={0.1} min={0} max={1} onCommit={(x) => onChange({ ...fill, mix: Math.min(1, Math.max(0, Number(x) || 0)) })} />
+          </label>
+        </>
+      )}
     </div>
   );
 }
@@ -338,6 +387,41 @@ function KeyTimeInput({ value, max, onCommit }: { value: number; max: number; on
   );
 }
 
+/** 轉場種類的顯示名稱（§5.9） */
+const TRANSITIONS: { kind: TransitionKind; label: string }[] = [
+  { kind: "dissolve", label: "Dissolve" },
+  { kind: "dipBlack", label: "Dip to black" },
+  { kind: "dipWhite", label: "Dip to white" },
+  { kind: "pushLeft", label: "Push left" },
+  { kind: "pushRight", label: "Push right" },
+];
+
+/** 片段起點的轉場（和前一段之間）：種類下拉＋長度；不改總長度 */
+function TransitionField({ project, clip, dispatch }: { project: Project; clip: Clip; dispatch: Dispatch<Action> }) {
+  const current = project.transitions?.find((t) => t.clipId === clip.id);
+  /** 送出一次變更 */
+  const set = (kind: TransitionKind | null, duration = current?.duration ?? TRANSITION_DEFAULT) =>
+    dispatch({ type: "commit", edits: [{ kind: "setTransition", clipId: clip.id, transition: kind, duration }] });
+  return (
+    <fieldset className="param-group">
+      <legend>Transition in</legend>
+      <label className="param-field"><span>Type</span>
+        <select data-testid="transition-kind" value={current?.kind ?? ""} onChange={(e) => set((e.target.value || null) as TransitionKind | null)}>
+          <option value="">None</option>
+          {TRANSITIONS.map((t) => <option key={t.kind} value={t.kind}>{t.label}</option>)}
+        </select>
+      </label>
+      {current && (
+        <label className="param-field"><span>Length (s)</span>
+          <input type="number" data-testid="transition-duration" min={TRANSITION_MIN} max={TRANSITION_MAX} step={0.1} value={current.duration}
+            onChange={(e) => { const v = Number(e.target.value); if (v > 0) set(current.kind, v); }} />
+        </label>
+      )}
+      <p className="muted">Plays across the cut with the previous clip. The total length doesn't change.</p>
+    </fieldset>
+  );
+}
+
 /** 變速的常用倍數 */
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 
@@ -345,9 +429,12 @@ const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
  * 片段屬性（spec §5.20 片段變速，P1-6）：0.25～4 倍，常用倍數按鈕＋自訂。同位置的連動片段（A1 對白）一起變，
  * V1 片段變長變短時後面的一起挪（setClipSpeed）。每次一筆可復原的編輯。
  */
-function ClipInspector({ project, clip, dispatch }: { project: Project; clip: Clip; dispatch: Dispatch<Action> }) {
+function ClipInspector({ project, clip, dispatch, playhead }: { project: Project; clip: Clip; dispatch: Dispatch<Action>; playhead?: number }) {
   const media = project.media.find((m) => m.id === clip.mediaId);
   const track = project.tracks.find((t) => t.id === clip.trackId);
+  /** V1 片段才有轉場與定格；轉場要有前一段 */
+  const isV1 = track?.kind === "video" && track.index === Math.min(...project.tracks.filter((t) => t.kind === "video").map((t) => t.index));
+  const hasPrev = isV1 && project.clips.some((c) => c.trackId === clip.trackId && c.id !== clip.id && Math.abs(clipEnd(c) - clip.start) < 1e-6);
   const label = track ? `${track.kind === "video" ? "V" : "A"}${track.index + 1}` : "";
   /** 設倍數 */
   const set = (speed: number) => dispatch({ type: "commit", edits: [{ kind: "setSpeed", clipId: clip.id, speed }] });
@@ -368,6 +455,15 @@ function ClipInspector({ project, clip, dispatch }: { project: Project; clip: Cl
         </label>
         <p className="muted">The linked audio changes with it and keeps its pitch. Later clips move to stay in sync.</p>
       </fieldset>
+      {isV1 && hasPrev && <TransitionField project={project} clip={clip} dispatch={dispatch} />}
+      {isV1 && !clip.freeze && (
+        <fieldset className="param-group">
+          <legend>Freeze frame</legend>
+          <button type="button" data-testid="freeze-insert" disabled={playhead === undefined || playhead < clip.start || playhead >= clipEnd(clip)}
+            onClick={() => dispatch({ type: "commit", edits: [{ kind: "insertFreeze", t: playhead! }] })}>Freeze 2 s at playhead</button>
+          <p className="muted">Shortcut: Shift+F. Later clips move back; the audio is silent while frozen.</p>
+        </fieldset>
+      )}
     </div>
   );
 }

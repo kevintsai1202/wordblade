@@ -54,11 +54,27 @@ export class ExportCancelled extends Error {
   }
 }
 
-/** 一個片段的解碼串流：預先要下一格（解碼和合成重疊） */
+/**
+ * 一個片段的解碼串流：預先要下一格（解碼和合成重疊）。
+ * 定格與轉場停格（2026-11-02）會讓連續好幾格要同一個素材時間：串流只解不重複的時間，
+ * 同一個時間的格沿用 current，換到新的時間才關掉舊的、取下一格。
+ */
 interface ClipStream {
   iter: AsyncGenerator<VideoSample | null, void, unknown>;
-  pending: Promise<IteratorResult<VideoSample | null, void>>;
+  /** 下一個不重複時間的解碼結果（沒有下一個就是 null） */
+  pending: Promise<IteratorResult<VideoSample | null, void>> | null;
   last: number;
+  /** 這個串流從第幾格開始、每格的素材時間 */
+  first: number;
+  times: number[];
+  /** 目前這一格用的畫格與它的素材時間 */
+  current: VideoSample | null;
+  currentTime: number | null;
+}
+
+/** 連續重複的時間只留一個 */
+function uniqueRuns(times: number[]): number[] {
+  return times.filter((t, k) => k === 0 || t !== times[k - 1]);
 }
 
 /** 動態載入 mediabunny（拆成獨立分塊） */
@@ -151,16 +167,29 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
         if (media.kind !== "video") continue;
         const track = await (await openInput(media)).getPrimaryVideoTrack();
         if (!track) continue;
-        const iter = new mb.VideoSampleSink(track).samplesAtTimestamps(r.srcTimes.slice(i - r.first));
-        streams.set(r.clipId, { iter, pending: iter.next(), last: r.last });
+        const times = r.srcTimes.slice(i - r.first);
+        const iter = new mb.VideoSampleSink(track).samplesAtTimestamps(uniqueRuns(times));
+        streams.set(r.clipId, { iter, pending: iter.next(), last: r.last, first: i, times, current: null, currentTime: null });
       }
       // 每個開著的串流這一格都要取一格（不管有沒有畫到），並預先要下一格
       const samples = new Map<string, VideoSample>();
+      /** 這一格畫完要關掉的畫格（串流結束的） */
+      const finished: VideoSample[] = [];
       for (const [clipId, s] of streams) {
-        const result = await s.pending;
-        if (result.value) samples.set(clipId, result.value);
-        if (i < s.last) s.pending = s.iter.next();
-        else {
+        const want = s.times[i - s.first];
+        if (s.currentTime === null || want !== s.currentTime) {
+          s.current?.close();
+          const result = s.pending ? await s.pending : { value: null };
+          s.current = result.value ?? null;
+          s.currentTime = want;
+          // 後面還有不同的時間才預先要下一格
+          const more = s.times.slice(i - s.first + 1).some((t) => t !== want);
+          s.pending = more ? s.iter.next() : null;
+        }
+        if (s.current) samples.set(clipId, s.current);
+        if (i >= s.last) {
+          if (s.current) finished.push(s.current);
+          s.current = null;
           void s.iter.return(undefined);
           streams.delete(clipId);
         }
@@ -178,13 +207,17 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
           }
           if (media?.kind === "image") {
             const bitmap = images.get(media.id);
-            if (bitmap) compositor.draw(bitmap, layer.rect, layer.opacity, layer.crop);
+            if (bitmap) compositor.draw(bitmap, layer.rect, layer.opacity, layer.crop, layer.grade);
+            continue;
+          }
+          if (layer.solid) {
+            compositor.drawSolid(layer.solid, layer.opacity);
             continue;
           }
           const sample = samples.get(layer.clipId);
           if (!sample) continue;
           const frame = sample.toVideoFrame();
-          compositor.draw(frame, layer.rect, layer.opacity, layer.crop);
+          compositor.draw(frame, layer.rect, layer.opacity, layer.crop, layer.grade);
           // SAM 遮罩（和預覽同一個畫法）
           masks.draw(compositor, project, layer, frame, plan.width, plan.height);
           frame.close();
@@ -204,7 +237,7 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
           effectErrors.set(effect.id, e instanceof Error ? e.message : String(e));
         }
       }
-      for (const sample of samples.values()) sample.close();
+      for (const sample of finished) sample.close();
       // 字幕畫在最上層（和預覽同一個 CaptionLayer）
       const captionCanvas = captionLayer?.render(job.captions!.captions, job.captions!.words, t, captionStyle, plan.width, plan.height);
       if (captionCanvas) compositor.draw(captionCanvas, { x: 0, y: 0, w: 1, h: 1 }, 1);
@@ -225,7 +258,8 @@ export async function runExport(job: ExportJob): Promise<ExportResult> {
   } finally {
     // 預先要的下一格（取消或出錯時還沒用到）也要釋放，否則解碼器的畫格會被 GC 回收才關
     for (const s of streams.values()) {
-      void s.pending.then((r) => r.value?.close(), () => undefined);
+      s.current?.close();
+      void s.pending?.then((r) => r.value?.close(), () => undefined);
       void s.iter.return(undefined);
     }
     for (const bitmap of images.values()) bitmap.close();

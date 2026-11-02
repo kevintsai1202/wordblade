@@ -304,3 +304,10 @@ button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor
 .texture-tile.background { width: 128px; height: 72px; background-repeat: no-repeat; background-position: center; }
 .texture-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
 .texture-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 卡拉 OK 重配錄音的提詞器（P1-9；2026-11-02） */
+.karaoke { border: 1px solid var(--border, #444); border-radius: 6px; padding: 8px 10px; margin: 8px 0; }
+.karaoke-countdown { font-size: 32px; font-weight: 700; text-align: center; margin: 4px 0; }
+.karaoke-text { font-size: 18px; line-height: 1.6; }
+.karaoke-text .said { opacity: 0.45; }
+.karaoke-text .now { color: #ffd34d; font-weight: 700; }

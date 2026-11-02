@@ -5,7 +5,7 @@
 import type { Effect, Plugin, Project } from "../core/model";
 import { PluginError, type SandboxHost } from "../sandbox/sandboxHost";
 import type { ThreeHost } from "../sandbox/threeHost";
-import { resolveTextureRefs } from "./textureRefs";
+import { resolveLayerFills, resolveTextureRefs } from "./textureRefs";
 import { hasSound, renderSound, soundGain, soundKey, wavBlob, type EffectSound, type SoundClip } from "./effectSound";
 
 /** 依素材 id 取得解碼好的圖片（3D 插件的 env.images；一鍵片頭的封面） */
@@ -133,7 +133,12 @@ export class EffectRenderer {
       const images = ids.length && this.images ? { key: ids.join(","), load: () => this.images!(ids) } : null;
       return this.three.render(effect.id, code, { ...req, params: sent, box: p.box ?? null, seed: 1 }, background, images);
     }
-    return this.host.request<ImageBitmap>("render", { instance: instanceOf(effect), ...req, background }, background ? [background] : []);
+    // 圖層的圖片填色（2026-11-02）：用到的材質圖複製一份送進沙盒（快取裡的圖不轉移），沙盒畫完關掉
+    const { instance, ids } = resolveLayerFills(instanceOf(effect));
+    if (!ids.length || !this.images) return this.host.request<ImageBitmap>("render", { instance, ...req, background }, background ? [background] : []);
+    return this.images(ids)
+      .then((bitmaps) => Promise.all(bitmaps.map((b) => createImageBitmap(b))))
+      .then((textures) => this.host.request<ImageBitmap>("render", { instance, ...req, background, textures }, [...(background ? [background] : []), ...textures]));
   }
 
   /**

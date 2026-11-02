@@ -99,6 +99,10 @@ describe("keyToAction（Resolve 熱鍵）", () => {
     expect(keyToAction(key("b", { ctrlKey: true }), s)).toEqual({ type: "commit", edits: [{ kind: "split", clipId: "v1b", t: 15 }] });
   });
 
+  it("Shift+F 在播放頭插入 2 秒定格（2026-11-02）", () => {
+    expect(keyToAction(key("F", { shiftKey: true }), s)).toEqual({ type: "commit", edits: [{ kind: "insertFreeze", t: 15 }] });
+  });
+
   it("Delete 漣漪刪除選取的片段", () => {
     expect(keyToAction(key("Delete"), s)).toEqual({ type: "deleteSelected" });
   });
