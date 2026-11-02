@@ -151,6 +151,10 @@ test("Re-voice：選範圍 → 改文字 → 產生（兩次加快後片段變�
   expect(p.voiceovers[0]).toMatchObject({ text: "This is the new line.", active: true, clipId: clip.id });
   expect(p.voiceovers[0].end - p.voiceovers[0].start).toBeCloseTo(4, 0);
   await expect(page.getByTestId("revoice-toggle")).toHaveText("Playing: AI");
+  // AI 聲音的軌標 Voice；範圍中間的字幕換成重配的文字（2026-11-02）
+  await expect(page.locator(".track-header .track-badge", { hasText: "Voice" })).toHaveCount(1);
+  await page.locator(".ruler").click({ position: { x: 1 + 8 * PX, y: 5 } });
+  await expect(page.getByTestId("preview-canvas")).toHaveAttribute("data-caption", /new line/, { timeout: 10_000 });
 
   // 匯出：範圍內只有 AI 的聲音（1 kHz，振幅 0.3 → RMS 約 0.21）；原音（RMS 約 0.57）被靜音；範圍外照舊
   const aiFile = await exportTo(page, "ai");

@@ -18,6 +18,14 @@ function liveVoiceovers(project: Project): Voiceover[] {
   return (project.voiceovers ?? []).filter((v) => project.clips.some((c) => c.id === v.clipId));
 }
 
+/** 生效中的重配音與它在時間軸上的範圍（字幕換字用） */
+export function activeVoiceovers(project: Project): { voiceover: Voiceover; from: Seconds; to: Seconds }[] {
+  return liveVoiceovers(project).filter((v) => v.active).map((v) => {
+    const clip = project.clips.find((c) => c.id === v.clipId)!;
+    return { voiceover: v, from: clip.start, to: clip.start + (v.end - v.start) };
+  });
+}
+
 /**
  * 目前生效（active，且 AI 片段還在）的重配音範圍：這些時間內原本的對白要靜音。
  * 起點跟著 AI 片段在時間軸上的位置走（前面剪掉或移動時，記錄的 start 會過時，片段才是準的），長度是框選範圍的長度。

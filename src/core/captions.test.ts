@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { makeClip, makeProject } from "./fixtures";
 import type { Project, Word } from "./model";
 import { breakLines, buildCaptions, joinWords, timelineWords } from "./captions";
+import { addVoiceover, setVoiceoverActive } from "./voiceover";
 
 /** 用一串英文詞建逐字稿：每個詞 0.3 秒、詞間 0.05 秒；gapsAfter 指定某些詞後面的停頓 */
 function wordsOf(text: string, gapsAfter: Record<number, number> = {}, mediaId = "m1"): Word[] {
@@ -140,5 +141,23 @@ describe("joinWords（中文字之間不加空白）", () => {
     const caps = buildCaptions(projectWith(words));
     expect(caps[caps.length - 1].lines.join("/")).toBe("好？");
     for (const c of caps) for (const line of c.lines) expect([...line].length).toBeLessThanOrEqual(19);
+  });
+});
+
+// AI 重配音（2026-11-02）：生效時範圍內的字幕換成重配的文字（平均分到範圍裡）；切回原聲就回到原本的字
+describe("字幕跟著 AI 重配音", () => {
+  it("範圍 0.9～2.2 秒蓋住 hello、um；生效時換成 hi there，切回原聲回到原字", () => {
+    let p = makeProject();
+    p = { ...p, media: [...p.media, { id: "vo", kind: "audio", duration: 1, audio: true }] };
+    p = addVoiceover(p, { id: "v", start: 0.9, end: 2.2, text: "hi there", mediaId: "vo" });
+    const on = timelineWords(p).map((w) => w.text);
+    expect(on).toContain("hi");
+    expect(on).toContain("there");
+    expect(on).not.toContain("hello");
+    expect(on).not.toContain("um");
+    expect(on).toContain("world");
+    const off = timelineWords(setVoiceoverActive(p, "v", false)).map((w) => w.text);
+    expect(off).toContain("hello");
+    expect(off).not.toContain("hi");
   });
 });

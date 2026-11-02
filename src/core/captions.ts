@@ -2,6 +2,7 @@
 // 規則以英文為主：句末標點（含全形。？！）或停頓 ≥ 0.5 秒斷句；每行最多 42 字元（中文字算 2.2 個，約 19 字）、每段最多 2 行；
 // 優先斷在逗號／分號／冒號之後，其次是連接詞與介系詞之前；冠詞、介系詞不留在行尾；不拆開數字與單位；
 // 每段最短 1 秒、最長 7 秒；閱讀速度上限每秒 17 字元（超過就延長顯示，不蓋到下一段）。
+import { activeVoiceovers } from "./voiceover";
 import type { Project, Seconds } from "./model";
 import { roundTime } from "./time";
 import { sourceToTimeline } from "./timeline";
@@ -97,7 +98,21 @@ export function timelineWords(project: Project): TimelineWord[] {
       });
     }
   }
-  return out.sort((a, b) => a.start - b.start);
+  // AI 重配音（2026-11-02）：生效時範圍內原本的字拿掉，換成重配的文字（依字元數平均分到範圍裡，逐字高亮跟得上）
+  const revoiced = activeVoiceovers(project);
+  if (!revoiced.length) return out.sort((a, b) => a.start - b.start);
+  const kept = out.filter((w) => !revoiced.some((r) => w.start >= r.from - 1e-6 && w.start < r.to - 1e-6));
+  for (const { voiceover, from, to } of revoiced) {
+    const parts = voiceover.text.split(/\s+/).filter(Boolean);
+    const total = parts.reduce((n, w) => n + w.length, 0) || 1;
+    let at = from;
+    parts.forEach((text, k) => {
+      const dur = ((to - from) * text.length) / total;
+      kept.push({ id: `vo:${voiceover.id}:${k}`, clipId: voiceover.clipId, text, start: at, end: at + dur });
+      at += dur;
+    });
+  }
+  return kept.sort((a, b) => a.start - b.start);
 }
 
 /** 在第 k 個詞之前斷行的分數：越高越適合 */

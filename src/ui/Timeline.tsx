@@ -132,7 +132,8 @@ function rows(project: Project): Row[] {
   return [
     ...video.map((t) => ({ id: t.id, label: `V${t.index + 1}`, kind: "video" as const, track: t })),
     { id: "S1", label: "S1", kind: "subtitle" as const },
-    ...audio.map((t) => ({ id: t.id, label: `A${t.index + 1}`, kind: "audio" as const, track: t })),
+    // AI 重配音的軌標 Voice（2026-11-02），其他照 A1、A2…
+    ...audio.map((t) => ({ id: t.id, label: t.role === "voice" ? "Voice" : `A${t.index + 1}`, kind: "audio" as const, track: t })),
   ];
 }
 
