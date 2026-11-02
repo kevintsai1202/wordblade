@@ -555,6 +555,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 速度：DirectML 第一次會先編譯（4 秒的音訊約 62 秒），之後 4 秒音訊約 11 秒；CPU 約 0.4 倍即時。
 - 11/2 安裝版驗證過（`scripts/verify-installer.ps1`）：DirectML.dll 裝在 exe 旁邊；安裝後用 DirectML 分 4 秒的音訊只要 3.8 秒（release 版）。新 clone 要先 `cargo build`，再跑 `scripts/fetch-directml.ps1`。
 
+- 長音訊實測（11/2，`scripts/stems-bench.ps1`，DirectML）：10 分鐘 129～137 秒（約 4.5 倍即時，第一次編譯約 30 秒），2 分鐘 25 秒；記憶體峰值兩者都是約 2.0 GB（固定開銷，不隨長度增加）。沒開專案時 app 快取的 stems\ 超過 2 GB 會從最舊的分離結果刪起。
 **介面與時間軸**
 
 - 素材庫或 A 片段的右鍵選單「Separate vocals / music」。

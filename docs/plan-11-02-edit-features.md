@@ -57,3 +57,7 @@
 5. 長影片分離：用 10 分鐘音訊實測速度與記憶體，結果寫進 spec（不改程式，除非發現問題）。
 6. 網頁版還原上次工作：沒有 handle（或 handle 取不回、沒權限）的素材標成 offline，顯示 Media Offline 卡，可重新連結。
 7. 轉場新增：推近（zoomIn）、拉遠（zoomOut）、上推／下推（pushUp、pushDown）、左右滑入（slideLeft、slideRight：後一段蓋在前一段上滑進來）、四向擦除（wipeLeft、wipeRight、wipeUp、wipeDown）。擦除用框＋裁切實作（和局部放大的 crop 疊乘），不用新的 shader。
+
+**第二輪狀態（11/2）：全部做完。** 單元 738、Rust stems 11（含快取整理）通過；e2e：edit-features（含往左擦除匯出：接點那格左半 108、右半 254）、revoice、session（還原後標示離線）、textures（教室不顯示桌面材質）、three、recording、layout、web-project-folder 共 26 個通過。
+長音訊分離：10 分鐘 129～137 秒、記憶體峰值約 2.0 GB（2 分鐘也一樣，是固定開銷）。
+沒有實際匯出驗證的：推移、滑入、推近、拉遠（只改框，有單元測試）。Windows 錄音機退路的卡拉 OK 沒有實機測（時間可能有些微偏差）。

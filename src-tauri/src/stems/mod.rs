@@ -170,6 +170,47 @@ fn cached_outputs(dir: &Path, fp: &str) -> Option<(PathBuf, PathBuf)> {
     (v.is_file() && b.is_file()).then_some((v, b))
 }
 
+/// app 快取資料夾 stems\ 的上限（2026-11-02）：超過就從最舊的分離結果開始刪（專案資料夾的 .data\stems 不動）
+const CACHE_LIMIT: u64 = 2 * 1024 * 1024 * 1024;
+
+/// 快取資料夾超過 limit 位元組時，依修改時間從最舊的一組（同指紋的人聲＋背景）開始刪，直到不超過；
+/// keep 這一組（剛分離完的）不刪；.part 與 tmp- 開頭的暫存檔不算也不刪。回傳刪掉幾組。
+fn prune_cache(dir: &Path, limit: u64, keep: &str) -> usize {
+    use std::collections::HashMap;
+    let keep = fingerprint_stem(keep);
+    // 指紋 → (總大小, 最新的修改時間, 檔案)
+    let mut groups: HashMap<String, (u64, std::time::SystemTime, Vec<PathBuf>)> = HashMap::new();
+    let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
+    for entry in entries.flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let Some(stem) = name.strip_suffix("-vocals.wav").or_else(|| name.strip_suffix("-background.wav")) else { continue };
+        if stem.starts_with("tmp-") || name.contains(".part") {
+            continue;
+        }
+        let Ok(meta) = entry.metadata() else { continue };
+        let modified = meta.modified().unwrap_or(std::time::UNIX_EPOCH);
+        let g = groups.entry(stem.to_string()).or_insert((0, std::time::UNIX_EPOCH, Vec::new()));
+        g.0 += meta.len();
+        g.1 = g.1.max(modified);
+        g.2.push(entry.path());
+    }
+    let mut total: u64 = groups.values().map(|g| g.0).sum();
+    let mut order: Vec<_> = groups.into_iter().filter(|(k, _)| *k != keep).collect();
+    order.sort_by_key(|(_, g)| g.1);
+    let mut removed = 0;
+    for (_, (size, _, files)) in order {
+        if total <= limit {
+            break;
+        }
+        for f in files {
+            let _ = std::fs::remove_file(f);
+        }
+        total = total.saturating_sub(size);
+        removed += 1;
+    }
+    removed
+}
+
 /// 輸出資料夾：有專案資料夾（且已有 .data）就放 <專案>\.data\stems\，否則 app 快取資料夾的 stems\
 fn output_dir(app: &AppHandle, project_dir: Option<&str>) -> Result<PathBuf, String> {
     let project = project_dir.map(PathBuf::from).filter(|p| p.join(".data").is_dir());
@@ -362,6 +403,8 @@ pub async fn separate_vocals(app: AppHandle, media_id: String, path: String, pro
     let ffmpeg = crate::media::tool(&app, "ffmpeg");
     let models = model_dir(&app)?;
     let tmp_dir = app.path().app_cache_dir().map_err(|e| e.to_string())?.join("stems");
+    // 結果放在 app 快取（沒開專案）時，分離完要整理快取
+    let in_cache = out_dir == tmp_dir;
     std::fs::create_dir_all(&tmp_dir).map_err(|e| e.to_string())?;
     let app2 = app.clone();
     let id = media_id.clone();
@@ -401,6 +444,10 @@ pub async fn separate_vocals(app: AppHandle, media_id: String, path: String, pro
     }
     let result = result??;
     allow(Path::new(&result.vocals), Path::new(&result.background))?;
+    // 沒開專案時結果放在 app 快取：分離成功後才整理，剛做好的這一組一定留著
+    if in_cache {
+        prune_cache(&out_dir, CACHE_LIMIT, &fp);
+    }
     Ok(result)
 }
 
@@ -463,6 +510,57 @@ mod tests {
         assert!(cached_outputs(&d, fp).is_none(), "只有人聲不算完整");
         std::fs::write(&b, b"x").unwrap();
         assert_eq!(cached_outputs(&d, fp), Some((v, b)));
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    /// 長音訊實測（2026-11-02，預設不跑）：WB_BENCH_MODEL＝模型、WB_BENCH_RAW＝44.1 kHz 立體聲 f32le 原始檔，
+    /// 印出耗時與用的推論裝置。用法見 scripts/stems-bench.ps1（同時量記憶體峰值）。
+    #[test]
+    #[ignore]
+    fn bench_long_audio() {
+        let model = std::env::var("WB_BENCH_MODEL").expect("WB_BENCH_MODEL");
+        let raw = std::env::var("WB_BENCH_RAW").expect("WB_BENCH_RAW");
+        let d = temp_dir("bench");
+        let cancel = AtomicBool::new(false);
+        let started = Instant::now();
+        let mut last = 0;
+        let (provider, note) = run_separation(Path::new(&model), Path::new(&raw), &d.join("v.wav"), &d.join("b.wav"), &cancel, &mut |r| {
+            let pct = (r * 10.0) as i32;
+            if pct != last {
+                last = pct;
+                eprintln!("progress {}% at {:.1}s", pct * 10, started.elapsed().as_secs_f64());
+            }
+        })
+        .unwrap();
+        eprintln!("BENCH provider={provider} note={note:?} seconds={:.1}", started.elapsed().as_secs_f64());
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    /// 快取整理：超過上限時從最舊的一組刪起，剛做好的與暫存檔不刪
+    #[test]
+    fn prune_cache_removes_oldest_groups() {
+        let d = temp_dir("prune");
+        let write = |name: &str, bytes: usize| std::fs::write(d.join(name), vec![0u8; bytes]).unwrap();
+        // 三組各 200 位元組，依序寫（修改時間由舊到新）
+        for (k, fp) in ["1-aa", "2-bb", "3-cc"].iter().enumerate() {
+            write(&format!("{fp}-vocals.wav"), 100);
+            write(&format!("{fp}-background.wav"), 100);
+            let t = std::time::SystemTime::now() - std::time::Duration::from_secs(1000 - k as u64 * 100);
+            for suffix in ["vocals", "background"] {
+                let f = std::fs::File::options().write(true).open(d.join(format!("{fp}-{suffix}.wav"))).unwrap();
+                f.set_modified(t).unwrap();
+            }
+        }
+        write("tmp-x-1.raw", 5000);
+        write("4-dd-vocals.part.wav", 5000);
+        // 上限 400：要刪一組；最舊的是 1-aa，但它是剛做好的（keep），所以刪 2-bb
+        assert_eq!(prune_cache(&d, 400, "1:aa"), 1);
+        assert!(d.join("1-aa-vocals.wav").exists());
+        assert!(!d.join("2-bb-vocals.wav").exists() && !d.join("2-bb-background.wav").exists());
+        assert!(d.join("3-cc-vocals.wav").exists());
+        assert!(d.join("tmp-x-1.raw").exists() && d.join("4-dd-vocals.part.wav").exists());
+        // 沒超過就不刪
+        assert_eq!(prune_cache(&d, 400, "1:aa"), 0);
         let _ = std::fs::remove_dir_all(&d);
     }
 
