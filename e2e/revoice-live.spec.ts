@@ -18,6 +18,7 @@ test("重配音實機：範例專案框一段 → Fish 生成 → Voice 軌 → 
     localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: tok }));
     localStorage.setItem("wordblade.consent.voice", "yes");
     localStorage.setItem("wordblade.exportToOpfs", "1");
+    localStorage.setItem("wordblade.dev", "1");
   }, [gateway!, token!]);
   await page.goto("/");
   await page.getByTestId("load-sample").click();
@@ -44,12 +45,21 @@ test("重配音實機：範例專案框一段 → Fish 生成 → Voice 軌 → 
   console.log(`重配音：${((Date.now() - t0) / 1000).toFixed(1)} 秒`);
   await page.screenshot({ path: "output/ui-shots/revoice-live.png" });
 
-  // 只取出 AI 聲音的 WAV（素材庫裡 voice-*.wav）存檔，人工聽；整支 2 分鐘匯出要 10 分鐘以上，這裡不做
-  const wav = await page.evaluate(async () => {
-    const hook = (window as unknown as { __wordblade?: { project: () => { media: { name?: string; handleKey?: string }[] } } }).__wordblade;
-    const m = hook?.project().media.find((x) => x.name?.startsWith("voice-"));
-    return m?.name ?? null;
+  // 存下 AI 聲音與它在時間軸的位置，給 scripts/tts/revoice-compare.ps1 做「原始 vs 重配」試聽檔
+  const out = await page.evaluate(async () => {
+    type M = { id: string; name?: string; path?: string; handleKey?: string };
+    const hook = (window as unknown as { __wordblade: { project: () => { media: M[]; voiceovers?: { start: number; end: number; mediaId: string; text: string }[] }; fileBytes: (k: string) => Promise<Uint8Array | null> } }).__wordblade;
+    const p = hook.project();
+    const vo = p.voiceovers![0];
+    const m = p.media.find((x) => x.id === vo.mediaId)!;
+    let bytes: number[] | null = null;
+    if (m.handleKey) { const b = await hook.fileBytes(m.handleKey); if (b) bytes = Array.from(b); }
+    if (!bytes && m.path) bytes = Array.from(new Uint8Array(await (await fetch(m.path)).arrayBuffer()));
+    return { start: vo.start, end: vo.end, text: vo.text, bytes };
   });
-  console.log(`AI 聲音素材：${wav}`);
-  expect(wav).toMatch(/^voice-.*\.wav$/);
+  expect(out.bytes?.length ?? 0).toBeGreaterThan(1000);
+  const { mkdirSync, writeFileSync } = await import("node:fs");
+  mkdirSync("output/revoice", { recursive: true });
+  writeFileSync("output/revoice/voice.wav", Buffer.from(out.bytes!));
+  writeFileSync("output/revoice/voice.json", JSON.stringify({ start: out.start, end: out.end, text: out.text }));
 });
