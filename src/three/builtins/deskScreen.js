@@ -3,7 +3,7 @@
 // 場景全部用程式畫（沒有外部素材，開發者 2026-10-27 決定）；桌上螢幕移植自 spikes/export-bench/src/scene3d.ts。
 // 三個場景的螢幕位置、大小相同，運鏡共用。頭尾接回滿版：區段開頭與結尾鏡頭正對螢幕、螢幕剛好填滿畫面。
 // 鏡頭：有鏡頭關鍵幀（env.params.cameraKeys，前面串了 cameraPath.js 的 CAMERA3D）就照關鍵幀走，否則用 motion 預設運鏡。
-// 參數：scene、motion（reveal 拉遠再推回／push 慢慢推近／orbit 繞半圈）、tilt（螢幕後仰度數）、ramp（頭尾過場秒數）。
+// 參數：scene、motion（reveal 拉遠再推回／push 慢慢推近／orbit 繞半圈／still 固定斜上方、螢幕佔畫面寬九成）、tilt（螢幕後仰度數）、ramp（頭尾過場秒數）。
 // 材質欄位（P1-14，型別 texture，env.textures[欄位]；沒選就用程式畫的預設）：deskTexture（桌面）、wallTexture／floorTexture／frameTexture
 //   （教室的牆、地板、黑板框與講桌）、floorTexture（攝影棚地面）；backgroundImage（3D 背景圖，當 scene.background）。
 /* global CAMERA3D */
@@ -202,8 +202,18 @@ function smooth(u) {
   return x * x * (3 - 2 * x);
 }
 
+/** 固定鏡頭（still）：比滿版鏡頭往上抬幾度、螢幕佔畫面寬的比例 */
+const STILL_ELEVATION = 20;
+const STILL_SHARE = 0.9;
+
 /** 預設運鏡的中間段（u：0～1） */
 function presetCamera(THREE, motion, u) {
+  if (motion === 'still') {
+    // 固定鏡頭（2026-11-03）：從滿版鏡頭往上抬 STILL_ELEVATION 度、拉遠到螢幕佔畫面寬 STILL_SHARE，整段不動
+    const look = S.flat.look.clone();
+    const back = S.flat.pos.clone().sub(look).applyAxisAngle(new THREE.Vector3(1, 0, 0), -STILL_ELEVATION * Math.PI / 180);
+    return { pos: look.clone().add(back.multiplyScalar(1 / STILL_SHARE)), look, fov: S.fov0 };
+  }
   const look = new THREE.Vector3(0, CENTER_Y * 0.8, 0);
   if (motion === 'orbit') {
     const a = -0.8 + u * 1.6;

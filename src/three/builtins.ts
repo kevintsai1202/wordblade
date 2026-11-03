@@ -46,7 +46,7 @@ export const COMPONENTS_3D: Component3D[] = [
     description: "The video plays on a screen in a 3D scene (desk, classroom board or studio); starts and ends full-frame so it cuts in seamlessly",
     params: {
       scene: { type: "enum", values: ["desk", "classroom", "studio"], labels: ["Wooden desk", "Classroom board", "Studio"], default: "desk", label: "Scene" },
-      motion: { type: "enum", values: ["reveal", "push", "orbit"], labels: ["Pull back and return", "Slow push in", "Orbit"], default: "reveal", label: "Camera (no keyframes)" },
+      motion: { type: "enum", values: ["reveal", "push", "orbit", "still"], labels: ["Pull back and return", "Slow push in", "Orbit", "Still (fixed angle)"], default: "reveal", label: "Camera (no keyframes)" },
       tilt: { type: "number", min: 0, max: 20, step: 1, default: 7, label: "Screen tilt (°)" },
       ramp: { type: "duration", min: 0.3, max: 3, default: 1.2, label: "In/out (sec)" },
       // 材質欄位（P1-14）：沒選就用程式畫的預設；每個場景用到的欄位不同（桌面／牆／地板／黑板框與講桌／攝影棚地面）
@@ -127,6 +127,7 @@ export const TEMPLATES_3D: Template3D[] = [
   { id: "mascot-wave", title: "Mascot waves", name: "Mascot walks in and waves", componentId: "mascot", params: { action: "wave", from: "right" }, duration: 4 },
   { id: "mascot-walk", title: "Mascot walks over", name: "Mascot walks all the way to the box", componentId: "mascot", params: { action: "walk" }, duration: 5 },
   { id: "desk-reveal", title: "Desk screen", name: "Screen on a desk — pull back and return", componentId: "desk-screen", params: { motion: "reveal" }, duration: 6 },
+  { id: "desk-still", title: "Desk still", name: "Screen on a desk — fixed angle, whole screen in view", componentId: "desk-screen", params: { motion: "still" }, duration: 6 },
   { id: "desk-orbit", title: "Desk orbit", name: "Screen on a desk — orbit", componentId: "desk-screen", params: { motion: "orbit" }, duration: 6 },
   { id: "classroom-board", title: "Classroom board", name: "The video on a classroom blackboard", componentId: "desk-screen", params: { scene: "classroom", motion: "push", tilt: 0 }, duration: 6 },
   { id: "studio-screen", title: "Studio screen", name: "The video on a screen in a studio", componentId: "desk-screen", params: { scene: "studio", motion: "reveal" }, duration: 6 },
