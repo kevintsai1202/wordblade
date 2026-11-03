@@ -4,7 +4,7 @@
 // 每句帶 S2 的方括號語氣提示（[excited]、[break] 等）；同一句（文字＋樣本）有快取，改稿只重念改到的句子。
 // 執行（PowerShell，repo 根目錄）：node scripts/tts/demo-narration.mjs [句子編號，逗號分隔，省略＝全部]
 // 需要：.env 的 FISH_API_KEY（只讀進行程，不印出）；PATH 上有 ffmpeg。
-// 樣本：預設讀原專案的 seed.wav／seed.json（作者本人，73 秒）；可用 $env:WORDBLADE_VOICE_SEED 指定別的資料夾。
+// 樣本：$env:WORDBLADE_VOICE_SEED 指定的資料夾裡的 seed.wav＋seed.json（text 欄是樣本逐字稿；作者本人的錄音，不進版控）。
 // 產出：output/demo-voice/<模型>/NN.wav（每句）、preview.wav（全部接起來，句間 0.4 秒）
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -15,7 +15,8 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const OUT = join(ROOT, "output", "demo-voice");
 /** 聲音樣本資料夾（seed.wav＋seed.json 的 text） */
-const SEED_DIR = process.env.WORDBLADE_VOICE_SEED ?? "D:/GitHub/transcript-review/output/fixture/2026-09-09 07-43-21.fixture.subtutor/tts";
+const SEED_DIR = process.env.WORDBLADE_VOICE_SEED;
+if (!SEED_DIR) throw new Error("請用 $env:WORDBLADE_VOICE_SEED 指定聲音樣本資料夾（裡面要有 seed.wav 與 seed.json）");
 /** Fish 模型 */
 const MODEL = process.env.WORDBLADE_DEMO_TTS_MODEL ?? "drama-3";
 /** 產出資料夾依模型分開，方便比較 */
