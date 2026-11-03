@@ -44,10 +44,10 @@ const PLAN: { id: string; lines: string[]; windows: [string, number, number][]; 
   { id: "asr1", lines: ["05"], windows: [["S1", 1.5, 12.5]], label: "label-asr", transition: "pushLeft" },
   { id: "asr2", lines: ["06"], windows: [["S1", 12.5, 37.5], ["S1", 37.5, 51.9]], label: "label-asr" },
   { id: "director", lines: ["07", "08"], windows: [["S2", 48, 56], ["S2", 366, 409.8]], label: "label-director", transition: "pushLeft" },
-  { id: "sam", lines: ["09"], windows: [["S3", 11, 52.1]], label: "label-sam", transition: "pushLeft" },
-  { id: "vibe", lines: ["10", "11"], windows: [["S4", 9, 24], ["S4", 24, 38], ["S4", 38, 50], ["S4", 50, 60], ["S4", 74, 89.4]], label: "label-vibe", transition: "pushLeft" },
+  { id: "sam", lines: ["09"], windows: [["S3", 11, 50.2]], label: "label-sam", transition: "pushLeft" },
+  { id: "vibe", lines: ["10", "11"], windows: [["S4", 9, 19], ["S4", 19, 30], ["S4", 30, 41], ["S4", 41, 50], ["S4", 64, 79.5]], label: "label-vibe", transition: "pushLeft" },
   { id: "scene", lines: ["12"], windows: [["S5", 9, 33.2]], label: "label-scene", transition: "zoomIn" },
-  { id: "publish", lines: ["13"], windows: [["S6", 44, 57], ["S6", 60, 73], ["S6", 79, 98], ["S6", 98, 109.9]], label: "label-publish", transition: "pushLeft" },
+  { id: "publish", lines: ["13"], windows: [["S6", 31, 45], ["S6", 46, 56], ["S6", 62, 78], ["S6", 78, 89.8]], label: "label-publish", transition: "pushLeft" },
   { id: "compositor", lines: ["14"], windows: [["fx", 26, 32], ["fx", 69, 74]], label: "label-compositor", transition: "dissolve" },
   { id: "sizzle", lines: [], windows: [["fx", 96, 101], ["stage", 3, 10], ["fx", 54, 57]], transition: "zoomIn" },
   { id: "end", lines: ["15"], windows: [["end", 0, 0]], transition: "dissolve", fixed: 0 },
@@ -57,10 +57,10 @@ const PLAN: { id: string; lines: string[]; windows: [string, number, number][]; 
  */
 const ZOOMS: [string, number, number, number, number, number][] = [
   ["S2", 368, 409.8, 0.45, 0.86, 0.45], // 導演建議清單
-  ["S3", 36, 52.1, 0.55, 0.38, 0.3],    // 金鑰被馬賽克
-  ["S4", 40, 50, 0.5, 0.42, 0.42],      // It works!
-  ["S4", 76, 89.4, 0.5, 0.42, 0.4],     // 3D 獎盃
-  ["S6", 86, 97, 0.45, 0.88, 0.35],     // 發佈包的標題
+  ["S3", 34, 50.2, 0.55, 0.38, 0.3],    // 金鑰被馬賽克
+  ["S4", 32, 41, 0.5, 0.42, 0.42],      // It works!
+  ["S4", 66, 79.5, 0.5, 0.42, 0.4],     // 3D 獎盃
+  ["S6", 70, 78, 0.45, 0.88, 0.35],     // 發佈包的標題
 ];
 /** 放大的框寬（2 倍左右）與一組操作點之間最多隔幾秒算同一段放大 */
 const ZOOM_W = 0.55;
@@ -72,6 +72,15 @@ function marksOf(key: string): Mark[] {
   const f = path.join(ROOT, FILES[key].replace(/\.mp4$/, ".marks.json"));
   return existsSync(f) ? (JSON.parse(readFileSync(f, "utf8")) as Mark[]) : [];
 }
+/** 錄影裡打字的區間（type-start～type-end，前後各留一點），剪片時原速、放大、鋪打字聲 */
+function typingOf(key: string): { a: number; b: number; cx: number; cy: number }[] {
+  const ms = marksOf(key);
+  return ms.flatMap((m, i) => {
+    if (m.what !== "type-start") return [];
+    const end = ms.slice(i + 1).find((x) => x.what === "type-end");
+    return end ? [{ a: m.t - 0.3, b: end.t + 0.5, cx: m.x, cy: m.y }] : [];
+  });
+}
 /** 框中心夾在框不會超出畫面（同 src/core/zoom.ts clampCenter） */
 const clampC = (c: number, w: number) => Math.min(1 - w / 2, Math.max(w / 2, c));
 /**
@@ -81,28 +90,36 @@ const clampC = (c: number, w: number) => Math.min(1 - w / 2, Math.max(w / 2, c))
 function zoomsOf(key: string, windows: [number, number][]) {
   const inUse = (t: number) => windows.some(([a, b]) => t >= a && t <= b);
   const points = [
-    ...marksOf(key).filter((m) => inUse(m.t)).map((m) => ({ t: m.t, cx: m.x, cy: m.y, hold: 1.8 })),
+    ...marksOf(key).filter((m) => inUse(m.t) && !m.what.startsWith("type-")).map((m) => ({ t: m.t, cx: m.x, cy: m.y, hold: 1.8 })),
+    ...typingOf(key).filter((r) => inUse(r.a)).map((r) => ({ t: r.a, cx: r.cx, cy: r.cy, hold: r.b - r.a + 0.3 })),
     ...ZOOMS.filter((z) => z[0] === key).map(([, a, b, , cx, cy]) => ({ t: a, cx, cy, hold: b - a })),
   ].sort((p, q) => p.t - q.t);
-  const regions: { start: number; end: number; path: { src: number; cx: number; cy: number }[] }[] = [];
+  const groups: { start: number; end: number; pts: { t: number; cx: number; cy: number }[] }[] = [];
   for (const p of points) {
-    const last = regions.at(-1);
+    const last = groups.at(-1);
     if (last && p.t - last.end < CLUSTER_GAP) {
       last.end = Math.max(last.end, p.t + p.hold);
-      last.path.push({ src: p.t, cx: p.cx, cy: p.cy });
-    } else regions.push({ start: Math.max(0, p.t - 1.2), end: p.t + p.hold, path: [{ src: p.t, cx: p.cx, cy: p.cy }] });
+      last.pts.push(p);
+    } else groups.push({ start: Math.max(0, p.t - 1.2), end: p.t + p.hold, pts: [p] });
   }
-  // 素材窗的邊界：放大不跨出用到的窗（夾到窗內）
-  return regions.map((r) => {
-    const win = windows.find(([a, b]) => r.path[0].src >= a && r.path[0].src <= b)!;
-    return { ...r, start: Math.max(r.start, win[0]), end: Math.min(r.end, win[1]) };
-  }).filter((r) => r.end - r.start > 0.5);
+  // 每組一段固定鏡頭（中途不移動）：框住整組的點，框寬至少 ZOOM_W；素材窗的邊界不跨出
+  return groups.map((g) => {
+    const xs = g.pts.map((p) => p.cx), ys = g.pts.map((p) => p.cy);
+    const w = Math.min(0.9, Math.max(ZOOM_W, Math.max(...xs) - Math.min(...xs) + 0.2, (Math.max(...ys) - Math.min(...ys) + 0.2)));
+    const cx = (Math.max(...xs) + Math.min(...xs)) / 2, cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+    const win = windows.find(([a, b]) => g.pts[0].t >= a && g.pts[0].t <= b)!;
+    return { start: Math.max(g.start, win[0]), end: Math.min(g.end, win[1]), w, path: [{ src: g.pts[0].t, cx: clampC(cx, w), cy: clampC(cy, w) }] };
+  }).filter((r) => r.end - r.start > 0.8);
 }
 /** 圈選框在畫面上的位置：操作點在放大後的位置（假設已經放大到底；同 src/core/zoom.ts zoomCrop） */
 function ringRect(m: Mark, center: { cx: number; cy: number }) {
   const x0 = clampC(center.cx, ZOOM_W) - ZOOM_W / 2, y0 = clampC(center.cy, ZOOM_W) - ZOOM_W / 2;
   return { x: (m.x - x0) / ZOOM_W, y: (m.y - y0) / ZOOM_W, w: m.w / ZOOM_W, h: m.h / ZOOM_W };
 }
+/** 片頭開頭沒有畫面的長度（秒，第三版量的：第一張封面約 1.6 秒才出現） */
+const INTRO_BLANK = 1.5;
+/** 片頭大標出現的時間（秒，從匯出的第一版量的：約 3.8 秒） */
+const INTRO_TITLE_AT = 3.8;
 /** 句子之間留白（秒） */
 const GAP = 0.35;
 
@@ -150,7 +167,7 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
     const ringPage = await page.context().newPage();
     await ringPage.setViewportSize({ width: 1920, height: 1080 });
     mkdirSync(path.join(OUT, "rings"), { recursive: true });
-    for (const key of Object.keys(FILES)) {
+    for (const key of [] as string[]) {
       const zones = zoomsOf(key, winsOf(key));
       for (const [i, m] of marksOf(key).entries()) {
         const z = zones.find((r) => m.t >= r.start && m.t <= r.end);
@@ -179,6 +196,20 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
   await page.getByTestId("intro-subtitle").fill("edit video by editing words");
   await page.getByTestId("intro-generate").click();
   await expect(page.getByTestId("intro-notice")).toContainText("intro at the start", { timeout: 180_000 });
+  // 片頭開頭 0.3 秒是空的、最後大標停太久：剪到大標出現後 1.5 秒（從後往前剪）
+  const introFull = await v1End(page);
+  await commit(page, [{ kind: "rippleDelete", a: Math.min(introFull - 0.1, INTRO_TITLE_AT + 1.5), b: introFull }]);
+  await commit(page, [{ kind: "rippleDelete", a: 0, b: INTRO_BLANK }]);
+  // 片頭特效的翻頁、閃光、大標時間記在參數裡（從特效起點算）：前面剪掉 INTRO_BLANK 秒，參數也要一起往前移，畫面才和音效對齊；
+  // 封面改原色（雙色調太暗，看不出是什麼）
+  // 效果的 params 是 { title, template, params: {…片頭參數} }（src/intro/insert.ts）
+  const introFx = (await project(page)).effects.find((e) => e.params.template === "flip-intro")!;
+  const shift = (v: unknown) => (typeof v === "number" ? Math.max(0, v - INTRO_BLANK) : v);
+  const ip = introFx.params.params as Record<string, unknown> & { pages: { t: number }[] };
+  await commit(page, [{ kind: "setEffectParams", effectId: introFx.id, params: { ...introFx.params, params: {
+    ...ip, tone: "original", pages: ip.pages.map((pg) => ({ ...pg, t: shift(pg.t) })),
+    montageStart: shift(ip.montageStart), titleIn: shift(ip.titleIn), flash: shift(ip.flash), reveal: shift(ip.reveal),
+  } } }]);
   const introLen = await v1End(page);
 
   // ② 其他素材（影片、片尾卡、每句旁白、角標）
@@ -211,16 +242,35 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
   // V1：依剪輯表一段一段往後接
   /** 快轉的時間範圍（時間軸），之後放快轉角標 */
   const fast: { a: number; b: number }[] = [];
+  /** 打字段在時間軸上的範圍（鋪打字聲） */
+  const typing: { a: number; b: number }[] = [];
   /** 每個素材窗在時間軸上的位置（素材 [a, b] → 時間軸起點、倍速） */
   const placed: { key: string; a: number; b: number; start: number; speed: number }[] = [];
   const table: { id: string; start: number; end: number; windows: { src: string; a: number; b: number; speed: number }[] }[] = [];
   for (const seg of PLAN) {
     const segStart = await v1End(page);
     const voice = seg.lines.reduce((s, l) => s + wavSeconds(path.join(VOICE, `${l}.wav`)) + GAP, 0);
-    const srcTotal = seg.windows.reduce((s, [, a, b]) => s + (b - a), 0);
+    // 窗依打字區間切成小段：打字段原速（fixed），其他段分剩下的長度
+    const pieces = seg.windows.flatMap(([key, a, b]) => {
+      if (key === "end") return [{ key, a, b, fixed: false }];
+      const out: { key: string; a: number; b: number; fixed: boolean }[] = [];
+      let at = a;
+      for (const r of typingOf(key).filter((r) => r.b > a && r.a < b)) {
+        const ra = Math.max(a, r.a), rb = Math.min(b, r.b);
+        if (ra - at > 0.2) out.push({ key, a: at, b: ra, fixed: false });
+        out.push({ key, a: ra, b: rb, fixed: true });
+        at = rb;
+      }
+      if (b - at > 0.2) out.push({ key, a: at, b, fixed: false });
+      return out;
+    });
+    const srcTotal = pieces.reduce((s, x) => s + (x.b - x.a), 0);
+    const fixedTotal = pieces.filter((x) => x.fixed).reduce((s, x) => s + (x.b - x.a), 0);
+    const flexSrc = srcTotal - fixedTotal;
     const target = seg.lines.length ? voice + 0.3 : srcTotal;
+    const flexTarget = Math.max(target - fixedTotal, flexSrc / 4);
     const used: { src: string; a: number; b: number; speed: number }[] = [];
-    for (const [i, [key, a, b]] of seg.windows.entries()) {
+    for (const [i, { key, a, b, fixed }] of pieces.entries()) {
       const mediaId = idOf(FILES[key]);
       const at = await v1End(page);
       await commit(page, [{ kind: "place", mediaId, trackId: "V1", t: at }]);
@@ -239,14 +289,15 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
       p = await project(page);
       const c2 = p.clips.find((c) => c.id === clip.id)!;
       await commit(page, [{ kind: "trim", clipId: clip.id, edge: "out", t: c2.start + (b - a) }]);
-      // 倍速：這一窗分到的長度＝段長 × 素材比例
-      const share = seg.lines.length ? (target * (b - a)) / srcTotal : b - a;
-      const speed = Math.min(4, Math.max(0.5, Math.round(((b - a) / share) * 100) / 100));
+      // 倍速：打字段原速；其他段依素材比例分剩下的長度
+      const share = !seg.lines.length ? b - a : (flexTarget * (b - a)) / Math.max(flexSrc, 1e-6);
+      const speed = fixed ? 1 : Math.min(4, Math.max(0.5, Math.round(((b - a) / share) * 100) / 100));
       if (Math.abs(speed - 1) > 0.01) await commit(page, [{ kind: "setSpeed", clipId: clip.id, speed }]);
       // 段的第一個窗放轉場（進場）
       if (i === 0 && seg.transition) await commit(page, [{ kind: "setTransition", clipId: clip.id, transition: seg.transition, duration: 0.6 }]);
       used.push({ src: key, a, b, speed });
       placed.push({ key, a, b, start: clip.start, speed });
+      if (fixed) typing.push({ a: clip.start, b: clip.start + (b - a) });
       if (speed >= 2) fast.push({ a: clip.start, b: clip.start + (b - a) / speed });
     }
     table.push({ id: seg.id, start: segStart, end: await v1End(page), windows: used });
@@ -254,7 +305,7 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
 
   // 局部放大：跟著操作點移動、結果出現時停在結果（WordBlade Zoom，素材時間記）
   const zoomEdits = Object.keys(FILES).flatMap((key) => zoomsOf(key, winsOf(key)).map((r, i) => ({
-    kind: "addZoom", zoom: { id: `zoom-${key}-${i}`, mediaId: idOf(FILES[key]), start: r.start, end: r.end, w: ZOOM_W, path: r.path.map((p) => ({ src: p.src, cx: clampC(p.cx, ZOOM_W), cy: clampC(p.cy, ZOOM_W) })), enabled: true },
+    kind: "addZoom", zoom: { id: `zoom-${key}-${i}`, mediaId: idOf(FILES[key]), start: r.start, end: r.end, w: r.w, path: r.path, enabled: true },
   })));
   if (zoomEdits.length) await commit(page, zoomEdits);
 
@@ -298,9 +349,25 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
     await commit(page, [{ kind: "setEffectParams", effectId: e.id, params: { ...e.params, ...params } }]);
   };
   const dir = table.find((s) => s.id === "director")!;
-  await mascot("robot-point", dir.end - 6, dir.end - 0.5, { from: "left", box: { cx: 0.9, cy: 0.45, w: 0.16, h: 0.5 }, height: 0.3 });
+  await mascot("robot-point", dir.end - 6, dir.end - 0.5, { from: "left", box: { cx: 0.93, cy: 0.86, w: 0.08, h: 0.1 }, height: 0.22 });
   const end = table.find((s) => s.id === "end")!;
   await mascot("robot-wave", end.start + 0.8, end.end, { box: { cx: 0.74, cy: 0.62, w: 0.1, h: 0.2 }, height: 0.42 });
+
+  // 打字聲：WordBlade 的 AI 音效（一句話 → 宣告式音效）生成鍵盤聲，循環鋪在每段打字上（A3 音效軌）
+  if (typing.length) {
+    await page.evaluate(([s0, e0]) => (window as unknown as { __wordblade: Hook }).__wordblade.dispatch({ type: "setRange", start: s0, end: e0 }), [typing[0].a, typing[0].a + 1]);
+    await openTab(page, "audio");
+    await page.getByTestId("sound-description").fill("Fast mechanical keyboard typing, crisp quiet key clicks, steady rhythm, about 2 seconds");
+    await page.getByTestId("sound-generate").click();
+    await expect(page.getByTestId("sound-result").or(page.getByTestId("sound-error"))).toBeVisible({ timeout: 180_000 });
+    await expect(page.getByTestId("sound-error")).toHaveCount(0);
+    const a3Before = (await project(page)).clips.filter((c) => c.trackId === "A3").map((c) => c.id);
+    await page.getByTestId("sound-add").click();
+    await expect.poll(async () => (await project(page)).clips.filter((c) => c.trackId === "A3" && !a3Before.includes(c.id)).length, { timeout: 60_000 }).toBeGreaterThan(0);
+    const key = (await project(page)).clips.find((c) => c.trackId === "A3" && !a3Before.includes(c.id))!;
+    await commit(page, [{ kind: "delete", clipId: key.id }]);
+    for (const r of typing) await commit(page, [{ kind: "placeLoop", mediaId: key.mediaId, trackId: "A3", t: r.a + 0.3, end: r.b - 0.5 }]);
+  }
 
   // AI 配樂：一句描述 → 鋪滿整支（有旁白時自動壓低）
   const total = await v1End(page);

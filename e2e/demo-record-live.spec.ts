@@ -74,11 +74,17 @@ async function act(page: Page, target: Locator, opts: { double?: boolean; modifi
   await pause(page, 500);
 }
 
-/** 一個字一個字打（看得到在打字） */
+/** 打字速度（每個字的間隔，毫秒）：剪片時打字段落用原速，這個速度觀眾看得清楚在打什麼 */
+const TYPE_DELAY = 65;
+
+/** 一個字一個字打（看得到在打字）；記下打字的起訖（剪片時原速、放大到輸入框、鋪打字聲） */
 async function type(page: Page, target: Locator, text: string) {
   await act(page, target);
   await target.fill("");
-  await target.pressSequentially(text, { delay: 28 });
+  const box = (await target.boundingBox())!;
+  mark(box, "type-start");
+  await target.pressSequentially(text, { delay: TYPE_DELAY });
+  mark(box, "type-end");
   await pause(page, 600);
 }
 
@@ -229,7 +235,7 @@ test("S4 Vibe 2D 與 Vibe 3D：一句話 → Muse Wonder 寫出新插件", async
   await start(page, ["vibe"]);
   await range(page, 60, 66);
   await tab(page, "vibe");
-  await type(page, page.getByTestId("vibe-description"), "A bold yellow highlighter sweeps under the terminal output, then a pop-in label says 'It works!' with a tiny burst of confetti");
+  await type(page, page.getByTestId("vibe-description"), "A yellow highlight sweeps under the output, then 'It works!' pops in");
   await act(page, page.getByTestId("vibe-generate"));
   await expect(page.locator(".effect-chip").or(page.getByTestId("vibe-error"))).toHaveCount(1, { timeout: 480_000 });
   await expect(page.getByTestId("vibe-error")).toHaveCount(0);
@@ -237,7 +243,7 @@ test("S4 Vibe 2D 與 Vibe 3D：一句話 → Muse Wonder 寫出新插件", async
   await pause(page, 2500);
   await range(page, 70, 76);
   await tab(page, "vibe3d");
-  await type(page, page.getByTestId("vibe-description"), "A glossy 3D golden trophy spinning slowly in the top-right corner, with small sparkles orbiting it");
+  await type(page, page.getByTestId("vibe-description"), "A glossy golden trophy spinning in the corner, with sparkles");
   await act(page, page.getByTestId("vibe-generate"));
   await expect(page.locator(".effect-chip").or(page.getByTestId("vibe-error"))).toHaveCount(2, { timeout: 480_000 });
   await expect(page.getByTestId("vibe-error")).toHaveCount(0);

@@ -29,18 +29,18 @@ const BASE = `
   html, body { width: 1920px; height: 1080px; background: transparent; font-family: "Segoe UI", Inter, Arial, sans-serif; overflow: hidden; }
 `;
 
-/** 左上角標籤：深色半透明膠囊、青綠色重點 */
+/** 左上角標籤：小型半透明膠囊（不擋內容）、青綠色重點 */
 const label = (title, sub) => `<style>${BASE}
-  .pill { position: absolute; left: 48px; top: 40px; padding: 18px 30px 18px 26px; border-radius: 18px; background: rgba(10,14,20,.86);
-    border: 2px solid #2fe0c0; box-shadow: 0 10px 40px rgba(0,0,0,.45); color: #fff; display: flex; gap: 18px; align-items: center; }
-  .dot { width: 18px; height: 18px; border-radius: 50%; background: #2fe0c0; box-shadow: 0 0 18px #2fe0c0; }
-  .t { font-size: 44px; font-weight: 800; letter-spacing: .3px; }
-  .s { font-size: 26px; color: #9ff6e8; margin-top: 2px; font-weight: 600; }
+  .pill { position: absolute; left: 22px; top: 18px; padding: 8px 16px 8px 13px; border-radius: 12px; background: rgba(10,14,20,.72);
+    border: 1.5px solid #2fe0c0; color: #fff; display: flex; gap: 10px; align-items: center; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #2fe0c0; box-shadow: 0 0 10px #2fe0c0; }
+  .t { font-size: 24px; font-weight: 800; }
+  .s { font-size: 16px; color: #9ff6e8; font-weight: 600; }
 </style><div class="pill"><div class="dot"></div><div><div class="t">${title}</div><div class="s">${sub}</div></div></div>`;
 
 /** 下方字卡（開場「這支影片是 WordBlade 剪的」） */
 const lowerThird = (text) => `<style>${BASE}
-  .bar { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); padding: 26px 54px; border-radius: 22px;
+  .bar { position: absolute; left: 50%; top: 60px; transform: translateX(-50%); padding: 26px 54px; border-radius: 22px;
     background: linear-gradient(90deg, #0b0f15ee, #102a2aee); border: 3px solid #2fe0c0; color: #fff; font-size: 64px; font-weight: 900;
     box-shadow: 0 16px 60px rgba(0,0,0,.55); white-space: nowrap; }
   b { color: #2fe0c0; }
@@ -72,18 +72,23 @@ await shot(lowerThird("This video was edited by <b>WordBlade</b>"), join(CARDS, 
 await shot(endCard, join(CARDS, "end.png"), false);
 // 快轉角標（右下角）：剪片時用 WordBlade 的片段變速快轉的地方
 await shot(`<style>${BASE}
-  .sp { position: absolute; right: 48px; bottom: 150px; padding: 14px 26px; border-radius: 16px; background: rgba(10,14,20,.86); border: 2px solid #ffb020;
-    color: #fff; font-size: 34px; font-weight: 800; } .sp b { color: #ffb020; } .sp small { font-size: 22px; color: #fde3b0; font-weight: 600; margin-left: 10px; }
+  .sp { position: absolute; right: 28px; bottom: 120px; padding: 8px 16px; border-radius: 12px; background: rgba(10,14,20,.86); border: 2px solid #ffb020;
+    color: #fff; font-size: 22px; font-weight: 800; } .sp b { color: #ffb020; } .sp small { font-size: 15px; color: #fde3b0; font-weight: 600; margin-left: 10px; }
 </style><div class="sp"><b>⏩ Fast-forward</b><small>WordBlade speed ramp</small></div>`, join(CARDS, "speed.png"));
 await browser.close();
 
-// 片頭封面：各功能的成品畫面（錄影與特效範例成品抽格）
+// 片頭封面：各功能成品的特寫（翻頁時一眼看得懂），[來源, 秒, 裁切 x, y, 寬, 高]（1920×1080 像素）
 const COVER_FRAMES = [
-  ["output/demo-3d/two-stage.mp4", 8], ["output/sample-effects-export.mp4", 28], ["output/sample-effects-export.mp4", 55],
-  ["output/demo-rec/S3-mask.mp4", 48], ["output/sample-effects-export.mp4", 71], ["output/demo-rec/S4-vibe.mp4", 86],
-  ["output/sample-effects-export.mp4", 99], ["output/demo-rec/S2-director.mp4", 400],
+  ["output/demo-3d/two-stage.mp4", 8, 760, 380, 1100, 620],
+  ["output/sample-effects-export.mp4", 28, 0, 0, 1920, 1080],
+  ["output/sample-effects-export.mp4", 55, 560, 180, 800, 450],
+  ["output/demo-rec/S3-mask.mp4", 46, 160, 40, 1040, 585],
+  ["output/sample-effects-export.mp4", 71, 0, 100, 1280, 720],
+  ["output/demo-3d/two-stage.mp4", 2, 300, 280, 1200, 675],
+  ["output/sample-effects-export.mp4", 99, 400, 200, 1100, 620],
+  ["output/demo-rec/S4-vibe.mp4", 76, 280, 120, 900, 506],
 ];
-COVER_FRAMES.forEach(([src, t], i) => {
-  execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(t), "-i", src, "-frames:v", "1", "-vf", "scale=1280:-2", join(COVERS, `cover-${i + 1}.png`)]);
+COVER_FRAMES.forEach(([src, t, x, y, w, h], i) => {
+  execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(t), "-i", src, "-frames:v", "1", "-vf", `crop=${w}:${h}:${x}:${y},scale=1280:720`, join(COVERS, `cover-${i + 1}.png`)]);
 });
 console.log(`已存 ${CARDS}（${LABELS.length + 3} 張）、${COVERS}（${COVER_FRAMES.length} 張）`);
