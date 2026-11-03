@@ -52,6 +52,8 @@ const pause = (page: Page, ms = 800) => page.waitForTimeout(ms);
 /** 游標慢慢移到元素中間再點 */
 async function act(page: Page, target: Locator, opts: { double?: boolean; modifiers?: ("Shift" | "Control")[] } = {}) {
   await target.scrollIntoViewIfNeeded();
+  // scrollIntoView 可能把右側面板橫向捲掉一半：捲回最左
+  await target.evaluate((el) => { for (let p = el.parentElement; p; p = p.parentElement) p.scrollLeft = 0; });
   const box = (await target.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 18 });
   await pause(page, 250);
@@ -75,12 +77,16 @@ async function tab(page: Page, id: string) {
   await pause(page, 600);
 }
 
-/** 播放頭移到 t 秒 */
+/** 播放頭移到 t 秒，再播 1.5 秒讓預覽確實畫出那一格（只跳格時預覽偶爾停在黑畫面） */
 async function seek(page: Page, t: number) {
-  await act(page, page.locator(".ruler"), {});
   const r = (await page.locator(".ruler").boundingBox())!;
+  await page.mouse.move(r.x + 1 + t * PX, r.y + 5, { steps: 14 });
   await page.mouse.click(r.x + 1 + t * PX, r.y + 5);
-  await pause(page, 400);
+  await pause(page, 500);
+  await page.keyboard.press("Space");
+  await page.waitForTimeout(1500);
+  await page.keyboard.press("Space");
+  await pause(page, 600);
 }
 
 /** Shift＋拖曳選時間範圍 [a, b] 秒 */
@@ -191,6 +197,8 @@ test("S3 SAM 遮罩：框出金鑰出現的範圍 → 打「API key」→ 追蹤
   await seek(page, 40);
   await range(page, 38, 46);
   await act(page, page.getByTestId("range-mask"));
+  // 「Other…」才有自己打字的欄位
+  await act(page, page.locator(".mask-targets button", { hasText: "Other" }));
   await type(page, page.getByTestId("mask-custom"), "API key");
   await act(page, page.getByTestId("mask-find"));
   await expect(page.getByTestId("mask-message")).toBeVisible({ timeout: 300_000 });
