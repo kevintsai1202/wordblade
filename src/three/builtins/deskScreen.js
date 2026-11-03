@@ -202,17 +202,19 @@ function smooth(u) {
   return x * x * (3 - 2 * x);
 }
 
-/** 固定鏡頭（still）：比滿版鏡頭往上抬幾度、螢幕佔畫面寬的比例 */
-const STILL_ELEVATION = 20;
+/** 固定鏡頭（still）：鏡頭仰角（度，世界座標）、螢幕佔畫面寬的比例 */
+const STILL_ELEVATION = 13;
 const STILL_SHARE = 0.9;
 
 /** 預設運鏡的中間段（u：0～1） */
 function presetCamera(THREE, motion, u) {
   if (motion === 'still') {
-    // 固定鏡頭（2026-11-03）：從滿版鏡頭往上抬 STILL_ELEVATION 度、拉遠到螢幕佔畫面寬 STILL_SHARE，整段不動
+    // 固定鏡頭（2026-11-03）：從正前方、仰角 STILL_ELEVATION 度（世界座標，與螢幕後仰無關）看螢幕中心，
+    // 距離取滿版距離 ÷ STILL_SHARE（螢幕佔畫面寬約這個比例），整段不動。螢幕後仰比仰角大時，下緣近、上緣遠
     const look = S.flat.look.clone();
-    const back = S.flat.pos.clone().sub(look).applyAxisAngle(new THREE.Vector3(1, 0, 0), -STILL_ELEVATION * Math.PI / 180);
-    return { pos: look.clone().add(back.multiplyScalar(1 / STILL_SHARE)), look, fov: S.fov0 };
+    const d = S.flat.pos.distanceTo(look) / STILL_SHARE;
+    const e = STILL_ELEVATION * Math.PI / 180;
+    return { pos: look.clone().add(new THREE.Vector3(0, Math.sin(e) * d, Math.cos(e) * d)), look, fov: S.fov0 };
   }
   const look = new THREE.Vector3(0, CENTER_Y * 0.8, 0);
   if (motion === 'orbit') {

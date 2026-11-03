@@ -297,7 +297,7 @@ test.describe("兩段版", () => {
     await range(0.5, 9.8);
     await openTab(page, "vibe");
     await page.getByTestId("vibe-description").fill(process.env.WORDBLADE_DEMO_2D_PROMPT ??
-      "A flat 2D cartoon cute dark cube robot with a glowing teal face, teal round ears and a teal antenna ball. " +
+      "A flat 2D cartoon cute WHITE glossy cube robot (bright white body with a thin dark outline so it stands out on a dark background) with a dark face plate, glowing teal eyes and smile, teal round ears and a teal antenna ball. " +
       "In the first 1.5 seconds it walks in from the left edge of the box to the center (legs stepping, body facing right). " +
       "Then it stops, keeps facing RIGHT (its face and eyes looking to the right) and waves its right hand toward the right side, again and again, with a small happy bounce. " +
       "Clean vector style with a soft ground shadow. Stay inside the box.");

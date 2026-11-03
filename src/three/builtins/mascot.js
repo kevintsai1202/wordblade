@@ -130,7 +130,7 @@ function setup(THREE, scene, camera, env) {
   M.viewH = 2 * 20 * Math.tan(camera.fov * Math.PI / 360);
   M.viewW = M.viewH * camera.aspect;
   M.parts = env.params.style === 'robot'
-    ? buildRobot(THREE, new THREE.Color(env.params.color || '#14171c'), new THREE.Color(env.params.glow || '#2fe0c0'))
+    ? buildRobot(THREE, new THREE.Color(env.params.color || '#eef2f7'), new THREE.Color(env.params.glow || '#2fe0c0'))
     : buildMascot(THREE, new THREE.Color(env.params.color || '#ffb020'));
   scene.add(M.parts.root);
 }

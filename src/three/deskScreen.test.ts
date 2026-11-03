@@ -58,3 +58,23 @@ describe("桌上螢幕的固定鏡頭（still）", () => {
     expect(look.distanceTo(center)).toBeLessThan(1e-9);
   });
 });
+
+// 螢幕後仰時（2026-11-03 開發者：下面靠近、上面遠離比較好）：固定鏡頭從接近水平的高度看，螢幕上緣比下緣離鏡頭遠
+describe("固定鏡頭看後仰的螢幕", () => {
+  it("螢幕後仰 20 度：上緣離鏡頭比下緣遠，螢幕仍佔畫面寬 85%～95%", () => {
+    const tilt = (20 * Math.PI) / 180;
+    const normal = new THREE.Vector3(0, Math.sin(tilt), Math.cos(tilt));
+    const up = new THREE.Vector3(0, Math.cos(tilt), -Math.sin(tilt));
+    const saved = S.flat;
+    S.flat = { pos: center.clone().add(normal.clone().multiplyScalar(dist)), look: center.clone(), fov: FOV };
+    const { pos, look } = presetCamera(THREE, "still", 0.5);
+    S.flat = saved;
+    const h = (4.0 * 9) / 16 / 2;
+    const top = center.clone().add(up.clone().multiplyScalar(h));
+    const bottom = center.clone().add(up.clone().multiplyScalar(-h));
+    expect(pos.distanceTo(top)).toBeGreaterThan(pos.distanceTo(bottom) + 0.15);
+    const share = widthShare(pos, look);
+    expect(share).toBeGreaterThan(0.85);
+    expect(share).toBeLessThan(0.95);
+  });
+});
