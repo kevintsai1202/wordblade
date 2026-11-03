@@ -10,6 +10,9 @@ const pure = true;
 /** 場景物件 */
 const M = {};
 
+/** 走到了以後朝向目標框的角度（弧度，3/4 側身） */
+const FACE = 0.55;
+
 /** 建角色：身體、頭、眼睛、手腳（每個關節一個 Group，方便轉） */
 function buildMascot(THREE, color) {
   const body = new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.05 });
@@ -116,6 +119,10 @@ function setup(THREE, scene, camera, env) {
   const key = new THREE.DirectionalLight(0xffffff, 2.2);
   key.position.set(3, 6, 8);
   scene.add(key);
+  // 側後方的輪廓光：方塊邊緣亮起來，和背景分開
+  const rim = new THREE.DirectionalLight(0x9ff6ff, 1.6);
+  rim.position.set(-6, 4, -6);
+  scene.add(rim);
   camera.position.set(0, 0, 20);
   camera.lookAt(0, 0, 0);
   camera.updateProjectionMatrix();
@@ -187,7 +194,11 @@ function update(t, env) {
   const swing = walking ? Math.sin(phase) * 0.7 : 0;
   P.legL.rotation.x = swing;
   P.legR.rotation.x = -swing;
-  P.root.rotation.y = walking ? (fromLeft ? 1 : -1) * 0.9 * (1 - smooth((t - walk + 0.3) / 0.3)) : 0;
+  // 走路時側身朝前進方向（0.9）；到了轉成 3/4 朝向目標框（FACE），兩個角色互相打招呼時看起來面對面
+  const dir = fromLeft ? 1 : -1;
+  P.root.rotation.y = dir * (FACE + (0.9 - FACE) * (1 - smooth((t - walk + 0.3) / 0.3)));
+  // 機器人稍微前傾，看得到頂面，比較有立體感
+  P.root.rotation.x = p.style === 'robot' ? 0.18 : 0;
   P.root.position.y += walking ? Math.abs(Math.sin(phase)) * 0.08 * size : 0;
 
   // 手：走路時跟著擺；到了以後揮手（靠框那隻手舉高左右揮）或指著框中心

@@ -229,3 +229,94 @@ test.describe("互動版", () => {
     writeFileSync(path.join(OUT, "interact.mp4"), Buffer.from(b64, "base64"));
   });
 });
+
+// 兩段版（2026-11-03）：① 平面影片上 Vibe 2D 生成「2D 機器人從左邊走進來、面向右邊揮手」→ 匯出；
+// ② 匯入①的成品（2D 已經燒進畫面，轉立體時跟著螢幕走）→ 3 秒起轉成桌上螢幕（固定鏡頭）→ 3D 機器人從右邊走向 2D、轉身面對它揮手。
+// 兩個角色往中間走、面對面。本機 dev server＋線上閘道：同互動版，另要 $env:WORDBLADE_E2E_PORT = '1420'
+test.describe("兩段版", () => {
+  test.skip(!video || !token, "沒有設 WORDBLADE_DEMO_VIDEO／WORDBLADE_LIVE_TOKEN");
+  /** 2D 機器人停的框（平面畫面座標） */
+  const BOX2D = { cx: 0.42, cy: 0.72, w: 0.2, h: 0.3 };
+  /** 固定鏡頭下螢幕在畫面裡的範圍（output/demo-3d/c3.jpg 量的：左右 3%～97%，上下 2%～88%） */
+  const onScreen = (b: typeof BOX2D) => ({ cx: 0.03 + 0.94 * b.cx, cy: 0.02 + 0.86 * b.cy, w: 0.94 * b.w, h: 0.86 * b.h });
+
+  test("Demo 3D 鏡頭試做（兩段版）：2D 打招呼 → 轉立體 → 3D 機器人面對面揮手 → 匯出", async ({ page }) => {
+    test.setTimeout(1_500_000);
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.addInitScript(([url, tok]) => {
+      localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: tok }));
+      localStorage.setItem("wordblade.consent.vibe", "yes");
+      localStorage.setItem("wordblade.exportToOpfs", "1");
+      localStorage.setItem("wordblade.dev", "1");
+    }, [GATEWAY, token!]);
+    mkdirSync(OUT, { recursive: true });
+
+    /** 開新頁、匯入一支影片放上 V1 */
+    const open = async (file: string) => {
+      await page.goto("/");
+      const chooser = page.waitForEvent("filechooser");
+      await page.getByTestId("import-media").click();
+      await (await chooser).setFiles(path.resolve(file));
+      await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 60_000 });
+      await page.locator(".media-item").first().dblclick();
+      await expect(page.locator('.track-row[data-track-id="V1"] .clip')).toHaveCount(1);
+    };
+    const range = async (a: number, b: number) => {
+      await seek(page, a);
+      const row = (await page.locator('.track-row[data-track-id="V1"]').boundingBox())!;
+      await page.keyboard.down("Shift");
+      await page.mouse.move(row.x + 1 + a * PX, row.y + row.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(row.x + 1 + b * PX, row.y + row.height / 2, { steps: 5 });
+      await page.mouse.up();
+      await page.keyboard.up("Shift");
+    };
+    type Hook = { project: () => { effects: { id: string; params: Record<string, unknown> }[] }; dispatch: (a: unknown) => void };
+    const setBox = (box: { cx: number; cy: number; w: number; h: number }) => page.evaluate((b) => {
+      const hook = (window as unknown as { __wordblade: Hook }).__wordblade;
+      const e = hook.project().effects.at(-1)!;
+      hook.dispatch({ type: "commit", edits: [{ kind: "setEffectParams", effectId: e.id, params: { ...e.params, box: b } }] });
+    }, box);
+    /** 匯出並存檔 */
+    const exportTo = async (name: string) => {
+      await openTab(page, "export");
+      await page.getByTestId("export-start").click();
+      await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 600_000 });
+      const b64 = await page.evaluate(async () => {
+        const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("exports");
+        const bytes = new Uint8Array(await (await (await dir.getFileHandle("wordblade-export.mp4")).getFile()).arrayBuffer());
+        let s = "";
+        for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+        return btoa(s);
+      });
+      writeFileSync(path.join(OUT, name), Buffer.from(b64, "base64"));
+    };
+
+    // ① 平面：Vibe 2D 生成 2D 機器人（0.5 秒起到片尾），從框的左邊走進來、停在框中間、面向右邊一直揮手
+    await open(video!);
+    await range(0.5, 9.8);
+    await openTab(page, "vibe");
+    await page.getByTestId("vibe-description").fill(process.env.WORDBLADE_DEMO_2D_PROMPT ??
+      "A flat 2D cartoon cute dark cube robot with a glowing teal face, teal round ears and a teal antenna ball. " +
+      "In the first 1.5 seconds it walks in from the left edge of the box to the center (legs stepping, body facing right). " +
+      "Then it stops, keeps facing RIGHT (its face and eyes looking to the right) and waves its right hand toward the right side, again and again, with a small happy bounce. " +
+      "Clean vector style with a soft ground shadow. Stay inside the box.");
+    await page.getByTestId("vibe-generate").click();
+    await expect(page.locator(".effect-chip").or(page.getByTestId("vibe-error"))).toHaveCount(1, { timeout: 480_000 });
+    await expect(page.getByTestId("vibe-error")).toHaveCount(0);
+    await setBox(BOX2D);
+    await exportTo("stage1.mp4");
+
+    // ② 轉立體：匯入①的成品，3 秒起桌上螢幕（固定鏡頭），4.5 秒起 3D 機器人從右邊走向 2D、轉身揮手
+    await open(path.join(OUT, "stage1.mp4"));
+    await range(3, 9.9);
+    await openTab(page, "vibe3d");
+    await page.locator('[data-template="desk-still"]').click();
+    await expect(page.locator(".effect-chip")).toHaveCount(1);
+    await range(4.5, 9.9);
+    await page.locator('[data-template="robot-wave"]').click();
+    await expect(page.locator(".effect-chip")).toHaveCount(2);
+    await setBox(onScreen(BOX2D));
+    await exportTo("two-stage.mp4");
+  });
+});

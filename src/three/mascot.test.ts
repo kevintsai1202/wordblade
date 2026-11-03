@@ -61,3 +61,21 @@ describe("機器人造型", () => {
     expect(Math.abs(bottom)).toBeLessThan(0.05);
   });
 });
+
+// 面向對方（2026-11-03 demo：3D 機器人和 2D 的自己互相打招呼）：走到了以後身體轉 3/4 朝向目標框，不是永遠正對鏡頭
+describe("走到了以後轉向目標", () => {
+  it("從右邊走進來 → 停下後轉向左邊的框（rotation.y 約 −0.55）；從左邊 → 約 +0.55", async () => {
+    const THREE = await import("three");
+    for (const [from, sign] of [["right", -1], ["left", 1]] as const) {
+      const ctx = vm.createContext({});
+      vm.runInContext(readFileSync(join(import.meta.dirname, "builtins/mascot.js"), "utf8"), ctx, { filename: "mascot.js" });
+      const setup = vm.runInContext("setup", ctx) as (three: typeof THREE, scene: unknown, camera: unknown, env: unknown) => void;
+      const update = vm.runInContext("update", ctx) as (t: number, env: unknown) => void;
+      const M = vm.runInContext("M", ctx) as { parts: { root: { rotation: { y: number } } } };
+      const env = { duration: 6, box: { cx: 0.5, cy: 0.6, w: 0.2, h: 0.2 }, params: { style: "robot", action: "wave", from, walk: 1.6 } };
+      setup(THREE, new THREE.Scene(), new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 100), env);
+      update(4, env);
+      expect(M.parts.root.rotation.y).toBeCloseTo(0.55 * sign, 2);
+    }
+  });
+});
