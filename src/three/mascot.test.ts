@@ -42,3 +42,22 @@ describe("吉祥物站的位置", () => {
     expect(p.startX).toBeGreaterThan(1);
   });
 });
+
+// 機器人造型（2026-11-03，demo 用；造型參考第一次 Vibe 3D 試做的 f1.jpg，程式重寫）：深色方塊身體、青綠發光臉、圓耳、天線
+describe("機器人造型", () => {
+  it("和原本的角色一樣的部位、大小（高約 2.6、半寬不超過 0.7），standPose 的換算才對得上", async () => {
+    const THREE = await import("three");
+    const ctx = vm.createContext({});
+    vm.runInContext(readFileSync(join(import.meta.dirname, "builtins/mascot.js"), "utf8"), ctx, { filename: "mascot.js" });
+    const buildRobot = vm.runInContext("buildRobot", ctx) as (three: typeof THREE, color: InstanceType<typeof THREE.Color>) => Record<string, InstanceType<typeof THREE.Object3D>>;
+    const parts = buildRobot(THREE, new THREE.Color("#14171c"));
+    for (const k of ["root", "head", "armL", "armR", "legL", "legR"]) expect(parts[k]).toBeTruthy();
+    parts.root.updateMatrixWorld(true);
+    const size = new THREE.Box3().setFromObject(parts.root).getSize(new THREE.Vector3());
+    expect(size.y).toBeGreaterThan(2.3);
+    expect(size.y).toBeLessThan(2.9);
+    expect(size.x / 2).toBeLessThanOrEqual(0.75);
+    const bottom = new THREE.Box3().setFromObject(parts.root).min.y;
+    expect(Math.abs(bottom)).toBeLessThan(0.05);
+  });
+});

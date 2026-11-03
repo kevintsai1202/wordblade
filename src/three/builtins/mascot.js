@@ -1,7 +1,7 @@
 // 內建 3D 範本「Mascot」（spec §5.7、§5.8 吉祥物）：基本幾何組成的小角色，疊在影片上（anim3d，透明背景）。
 // 從畫面一側走進來，停在目標框旁邊，然後揮手或指著目標框；目標框 env.box（0～1）可以在預覽上拖。
 // 畫面只由 t 決定（pure）；鏡頭固定，畫面座標用 z=0 平面換算（box 的位置對得上畫面）。
-// 參數：action（wave 揮手／point 指著框／walk 一路走到框旁、到了原地輕輕晃）、from（left／right 從哪邊走進來）、color、height（角色高度佔畫面高的比例）、
+// 參數：style（classic 圓滾滾的小人／robot 深色方塊機器人、發光臉）、glow（robot 的發光色）、action（wave 揮手／point 指著框／pointWave 先指再揮手／walk 一路走到框旁、到了原地輕輕晃）、from（left／right 從哪邊走進來）、color、height（角色高度佔畫面高的比例）、
 // walk（走路秒數；walk 動作不看這個，整段幾乎都在走：片長 − 0.4 秒）。
 
 /** 畫面只由 t 決定 */
@@ -50,6 +50,66 @@ function buildMascot(THREE, color) {
   };
 }
 
+/**
+ * 建機器人造型（style: robot，2026-11-03 demo 用）：深色亮面方塊身體（就是頭）、青綠發光的眼睛與笑臉、兩側圓耳、頭頂天線，
+ * 短手短腳。部位與原本的角色相同（root、head、armL/R、legL/R），高約 2.4、半寬約 0.7、腳底在 y=0，走路與指的動作共用。
+ * @param color 身體顏色；glow 發光色（臉、耳朵、天線、手）
+ */
+function buildRobot(THREE, color, glow) {
+  const shell = new THREE.MeshStandardMaterial({ color, roughness: 0.25, metalness: 0.35 });
+  const face = new THREE.MeshStandardMaterial({ color: 0x07090c, roughness: 0.15, metalness: 0.2 });
+  const light = new THREE.MeshStandardMaterial({ color: glow, emissive: glow, emissiveIntensity: 1.4, roughness: 0.4 });
+  const root = new THREE.Group();
+
+  // 身體＝頭：圓角感用略小的面板疊出臉
+  const head = new THREE.Group();
+  head.position.y = 1.12;
+  head.add(new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), shell));
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.98, 0.82), face);
+  plate.position.set(0, 0.04, 0.601);
+  head.add(plate);
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.2, 0.02), light);
+    eye.position.set(0.2 * side, 0.16, 0.612);
+    head.add(eye);
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12), light);
+    ear.position.set(0.62 * side, 0.05, 0);
+    head.add(ear);
+  }
+  const smile = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.03, 8, 24, Math.PI), light);
+  smile.rotation.z = Math.PI;
+  smile.position.set(0, -0.1, 0.612);
+  head.add(smile);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.5, 8), shell);
+  stem.position.y = 0.85;
+  head.add(stem);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 12), light);
+  tip.position.y = 1.17;
+  head.add(tip);
+  root.add(head);
+
+  /** 一條手或腳：關節 Group，裡面一根膠囊往下垂；手的末端加發光圓球 */
+  const limb = (x, y, len, radius, hand) => {
+    const joint = new THREE.Group();
+    joint.position.set(x, y, 0);
+    const m = new THREE.Mesh(new THREE.CapsuleGeometry(radius, len, 6, 12), shell);
+    m.position.y = -len / 2 - radius;
+    joint.add(m);
+    if (hand) {
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12), light);
+      ball.position.y = -len - radius * 2;
+      joint.add(ball);
+    }
+    root.add(joint);
+    return joint;
+  };
+  return {
+    root, head,
+    armL: limb(-0.6, 1.2, 0.3, 0.08, true), armR: limb(0.6, 1.2, 0.3, 0.08, true),
+    legL: limb(-0.25, 0.5, 0.26, 0.12, false), legR: limb(0.25, 0.5, 0.26, 0.12, false),
+  };
+}
+
 /** 建場景 */
 function setup(THREE, scene, camera, env) {
   scene.add(new THREE.AmbientLight(0xffffff, 1.3));
@@ -62,7 +122,9 @@ function setup(THREE, scene, camera, env) {
   // z=0 平面上看得到的範圍（畫面座標換算用）
   M.viewH = 2 * 20 * Math.tan(camera.fov * Math.PI / 360);
   M.viewW = M.viewH * camera.aspect;
-  M.parts = buildMascot(THREE, new THREE.Color(env.params.color || '#ffb020'));
+  M.parts = env.params.style === 'robot'
+    ? buildRobot(THREE, new THREE.Color(env.params.color || '#14171c'), new THREE.Color(env.params.glow || '#2fe0c0'))
+    : buildMascot(THREE, new THREE.Color(env.params.color || '#ffb020'));
   scene.add(M.parts.root);
 }
 
@@ -143,7 +205,9 @@ function update(t, env) {
   } else {
     const a = smooth((t - walk) / 0.35);
     far.rotation.set(0, 0, (fromLeft ? 1 : -1) * 0.15 * a);
-    if ((p.action || 'point') === 'wave') {
+    // pointWave：先指著框、後半段改揮手（demo：指著 2D 的自己，再跟它打招呼）
+    const wave = p.action === 'wave' || (p.action === 'pointWave' && t - walk > (env.duration - walk) / 2);
+    if (wave) {
       near.rotation.set(0, 0, (fromLeft ? 1 : -1) * (2.6 * a + Math.sin((t - walk) * 10) * 0.35 * a));
     } else {
       // 指向框中心：從肩膀到框中心的角度（手臂預設朝下，所以加 90°）

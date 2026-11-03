@@ -149,3 +149,83 @@ test("Demo 3D 鏡頭試做（組合版）：桌上螢幕＋固定鏡頭＋吉祥
   writeFileSync(path.join(OUT, "combo.mp4"), Buffer.from(b64, "base64"));
 });
 });
+
+// 互動版（2026-11-03）：固定鏡頭桌上螢幕＋3D 機器人走進來指著 → Vibe 2D 生成「2D 版的自己」從框裡跳出來 → 3D 機器人揮手回應。
+// 吉祥物與 2D 都在螢幕右下角，不擋內容。Vibe 2D 要呼叫 AI（本機 dev server＋線上閘道，CORS 放行 localhost:1420）：
+//   $env:WORDBLADE_DEMO_VIDEO = 'output/demo-3d/source-10s.mp4'; $env:WORDBLADE_LIVE_TOKEN = '<權杖>'
+//   pnpm playwright test e2e/demo-3d-try-live.spec.ts -g 互動版
+test.describe("互動版", () => {
+  test.skip(!video || !token, "沒有設 WORDBLADE_DEMO_VIDEO／WORDBLADE_LIVE_TOKEN");
+  test("Demo 3D 鏡頭試做（互動版）：3D 機器人＋Vibe 2D 的自己 → 匯出", async ({ page }) => {
+    test.setTimeout(1_200_000);
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.addInitScript(([url, tok]) => {
+      localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: tok }));
+      localStorage.setItem("wordblade.consent.vibe", "yes");
+      localStorage.setItem("wordblade.exportToOpfs", "1");
+      localStorage.setItem("wordblade.dev", "1");
+    }, [GATEWAY, token!]);
+    await page.goto("/");
+    const chooser = page.waitForEvent("filechooser");
+    await page.getByTestId("import-media").click();
+    await (await chooser).setFiles(path.resolve(video!));
+    await expect(page.getByTestId("media-status")).toHaveCount(0, { timeout: 60_000 });
+    await page.locator(".media-item").first().dblclick();
+    await expect(page.locator('.track-row[data-track-id="V1"] .clip')).toHaveCount(1);
+    mkdirSync(OUT, { recursive: true });
+
+    /** Shift＋拖曳選範圍 */
+    const range = async (a: number, b: number) => {
+      await seek(page, a);
+      const row = (await page.locator('.track-row[data-track-id="V1"]').boundingBox())!;
+      await page.keyboard.down("Shift");
+      await page.mouse.move(row.x + 1 + a * PX, row.y + row.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(row.x + 1 + b * PX, row.y + row.height / 2, { steps: 5 });
+      await page.mouse.up();
+      await page.keyboard.up("Shift");
+    };
+    type Hook = { project: () => { effects: { id: string; params: Record<string, unknown> }[] }; dispatch: (a: unknown) => void };
+    /** 最後加的特效改目標框（畫面座標 0～1） */
+    const setBox = (box: { cx: number; cy: number; w: number; h: number }) => page.evaluate((b) => {
+      const hook = (window as unknown as { __wordblade: Hook }).__wordblade;
+      const e = hook.project().effects.at(-1)!;
+      hook.dispatch({ type: "commit", edits: [{ kind: "setEffectParams", effectId: e.id, params: { ...e.params, box: b } }] });
+    }, box);
+    /** 2D 的自己出現的框（螢幕右下、內容外側） */
+    const BOX2D = { cx: 0.66, cy: 0.74, w: 0.16, h: 0.26 };
+
+    await range(0, 9.5);
+    await openTab(page, "vibe3d");
+    await page.locator('[data-template="desk-still"]').click();
+    await expect(page.locator(".effect-chip")).toHaveCount(1);
+
+    // 1.5～9.5 秒：3D 機器人從右邊走進來，先指著 2D 會出現的地方，後半段揮手跟它打招呼
+    await range(1.5, 9.5);
+    await page.locator('[data-template="robot-wave"]').click();
+    await expect(page.locator(".effect-chip")).toHaveCount(2);
+    await setBox(BOX2D);
+
+    // 3.5～9.5 秒：Vibe 2D 生成 2D 版的自己
+    await range(3.5, 9.5);
+    await openTab(page, "vibe");
+    await page.getByTestId("vibe-description").fill(process.env.WORDBLADE_DEMO_2D_PROMPT ??
+      "A flat 2D cartoon version of a cute dark cube robot with a glowing teal face, teal round ears and a teal antenna ball: it pops out of a small teal sparkle burst, bounces once, then waves happily. Clean vector style with a soft shadow. Stay inside the box.");
+    await page.getByTestId("vibe-generate").click();
+    await expect(page.locator(".effect-chip").or(page.getByTestId("vibe-error"))).toHaveCount(3, { timeout: 480_000 });
+    await expect(page.getByTestId("vibe-error")).toHaveCount(0);
+    await setBox(BOX2D);
+
+    await openTab(page, "export");
+    await page.getByTestId("export-start").click();
+    await expect(page.getByTestId("export-status")).toContainText("Saved", { timeout: 600_000 });
+    const b64 = await page.evaluate(async () => {
+      const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("exports");
+      const bytes = new Uint8Array(await (await (await dir.getFileHandle("wordblade-export.mp4")).getFile()).arrayBuffer());
+      let s = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      return btoa(s);
+    });
+    writeFileSync(path.join(OUT, "interact.mp4"), Buffer.from(b64, "base64"));
+  });
+});
