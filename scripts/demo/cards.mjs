@@ -80,8 +80,8 @@ await browser.close();
 // 片頭封面：各功能的成品畫面（錄影與特效範例成品抽格）
 const COVER_FRAMES = [
   ["output/demo-3d/two-stage.mp4", 8], ["output/sample-effects-export.mp4", 28], ["output/sample-effects-export.mp4", 55],
-  ["output/demo-rec/S3-mask.mp4", 44], ["output/sample-effects-export.mp4", 71], ["output/demo-rec/S4-vibe.mp4", 92],
-  ["output/sample-effects-export.mp4", 99], ["output/demo-rec/S2-director.mp4", 372],
+  ["output/demo-rec/S3-mask.mp4", 48], ["output/sample-effects-export.mp4", 71], ["output/demo-rec/S4-vibe.mp4", 86],
+  ["output/sample-effects-export.mp4", 99], ["output/demo-rec/S2-director.mp4", 400],
 ];
 COVER_FRAMES.forEach(([src, t], i) => {
   execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(t), "-i", src, "-frames:v", "1", "-vf", "scale=1280:-2", join(COVERS, `cover-${i + 1}.png`)]);

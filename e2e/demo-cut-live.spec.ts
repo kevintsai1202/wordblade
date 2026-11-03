@@ -41,13 +41,13 @@ const FILES: Record<string, string> = {
 const PLAN: { id: string; lines: string[]; windows: [string, number, number][]; label?: string; transition?: string; fixed?: number }[] = [
   { id: "open", lines: ["01", "02"], windows: [["stage", 0, 10], ["fx", 54, 57.5]] },
   { id: "problem", lines: ["03", "04"], windows: [["raw", 3, 23]], transition: "dissolve" },
-  { id: "asr1", lines: ["05"], windows: [["S1", 0, 8]], label: "label-asr", transition: "pushLeft" },
-  { id: "asr2", lines: ["06"], windows: [["S1", 8, 44]], label: "label-asr" },
-  { id: "director", lines: ["07", "08"], windows: [["S2", 36, 48], ["S2", 340, 379]], label: "label-director", transition: "pushLeft" },
-  { id: "sam", lines: ["09"], windows: [["S3", 10, 48]], label: "label-sam", transition: "pushLeft" },
-  { id: "vibe", lines: ["10", "11"], windows: [["S4", 8, 22], ["S4", 22, 36], ["S4", 36, 46], ["S4", 46, 58], ["S4", 84, 96]], label: "label-vibe", transition: "pushLeft" },
-  { id: "scene", lines: ["12"], windows: [["S5", 6, 26]], label: "label-scene", transition: "zoomIn" },
-  { id: "publish", lines: ["13"], windows: [["S6", 40, 56], ["S6", 62, 88]], label: "label-publish", transition: "pushLeft" },
+  { id: "asr1", lines: ["05"], windows: [["S1", 1.5, 12.5]], label: "label-asr", transition: "pushLeft" },
+  { id: "asr2", lines: ["06"], windows: [["S1", 12.5, 37.5], ["S1", 37.5, 51.9]], label: "label-asr" },
+  { id: "director", lines: ["07", "08"], windows: [["S2", 48, 56], ["S2", 366, 409.8]], label: "label-director", transition: "pushLeft" },
+  { id: "sam", lines: ["09"], windows: [["S3", 11, 52.1]], label: "label-sam", transition: "pushLeft" },
+  { id: "vibe", lines: ["10", "11"], windows: [["S4", 9, 24], ["S4", 24, 38], ["S4", 38, 50], ["S4", 50, 60], ["S4", 74, 89.4]], label: "label-vibe", transition: "pushLeft" },
+  { id: "scene", lines: ["12"], windows: [["S5", 9, 33.2]], label: "label-scene", transition: "zoomIn" },
+  { id: "publish", lines: ["13"], windows: [["S6", 44, 57], ["S6", 60, 73], ["S6", 79, 98], ["S6", 98, 109.9]], label: "label-publish", transition: "pushLeft" },
   { id: "compositor", lines: ["14"], windows: [["fx", 26, 32], ["fx", 69, 74]], label: "label-compositor", transition: "dissolve" },
   { id: "sizzle", lines: [], windows: [["fx", 96, 101], ["stage", 3, 10], ["fx", 54, 57]], transition: "zoomIn" },
   { id: "end", lines: ["15"], windows: [["end", 0, 0]], transition: "dissolve", fixed: 0 },
@@ -56,12 +56,11 @@ const PLAN: { id: string; lines: string[]; windows: [string, number, number][]; 
  * 局部放大（WordBlade 的 Zoom，素材時間記）：AI 結果出現時拉近到結果區，觀眾看得清楚。[代號, 素材起, 素材訖, 框寬, cx, cy]
  */
 const ZOOMS: [string, number, number, number, number, number][] = [
-  ["S1", 24, 44, 0.5, 0.85, 0.4],     // 逐字稿刪字
-  ["S2", 352, 379, 0.45, 0.86, 0.45], // 導演建議清單
-  ["S3", 32, 48, 0.55, 0.38, 0.3],    // 金鑰被馬賽克
-  ["S4", 37, 46, 0.5, 0.42, 0.42],    // It works!
-  ["S4", 86, 96, 0.5, 0.42, 0.4],     // 3D 獎盃
-  ["S6", 66, 80, 0.45, 0.88, 0.35],   // 發佈包的標題
+  ["S2", 368, 409.8, 0.45, 0.86, 0.45], // 導演建議清單
+  ["S3", 36, 52.1, 0.55, 0.38, 0.3],    // 金鑰被馬賽克
+  ["S4", 40, 50, 0.5, 0.42, 0.42],      // It works!
+  ["S4", 76, 89.4, 0.5, 0.42, 0.4],     // 3D 獎盃
+  ["S6", 86, 97, 0.45, 0.88, 0.35],     // 發佈包的標題
 ];
 /** 放大的框寬（2 倍左右）與一組操作點之間最多隔幾秒算同一段放大 */
 const ZOOM_W = 0.55;
@@ -69,6 +68,7 @@ const CLUSTER_GAP = 4;
 type Mark = { t: number; x: number; y: number; w: number; h: number; what: string };
 /** 錄影的操作點（e2e/demo-record-live.spec.ts 錄的時候記下；沒有就空的） */
 function marksOf(key: string): Mark[] {
+  if (!FILES[key].endsWith(".mp4")) return [];
   const f = path.join(ROOT, FILES[key].replace(/\.mp4$/, ".marks.json"));
   return existsSync(f) ? (JSON.parse(readFileSync(f, "utf8")) as Mark[]) : [];
 }
