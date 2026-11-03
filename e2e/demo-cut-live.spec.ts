@@ -36,20 +36,19 @@ const FILES: Record<string, string> = {
 /**
  * 剪輯表：每段配哪幾句旁白（lines）、用哪些素材窗（[代號, 入點, 出點]，素材秒數）、左上角標（label）。
  * 段長＝那幾句旁白的長度＋間隔；各窗依素材長度比例分配，倍速夾在 0.5～4（等待的地方快轉）。
- * sizzle 段沒有旁白，原速、接點放轉場；片尾是片尾卡（圖片）。
+ * 窗的第 4 個欄位 true＝成品片段（操作完接全螢幕的結果，原速）；片尾是片尾卡（圖片）。
  */
-const PLAN: { id: string; lines: string[]; windows: [string, number, number][]; label?: string; transition?: string; fixed?: number }[] = [
+const PLAN: { id: string; lines: string[]; windows: ([string, number, number] | [string, number, number, true])[]; label?: string; transition?: string; fixed?: number }[] = [
   { id: "open", lines: ["01", "02"], windows: [["stage", 0, 10], ["fx", 54, 57.5]] },
   { id: "problem", lines: ["03", "04"], windows: [["raw", 3, 23]], transition: "dissolve" },
   { id: "asr1", lines: ["05"], windows: [["S1", 1.5, 12.5]], label: "label-asr", transition: "pushLeft" },
   { id: "asr2", lines: ["06"], windows: [["S1", 12.5, 37.5], ["S1", 37.5, 51.9]], label: "label-asr" },
   { id: "director", lines: ["07", "08"], windows: [["S2", 48, 56], ["S2", 366, 409.8]], label: "label-director", transition: "pushLeft" },
-  { id: "sam", lines: ["09"], windows: [["S3", 11, 50.2]], label: "label-sam", transition: "pushLeft" },
-  { id: "vibe", lines: ["10", "11"], windows: [["S4", 9, 19], ["S4", 19, 30], ["S4", 30, 41], ["S4", 41, 50], ["S4", 64, 79.5]], label: "label-vibe", transition: "pushLeft" },
-  { id: "scene", lines: ["12"], windows: [["S5", 9, 33.2]], label: "label-scene", transition: "zoomIn" },
+  { id: "sam", lines: ["09"], windows: [["S3", 11, 50.2], ["fx", 40, 43, true]], label: "label-sam", transition: "pushLeft" },
+  { id: "vibe", lines: ["10", "11"], windows: [["S4", 9, 19], ["S4", 19, 30], ["S4", 30, 41], ["fx", 70, 73.5, true], ["S4", 41, 50], ["S4", 64, 79.5], ["fx", 54, 57, true]], label: "label-vibe", transition: "pushLeft" },
+  { id: "scene", lines: ["12"], windows: [["S5", 9, 33.2], ["stage", 4, 9.5, true]], label: "label-scene", transition: "zoomIn" },
   { id: "publish", lines: ["13"], windows: [["S6", 31, 45], ["S6", 46, 56], ["S6", 62, 78], ["S6", 78, 89.8]], label: "label-publish", transition: "pushLeft" },
   { id: "compositor", lines: ["14"], windows: [["fx", 26, 32], ["fx", 69, 74]], label: "label-compositor", transition: "dissolve" },
-  { id: "sizzle", lines: [], windows: [["fx", 96, 101], ["stage", 3, 10], ["fx", 54, 57]], transition: "zoomIn" },
   { id: "end", lines: ["15"], windows: [["end", 0, 0]], transition: "dissolve", fixed: 0 },
 ];
 /**
@@ -62,9 +61,11 @@ const ZOOMS: [string, number, number, number, number, number][] = [
   ["S4", 66, 79.5, 0.5, 0.42, 0.4],     // 3D 獎盃
   ["S6", 70, 78, 0.45, 0.88, 0.35],     // 發佈包的標題
 ];
-/** 放大的框寬（2 倍左右）與一組操作點之間最多隔幾秒算同一段放大 */
+/** 放大的框寬（2 倍左右）與一組操作點之間最多隔幾秒（素材時間）算同一段放大：隔得近就不切回全畫面，避免一下全畫面一下放大 */
 const ZOOM_W = 0.55;
-const CLUSTER_GAP = 4;
+const CLUSTER_GAP = 10;
+/** 放大最寬到多少（一組點太分散時寧可放大少一點，也不要中途切回全畫面再放大） */
+const ZOOM_MAX_W = 0.8;
 type Mark = { t: number; x: number; y: number; w: number; h: number; what: string };
 /** 錄影的操作點（e2e/demo-record-live.spec.ts 錄的時候記下；沒有就空的） */
 function marksOf(key: string): Mark[] {
@@ -105,7 +106,7 @@ function zoomsOf(key: string, windows: [number, number][]) {
   // 每組一段固定鏡頭（中途不移動）：框住整組的點，框寬至少 ZOOM_W；素材窗的邊界不跨出
   return groups.map((g) => {
     const xs = g.pts.map((p) => p.cx), ys = g.pts.map((p) => p.cy);
-    const w = Math.min(0.9, Math.max(ZOOM_W, Math.max(...xs) - Math.min(...xs) + 0.2, (Math.max(...ys) - Math.min(...ys) + 0.2)));
+    const w = Math.min(ZOOM_MAX_W, Math.max(ZOOM_W, Math.max(...xs) - Math.min(...xs) + 0.2, (Math.max(...ys) - Math.min(...ys) + 0.2)));
     const cx = (Math.max(...xs) + Math.min(...xs)) / 2, cy = (Math.max(...ys) + Math.min(...ys)) / 2;
     const win = windows.find(([a, b]) => g.pts[0].t >= a && g.pts[0].t <= b)!;
     return { start: Math.max(g.start, win[0]), end: Math.min(g.end, win[1]), w, path: [{ src: g.pts[0].t, cx: clampC(cx, w), cy: clampC(cy, w) }] };
@@ -251,17 +252,19 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
     const segStart = await v1End(page);
     const voice = seg.lines.reduce((s, l) => s + wavSeconds(path.join(VOICE, `${l}.wav`)) + GAP, 0);
     // 窗依打字區間切成小段：打字段原速（fixed），其他段分剩下的長度
-    const pieces = seg.windows.flatMap(([key, a, b]) => {
-      if (key === "end") return [{ key, a, b, fixed: false }];
-      const out: { key: string; a: number; b: number; fixed: boolean }[] = [];
+    const pieces = seg.windows.flatMap(([key, a, b, result]) => {
+      if (key === "end") return [{ key, a, b, fixed: false, typed: false }];
+      // 成品片段（操作完接全螢幕的結果）：原速
+      if (result) return [{ key, a, b, fixed: true, typed: false }];
+      const out: { key: string; a: number; b: number; fixed: boolean; typed: boolean }[] = [];
       let at = a;
       for (const r of typingOf(key).filter((r) => r.b > a && r.a < b)) {
         const ra = Math.max(a, r.a), rb = Math.min(b, r.b);
-        if (ra - at > 0.2) out.push({ key, a: at, b: ra, fixed: false });
-        out.push({ key, a: ra, b: rb, fixed: true });
+        if (ra - at > 0.2) out.push({ key, a: at, b: ra, fixed: false, typed: false });
+        out.push({ key, a: ra, b: rb, fixed: true, typed: true });
         at = rb;
       }
-      if (b - at > 0.2) out.push({ key, a: at, b, fixed: false });
+      if (b - at > 0.2) out.push({ key, a: at, b, fixed: false, typed: false });
       return out;
     });
     const srcTotal = pieces.reduce((s, x) => s + (x.b - x.a), 0);
@@ -270,7 +273,7 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
     const target = seg.lines.length ? voice + 0.3 : srcTotal;
     const flexTarget = Math.max(target - fixedTotal, flexSrc / 4);
     const used: { src: string; a: number; b: number; speed: number }[] = [];
-    for (const [i, { key, a, b, fixed }] of pieces.entries()) {
+    for (const [i, { key, a, b, fixed, typed }] of pieces.entries()) {
       const mediaId = idOf(FILES[key]);
       const at = await v1End(page);
       await commit(page, [{ kind: "place", mediaId, trackId: "V1", t: at }]);
@@ -297,7 +300,7 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
       if (i === 0 && seg.transition) await commit(page, [{ kind: "setTransition", clipId: clip.id, transition: seg.transition, duration: 0.6 }]);
       used.push({ src: key, a, b, speed });
       placed.push({ key, a, b, start: clip.start, speed });
-      if (fixed) typing.push({ a: clip.start, b: clip.start + (b - a) });
+      if (typed) typing.push({ a: clip.start, b: clip.start + (b - a) });
       if (speed >= 2) fast.push({ a: clip.start, b: clip.start + (b - a) / speed });
     }
     table.push({ id: seg.id, start: segStart, end: await v1End(page), windows: used });
@@ -348,8 +351,6 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
     const e = (await project(page)).effects.at(-1)!;
     await commit(page, [{ kind: "setEffectParams", effectId: e.id, params: { ...e.params, ...params } }]);
   };
-  const dir = table.find((s) => s.id === "director")!;
-  await mascot("robot-point", dir.end - 6, dir.end - 0.5, { from: "left", box: { cx: 0.93, cy: 0.86, w: 0.08, h: 0.1 }, height: 0.22 });
   const end = table.find((s) => s.id === "end")!;
   await mascot("robot-wave", end.start + 0.8, end.end, { box: { cx: 0.74, cy: 0.62, w: 0.1, h: 0.2 }, height: 0.42 });
 
@@ -357,7 +358,9 @@ test("Demo 影片：WordBlade 剪 3 分鐘 demo → 匯出", async ({ page }) =>
   if (typing.length) {
     await page.evaluate(([s0, e0]) => (window as unknown as { __wordblade: Hook }).__wordblade.dispatch({ type: "setRange", start: s0, end: e0 }), [typing[0].a, typing[0].a + 1]);
     await openTab(page, "audio");
-    await page.getByTestId("sound-description").fill("Fast mechanical keyboard typing, crisp quiet key clicks, steady rhythm, about 2 seconds");
+    // 描述用試聽挑中的第 1 種（e2e/demo-typing-sound-live.spec.ts，開發者 2026-11-04 選定）
+    await page.getByTestId("sound-description").fill("Realistic laptop keyboard typing: about 9 separate key clicks over 1.2 seconds at irregular intervals (70 to 200 ms apart). Each click is a very short burst of white noise (8 to 15 ms), high-pass filtered around 2.5 kHz, sharp attack, fast decay, slightly different loudness. No tone, no music.");
+    await page.getByTestId("sound-length").fill("1.3");
     await page.getByTestId("sound-generate").click();
     await expect(page.getByTestId("sound-result").or(page.getByTestId("sound-error"))).toBeVisible({ timeout: 180_000 });
     await expect(page.getByTestId("sound-error")).toHaveCount(0);
