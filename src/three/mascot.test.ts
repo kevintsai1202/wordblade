@@ -42,3 +42,40 @@ describe("吉祥物站的位置", () => {
     expect(p.startX).toBeGreaterThan(1);
   });
 });
+
+// 機器人造型（2026-11-03，demo 用；造型參考第一次 Vibe 3D 試做的 f1.jpg，程式重寫）：深色方塊身體、青綠發光臉、圓耳、天線
+describe("機器人造型", () => {
+  it("和原本的角色一樣的部位、大小（高約 2.6、半寬不超過 0.7），standPose 的換算才對得上", async () => {
+    const THREE = await import("three");
+    const ctx = vm.createContext({});
+    vm.runInContext(readFileSync(join(import.meta.dirname, "builtins/mascot.js"), "utf8"), ctx, { filename: "mascot.js" });
+    const buildRobot = vm.runInContext("buildRobot", ctx) as (three: typeof THREE, color: InstanceType<typeof THREE.Color>) => Record<string, InstanceType<typeof THREE.Object3D>>;
+    const parts = buildRobot(THREE, new THREE.Color("#14171c"));
+    for (const k of ["root", "head", "armL", "armR", "legL", "legR"]) expect(parts[k]).toBeTruthy();
+    parts.root.updateMatrixWorld(true);
+    const size = new THREE.Box3().setFromObject(parts.root).getSize(new THREE.Vector3());
+    expect(size.y).toBeGreaterThan(2.3);
+    expect(size.y).toBeLessThan(2.9);
+    expect(size.x / 2).toBeLessThanOrEqual(0.75);
+    const bottom = new THREE.Box3().setFromObject(parts.root).min.y;
+    expect(Math.abs(bottom)).toBeLessThan(0.05);
+  });
+});
+
+// 面向對方（2026-11-03 demo：3D 機器人和 2D 的自己互相打招呼）：走到了以後身體轉 3/4 朝向目標框，不是永遠正對鏡頭
+describe("走到了以後轉向目標", () => {
+  it("從右邊走進來 → 停下後轉向左邊的框（rotation.y 約 −0.55）；從左邊 → 約 +0.55", async () => {
+    const THREE = await import("three");
+    for (const [from, sign] of [["right", -1], ["left", 1]] as const) {
+      const ctx = vm.createContext({});
+      vm.runInContext(readFileSync(join(import.meta.dirname, "builtins/mascot.js"), "utf8"), ctx, { filename: "mascot.js" });
+      const setup = vm.runInContext("setup", ctx) as (three: typeof THREE, scene: unknown, camera: unknown, env: unknown) => void;
+      const update = vm.runInContext("update", ctx) as (t: number, env: unknown) => void;
+      const M = vm.runInContext("M", ctx) as { parts: { root: { rotation: { y: number } } } };
+      const env = { duration: 6, box: { cx: 0.5, cy: 0.6, w: 0.2, h: 0.2 }, params: { style: "robot", action: "wave", from, walk: 1.6 } };
+      setup(THREE, new THREE.Scene(), new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 100), env);
+      update(4, env);
+      expect(M.parts.root.rotation.y).toBeCloseTo(0.55 * sign, 2);
+    }
+  });
+});

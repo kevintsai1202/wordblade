@@ -38,3 +38,4 @@ spikes/**/gen/schemas/
 .classpath
 .project
 .settings/
+cold-notes/
