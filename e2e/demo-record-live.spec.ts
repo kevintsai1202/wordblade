@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { openTab } from "./helpers/tabs";
 
@@ -46,6 +46,17 @@ const CURSOR = () => {
   if (document.body) install(); else addEventListener("DOMContentLoaded", install);
 };
 
+/**
+ * 操作點紀錄：每次點擊或打字的時間（錄影開始起算的秒數）與位置（畫面比例 0～1），剪片時用來自動放大與圈選
+ * （e2e/demo-cut-live.spec.ts）。錄影從開頁時開始，t0 在 start() 記下。
+ */
+const marks: { t: number; x: number; y: number; w: number; h: number; what: string }[] = [];
+let t0 = 0;
+/** 記一個操作點（元素的框） */
+function mark(box: { x: number; y: number; width: number; height: number }, what: string) {
+  marks.push({ t: (Date.now() - t0) / 1000, x: (box.x + box.width / 2) / SIZE.width, y: (box.y + box.height / 2) / SIZE.height, w: box.width / SIZE.width, h: box.height / SIZE.height, what });
+}
+
 /** 停一下（讓觀眾看清楚） */
 const pause = (page: Page, ms = 800) => page.waitForTimeout(ms);
 
@@ -57,6 +68,7 @@ async function act(page: Page, target: Locator, opts: { double?: boolean; modifi
   const box = (await target.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 18 });
   await pause(page, 250);
+  mark(box, (await target.getAttribute("data-testid")) ?? (await target.innerText().catch(() => "")).slice(0, 30));
   if (opts.double) await target.dblclick({ modifiers: opts.modifiers });
   else await target.click({ modifiers: opts.modifiers });
   await pause(page, 500);
@@ -107,6 +119,8 @@ async function range(page: Page, a: number, b: number) {
 
 /** 開 WordBlade、匯入原始錄影放上 V1 */
 async function start(page: Page, consents: string[]) {
+  marks.length = 0;
+  t0 = Date.now();
   await page.addInitScript(CURSOR);
   await page.addInitScript(([url, tok, list]) => {
     localStorage.setItem("wordblade.gateway", JSON.stringify({ url, token: tok }));
@@ -141,6 +155,7 @@ async function finish(page: Page, name: string) {
   const video = page.video()!;
   await page.close();
   mkdirSync(OUT, { recursive: true });
+  writeFileSync(path.join(OUT, `${name}.marks.json`), JSON.stringify(marks, null, 1));
   const webm = path.join(OUT, `${name}.webm`);
   await video.saveAs(webm);
   const mp4 = path.join(OUT, `${name}.mp4`);
