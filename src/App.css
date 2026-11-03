@@ -48,7 +48,17 @@ button:disabled { opacity: 0.4; cursor: default; }
 .splitter.x { cursor: col-resize; width: 5px; }
 .splitter.y { cursor: row-resize; height: 5px; }
 .splitter:hover, .splitter:active { background: var(--accent); }
-.preview { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: #0f1012; }
+.preview { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: #0f1012; position: relative; }
+/* 歡迎畫面：蓋在預覽區上（還沒開專案、也沒素材時） */
+.welcome { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; background: #0f1012; text-align: center; }
+.welcome h2 { margin: 0; font-size: 28px; letter-spacing: 0.5px; }
+.welcome p { margin: 0; max-width: 34em; }
+.welcome-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.welcome-actions > button { padding: 8px 16px; font-size: 14px; }
+.welcome-continue { display: flex; flex-direction: column; gap: 2px; padding: 12px 28px; font-size: 16px; }
+.welcome-continue .muted { font-size: 12px; }
+.welcome-recent { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.welcome-recent li { display: flex; gap: 12px; justify-content: space-between; min-width: 18em; }
 .viewer { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 12px; }
 .frame {
   position: relative; aspect-ratio: 16 / 9; max-height: 100%; max-width: 100%; height: 100%;
@@ -134,6 +144,20 @@ button:disabled { opacity: 0.4; cursor: default; }
 .media-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .media-status { font-size: 11px; color: #e0b050; }
 .media-status.failed { color: #ff7a7a; white-space: normal; }
+/* 原檔找不到（同達文西的 Media Offline）：素材與片段標紅，照樣能剪 */
+.media-status.offline { color: #ff7a7a; white-space: normal; word-break: break-all; }
+.media-item.offline .media-thumb { outline: 2px solid #c0392b; }
+/* 移除素材：滑過才出現；離線的一直顯示 */
+.media-item { position: relative; }
+.media-remove { position: absolute; top: 4px; right: 4px; font-size: 11px; padding: 1px 6px; opacity: 0; }
+.media-item:hover .media-remove, .media-remove.visible { opacity: 1; }
+/* 分離按鈕放在右下角（不蓋住項目中央：雙擊素材要能加到時間軸） */
+.media-separate, .media-separate-row { position: absolute; right: 4px; bottom: 4px; font-size: 11px; }
+.media-separate { padding: 1px 6px; opacity: 0.55; }
+.media-item:hover .media-separate:not(:disabled) { opacity: 1; }
+.media-separate-row { display: flex; gap: 6px; align-items: center; background: #1e1e1e; padding-left: 4px; }
+.clip.offline { background: repeating-linear-gradient(135deg, #6b1414 0 6px, #561010 6px 12px) !important; }
+.clip.offline .clip-label::before { content: "⚠ "; }
 .media-ghost { position: fixed; z-index: 100; pointer-events: none; padding: 3px 8px; background: #2d6cdf; color: #fff; border-radius: 3px; font-size: 12px; white-space: nowrap; }
 /* 專案資料夾：另存的名稱輸入 */
 .save-as { display: inline-flex; gap: 4px; align-items: center; }
@@ -272,3 +296,18 @@ button.link { background: none; border: none; color: #4fc3f7; padding: 0; cursor
 .director-treatment ul { margin: 4px 0 0; padding-left: 16px; }
 .director-check-spacer { display: inline-block; width: 13px; }
 .director-empty { font-size: 11px; }
+
+/* 材質庫（P1-14）：每項一個預覽（材質是 2×2 拼貼）、名字、法線強度、再產生與刪除 */
+.texture-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.texture-item { display: flex; gap: 8px; align-items: flex-start; }
+.texture-tile { width: 96px; height: 96px; flex: none; background-color: #111; background-repeat: repeat; background-position: 0 0; border-radius: 3px; border: 1px solid rgba(255,255,255,0.12); }
+.texture-tile.background { width: 128px; height: 72px; background-repeat: no-repeat; background-position: center; }
+.texture-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.texture-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 卡拉 OK 重配錄音的提詞器（P1-9；2026-11-02） */
+.karaoke { border: 1px solid var(--border, #444); border-radius: 6px; padding: 8px 10px; margin: 8px 0; }
+.karaoke-countdown { font-size: 32px; font-weight: 700; text-align: center; margin: 4px 0; }
+.karaoke-text { font-size: 18px; line-height: 1.6; }
+.karaoke-text .said { opacity: 0.45; }
+.karaoke-text .now { color: #ffd34d; font-weight: 700; }

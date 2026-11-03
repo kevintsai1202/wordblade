@@ -2,16 +2,21 @@
 // 例如「去贅詞 Remove all」、AI 導演採用一條建議，都只要一次 Ctrl+Z（§5.11、§5.16）。
 // 歷史存的是整份專案的快照；timeline 的函式用 Immer 做結構共享，快照之間沒改到的部分是同一個物件。
 import { addEffect, deleteEffect, moveEffect, setEffectCameraKeys, setEffectParams, trimEffect } from "./effects";
-import type { CameraKey, DirectorChapter, Effect, MaskObject, Plugin, Project, Seconds, Suggestion, Word, ZoomRegion } from "./model";
+import { setTransition } from "./transitions";
+import { deleteColorGrade, setColorGrade, type GradeValues } from "./colorGrade";
+import type { TransitionKind } from "./model";
+import type { CameraKey, DirectorChapter, Effect, MaskObject, Plugin, Project, Seconds, Suggestion, Synth, TextureAsset, Word, ZoomRegion } from "./model";
 import { setSuggestionStatus, setSuggestions } from "./suggestions";
 import { addMasks, deleteMasks, setMask } from "./masks";
 import { setCaptionStyle, setMediaWords } from "./media";
 import { editWords } from "./transcriptEdit";
 import { addZoom, deleteZoom, setZoom } from "./zoom";
 import { setClipSpeed } from "./speed";
+import { separateStems } from "./stems";
+import { addVoiceover, deleteVoiceover, setVoiceoverActive, type NewVoiceover } from "./voiceover";
 import { insertIntro, type IntroInsert } from "../intro/insert";
 import type { CaptionStyle } from "../captions/captionLayout";
-import { cutByWords, cutSourceRanges, deleteClip, moveClip, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
+import { cutByWords, cutSourceRanges, deleteClip, insertFreeze, layoutV1, moveClip, placeLoop, placeMedia, rippleDelete, splitClip, trimClip, type SourceRange } from "./timeline";
 
 /** 一個編輯動作 */
 export type Edit =
@@ -22,6 +27,13 @@ export type Edit =
   | { kind: "move"; clipId: string; start: Seconds }
   | { kind: "delete"; clipId: string }
   | { kind: "place"; mediaId: string; trackId: string; t: Seconds }
+  | { kind: "placeLoop"; mediaId: string; trackId: string; t: Seconds; end: Seconds }
+  | { kind: "addSynth"; synth: Synth }
+  | { kind: "addTexture"; texture: TextureAsset }
+  | { kind: "setTexture"; textureId: string; patch: Partial<Omit<TextureAsset, "id">> }
+  | { kind: "deleteTexture"; textureId: string }
+  | { kind: "removeMedia"; mediaId: string }
+  | { kind: "separateStems"; mediaId: string; vocalsId: string; backgroundId: string }
   | { kind: "addEffect"; effect: Effect; plugins: Plugin[] }
   | { kind: "moveEffect"; effectId: string; start: Seconds }
   | { kind: "trimEffect"; effectId: string; edge: "in" | "out"; t: Seconds }
@@ -41,7 +53,14 @@ export type Edit =
   | { kind: "deleteMasks"; ids: string[] }
   | { kind: "setSuggestions"; mediaId: string; suggestions: Suggestion[]; chapters?: DirectorChapter[] }
   | { kind: "setSuggestionStatus"; id: string; status: Suggestion["status"] }
-  | { kind: "insertIntro"; intro: IntroInsert };
+  | { kind: "insertIntro"; intro: IntroInsert }
+  | { kind: "addVoiceover"; voiceover: NewVoiceover; speed?: number }
+  | { kind: "setVoiceoverActive"; id: string; active: boolean }
+  | { kind: "deleteVoiceover"; id: string }
+  | { kind: "setTransition"; clipId: string; transition: TransitionKind | null; duration?: Seconds }
+  | { kind: "insertFreeze"; t: Seconds; hold?: Seconds }
+  | { kind: "setColorGrade"; id: string; values: GradeValues; range?: { start: Seconds; end: Seconds } | null }
+  | { kind: "deleteColorGrade"; id: string };
 
 /** 套用一個編輯 */
 function applyEdit(project: Project, edit: Edit): Project {
@@ -53,6 +72,13 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "move": return moveClip(project, edit.clipId, edit.start);
     case "delete": return deleteClip(project, edit.clipId);
     case "place": return placeMedia(project, edit.mediaId, edit.trackId, edit.t);
+    case "placeLoop": return placeLoop(project, edit.mediaId, edit.trackId, edit.t, edit.end);
+    case "removeMedia": return removeMedia(project, edit.mediaId);
+    case "separateStems": return separateStems(project, edit.mediaId, edit.vocalsId, edit.backgroundId);
+    case "addSynth": return { ...project, synths: [...(project.synths ?? []).filter((x) => x.id !== edit.synth.id), edit.synth] };
+    case "addTexture": return { ...project, textures: [...(project.textures ?? []).filter((x) => x.id !== edit.texture.id), edit.texture] };
+    case "setTexture": return setTexture(project, edit.textureId, edit.patch);
+    case "deleteTexture": return deleteTexture(project, edit.textureId);
     case "addEffect": return addEffect(project, edit.effect, edit.plugins);
     case "insertIntro": return insertIntro(project, edit.intro);
     case "moveEffect": return moveEffect(project, edit.effectId, edit.start);
@@ -73,7 +99,31 @@ function applyEdit(project: Project, edit: Edit): Project {
     case "setSuggestions": return setSuggestions(project, edit.mediaId, edit.suggestions, edit.chapters);
     case "setSuggestionStatus": return setSuggestionStatus(project, edit.id, edit.status);
     case "setSpeed": return setClipSpeed(project, edit.clipId, edit.speed);
+    case "addVoiceover": return addVoiceover(project, edit.voiceover, edit.speed ?? 1);
+    case "setVoiceoverActive": return setVoiceoverActive(project, edit.id, edit.active);
+    case "deleteVoiceover": return deleteVoiceover(project, edit.id);
+    case "setTransition": return setTransition(project, edit.clipId, edit.transition, edit.duration);
+    case "insertFreeze": return insertFreeze(project, edit.t, edit.hold);
+    case "setColorGrade": return setColorGrade(project, edit.id, edit.values, edit.range);
+    case "deleteColorGrade": return deleteColorGrade(project, edit.id);
   }
+}
+
+/** 改材質庫某一筆的欄位（id 不變）；找不到或沒有實際變化就回傳原物件 */
+function setTexture(project: Project, textureId: string, patch: Partial<Omit<TextureAsset, "id">>): Project {
+  const list = project.textures ?? [];
+  const old = list.find((t) => t.id === textureId);
+  if (!old) return project;
+  const next = { ...old, ...patch };
+  if (Object.keys(patch).every((k) => (old as unknown as Record<string, unknown>)[k] === (next as unknown as Record<string, unknown>)[k])) return project;
+  return { ...project, textures: list.map((t) => (t.id === textureId ? next : t)) };
+}
+
+/** 從材質庫刪掉一筆（素材庫裡的圖留著，專案只記連結；特效參數裡的引用不動，插件找不到就用預設） */
+function deleteTexture(project: Project, textureId: string): Project {
+  const list = project.textures ?? [];
+  if (!list.some((t) => t.id === textureId)) return project;
+  return { ...project, textures: list.filter((t) => t.id !== textureId) };
 }
 
 /** 依序套用多個編輯；全部沒改到就回傳原物件 */
@@ -108,6 +158,12 @@ export function amend(history: History, change: (project: Project) => Project): 
   return { past: history.past.map(change), present: change(history.present), future: history.future.map(change) };
 }
 
+/** 只改目前這一步（不動過去與未來、不新增步驟）：滑桿拖動中用；未來的快照清掉（同 commit） */
+export function replacePresent(history: History, edits: Edit[]): History {
+  const next = applyEdits(history.present, edits);
+  return next === history.present ? history : { ...history, present: next, future: [] };
+}
+
 /** 能不能復原 */
 export function canUndo(history: History): boolean {
   return history.past.length > 0;
@@ -130,4 +186,25 @@ export function redo(history: History): History {
   if (!canRedo(history)) return history;
   const [next, ...rest] = history.future;
   return { past: [...history.past, history.present], present: next, future: rest };
+}
+
+/**
+ * 從專案移除素材（2026-11-01）：素材、它在時間軸上的片段、逐字稿、遮罩、AI 建議與章節、音效規格的連結一起拿掉；
+ * V1 拿掉片段後重新接起來（不留空隙），其他軌不動。素材檔本身不動（專案只記連結）。
+ */
+function removeMedia(project: Project, mediaId: string): Project {
+  if (!project.media.some((m) => m.id === mediaId)) return project;
+  const removed = new Set(project.clips.filter((c) => c.mediaId === mediaId).map((c) => c.id));
+  let p: Project = {
+    ...project,
+    media: project.media.filter((m) => m.id !== mediaId),
+    words: project.words.filter((w) => w.mediaId !== mediaId),
+    masks: project.masks.filter((m) => m.mediaId !== mediaId),
+    suggestions: project.suggestions.filter((s) => s.mediaId !== mediaId),
+    synths: (project.synths ?? []).map((x) => (x.renderedMediaId === mediaId ? { ...x, renderedMediaId: undefined } : x)),
+    ...(project.directorChapters ? { directorChapters: project.directorChapters.filter((c) => c.mediaId !== mediaId) } : {}),
+  };
+  // 只拿掉這支素材的片段（不用漣漪刪除：那會連帶剪掉其他軌上別的素材）；V1 再重新接起來
+  p = { ...p, clips: p.clips.filter((c) => !removed.has(c.id)) };
+  return layoutV1(p);
 }

@@ -54,11 +54,9 @@ export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>, thum
         // 素材準備是重工作：期間背景縮圖排程停下來
         const endBusy = beginBusy();
         try {
-          // 影片先做第一層縮圖（每 10 秒、寬 160，只解關鍵幀；D39），再做縮圖、包絡與代理檔
-          if (thumbs && media.kind === "video") {
-            await thumbs.track(media);
-            await thumbs.runTier(media.id, 0);
-          }
+          // 先做素材庫縮圖、包絡與代理檔（有進度），做完就標成就緒；
+          // 時間軸的第一層縮圖（每 10 秒、寬 160，只解關鍵幀；D39）之後再補。長片的第一層要解上千格又沒有進度，
+          // 以前放在前面會讓素材庫停在「Preparing 0%」好幾分鐘（2026-11-01，5 小時的片）
           const result = await engine.prepare(media, (progress) => patch(media.id, { progress }));
           if (result.proxyPath) dispatch({ type: "patchMedia", id: media.id, patch: { proxyPath: result.proxyPath } });
           setLibrary((lib) => {
@@ -68,6 +66,10 @@ export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>, thum
             if (result.envelope) envelopes.set(media.id, result.envelope);
             return { items, envelopes };
           });
+          if (thumbs && media.kind === "video") {
+            await thumbs.track(media);
+            await thumbs.runTier(media.id, 0);
+          }
         } catch (e) {
           // 準備失敗不影響使用：預覽繼續用原檔，只是沒有縮圖、波形或代理檔
           patch(media.id, { status: "failed", error: `Preparing failed: ${String(e)}` });
@@ -89,6 +91,8 @@ export function useMediaLibrary(engine: Engine, dispatch: Dispatch<Action>, thum
         let media;
         try {
           media = await engine.probe(source, id);
+          // 匯入時就帶上用途（材質圖），素材庫才不會先閃一下再消失
+          if (source.role) media = { ...media, role: source.role };
         } catch (e) {
           patch(id, { status: "failed", error: e instanceof UnsupportedMediaError ? e.message : `Can't import: ${String(e)}` });
           continue;

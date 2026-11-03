@@ -43,8 +43,10 @@ export function gainAt(curve: DuckCurve, t: Seconds): number {
  */
 export function duckingCurve(project: Project, envelopes: Map<string, Envelope>, options: Partial<DuckOptions> = {}): DuckCurve {
   const o = { ...DEFAULT_DUCK, ...options };
-  const dialogue = new Map(project.tracks.filter((t) => t.kind === "audio" && t.role === "dialogue" && !t.muted).map((t) => [t.id, t]));
-  const clips = project.clips.filter((c) => dialogue.has(c.trackId) && envelopes.has(c.mediaId));
+  // 對白軌與 AI 重配音軌都算「有人講話」；重配音切回原聲時 AI 片段靜音，不算（2026-11-02）
+  const dialogue = new Map(project.tracks.filter((t) => t.kind === "audio" && (t.role === "dialogue" || t.role === "voice") && !t.muted).map((t) => [t.id, t]));
+  const inactive = new Set((project.voiceovers ?? []).filter((v) => !v.active).map((v) => v.clipId));
+  const clips = project.clips.filter((c) => dialogue.has(c.trackId) && envelopes.has(c.mediaId) && !inactive.has(c.id));
   const end = project.clips.reduce((max, c) => Math.max(max, clipEnd(c)), 0);
   const n = Math.ceil(end * o.rate);
   const gain = new Float32Array(n);

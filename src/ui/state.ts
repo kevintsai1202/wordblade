@@ -1,6 +1,6 @@
 // 介面狀態（主畫面共用）：專案歷史、播放頭、選取的片段、時間軸縮放。
 // reducer 與熱鍵對應都是純函式，方便單元測試；React 端只負責把事件轉成動作。
-import { amend, commit, createHistory, redo, undo, type Edit, type History } from "../core/history";
+import { amend, commit, createHistory, replacePresent, redo, undo, type Edit, type History } from "../core/history";
 import { addMedia, patchMedia } from "../core/media";
 import type { Media, Project, Seconds } from "../core/model";
 import type { PublishKit } from "../publish/kit";
@@ -37,6 +37,8 @@ export interface AppState {
 /** 介面動作 */
 export type Action =
   | { type: "commit"; edits: Edit[] }
+  /** 改目前這一步（不新增復原步驟）：滑桿拖動中用，第一下要先 commit */
+  | { type: "amend"; edits: Edit[] }
   | { type: "undo" }
   | { type: "redo" }
   | { type: "seek"; time: Seconds }
@@ -104,6 +106,8 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, playing: true, rate: action.rate, stopAt: action.stopAt ?? null, playSeq: state.playSeq + 1 };
     case "pause":
       return { ...state, playing: false };
+    case "amend":
+      return { ...state, history: replacePresent(state.history, action.edits) };
     case "importMedia":
       // 匯入不進復原歷史：Ctrl+Z 不會讓素材消失
       return { ...state, history: amend(state.history, (p) => addMedia(p, action.media)) };
@@ -205,6 +209,8 @@ export function keyToAction(e: KeyInput, state: AppState): Action | null {
     return clip ? { type: "commit", edits: [{ kind: "split", clipId: clip.id, t: state.playhead }] } : null;
   }
   if (e.ctrlKey) return null;
+  // Shift+F：在播放頭插入定格（§5.20，預設 2 秒）
+  if (e.shiftKey && key === "f") return { type: "commit", edits: [{ kind: "insertFreeze", t: state.playhead }] };
   // 播放：Space 切換；L 前進、J 倒退，同方向連按加速到 8 倍；K 停
   if (e.key === " ") return state.playing ? { type: "pause" } : { type: "play", rate: 1 };
   if (key === "k") return { type: "pause" };

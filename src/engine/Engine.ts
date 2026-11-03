@@ -2,12 +2,16 @@
 // 介面、TS 核心、合成器、沙盒只寫一份；讀寫檔、代理檔、中間檔、抽 ASR 音訊、聲音分離、錄音
 // 這些跟平台有關的事收在 Engine 後面，由 DesktopEngine（Tauri＋Rust）與 WebEngine（瀏覽器 API）各自實作。
 
+import type { SampleId } from "../project/sample";
 import type { Envelope } from "../audio/envelope";
 import type { Media } from "../core/model";
 import type { DoneMap } from "../media/thumbs";
 
 /** 要匯入的檔案：Windows 版是路徑，網頁版是 File */
-export type ImportSource = { kind: "path"; path: string; name: string } | { kind: "file"; file: File; name: string };
+export type ImportSource = ({ kind: "path"; path: string; name: string } | { kind: "file"; file: File; name: string; handle?: FileSystemFileHandle }) & {
+  /** 匯入時就標上的用途（材質圖："texture"，素材庫頁籤不列）；一般匯入沒有 */
+  role?: Media["role"];
+};
 
 /** 匯入後的背景準備結果 */
 export interface Prepared {
@@ -24,6 +28,30 @@ export class UnsupportedMediaError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "UnsupportedMediaError";
+  }
+}
+
+/** 聲音分離的進度：下載模型或分離，比例 0～1 */
+export interface SeparationProgress {
+  stage: "download" | "separate";
+  ratio: number;
+}
+
+/** 聲音分離的結果：兩個衍生檔（交給 importSources 變成素材）與診斷資訊 */
+export interface SeparationResult {
+  vocals: ImportSource;
+  background: ImportSource;
+  /** 推論用的執行提供者（"directml"、"cpu"，快取命中是 "cache"） */
+  provider: string;
+  /** 分離花的秒數（不含下載；快取命中是 0） */
+  seconds: number;
+}
+
+/** 使用者取消了聲音分離 */
+export class SeparationCancelled extends Error {
+  constructor() {
+    super("Separation cancelled");
+    this.name = "SeparationCancelled";
   }
 }
 
@@ -83,10 +111,10 @@ export interface Engine {
   /** 示範專案的素材資料夾：網頁版是開發伺服器的 samples/；Windows 版找 repo 的 samples/，找不到（安裝版）回 null */
   demoMediaRoot(): Promise<string | null>;
   /**
-   * 範例專案（§5.22）：讀 sample/project.json，回傳範例資料夾（素材路徑改寫用，見 project/sample.ts）與檔案內容；找不到回 null。
-   * 網頁版從靜態網站讀（root 是 "sample"）；Windows 版讀安裝資料夾裡的 sample\（開發時是 repo 的 public\sample\）。
+   * 範例專案（§5.22）：讀 <id>/project.json，回傳範例資料夾（素材路徑改寫用，見 project/sample.ts）與檔案內容；找不到回 null。
+   * 網頁版從靜態網站讀（root 就是 id）；Windows 版讀安裝資料夾裡的 <id>\（開發時是 repo 的 public\<id>\）。
    */
-  openSample(): Promise<{ root: string; text: string } | null>;
+  openSample(id: SampleId): Promise<{ root: string; text: string } | null>;
   /** 匯出讀的素材來源（原檔或中間檔，不用代理檔）：網頁版是 File，Windows 版是 asset 協定的網址（mediabunny 分段讀） */
   exportSource(media: Media): Promise<Blob | string>;
   /** 選擇匯出位置（存檔對話框）；使用者取消回 null */
@@ -112,17 +140,42 @@ export interface Engine {
   openProject(): Promise<{ location: ProjectLocation; text: string } | null>;
   /** 重新開最近的專案（不用對話框）；找不到或沒有權限回 null */
   reopenProject(location: ProjectLocation): Promise<{ location: ProjectLocation; text: string } | null>;
+  /** 寫專案 .data 裡的文字檔（rel 相對 .data，例如 masks/<id>.json；D41 P5） */
+  writeData(location: ProjectLocation, rel: string, text: string): Promise<void>;
+  /** 讀專案 .data 裡的文字檔；沒有回 null */
+  readData(location: ProjectLocation, rel: string): Promise<string | null>;
+  /** 目前開著的專案資料夾（產生的檔案寫進它的 .data\generated\）；null＝沒開 */
+  setProjectLocation(location: ProjectLocation | null): void;
   /** 寫 project.json（暫存檔＋改名，不會寫壞） */
   writeProject(location: ProjectLocation, text: string): Promise<void>;
   /** 素材的內容指紋（大小＋頭尾各 1 MB）；拿不到回 undefined */
   mediaFingerprint(media: Media): Promise<string | undefined>;
   /** 找回素材：依序試候選路徑，第一個存在且指紋相同的回傳更新過路徑的素材；都不是回 null（介面請使用者重新連結） */
   locateMedia(media: Media, candidates: string[], fingerprint?: string): Promise<Media | null>;
-  /** 人聲／背景音樂分離，回傳兩個衍生素材的 id（§5.14） */
-  separateVocals(mediaId: string): Promise<{ vocalsId: string; backgroundId: string }>;
+  /**
+   * 網頁版：讓使用者授權一個素材資料夾（素材在專案資料夾外面時；允許一次就記住，之後開專案自動在裡面找）。
+   * 要在使用者手勢裡呼叫；取消或桌面版回 false。
+   */
+  grantMediaFolder(): Promise<boolean>;
+  /** 網頁版重新連結：使用者選的檔案（source）接上找不到的素材，回傳素材的 handleKey；Windows 版走 locateMedia，回 null */
+  adoptFile(media: Media, source: ImportSource): Promise<string | null>;
+  /**
+   * 錄音退路（spec §5.18）：Windows 版 getUserMedia 被擋時改用內建錄音機；網頁版沒有（null）。
+   * stop 回傳錄好的檔案（.m4a，已搬進專案 .data\generated\ 或 app 資料夾），接著走一般匯入。
+   */
+  readonly recorderFallback: { start(): Promise<void>; stop(): Promise<ImportSource> } | null;
+  /**
+   * 人聲／背景音樂分離（§5.14，只有 Windows 版）：本機推論，結果是兩個 WAV（人聲、背景音樂），回傳成可走一般匯入（importSources）的來源。
+   * 第一次用會先下載模型（stage="download"）；已分離過的素材（同內容指紋）直接回傳快取。onProgress 回報 0～1。
+   * 取消用 cancelSeparation，這個呼叫會以 SeparationCancelled 拒絕。
+   */
+  separateVocals(media: Media, onProgress: (p: SeparationProgress) => void): Promise<SeparationResult>;
+  /** 取消這支素材進行中的分離 */
+  cancelSeparation(mediaId: string): Promise<void>;
   /**
    * 程式產生的檔案（AI 音效與配樂的 WAV，§5.15）變成可匯入的來源，接著走一般的匯入流程（useMediaLibrary.importSources）。
-   * Windows 版寫進 app 資料夾的 generated/（回傳路徑），網頁版包成 File。name 是建議的檔名（例如 sfx-whoosh.wav）。
+   * 開著專案資料夾時寫進 .data\generated\（D41 P5），沒開時：Windows 版寫進 app 資料夾的 generated/（回傳路徑），網頁版包成 File。
+   * name 是建議的檔名（例如 sfx-whoosh.wav）；副檔名只認 wav、png、webp（材質圖是 PNG，§5.12），其他一律當 wav。
    */
   importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource>;
 }

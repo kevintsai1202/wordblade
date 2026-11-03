@@ -1,4 +1,5 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import type { SampleId } from "../project/sample";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open, save } from "@tauri-apps/plugin-dialog";
@@ -7,7 +8,7 @@ import { pcm16ToWav } from "../asr/wav";
 import { IMAGE_DURATION } from "../core/media";
 import type { Media } from "../core/model";
 import { CHUNK, TIERS, chunkCount, indicesInChunk, type DoneMap } from "../media/thumbs";
-import { NotImplementedError, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation } from "./Engine";
+import { NotImplementedError, SeparationCancelled, UnsupportedMediaError, type Engine, type ExportTarget, type ImportSource, type Prepared, type ProjectLocation, type SeparationProgress, type SeparationResult } from "./Engine";
 
 /** 資料夾路徑 → 專案名稱（最後一段去掉 .wordblade） */
 function projectName(dir: string): string {
@@ -40,8 +41,8 @@ function baseName(path: string): string {
 /** Windows 桌面版：重運算交給 Rust 指令層（ffmpeg sidecar、onnxruntime） */
 export class DesktopEngine implements Engine {
   readonly kind = "desktop" as const;
-  /** 聲音分離（P1-10）還沒實作：旗標維持 false，等 separateVocals 做好再打開 */
-  readonly capabilities = { vocalSeparation: false, anyFormatImport: true };
+  /** 聲音分離（P1-10）：Rust 的 separate_vocals（onnxruntime，DirectML 或 CPU） */
+  readonly capabilities = { vocalSeparation: true, anyFormatImport: true };
   /** 本機檔案經 Tauri 的 asset 協定給 WebView 讀；有代理檔就用代理檔（§5.21） */
   mediaUrl(media: Media): string {
     const path = media.proxyPath ?? media.path ?? "";
@@ -75,6 +76,7 @@ export class DesktopEngine implements Engine {
     const info = await invoke<ProbeInfo>("probe_media", { path: source.path }).catch((e: unknown) => {
       throw new UnsupportedMediaError(`Can't read ${source.name}: ${String(e)}`);
     });
+    // 素材只記連結（原檔路徑），不複製進專案（2026-11-01 開發者決定，同達文西）
     return {
       id, name: source.name, path: source.path, kind: info.kind,
       duration: info.kind === "image" ? IMAGE_DURATION : info.duration,
@@ -161,7 +163,13 @@ export class DesktopEngine implements Engine {
   /** 開舊專案：選 .wordblade 資料夾 */
   async openProject(): Promise<{ location: ProjectLocation; text: string } | null> {
     const picked = await open({ directory: true, multiple: false, title: "Open a .wordblade project folder" });
-    return typeof picked === "string" ? this.reopenProject({ name: projectName(picked), dir: picked }) : null;
+    if (typeof picked !== "string") return null;
+    try {
+      const [dir, text] = await invoke<[string, string]>("project_read", { dir: picked });
+      return { location: { name: projectName(dir), dir }, text };
+    } catch {
+      throw new Error(`${picked} isn't a WordBlade project — pick the .wordblade folder (it has project.json inside).`);
+    }
   }
 
   /** 依路徑重新開（最近開啟） */
@@ -177,6 +185,44 @@ export class DesktopEngine implements Engine {
   /** 寫 project.json */
   async writeProject(location: ProjectLocation, text: string): Promise<void> {
     await invoke("project_write", { dir: location.dir, text });
+  }
+
+  /** 開著的專案資料夾（產生的檔案寫進它的 .data\generated\） */
+  private project: ProjectLocation | null = null;
+
+  /** 錄音退路：Rust 用 PowerShell 驅動 Windows 內建錄音機（scripts/recorder/sound-recorder.ps1） */
+  readonly recorderFallback = {
+    start: async (): Promise<void> => {
+      await invoke<number>("recorder_start");
+    },
+    stop: async (): Promise<ImportSource> => {
+      const { path } = await invoke<{ path: string }>("recorder_stop", { projectDir: this.project?.dir ?? null });
+      return { kind: "path", path, name: baseName(path) };
+    },
+  };
+
+  setProjectLocation(location: ProjectLocation | null): void {
+    this.project = location;
+  }
+
+  /** 寫 .data 裡的文字檔（Rust 檢查路徑跳不出 .data） */
+  async writeData(location: ProjectLocation, rel: string, text: string): Promise<void> {
+    await invoke("project_data_write", { dir: location.dir, rel, text });
+  }
+
+  /** 讀 .data 裡的文字檔 */
+  async readData(location: ProjectLocation, rel: string): Promise<string | null> {
+    return invoke<string | null>("project_data_read", { dir: location.dir, rel }).catch(() => null);
+  }
+
+  /** 桌面版照路徑讀檔，不用授權資料夾 */
+  async grantMediaFolder(): Promise<boolean> {
+    return false;
+  }
+
+  /** Windows 版重新連結走路徑（locateMedia），不用這個 */
+  async adoptFile(): Promise<string | null> {
+    return null;
   }
 
   /** 素材指紋（Rust 讀頭尾） */
@@ -197,9 +243,9 @@ export class DesktopEngine implements Engine {
     return invoke<string | null>("find_samples_dir");
   }
 
-  /** 範例專案：Rust 找安裝資料夾（或 repo 的 public\sample\）並放行讀取，再經 asset 協定讀 project.json */
-  async openSample(): Promise<{ root: string; text: string } | null> {
-    const root = await invoke<string | null>("find_sample_dir");
+  /** 範例專案：Rust 找安裝資料夾（或 repo 的 public\<id>\）並放行讀取，再經 asset 協定讀 project.json */
+  async openSample(id: SampleId): Promise<{ root: string; text: string } | null> {
+    const root = await invoke<string | null>("find_sample_dir", { name: id });
     if (!root) return null;
     const res = await fetch(convertFileSrc(`${root}\\project.json`)).catch(() => null);
     return res?.ok ? { root, text: await res.text() } : null;
@@ -248,13 +294,45 @@ export class DesktopEngine implements Engine {
     return pcm16ToWav(new Uint8Array(pcm));
   }
 
-  async separateVocals(_mediaId: string): Promise<{ vocalsId: string; backgroundId: string }> {
-    throw new NotImplementedError("separateVocals");
+  /**
+   * 聲音分離：呼叫 Rust 的 separate_vocals（開著專案時輸出放 <專案>\.data\stems\），聽 stems-progress 事件回報進度，
+   * 回傳兩個 WAV 路徑（走一般匯入）。Rust 以錯誤 "cancelled" 回應取消。
+   */
+  async separateVocals(media: Media, onProgress: (p: SeparationProgress) => void): Promise<SeparationResult> {
+    if (!media.path) throw new Error("This media has no file path");
+    const unlisten = await listen<{ mediaId: string; stage: SeparationProgress["stage"]; ratio: number }>("stems-progress", (e) => {
+      if (e.payload.mediaId === media.id) onProgress({ stage: e.payload.stage, ratio: e.payload.ratio });
+    });
+    try {
+      const r = await invoke<{ vocals: string; background: string; provider: string; seconds: number }>("separate_vocals", {
+        mediaId: media.id, path: media.path, projectDir: this.project?.dir ?? null,
+      });
+      return {
+        vocals: { kind: "path", path: r.vocals, name: baseName(r.vocals) },
+        background: { kind: "path", path: r.background, name: baseName(r.background) },
+        provider: r.provider, seconds: r.seconds,
+      };
+    } catch (e) {
+      if (String(e) === "cancelled") throw new SeparationCancelled();
+      throw e;
+    } finally {
+      unlisten();
+    }
   }
 
-  /** 產生的 WAV 寫進 app 資料夾的 generated/（Rust write_generated；raw body 傳位元組，不經 JSON），回傳路徑給一般匯入流程 */
+  /** 取消進行中的分離 */
+  async cancelSeparation(mediaId: string): Promise<void> {
+    await invoke("separate_cancel", { mediaId });
+  }
+
+  /**
+   * 產生的 WAV 寫進開著的專案的 .data\generated\（沒開專案時寫進 app 資料夾的 generated/；Rust write_generated，
+   * raw body 傳位元組，不經 JSON），回傳路徑給一般匯入流程。路徑放標頭要先編碼（標頭只能 ASCII）。
+   */
   async importGenerated(name: string, bytes: Uint8Array): Promise<ImportSource> {
-    const path = await invoke<string>("write_generated", bytes, { headers: { "x-generated-name": name } });
+    const headers: Record<string, string> = { "x-generated-name": name };
+    if (this.project) headers["x-project-dir"] = encodeURIComponent(this.project.dir);
+    const path = await invoke<string>("write_generated", bytes, { headers });
     return { kind: "path", path, name: baseName(path) };
   }
 }

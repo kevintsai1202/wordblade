@@ -54,11 +54,21 @@ test("音效範本：不用 AI 直接算成 WAV → 素材庫 → 放到 A3 音�
   // 範本不用 AI：沒有同意說明、沒有送任何請求
   expect(requests).toEqual([]);
 
-  // Ctrl+Z 一次就拿掉片段（素材留在素材庫）
+  // 規格存進專案（2026-11-01）：音效頁籤列出這一版，打開來沿用同一個素材（不重複匯入）
+  await openTab(page, "audio");
+  await expect(page.locator('[data-testid="synth-item"][data-kind="sound"]')).toHaveCount(1);
+  await page.locator('[data-template="whoosh"]').click();
+  await page.getByTestId("synth-item").click();
+  await expect(page.getByTestId("sound-save")).toHaveText("In media");
+  await openTab(page, "media");
+
+  // Ctrl+Z 一次就拿掉片段與存的規格（同一次提交；素材留在素材庫）
   await page.locator(".title-bar").click();
   await page.keyboard.press("Control+z");
   await expect(page.locator('[data-track-id="A3"] .clip')).toHaveCount(0);
   await expect(page.locator(".media-item.audio")).toHaveCount(1);
+  await openTab(page, "audio");
+  await expect(page.getByTestId("synth-item")).toHaveCount(0);
 });
 
 test("AI 音樂：同意說明 → 生成 → 放到 A2；「改一下」帶著前一版 spec", async ({ page }) => {
@@ -97,6 +107,8 @@ test("AI 音樂：同意說明 → 生成 → 放到 A2；「改一下」帶著�
   // 新版本是新的素材：再加一次就多一個片段
   await page.getByTestId("music-add").click();
   await expect(page.locator('[data-track-id="A2"] .clip')).toHaveCount(2, { timeout: 15_000 });
+  // 兩版配樂的規格都存進專案
+  await expect(page.locator('[data-testid="synth-item"][data-kind="music"]')).toHaveCount(2);
 
   // 再生成一次：用原本的描述重來（不帶前一版、不疊修改指示）
   await page.getByTestId("music-regenerate").click();

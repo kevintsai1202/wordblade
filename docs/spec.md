@@ -113,11 +113,11 @@
 | P1-12 | 一鍵片頭 | §5.23：多張封面＋標題 → 選風格 → 一鍵產生片頭（畫面、翻頁／轉場音效、配樂對拍），可改參數重算、一次 Ctrl+Z 復原 |
 | P1-13 | 清除無聲片段 | §5.16b：依對白音量包絡找出超過 N 秒的無聲段 → 確認清單 → 一次剪掉（漣漪），一次 Ctrl+Z 復原 |
 | P1-14 | Muse Image 材質圖與 3D 背景 | §5.12：一句話 → 無縫材質（顏色＋本機算的法線貼圖）→ 材質庫 → 套到 3D 場景表面、3D／2D 插件；同一條路也產生 3D 背景圖 |
-| P2 | AI 重生語音 | §5.6：Fish Audio，樣本取分離後的人聲 |
-| P2 | 定格 | §5.20：在播放頭凍結畫面一段時間 |
-| P2 | 轉場 | §5.9：溶接、穿黑／白、推移、推近 |
-| P2 | AI 音樂（MusicGen） | §5.15：Meta MusicGen（權重非商用，只限黑客松） |
-| P3 | 色彩調整 | 亮度、對比、飽和度、色溫（片段層級） |
+| P2 | AI 重生語音 | §5.6：Fish Audio（s2.1-pro-free），樣本取分離後的人聲（11/1 已做，11/3 實機試聽） |
+| P2 | 定格 | §5.20：在播放頭凍結畫面一段時間（11/2 已做） |
+| P2 | 轉場 | §5.9：溶接、穿黑／白、推移、推近（11/2 已做，推近不做） |
+| P2 | AI 音樂（MusicGen） | §5.15：放棄（11/3 開發者決定：目前沒有提供此模型），配樂維持 WebAudio 版 |
+| P3 | 色彩調整 | 亮度、對比、飽和度、色溫（11/2 已做：改成時間軸範圍，預設整條） |
 
 **順序與取捨**
 
@@ -311,6 +311,14 @@
 - 選一段字 → 取那段前後的**人聲**當聲音樣本（有做聲音分離時用分離後的人聲，樣本不混音樂）→ 閘道 `/v1/tts` 轉 Fish Audio 生成 → 調整長度對齊原區間 → 產生一個新的音訊片段放在原位置，原本那段人聲靜音；背景音樂軌不受影響。
 - Meta 沒有 TTS（模型清單已確認），所以用 Fish Audio；供應商包在閘道後面，之後可換。
 - Fish 一律用免費模型 `s2.1-pro-free`（D32；不保證延遲，介面顯示進度）。
+- **11/1 已做**（照原專案的操作方式）：
+  - 操作：框時間軸範圍 → 範圍動作列「Re-voice」→ 文字預設是範圍內的字，可以改 → Generate。
+  - 聲音樣本：從逐字稿挑最長的說話段，湊 20～90 秒；有聲音分離就改用分離後的人聲。
+  - 閘道 `/v1/tts`：msgpack 轉給 Fish，串流 WAV 會重包。實測 9.5～14 秒。
+  - 長度對齊：先用自然速度生成；太長就加速重生一次（上限 1.3 倍）；還太長再用片段變速。
+  - 生成的聲音放在另一條音軌（`Project.voiceovers`）。生效時，範圍內的對白靜音（預覽把增益設 0；匯出加 10 ms 淡出入）；每段可以切回原聲。範圍跟著 AI 片段的位置走。
+  - 11/2 補上：生效時範圍內的字幕換成重配的文字（依字元數平均分配時間）；AI 聲音也會讓配樂壓低；新增的音軌標「Voice」。
+  - 驗證：`e2e/revoice.spec.ts`、`e2e/revoice-live.spec.ts`（實機）。生成的聲音還沒有人工聽過。
 - Fish 的契約（原專案實測 2026-07-21、09-17）：模型用 HTTP header `model` 指定；即時克隆的參考音檔要 raw bytes，請求本體用 msgpack；標記一律方括號 `[break]`（圓括號會被唸出來）；串流 WAV 的標頭長度欄位是錯的（0xFFFFFFFF），要依 fmt 重新包裝；`prosody.speed` 上限 1.3，超過的部分用片段變速；0.2 秒以下的極短區間不要送。
 
 ### 5.7 動畫插件與 Vibe特效（P0 核心，2D 與 3D，D19）
@@ -327,7 +335,14 @@
 - **沙盒**（Q6）：插件在 `sandbox="allow-scripts"`（不給 same-origin）的 iframe 裡的 Worker 執行（3D 用 OffscreenCanvas 的 WebGL2）；只能用我們給的 API 與 three.js；每格限時（2D 30 ms、3D 100 ms），單段最長 60 秒；逾時直接終止 Worker。存檔前先試跑一次。
   - **10/27 實測：Worker 路線可行**（`spikes/sandbox/RESULT.md`，Chromium／Edge 156）：blob URL 建 Worker、Worker 裡 OffscreenCanvas WebGL2、本機打包的 three.js 都能跑；ImageBitmap 雙向轉移 300 格畫素全對；25 項連網檢查全被擋；無窮迴圈在預算內偵測到，`terminate()` 確實殺掉 Worker 並能重建。
   - **CSP**（srcdoc iframe 會繼承父頁 CSP，兩份取交集；Tauri 的 `app.security.csp` 是靜態的，寫不出每次換的 nonce，所以用啟動腳本的 sha256，建置時算）：
-    - 父頁：`default-src 'none'; script-src 'self' 'sha256-<HASH>'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; worker-src blob:; frame-src 'none'; base-uri 'none'; form-action 'none'`。`frame-src 'none'` 擋 iframe 自我導航外洩（iframe 自己的 CSP 擋不了）；`script-src` 不加 `blob:`。實際的 `connect-src` 要再加閘道網址。
+    - 父頁：`default-src 'none'; script-src 'self' 'sha256-<HASH>'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; worker-src blob:; frame-src 'none'; base-uri 'none'; form-action 'none'`。`frame-src 'none'` 擋 iframe 自我導航外洩（iframe 自己的 CSP 擋不了）；`script-src` 不加 `blob:`。實際的 `connect-src` 要再加閘道網址。**11/1 已套用**，唯一來源是 `deploy/csp.mjs`：
+      - 雜湊在建置時從 `iframeRuntime.js` 算（換行轉成 LF）。
+      - 比上面那份多了幾項：`media-src`、`font-src`、`object-src 'none'`。
+      - `connect-src` 放行 `'self' https: blob: data:` 和本機 http（因為閘道網址可以在設定裡改，開發者決定）。
+      - Windows 版的 img、media、connect 另外加上 `http://asset.localhost asset:`。
+      - 套用在三個地方：nginx 由 `web-zeabur.ps1` 填入 `__CSP__`；`vite preview` 用在 e2e；`tauri.conf.json` 的 `devCsp` 另給一份開發用的（`--desktop --dev`：script-src 用 'unsafe-inline'、加 HMR 的 ws）；設成 null 會被當成沒設，開發時就套用正式 CSP，而開發伺服器有 React 的行內前置腳本。
+      - 主程式不能再用 `new Function` 執行字串：`plane3d_math.js` 改用 Vite 外掛 `?global=PLANE3D` 當模組載入。
+      - `src/sandbox/csp.test.ts` 檢查雜湊和 Tauri 設定一致，`e2e/csp.spec.ts` 檢查完整流程沒有違規。
     - iframe（srcdoc 開頭的 `<meta http-equiv>`）：`default-src 'none'; script-src blob: 'sha256-<HASH>'; worker-src blob:; connect-src 'none'; img-src blob: data:`。
     - 啟動腳本不能用 blob URL（沒有 same-origin 的 iframe 載不到父頁建的 blob）；srcdoc 裡的腳本要和算雜湊的原文逐位元組相同（換行用 LF）。
   - CSP 擋不住 WebRTC（實測 STUN 送出 3 個 UDP 封包）：載入插件前刪掉 `RTCPeerConnection` 等建構子。
@@ -373,6 +388,8 @@
   - **用說的**：閘道 `/v1/ai/plane3d`（Spark、推理 low、最多 2 輪、1.2 萬 token），提示詞移植原專案 `plane3d_ai.py`，範圍表與提示詞由 `scripts/plane3d/build-prompt.mjs` 從原專案的姿勢數學產生；閘道檢查形狀、範圍、t 不超過區段長度（原專案默默夾住，這裡改成擋下）、換算後嚴格遞增；桌面用同一份數學檢查姿勢路徑，不過就回饋。介面在 Inspector「Describe the move」，提議先預覽、按 Apply 才寫進專案（一筆可復原的編輯）。10/27 實測（`scripts/plane3d/probe.mjs`）：Spark 8／8（方向、時間、路徑都對，拒答 1 句），每句 2～10 秒。
 
 ### 5.9 轉場（P2）
+
+> 11/2 已做（`docs/plan-11-02-edit-features.md`）：溶接、穿黑、穿白、左推、右推（推近不做）。不改總長度，沒有多餘畫面時停在第一格／最後一格。在 Inspector 選 V1 片段 → Transition in。
 
 - 在剪輯接點加轉場：溶接、穿黑、穿白、推移、推近；長度可調。
 - 接點兩側沒有多餘畫面（手把）時，用兩側的最後／第一格定格補。
@@ -448,6 +465,16 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
     - Vibe特效 3D：提示詞告訴 Wonder 可以宣告 `texture` 參數並附一句材質描述；沙盒試跑時用灰色棋盤格佔位；插件通過後依描述呼叫 Muse Image 補上材質，使用者可在 Inspector 換掉。
     - 2D 插件：參數型別 `texture`，直譯器的 runtime 增加以圖片填色的 API（`createPattern`，例如金屬字、木紋字）；要擴充 `anim_api_manifest.json` 與提示詞，實作時一併補直譯器測試。
   - 驗證：單元測試（無縫化後左右、上下邊緣像素差低於門檻；全平的圖算出的法線貼圖是 (128,128,255)）；e2e 用假閘道回固定圖片，走「產生 → 材質庫 → 套到教室黑板框 → 預覽畫面看得到材質」；實機另測 3 種描述（木頭、黑板、金屬）看無縫品質。
+- **11/1 已做**：
+  - 閘道 `/v1/ai/image` 的 `purpose` 多了 `texture`、`background`，走 `/v1/images/generations`。
+  - 後處理在主執行緒（`src/texture/process.ts`，純函式）。無縫化改成四份混合（原圖、橫移、直移、兩邊都移，依離邊緣遠近加權），十字遮罩法會在邊緣斷掉。實機三張的接縫差：木頭 46.9 → 14.4，黑板 21.4 → 6.6，金屬 8.6 → 3.7。
+  - 材質庫存在 `Project.textures`，材質圖是 `role="texture"` 的素材，素材庫不列出。
+  - 3D 插件拿得到 `env.textures[欄位]`。ImageBitmap 不吃 flipY，所以先畫到畫布再做貼圖，否則背景會上下顛倒。
+  - 內建「Screen in a scene」有桌面、牆、地板、黑板框的材質欄位與 3D 背景，漂浮板子的背景也可以選「AI image」。
+  - Effects → Textures 頁籤；Inspector 的材質下拉。
+  - Vibe 3D：插件可以宣告 `texture` 參數（附 `describe`），通過試跑後依描述自動產生材質並套上。試跑時沒有材質，插件要退回純色。
+  - 2D 插件的圖片填色還沒做。
+  - 驗證：`e2e/textures.spec.ts`（含背景方向）、`e2e/vibe.spec.ts`（自動配材質）、`e2e/textures-live.spec.ts`（實機：每張 23～41 秒）。
 - **3D 背景**：輸入一句描述（例如「a cozy classroom with a chalkboard」）→ Muse Image 產生 16:9 背景圖（`purpose: "background"`，不做無縫化），存進材質庫當 3D 場景或板子的自訂背景。
 - **影片縮圖**：從成片挑一格當底圖 → Muse Image 依描述改成縮圖風格（不放標題字）→ 標題文字由 WordBlade 用 canvas 疊上 → 縮放成 1280×720。原專案實測（2026-09-12，muse-image-mcp）：`size` 是長寬比字串不是像素（要 1792×1024 實際給 2016×1152），所以一定要自己縮放；`edit` 會整張重畫、小字會壞；圖裡的拉丁字串（網址、名稱）會隨機拼錯，所以字不交給模型畫。
 - API（同上實測）：`/v1/images/generations`、`/v1/images/edits`（JSON 帶 `image_url` data URL）回 `data[].b64_json`；預設輸出 webp。
@@ -519,6 +546,16 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 模型檔不放進 repo：第一次用時下載到使用者資料夾並驗 SHA-256（安裝檔不必大 64 MB）。
 - **只有 Windows 版**：網頁版不做聲音分離（onnxruntime-web 是重複實作，而且這項在砍除順序的前段），選單顯示「Available in the Windows app」。
 
+**11/1 已做（桌面版）**：
+- Rust 推論在 `src-tauri/src/stems`，用 `ort`（onnxruntime，靜態連結），先試 DirectML、失敗退回 CPU，DirectML.dll 和程式一起打包。從 `spikes/mdx-rust` 移植，和 numpy 版相差 >124 dB。
+- 模型第一次用時下載到 app 資料夾的 `models/` 並驗證 SHA-256 `ce74ef3b…9c8b`。實測下載加分離 82 秒。
+- ffmpeg 解成 44.1 kHz 立體聲後串流處理，有進度、可以取消。結果依內容指紋快取在專案的 `.data/stems/`（沒開專案時放 app 快取）。
+- 素材庫的「Separate」按鈕：原本的音訊片段換成人聲（留在原軌）加背景（新的 music 軌），位置與修邊相同，一次 Ctrl+Z 復原；`Media.stems` 記錄兩者的關聯。
+- 轉錄與 AI 重配音的聲音樣本改用分離後的人聲。網頁版按鈕停用。
+- 速度：DirectML 第一次會先編譯（4 秒的音訊約 62 秒），之後 4 秒音訊約 11 秒；CPU 約 0.4 倍即時。
+- 11/2 安裝版驗證過（`scripts/verify-installer.ps1`）：DirectML.dll 裝在 exe 旁邊；安裝後用 DirectML 分 4 秒的音訊只要 3.8 秒（release 版）。新 clone 要先 `cargo build`，再跑 `scripts/fetch-directml.ps1`。
+
+- 長音訊實測（11/2，`scripts/stems-bench.ps1`，DirectML）：10 分鐘 129～137 秒（約 4.5 倍即時，第一次編譯約 30 秒），2 分鐘 25 秒；記憶體峰值兩者都是約 2.0 GB（固定開銷，不隨長度增加）。沒開專案時 app 快取的 stems\ 超過 2 GB 會從最舊的分離結果刪起。
 **介面與時間軸**
 
 - 素材庫或 A 片段的右鍵選單「Separate vocals / music」。
@@ -552,7 +589,10 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 配樂 spec：`{bpm 60～180, beatsPerBar? 2|3|4, bars 1～32, chords: 每小節一個（Am、Fmaj7、G7…，不夠就循環）, gain?, seed?, parts: 1～6 個}`；聲部 `{role: bass|pad|arp|lead|drums, voice?（drums 以外必填）, gain?, loopBars?, notes}`；音符 `{at, len（拍）, pitch?（MIDI）| chord?（和弦第幾個音）+ octave? | drum?（kick、snare、hat、openhat、clap）, vel?}`。長度＝bars × beatsPerBar × 60 ÷ bpm，上限 120 秒、展開後最多 3000 個音。
 - 解讀器（`render.ts`）：每群音（同音色）共用一條效果鏈；雜訊與殘響脈衝響應用固定種子，同一份 spec 每次算出的 WAV 位元組相同。配樂多算一段尾巴再疊回開頭，長度剛好整數小節、首尾無縫；峰值超過 0.89 整體縮小；輸出 48 kHz 單聲道 16-bit WAV。
 - 閘道：`POST /v1/ai/sound`（description、length、previous?）、`POST /v1/ai/music`（description、bars、previous?）→ 202 `{jobId}`，`GET …/{jobId}` 輪詢（同 plane3d 的 AiJobs）。模型 Muse Spark（`wordblade.models.spark`，推理 low），只回 JSON；音效 length、配樂 bars 要等於請求的值；不合格自動帶錯誤重問一次（最多 2 輪），拒答只有 `off-topic`。用量記在 `/v1/ai/sound`、`/v1/ai/music`。前端拿到 spec 再驗證一次。
-- 產生的 WAV 經 `Engine.importGenerated` 變成一般素材：Windows 版 Rust `write_generated` 寫進 app 資料夾的 `generated/`（檔名淨化、不覆寫、放行 asset 協定），網頁版包成 File；再走 `importSources`。目前沒有另存 `Synth`（spec 不進專案）。
+- 產生的 WAV 經 `Engine.importGenerated` 變成一般素材：Windows 版 Rust `write_generated` 寫進 app 資料夾的 `generated/`（檔名淨化、不覆寫、放行 asset 協定），網頁版包成 File；再走 `importSources`。**11/1**：
+  - 開著專案資料夾時，產生的檔案改寫進 `.data\generated\`；Windows 版用標頭 `x-project-dir` 告訴 Rust 寫到哪個專案。
+  - 進素材庫時同時存一筆 `Synth`（spec、label、prompt、renderedMediaId；編輯 `addSynth`，可以復原）。音效頁籤的「In this project」會列出來，點了重新算樣本，素材還在就沿用，重開專案後還能 Play、Modify、Regenerate。
+  - 配樂放進比一圈長的範圍時，接著重複放滿，最後一段剪到範圍結束（編輯 `placeLoop`）。
 - 介面：特效 → 音效（Sound）子頁籤。上半音效：10 個範本（whoosh、pop、ding、typing、rise、fall、click、sweep、impact、sparkle）點了直接算、不送任何資料；或描述＋長度按 Generate。下半配樂：描述＋小節數（4／8／16）、Generate、Regenerate（同描述再來一次）、Modify（修改指示＋前一版 spec）。都有 Play（共用 AudioContext 預覽）、Save to media、Add to timeline（音效 → 音效軌 A3、配樂 → 配樂軌 A2；有選範圍放在範圍起點，否則放在播放頭；一次復原）。第一次用 AI 顯示同意說明（送到 Muse Spark，Contributor 版的內容可能被 Meta 用於訓練，D32）。
 
 **AI 音效（P1-8）**
@@ -619,6 +659,17 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 麥克風：WebView2 的 `getUserMedia`。10/27 實測（`spikes/tauri-env/`）：WebView2 會跳權限詢問，沒人按就一直等。做法：Rust 端處理 WebView2 的 `PermissionRequested`，自動允許麥克風（不跳詢問）。**10/27 已做**：Tauri 2.12 的 `Builder::on_permission_request` 只放行 `PermissionKind::Microphone`、其他照平台預設（不必自己接 COM）；實測不再逾時，權限放行後在作者公司電腦回 `NotReadableError`，同機的 Edge 也一樣（`scripts/desktop-selftest/mic-edge-check.mjs`），是裝置層被擋（下句的 Kaspersky），實際錄音要換電腦驗。作者的公司電腦上 Kaspersky 依程式信任等級擋錄音（原專案 2026-10-18：所有 WASAPI 初始化都回 `0x80070057`，Rust／ffmpeg 一樣被擋，只有微軟簽章的程式能錄），所以「改由 Rust 錄音」不是有效備案。**退路（開發者 2026-10-27 決定，P1-9 實作）**：預設用 `getUserMedia`＋`MediaRecorder`；Windows 版遇到 `NotReadableError`、`NotAllowedError` 或 8 秒逾時，自動改用原專案（字導字演）的做法——Rust 以內嵌的 ASCII PowerShell 腳本（`powershell.exe` 5.1）從 `shell:AppsFolder` 喚起 Windows 內建錄音機（`Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe`，微軟簽章、不是本程式的子程序），用 UI Automation 按 `RecordButton`／`StopRecordingButton`、把視窗縮到最小尺寸停在右下角；起訖時間讀 `HKCU\...\CapabilityAccessManager\ConsentStore\microphone\<套件>` 的 `LastUsedTimeStart`／`Stop`（FILETIME，毫秒級）；停止後在「文件」底下找修改時間最接近停止時刻的 `.m4a`，搬進 app 資料夾再匯入（原專案 `backend/narration.py`，2026-10-19 在 Kaspersky 機器實測可錄）。`NotFoundError`（沒有麥克風）不退，直接提示；網頁版沒有退路，只提示。提詞器顯示這次用了哪種方式。錄前先試開麥克風、錄後檢查峰值，削峰時提示（原專案的爆音主因是錄音裝置增益 96%，`adeclip` 可後製去削峰）。
 - 和 AI 重生語音（§5.6，P2）是兩種選擇：自己念，或讓 AI 用你的聲音念。
 
+
+**錄音（11/1，卡拉 OK 重配錄音本身還沒做）**：音效頁籤的「Voice recording」可以錄一段，放進素材庫或放上對白軌。
+- 預設用 `getUserMedia` 加 `MediaRecorder` 錄音，再解碼成 48 kHz 單聲道 WAV（`src/audio/micRecorder.ts`）。
+- 退路照上面的決定：Windows 版遇到 NotReadableError、NotAllowedError 或 8 秒逾時時，改用 Rust 的 `recorder_start`、`recorder_stop`，執行內嵌的 `scripts/recorder/sound-recorder.ps1`（從原專案 narration.py 移植，純 ASCII）。停止後把 m4a 複製進專案的 `.data\generated\`，再走一般匯入。
+- NotFoundError（沒有麥克風）不走退路，直接提示；網頁版沒有退路。
+- 錄完峰值達 0.99 會提示削峰。
+- 驗證狀況：
+  - `e2e/recording.spec.ts` 用 Chromium 的假麥克風測過。
+  - 退路腳本在作者的電腦（有 Kaspersky）上手動跑過一次 start／stop，拿到 m4a。
+  - 從 Windows 版介面觸發退路還沒有人工點過。
+
 ### 5.19 局部放大（P1-2，D20、D38）
 
 照字導字演的做法（開發者 2026-10-28 要求）：
@@ -640,6 +691,7 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
   - **實作（10/28）**：`setClipSpeed`（`src/core/speed.ts`）：倍數夾在 0.25～4、取到小數兩位，片段至少 0.1 秒；連動片段（其他軌道上同一支素材、同起點、同素材範圍，通常是 A1 對白）一起變速，選 V1 或 A1 結果一樣；V1 片段變長變短時 V1 重排，其他未鎖定軌道上「在它原本結束點之後開始」的片段、特效、時間軸定位點平移同樣距離，跨在中間的（配樂、蓋過接點的特效）不剪不動（開發者 2026-10-28 選定）；淡入淡出各自不超過新長度；局部放大與詞用素材時間記，不必動。Inspector 選到片段時顯示片段屬性（0.25～4 倍按鈕＋自訂），`setSpeed` 編輯。預覽的 `playbackRate` 夾在 0.0625～16（瀏覽器上限；4 倍片段再按 L 快轉時會碰到）。
   - 驗收：Vitest 6（長度、連動、平移規則、鎖定軌、夾倍數、復原）；e2e 2 倍與 0.5 倍：時間軸長度、A1 一起變、匯出長度正確、聲音上升過零每秒約 440 次（WSOLA 保持音高）。預覽的 `preservesPitch` 在 Playwright 量不到音高，沒有自動驗。
   - 限制：Ctrl+B 切開只切一個片段，切開後的 V1 片段沒有完全相同的 A1 夥伴，變速時聲音不會跟著變（既有行為）；4 倍片段跨過 5 分鐘混音段時，那段要讀 20 分鐘的來源聲音（約 460 MB），很少見，先不處理。
+- 11/2 已做：定格（Shift+F，或在 Inspector 按 Freeze 2 s，定格期間沒有聲音）；色彩調整（Effects → Color，預設整條，有選範圍就只調那段，預覽與匯出共用同一個 shader）；2D 圖層的圖片填色（Inspector → Image fill）。
 - **定格（P2）**：在播放頭把畫面凍結 N 秒（`Clip.freeze`，合成器在那段時間一直畫同一格；聲音可選靜音或繼續），常用在講解時停在某個畫面。
 - **轉場（P2）**：見 §5.9。
 - **色彩調整（P3）**：片段層級的亮度、對比、飽和度、色溫；合成器的 shader，預覽與輸出共用。
@@ -689,6 +741,15 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 - 內容由 `e2e/sample-build.spec.ts` 實際跑 AI 產生（可重跑，約 5 分鐘）：Muse ASR 逐字稿、AI 導演 8 條建議（採用遮假金鑰、剪重講）、去贅詞、逐字高亮、Vibe 2D ×2、桌上螢幕＋吉祥物、AI 配樂、翻頁式片頭、發佈包與縮圖；每一步的結果寫在 `public/sample/BUILD.md`。
 - 放在 `public/sample/`（project.json＋media/＋thumbnail.png，約 12 MB，進版控）：網頁版從靜態網站讀，標題列「Try the sample project」或網址 `?sample=1`；Windows 版讀安裝資料夾的 `sample\`（開發時是 repo 的 `public\sample\`）。示範狀態：沒編輯前不自動存。
 - 驗證：e2e `sample.spec.ts` 擋掉所有對外連線仍能開啟並匯出；安裝檔驗證時自我檢查讀到全部 16 個素材。
+
+**改成兩個範例（11/2，開發者決定）**
+
+- 原因：10/31 用新版 AI 導演（plain 風格，預設克制）重建範例時，特效全部交給導演提議，結果 Vibe 2D／3D、3D 場景、配樂、片頭都沒了，e2e 只看放大條所以沒抓到。導演只是其中一種能力，特效另外放一個範例。
+- **導演範例** `public/sample/`（不變）：標題列「Try the sample project」、`?sample=1`。內容是 AI 導演的剪輯、改字、遮罩、放大、字幕，加上發佈包與縮圖。
+- **特效範例** `public/sample-effects/`：標題列「Try the effects sample」、`?sample=effects`。同一支 2 分鐘影片（整支，素材多一份約 9 MB），不經過導演：Vibe 2D ×2、Vibe 3D ×1、3D 場景（桌上螢幕，鏡頭用說的）、吉祥物、內建 2D 範本 ×4、轉場 ×3（溶接、推移、推近）、整條色彩、音效、AI 配樂、翻頁片頭、逐字高亮字幕。
+- 建置：`$env:WORDBLADE_SAMPLE="effects"` 再跑 `e2e/sample-build.spec.ts`（live 走 `scripts/sam/live-local.ps1 -E2E -Spec e2e/sample-build.spec.ts`）；沒設就建導演範例。
+- Windows 版：`find_sample_dir` 帶範例名稱（只收 `sample`、`sample-effects`），安裝檔兩個資料夾都打包；自我檢查兩個都讀。
+- 驗證：`sample.spec.ts` 的特效範例測試擋掉對外連線仍能開啟，並逐項檢查每種特效都在（Vibe 2D／3D 插件、3D 場景、轉場種類、色彩、音效或配樂、片頭封面、逐字稿）。
 
 
 ### 5.23 一鍵片頭（P1-12，D34）
@@ -833,6 +894,8 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 3. 0:50～2:20：製作過程（螢幕錄影加速播放）：匯入這支原始錄影 → Muse ASR 產生字幕 → AI 導演列出建議（重講、口誤、API 金鑰、適合加特效的地方）→ 一鍵採用（含去贅詞、局部放大）→ 用一句話加 Vibe特效（2D／3D）與 3D 運鏡 → 逐字高亮字幕 → 發佈包（標題、章節、Muse Image 縮圖）→ 匯出。每一步在角落標出用了哪個 Meta 模型。
 4. 2:20～2:50：原始錄影與成品左右對照；數字：「原始 X 分鐘 → 成品 Y 分鐘，剪輯花了 Z 分鐘」。
 5. 2:50～3:00：架構圖一閃、GitHub 連結、Muse 模型清單。
+
+**入鏡限制（11/3，對照官方規則「demo 只能展示黑客松期間做的東西，分不清會被取消資格」）**：不展示人聲分離（Kim_Vocal_2 上游授權不明）；不把 2D 內建範本當亮點（元件庫與直譯器沿用作者先前的專案，README「Built during the hackathon」列出沿用清單），2D 只展示 Vibe 一句話生成。官方規則沒有要求真人露臉，影片長度 3 分鐘。
 
 **注意**：要在 11/3 晚上前把 AI 導演、Vibe特效、3D、字幕、匯出都做到能用，素材才錄得成；11/4 只剪片、不改功能。來不及的功能就不入鏡，不要放假的畫面。
 

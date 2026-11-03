@@ -35,7 +35,7 @@ export interface Component3D {
   effectKind: "scene3d" | "anim3d";
   name: string;
   description: string;
-  params: Record<string, { type: string; default?: unknown; label?: string; min?: number; max?: number; step?: number; values?: string[]; labels?: string[] }>;
+  params: Record<string, { type: string; default?: unknown; label?: string; min?: number; max?: number; step?: number; values?: string[]; labels?: string[]; kind?: "texture" | "background" }>;
   code: string;
 }
 
@@ -49,6 +49,12 @@ export const COMPONENTS_3D: Component3D[] = [
       motion: { type: "enum", values: ["reveal", "push", "orbit"], labels: ["Pull back and return", "Slow push in", "Orbit"], default: "reveal", label: "Camera (no keyframes)" },
       tilt: { type: "number", min: 0, max: 20, step: 1, default: 7, label: "Screen tilt (°)" },
       ramp: { type: "duration", min: 0.3, max: 3, default: 1.2, label: "In/out (sec)" },
+      // 材質欄位（P1-14）：沒選就用程式畫的預設；每個場景用到的欄位不同（桌面／牆／地板／黑板框與講桌／攝影棚地面）
+      deskTexture: { type: "texture", kind: "texture", default: null, label: "Desk top texture (wooden desk)" },
+      wallTexture: { type: "texture", kind: "texture", default: null, label: "Wall texture (classroom)" },
+      floorTexture: { type: "texture", kind: "texture", default: null, label: "Floor texture (classroom, studio)" },
+      frameTexture: { type: "texture", kind: "texture", default: null, label: "Board frame texture (classroom)" },
+      backgroundImage: { type: "texture", kind: "background", default: null, label: "3D background image" },
     },
     // 鏡頭關鍵幀的內插串在插件前面
     code: `${cameraPathCode}
@@ -62,8 +68,9 @@ ${deskScreenCode}`,
       keys: { type: "keys", default: [key({})], label: "Board keyframes" },
       float: { type: "float", default: null, label: "Gentle sway" },
       edges: { type: "boolean", default: true, label: "Return to full frame at both ends" },
-      background: { type: "enum", values: ["studio", "grid", "blur", "color"], labels: ["Studio", "Tech grid", "Blurred video", "Solid color"], default: "studio", label: "Background" },
+      background: { type: "enum", values: ["studio", "grid", "blur", "color", "image"], labels: ["Studio", "Tech grid", "Blurred video", "Solid color", "AI image"], default: "studio", label: "Background" },
       color: { type: "color", default: "#202020", label: "Background color" },
+      backgroundImage: { type: "texture", kind: "background", default: null, label: "Background image (when Background is AI image)" },
       shadow: { type: "number", min: 0, max: 1, step: 0.05, default: 0.55, label: "Shadow" },
     },
     // 原專案的姿勢數學與板子幾何串在插件前面，一起送進沙盒 Worker
@@ -160,4 +167,30 @@ export function template3DEffect(template: Template3D, plugin: Plugin, id: strin
       ...(component.effectKind === "anim3d" ? { box: { cx: 0.6, cy: 0.45, w: 0.25, h: 0.25 } } : {}),
     },
   };
+}
+
+/**
+ * 內建 3D 元件裡「只有某些設定才用得到」的參數（2026-11-02）：Inspector 依目前的值決定要不要顯示。
+ * 放在元件外面（不在 params 裡），元件內容雜湊不變，舊專案與範例照樣套得到。
+ * 鍵：元件 id → 參數名稱 → { 看哪個參數, 那個參數是哪些值時才顯示 }。
+ */
+export const PARAM_WHEN: Record<string, Record<string, { param: string; values: unknown[] }>> = {
+  "desk-screen": {
+    deskTexture: { param: "scene", values: ["desk"] },
+    wallTexture: { param: "scene", values: ["classroom"] },
+    floorTexture: { param: "scene", values: ["classroom", "studio"] },
+    frameTexture: { param: "scene", values: ["classroom"] },
+  },
+  "floating-board": {
+    backgroundImage: { param: "background", values: ["image"] },
+    color: { param: "background", values: ["color"] },
+  },
+};
+
+/** 某個參數現在要不要顯示（沒有條件就顯示；值沒設時用元件的預設值判斷） */
+export function paramVisible(componentId: string | undefined, key: string, values: Record<string, unknown>, defaults: Record<string, { default?: unknown }>): boolean {
+  const when = componentId ? PARAM_WHEN[componentId]?.[key] : undefined;
+  if (!when) return true;
+  const current = values[when.param] ?? defaults[when.param]?.default;
+  return when.values.includes(current);
 }

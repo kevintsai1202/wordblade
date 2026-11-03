@@ -99,6 +99,10 @@ describe("keyToAction（Resolve 熱鍵）", () => {
     expect(keyToAction(key("b", { ctrlKey: true }), s)).toEqual({ type: "commit", edits: [{ kind: "split", clipId: "v1b", t: 15 }] });
   });
 
+  it("Shift+F 在播放頭插入 2 秒定格（2026-11-02）", () => {
+    expect(keyToAction(key("F", { shiftKey: true }), s)).toEqual({ type: "commit", edits: [{ kind: "insertFreeze", t: 15 }] });
+  });
+
   it("Delete 漣漪刪除選取的片段", () => {
     expect(keyToAction(key("Delete"), s)).toEqual({ type: "deleteSelected" });
   });
@@ -253,5 +257,19 @@ describe("播放中介入（開發者 2026-10-28：任何移動播放頭的操�
     expect(s.playing).toBe(true);
     expect(s.playhead).toBe(7);
     expect(s.playSeq).toBe(seq + 1);
+  });
+});
+
+// 滑桿拖動（色彩調整）：第一下 commit，拖動中 amend 改同一筆，只留一步復原（2026-11-02）
+describe("amend 動作", () => {
+  it("commit 後連續 amend，Ctrl+Z 一次回到原樣", () => {
+    let s = initialState(makeProject());
+    const v = (b: number) => ({ brightness: b, contrast: 0, saturation: 0, temperature: 0 });
+    s = reducer(s, { type: "commit", edits: [{ kind: "setColorGrade", id: "g", values: v(0.1) }] });
+    s = reducer(s, { type: "amend", edits: [{ kind: "setColorGrade", id: "g", values: v(0.5) }] });
+    s = reducer(s, { type: "amend", edits: [{ kind: "setColorGrade", id: "g", values: v(0.8) }] });
+    expect(s.history.present.colorGrades![0].brightness).toBe(0.8);
+    s = reducer(s, { type: "undo" });
+    expect(s.history.present.colorGrades ?? []).toHaveLength(0);
   });
 });

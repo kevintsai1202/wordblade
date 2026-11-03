@@ -5,6 +5,7 @@
 import type { Effect, Plugin, Project } from "../core/model";
 import { PluginError, type SandboxHost } from "../sandbox/sandboxHost";
 import type { ThreeHost } from "../sandbox/threeHost";
+import { resolveLayerFills, resolveTextureRefs } from "./textureRefs";
 import { hasSound, renderSound, soundGain, soundKey, wavBlob, type EffectSound, type SoundClip } from "./effectSound";
 
 /** 依素材 id 取得解碼好的圖片（3D 插件的 env.images；一鍵片頭的封面） */
@@ -126,11 +127,18 @@ export class EffectRenderer {
       const p = effect.params as { params?: Record<string, unknown>; box?: unknown };
       // 鏡頭關鍵幀（3D 場景）跟著參數送進插件
       const params = effect.cameraKeys?.length ? { ...(p.params ?? {}), cameraKeys: effect.cameraKeys } : p.params ?? {};
-      const ids = Array.isArray(params.imageIds) ? (params.imageIds as string[]) : [];
+      // 材質引用（P1-14）用到的圖接在 imageIds 後面一起送；__textures 告訴 harness 哪一格是哪個欄位的貼圖
+      const { ids, textures } = resolveTextureRefs(params, Array.isArray(params.imageIds) ? (params.imageIds as string[]) : []);
+      const sent = textures ? { ...params, __textures: textures } : params;
       const images = ids.length && this.images ? { key: ids.join(","), load: () => this.images!(ids) } : null;
-      return this.three.render(effect.id, code, { ...req, params, box: p.box ?? null, seed: 1 }, background, images);
+      return this.three.render(effect.id, code, { ...req, params: sent, box: p.box ?? null, seed: 1 }, background, images);
     }
-    return this.host.request<ImageBitmap>("render", { instance: instanceOf(effect), ...req, background }, background ? [background] : []);
+    // 圖層的圖片填色（2026-11-02）：用到的材質圖複製一份送進沙盒（快取裡的圖不轉移），沙盒畫完關掉
+    const { instance, ids } = resolveLayerFills(instanceOf(effect));
+    if (!ids.length || !this.images) return this.host.request<ImageBitmap>("render", { instance, ...req, background }, background ? [background] : []);
+    return this.images(ids)
+      .then((bitmaps) => Promise.all(bitmaps.map((b) => createImageBitmap(b))))
+      .then((textures) => this.host.request<ImageBitmap>("render", { instance, ...req, background, textures }, [...(background ? [background] : []), ...textures]));
   }
 
   /**
@@ -200,9 +208,34 @@ export class EffectRenderer {
     }
   }
 
+  /**
+   * 釋放專案裡不再用到的特效音效（blob URL）。預覽在 setEffectSounds 之後才呼叫：
+   * 舊的 <audio> 換掉後才釋放，避免正在播的元素讀到失效的網址。
+   */
+  async pruneSounds(project: Project): Promise<void> {
+    const keep = new Set(project.effects.filter(hasSound).map(soundKey));
+    const stale = [...this.soundCache].filter(([key]) => !keep.has(key));
+    for (const [key] of stale) this.soundCache.delete(key);
+    for (const [, hit] of stale) {
+      const sound = await hit;
+      if (sound) URL.revokeObjectURL(sound.url);
+    }
+  }
+
+  /** 釋放全部特效音效的 blob URL */
+  async disposeSounds(): Promise<void> {
+    const all = [...this.soundCache.values()];
+    this.soundCache.clear();
+    for (const hit of all) {
+      const sound = await hit;
+      if (sound) URL.revokeObjectURL(sound.url);
+    }
+  }
+
   /** 全部釋放 */
   dispose() {
     for (const slot of this.slots.values()) slot.bitmap?.close();
     this.slots.clear();
+    void this.disposeSounds();
   }
 }

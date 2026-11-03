@@ -1,7 +1,7 @@
 // MP4 匯出的規劃（spec §5.4）：輸出大小、格率、長度、位元率，以及每個影像片段要解哪些格。純函式，Vitest 測。
 // 每格畫什麼仍由預覽共用的 layerPlan 決定（D24）；這裡只算匯出才需要的部分。
 import type { Project, Seconds } from "../core/model";
-import { clipEnd, timelineToSource } from "../core/timeline";
+import { extendedSource, transitionCuts, visibleRange } from "../core/transitions";
 import { projectDuration } from "../ui/state";
 
 /** 解析度選項：依素材（V1 第一個片段的素材）、1080p、720p */
@@ -72,17 +72,21 @@ export interface ClipFrames {
 export function clipFrames(project: Project, fps: number, frames: number): ClipFrames[] {
   const tracks = new Map(project.tracks.filter((t) => t.kind === "video" && !t.muted).map((t) => [t.id, t.index]));
   const out: (ClipFrames & { track: number })[] = [];
+  // 轉場（§5.9）：前一段往後延、後一段往前提早，解格範圍跟著延伸（和 framePlan 同一個 visibleRange）
+  const cuts = transitionCuts(project);
   for (const clip of project.clips) {
     const track = tracks.get(clip.trackId);
     if (track === undefined) continue;
-    const end = clipEnd(clip);
-    const first = Math.max(0, Math.ceil(clip.start * fps - 1e-6));
+    const range = visibleRange(cuts, clip);
+    const end = range.to;
+    const media = project.media.find((m) => m.id === clip.mediaId);
+    const first = Math.max(0, Math.ceil(range.from * fps - 1e-6));
     let last = Math.min(frames - 1, Math.ceil(end * fps - 1e-6) - 1);
     // 浮點誤差：最後一格的時間要嚴格小於終點
     while (last >= first && last / fps >= end) last--;
     if (last < first) continue;
     const srcTimes: Seconds[] = [];
-    for (let i = first; i <= last; i++) srcTimes.push(timelineToSource(clip, i / fps));
+    for (let i = first; i <= last; i++) srcTimes.push(extendedSource(clip, i / fps, media));
     out.push({ clipId: clip.id, mediaId: clip.mediaId, first, last, srcTimes, track });
   }
   out.sort((a, b) => a.first - b.first || a.track - b.track);

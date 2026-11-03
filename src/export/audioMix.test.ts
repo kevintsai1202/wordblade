@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeClip, makeProject } from "../core/fixtures";
+import { addVoiceover, setVoiceoverActive } from "../core/voiceover";
 import { mixExtra, mixSpan, resampleLinear, stretch, voicesIn } from "./audioMix";
 
 /** 正弦波 */
@@ -127,5 +128,34 @@ describe("特效音效疊進輸出區塊（mixExtra）", () => {
     const b: [Float32Array, Float32Array] = [new Float32Array(10), new Float32Array(10)];
     mixExtra(b, 1.7, rate, extra);
     expect(Array.from(b[0].subarray(0, 4))).toEqual([1, 1, 1, 0]);
+  });
+});
+
+describe("mixSpan 與重配音（§5.6）", () => {
+  /** 對白 a1a（0～10 秒）餵全 1 的聲音混 0～10 秒，rate 1000 */
+  const mixDialogue = (active: boolean) => {
+    let p = makeProject();
+    p.media.push({ id: "vo1", kind: "audio", duration: 3 });
+    p = addVoiceover(p, { id: "vo-a", start: 4, end: 7, text: "x", mediaId: "vo1" });
+    if (!active) p = setVoiceoverActive(p, "vo-a", false);
+    const out: [Float32Array, Float32Array] = [new Float32Array(10000), new Float32Array(10000)];
+    const ones = new Float32Array(10000).fill(1);
+    mixSpan(out, 0, 1000, p, voicesIn(p, 0, 10).find((s) => s.clipId === "a1a")!, [ones, ones], null);
+    return out[0];
+  };
+
+  it("生效：範圍內零、邊緣 10 ms 淡出入、範圍外原樣", () => {
+    const x = mixDialogue(true);
+    expect(x[3000]).toBe(1);
+    expect(x[3995]).toBeCloseTo(0.5, 1); // 範圍開始前 5 ms
+    expect(x[4000]).toBe(0);
+    expect(x[5500]).toBe(0);
+    expect(x[6999]).toBe(0);
+    expect(x[7005]).toBeCloseTo(0.5, 1); // 範圍結束後 5 ms
+    expect(x[7500]).toBe(1);
+  });
+
+  it("切回原音：對白完整", () => {
+    expect(mixDialogue(false).every((v) => v === 1)).toBe(true);
   });
 });

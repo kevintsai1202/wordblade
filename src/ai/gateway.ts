@@ -78,6 +78,18 @@ export function saveSettings(settings: GatewaySettings) {
   }
 }
 
+/** 位元組 → base64（分段轉，避免大檔一次展開參數爆掉堆疊） */
+export function bytesToBase64(bytes: Uint8Array): string {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+/** base64 → 位元組 */
+export function base64ToBytes(b64: string): Uint8Array {
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+}
+
 /** 等一下 */
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -209,6 +221,18 @@ export class GatewayClient {
     return view.kit;
   }
 
+  /**
+   * AI 重配音（§5.6）：文字＋講者的聲音樣本（seed，WAV）與樣本的逐字稿 → Fish Audio 用那個聲音念出來。
+   * 走 POST /v1/tts → 輪詢 GET /v1/tts/{jobId}；免費模型的延遲不一，最多等 180 秒。speed 是語速（1 為原速）。
+   * 回傳 WAV 位元組與長度（秒）；失敗丟 GatewayError。
+   */
+  async speak(body: { text: string; seed: Uint8Array; seedText: string; speed: number }): Promise<{ audio: Uint8Array; seconds: number }> {
+    const { jobId } = await this.call<{ jobId: string }>("/v1/tts", { method: "POST", body: JSON.stringify({ text: body.text, seed: bytesToBase64(body.seed), seedText: body.seedText, speed: body.speed }) });
+    const view = await this.pollView<{ status: string; audio: string | null; seconds: number | null; error: string | null }>(`/v1/tts/${encodeURIComponent(jobId)}`, 180);
+    if (view.status !== "done" || !view.audio) throw new GatewayError(view.error ? `The AI couldn't make the voice: ${view.error}` : "The AI couldn't make the voice. Try again.", 0);
+    return { audio: base64ToBytes(view.audio), seconds: view.seconds ?? 0 };
+  }
+
   /** 縮圖底圖（§5.12）：一格畫面（PNG／JPEG）＋風格描述 → Muse Image 改過的圖（不含字）；約 30 秒 */
   async thumbnailBase(image: Blob, style: string): Promise<Blob> {
     const form = new FormData();
@@ -227,6 +251,30 @@ export class GatewayClient {
     const { jobId } = (await res.json()) as { jobId: string };
     const view = await this.pollView<{ status: string; image: string | null; mime: string | null }>(`/v1/ai/image/${encodeURIComponent(jobId)}`, 240);
     if (view.status !== "done" || !view.image) throw new GatewayError("The AI couldn't make the thumbnail. Try again, or use the frame as it is.", 0);
+    const bytes = Uint8Array.from(atob(view.image), (c) => c.charCodeAt(0));
+    return new Blob([bytes], { type: view.mime ?? "image/webp" });
+  }
+
+  /**
+   * 材質圖或 3D 背景（§5.12）：只有描述、不帶圖 → Muse Image 產生的圖。
+   * texture 回 1600×1600、background 回約 2016×1152（都是 webp）；約 30 秒。失敗丟 GatewayError。
+   */
+  async generateImage(purpose: "texture" | "background", prompt: string): Promise<Blob> {
+    const form = new FormData();
+    form.append("purpose", purpose);
+    form.append("prompt", prompt);
+    let res: Response;
+    try {
+      // multipart 的 content-type（含 boundary）由瀏覽器填
+      res = await fetch(this.settings.url.replace(/\/$/, "") + "/v1/ai/image", { method: "POST", headers: { authorization: `Bearer ${this.settings.token}` }, body: form });
+    } catch {
+      throw new GatewayError("Can't reach the AI service. Check the address in AI settings and your connection.", 0);
+    }
+    if (res.status === 401) throw new GatewayError("The invite token isn't valid. Check it in AI settings.", 401);
+    if (!res.ok) throw new GatewayError(`The AI service returned an error (${res.status}).`, res.status);
+    const { jobId } = (await res.json()) as { jobId: string };
+    const view = await this.pollView<{ status: string; image: string | null; mime: string | null }>(`/v1/ai/image/${encodeURIComponent(jobId)}`, 240);
+    if (view.status !== "done" || !view.image) throw new GatewayError("The AI couldn't make the image. Try again, or change the description.", 0);
     const bytes = Uint8Array.from(atob(view.image), (c) => c.charCodeAt(0));
     return new Blob([bytes], { type: view.mime ?? "image/webp" });
   }

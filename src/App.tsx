@@ -6,15 +6,19 @@ import { setEffectParams } from "./core/effects";
 import { PluginService } from "./anim/pluginService";
 import { createEngine } from "./engine/createEngine";
 import { demoProject } from "./ui/demoProject";
-import { loadSample, samplePath } from "./project/sample";
+import { loadSample, SAMPLES, samplePath, type SampleId } from "./project/sample";
 import { EditPanel } from "./ui/EditPanel";
 import { MediaTab } from "./ui/MediaTab";
 import { PreviewPane } from "./ui/PreviewPane";
+import { WelcomePanel } from "./ui/WelcomePanel";
+import { commonFolder } from "./engine/rootPath";
 import { initialState, keyToAction, projectDuration, reducer } from "./ui/state";
 import { Timeline } from "./ui/Timeline";
 import { useMediaLibrary } from "./ui/useMediaLibrary";
+import { useSeparation } from "./ui/useSeparation";
 import { VibeTab } from "./ui/VibeTab";
 import { InspectorTab } from "./ui/InspectorTab";
+import { ColorTab } from "./ui/ColorTab";
 import { ExportTab } from "./ui/ExportTab";
 import { TranscribePanel } from "./ui/TranscribePanel";
 import { CaptionStyleTab } from "./ui/CaptionStyleTab";
@@ -26,6 +30,8 @@ import { DirectorTab } from "./ui/DirectorTab";
 import { IntroTab } from "./ui/IntroTab";
 import { PublishTab, type Thumbnail } from "./ui/PublishTab";
 import { SoundTab } from "./ui/SoundTab";
+import { RevoiceTab } from "./ui/RevoiceTab";
+import { TextureTab } from "./ui/TextureTab";
 import { ZoomEditOverlay } from "./ui/ZoomEditOverlay";
 import type { ZoomEdit } from "./ui/ZoomBands";
 import { zoomFromRange } from "./core/zoom";
@@ -73,6 +79,7 @@ function App() {
   /** 字幕由逐字稿算出（D26），專案一變就重算 */
   const captions = useMemo(() => buildCaptions(project), [project]);
   const { library, importSources, enqueuePrepare, reset } = useMediaLibrary(engine, dispatch, thumbs);
+  const separation = useSeparation(engine, importSources, dispatch);
   /** AI 預覽中的特效設定（「用說的」的提議，還沒寫進專案；預覽畫面用它） */
   const [aiPreview, setAiPreview] = useState<{ effectId: string; params: Record<string, unknown> } | null>(null);
   /** 要求右側面板切到某個頁籤（範圍動作列的「特效」「放大」） */
@@ -152,15 +159,43 @@ function App() {
     }, 2000);
     return () => clearTimeout(timer);
   }, [project, state.history.past.length, isDemo, folder.location]);
+  // 啟動時自動開最後一個專案（2026-11-01 開發者決定）：桌面版直接開；網頁版要使用者點一下才拿得到檔案權限，交給歡迎畫面的 Continue。
+  // 開不了（搬走、刪掉）就留在歡迎畫面並提示
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (autoOpened.current || START_WITH_DEMO || engine.kind !== "desktop" || !engine.projectFolders) return;
+    autoOpened.current = true;
+    const last = folder.recent[0];
+    if (last) void folder.reopen(last).then((err) => err && setNotice(err));
+  }, [engine, folder]);
+  /** 還沒開專案、專案也完全是空的（沒有素材、片段、特效）：預覽區顯示歡迎畫面；一動手就讓開 */
+  const showWelcome = !folder.location && !isDemo && project.media.length === 0 && project.clips.length === 0 && project.effects.length === 0;
+
   /** 還原上次的工作：載入專案、素材照常在背景準備（桌面版路徑還在；網頁版要重新匯入檔案） */
-  const restoreLast = () => {
+  const restoreLast = async () => {
     if (!lastSession) return;
     reset(project.media);
-    dispatch({ type: "load", project: lastSession.project });
-    for (const m of lastSession.project.media) enqueuePrepare(m);
+    const restored = lastSession.project;
     setIsDemo(false);
     setLastSession(null);
-    if (engine.kind === "web") setNotice("Restored. On the web, import the video files again to see them.");
+    if (engine.kind !== "web") {
+      dispatch({ type: "load", project: restored });
+      for (const m of restored.media) enqueuePrepare(m);
+      return;
+    }
+    // 網頁版（2026-11-02）：重新整理後檔案要從記住的 handle 或授權的資料夾找回；找不到的先標成離線（顯示 Media Offline 卡），
+    // 交給「Locate…／Allow folder」重新連結，不要丟進準備佇列（會失敗）
+    const missing: { id: string; name: string }[] = [];
+    const media = await Promise.all(restored.media.map(async (m) => {
+      const hit = await engine.locateMedia(m, []).catch(() => null);
+      if (hit) return { ...hit, offline: undefined };
+      missing.push({ id: m.id, name: m.name ?? m.id });
+      return { ...m, offline: true };
+    }));
+    dispatch({ type: "load", project: { ...restored, media } });
+    for (const m of media) if (!m.offline) enqueuePrepare(m);
+    folder.markMissing(missing);
+    if (missing.length) setNotice(`Restored. ${missing.length} media file${missing.length > 1 ? "s" : ""} need to be located again.`);
   };
 
   // Resolve 風格熱鍵；焦點在輸入框時不攔
@@ -183,9 +218,9 @@ function App() {
    * 開範例專案（§5.22）：預先算好的 2 分鐘範例（逐字稿、AI 結果、特效都在裡面），不用權杖、不呼叫 AI。
    * 和示範專案一樣是「示範狀態」：沒編輯前不自動存，不蓋掉上次的工作。
    */
-  const onLoadSample = async () => {
-    const opened = await engine.openSample();
-    const sample = opened && loadSample(opened.text, opened.root);
+  const onLoadSample = async (id: SampleId = "sample") => {
+    const opened = await engine.openSample(id);
+    const sample = opened && loadSample(opened.text, opened.root, id);
     if (!sample) {
       setNotice("The sample project isn't available here.");
       return;
@@ -197,7 +232,7 @@ function App() {
     dispatch({ type: "load", project: sample });
     for (const m of sample.media) enqueuePrepare(m);
     // 發佈包的縮圖不在專案裡：範例資料夾有 thumbnail.png 就一起載入（匯出時寫在影片旁邊）
-    const thumbUrl = engine.mediaUrl({ id: "sample-thumbnail", kind: "image", duration: 0, path: samplePath("sample/thumbnail.png", opened.root) });
+    const thumbUrl = engine.mediaUrl({ id: "sample-thumbnail", kind: "image", duration: 0, path: samplePath(`${id}/thumbnail.png`, opened.root, id) });
     const res = await fetch(thumbUrl).catch(() => null);
     if (res?.ok) {
       const blob = await res.blob();
@@ -205,9 +240,10 @@ function App() {
     }
   };
 
-  // 網址帶 ?sample=1 就直接開範例專案（e2e 與分享連結用）
+  // 網址帶 ?sample=1 就直接開導演範例、?sample=effects 開特效範例（e2e 與分享連結用）
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("sample")) void onLoadSample();
+    const q = new URLSearchParams(window.location.search).get("sample");
+    if (q !== null) void onLoadSample(q === "effects" ? "sample-effects" : "sample");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 開發用（範例專案打包腳本 e2e/sample-build.spec.ts）：localStorage wordblade.dev＝1 時提供目前的專案與素材檔的位元組
@@ -237,7 +273,7 @@ function App() {
         {engine.projectFolders && (
           <>
             {saveName === null
-              ? <button data-testid="project-save-as" title="Save this project as a .wordblade folder" onClick={() => setSaveName(folder.location?.name ?? project.media[0]?.name?.replace(/\.[^.]+$/, "") ?? "Untitled")}>{folder.location ? "Save as…" : "Save…"}</button>
+              ? <button data-testid="project-save-as" title="Save this project as a .wordblade folder" onClick={() => setSaveName(folder.location?.name ?? project.media[0]?.name?.replace(/\.[^.]+$/, "") ?? "Untitled")}>{folder.location ? "Save as…" : "New project…"}</button>
               : (
                 <form className="save-as" onSubmit={(e) => { e.preventDefault(); const n = saveName.trim(); setSaveName(null); if (n) void folder.saveAs(n); }}>
                   <input autoFocus data-testid="project-name-input" value={saveName} maxLength={80} onChange={(e) => setSaveName(e.target.value)} />
@@ -258,11 +294,23 @@ function App() {
           <span className="warning" data-testid="missing-media" title={folder.missing.map((m) => m.name).join(", ")}>
             {folder.missing.length} media file{folder.missing.length > 1 ? "s" : ""} not found: {folder.missing.slice(0, 2).map((m) => m.name).join(", ")}{folder.missing.length > 2 ? "…" : ""}
             {/* 一次連一支（從第一支開始）；同資料夾裡的其他支會一起找回 */}
+            {engine.kind === "web" && (() => {
+              const paths = folder.missing.map((x) => project.media.find((m) => m.id === x.id)?.path).filter((p): p is string => !!p);
+              const where = commonFolder(paths);
+              return paths.length > 0 && (
+                <button data-testid="allow-media-folder" className="primary" title="The browser can only read folders you allow. Allow once and WordBlade remembers it."
+                  onClick={() => void folder.allowFolder().then((err) => err && setNotice(err))}>
+                  Allow access to {where ?? "the media folder"}…
+                </button>
+              );
+            })()}
             <button data-testid="relink-media" title={`Locate ${folder.missing[0].name}; others in the same folder are found automatically`} onClick={() => void folder.relink(folder.missing[0].id).then((err) => err && setNotice(err))}>Locate {folder.missing[0].name}…</button>
             <button onClick={folder.dismissMissing}>✕</button>
           </span>
         )}
-        <button title="Open a ready-made 2-minute sample: transcript, AI suggestions and effects are already in it (no token needed)" data-testid="load-sample" onClick={() => void onLoadSample()}>Try the sample project</button>
+        {SAMPLES.map((s) => (
+          <button key={s.id} title={s.title} data-testid={s.id === "sample" ? "load-sample" : "load-sample-effects"} onClick={() => void onLoadSample(s.id)}>{s.label}</button>
+        ))}
         {lastSession && !project.media.length && (
           <span className="restore-bar" data-testid="restore-bar">
             Last session: {lastSession.project.clips.length} clips, saved {new Date(lastSession.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -276,7 +324,17 @@ function App() {
         <button disabled title="Export — coming soon">Export</button>
       </header>
       <main className="workspace">
-        <PreviewPane project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} playSeq={state.playSeq} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} thumbs={thumbs} selectedEffectId={state.selectedEffectId}
+        <PreviewPane
+          cover={showWelcome ? (
+            <WelcomePanel recent={folder.recent} projectFolders={engine.projectFolders}
+              onNew={(n) => void folder.saveAs(n)}
+              onOpen={() => void folder.open().then((err) => err && setNotice(err))}
+              onReopen={(r) => void folder.reopen(r).then((err) => err && setNotice(err))}
+              onSample={(id) => void onLoadSample(id)}
+              lastSession={lastSession ? { clips: lastSession.project.clips.length, savedAt: lastSession.savedAt } : null}
+              onRestore={restoreLast} />
+          ) : undefined}
+          project={shownProject} playhead={state.playhead} playing={state.playing} rate={state.rate} playSeq={state.playSeq} duration={projectDuration(project)} captions={captions} engine={engine} library={library} plugins={plugins} thumbs={thumbs} selectedEffectId={state.selectedEffectId}
           overlay={editingZoom && zoomEdit ? (
             <ZoomEditOverlay
               zoom={editingZoom} clip={zoomClip} playhead={state.playhead} edit={zoomEdit}
@@ -299,27 +357,30 @@ function App() {
           request={tabRequest}
           initialTab={START_WITH_DEMO ? "transcript" : "media"}
           tabs={{
-            media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} dispatch={dispatch} />,
+            media: <MediaTab project={project} library={library} engine={engine} pxPerSecond={state.pxPerSecond} onImport={() => void onImport()} separation={separation} dispatch={dispatch} />,
             vibe: <VibeTab dimension="2d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
-            vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} />,
+            vibe3d: <VibeTab dimension="3d" plugins={plugins} playhead={state.playhead} range={state.range} dispatch={dispatch} engine={engine} importSources={importSources} />,
             transcript: <TranscriptTab project={project} captions={captions} playhead={state.playhead} dispatch={dispatch} />,
             transcriptTools: <><TranscribePanel project={project} engine={engine} envelopes={library.envelopes} dispatch={dispatch} /><CleanupPanel project={project} envelopes={library.envelopes} dispatch={dispatch} /></>,
             director: <DirectorTab project={project} engine={engine} envelopes={library.envelopes} plugins={plugins} playhead={state.playhead} importSources={importSources} dispatch={dispatch} />,
             mask: <MaskTab project={project} engine={engine} range={state.range} playhead={state.playhead} dispatch={dispatch} />,
             zoom: <ZoomTab project={project} edit={zoomEdit} onEdit={setZoomEdit} dispatch={dispatch} />,
             audio: <SoundTab engine={engine} project={project} playhead={state.playhead} range={state.range} importSources={importSources} dispatch={dispatch} />,
+            textures: <TextureTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
+            color: <ColorTab project={project} range={state.range} dispatch={dispatch} />,
+            revoice: <RevoiceTab engine={engine} project={project} range={state.range} importSources={importSources} dispatch={dispatch} playhead={state.playhead} playing={state.playing} />,
             intro: <IntroTab project={project} engine={engine} importSources={importSources} dispatch={dispatch} />,
             style: <CaptionStyleTab project={project} dispatch={dispatch} />,
             export: <ExportTab suggestedName={exportPathFor(folder.location, "mp4")} project={project} captions={captions} engine={engine} plugins={plugins} envelopes={library.envelopes} thumbnail={thumbnail?.blob ?? null} />,
             publish: <PublishTab project={project} duration={projectDuration(project)} dispatch={dispatch} thumbnail={thumbnail} onThumbnail={setThumbnail} />,
-            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} />,
+            inspector: <InspectorTab project={project} effectId={state.selectedEffectId} clipId={state.selectedClipId} playhead={state.playhead} dispatch={dispatch} preview={aiPreview} onPreview={setAiPreview} onOpenTab={openTab} />,
           }}
         />
       </main>
       <Splitter axis="y" sign={-1} value={layout.timelineHeight} onChange={(v) => setLayout("timelineHeight", v)} onReset={() => resetLayout("timelineHeight")} testId="split-timeline" title="Drag to resize the timeline" />
       <Timeline headerWidth={layout.headerWidth} thumbs={thumbs}
         headerSplitter={<Splitter axis="x" sign={1} value={layout.headerWidth} onChange={(v) => setLayout("headerWidth", v)} onReset={() => resetLayout("headerWidth")} testId="split-header" title="Drag to resize the track headers" />}
-        state={state} dispatch={dispatch} captions={captions} library={library} zoomEdit={zoomEdit} onZoomEdit={setZoomEdit} onRangeAction={(kind) => (kind === "effect" ? openTab("vibe") : kind === "mask" ? openTab("mask") : createZoom())} />
+        state={state} dispatch={dispatch} captions={captions} library={library} zoomEdit={zoomEdit} onZoomEdit={setZoomEdit} onRangeAction={(kind) => (kind === "effect" ? openTab("vibe") : kind === "mask" ? openTab("mask") : kind === "revoice" ? openTab("revoice") : createZoom())} />
       <footer className="status-bar">
         Space play · J / K / L reverse / stop / forward · Click to select · Delete ripple delete · Ctrl+B split at playhead · Ctrl+Z / Ctrl+Shift+Z undo / redo · ← → frame · ↑ ↓ edit points · Ctrl+wheel zoom
       </footer>

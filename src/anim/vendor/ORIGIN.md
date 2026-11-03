@@ -1,6 +1,6 @@
 # 來源
 
-這個資料夾與上一層的 `anim-library*.json`、`anim_api_manifest.json`、`legacy/*.cjs` 沿用作者先前的專案 transcript-review（Apache-2.0），複製自 commit `7d4badc`（2026-10-27）。開發者 2026-10-27 決定 2D 插件沿用它的直譯器，放進沙盒 Worker 執行（spec §5.7）。
+這個資料夾與上一層的 `anim-library*.json`、`anim_api_manifest.json`、`legacy/*.cjs` 沿用作者先前的專案 transcript-review（Apache-2.0），複製自 commit `7d4badc`（2026-10-27 複製；這些檔案在原專案 2026-10-06 建立、最後修改 10-21，都在黑客松前）。開發者 2026-10-27 決定 2D 插件沿用它的直譯器，放進沙盒 Worker 執行（spec §5.7）。
 
 | 檔案 | 原位置 | 改動 |
 | --- | --- | --- |

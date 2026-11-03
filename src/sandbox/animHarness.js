@@ -3,7 +3,8 @@
 // 這層 Worker 又在沒有 same-origin、CSP 擋網路的 iframe 裡（雙層防護）。
 // 協定（資料通道是父頁轉移進來的 MessagePort）：每個請求帶 id，回覆 {type:'result', id, result} 或 {type:'error', id, error}。
 //   setComponents {components}       → {hashes}：驗證並記住元件（雜湊 → 元件），之後 render 用雜湊指到元件
-//   render {instance, frame, fps, duration, videoW, videoH, width, height, background?} → ImageBitmap（transfer）
+//   render {instance, frame, fps, duration, videoW, videoH, width, height, background?, textures?} → ImageBitmap（transfer）
+//     textures：圖層圖片填色（fill.texture 是索引）用的圖（複製進來的，畫完關掉）
 //   vet {component}                  → {plugin, hash}：結構、編譯、試跑、參數變體（Vibe特效寫的程式用這個把關）
 //   usesBackground {instance}        → boolean：這段動畫有沒有圖層讀下層畫面（有才需要讀回畫面）
 //   manifest                         → API 說明（給 AI 的文件）
@@ -74,10 +75,11 @@
         try {
           RT.drawFrame(ctx, d.instance, components, {
             frame: d.frame, fps: d.fps, duration: d.duration, videoW: d.videoW, videoH: d.videoH, background,
-            canvasFactory: (w, h) => new OffscreenCanvas(w, h),
+            canvasFactory: (w, h) => new OffscreenCanvas(w, h), textures: d.textures || null,
           });
         } finally {
           if (d.background) d.background.close();
+          if (d.textures) for (const t of d.textures) t.close();
         }
         const bitmap = c.transferToImageBitmap();
         return [bitmap, [bitmap]];

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { addMedia, emptyProject } from "../core/media";
 import type { Project } from "../core/model";
 import { placeMedia } from "../core/timeline";
+import { addVoiceover, setVoiceoverActive } from "../core/voiceover";
 import { duckingCurve, gainAt } from "./ducking";
 import { ENVELOPE_RATE, EnvelopeBuilder, type Envelope } from "./envelope";
 
@@ -62,5 +63,16 @@ describe("duckingCurve（配樂壓低，預覽與匯出共用）", () => {
     const curve = duckingCurve(project(), new Map([["talk", envelope(20, 0, 20)]]));
     expect(gainAt(curve, -1)).toBe(1);
     expect(gainAt(curve, 999)).toBe(1);
+  });
+});
+
+// AI 重配音（2026-11-02）：生效中的 AI 聲音也算「有人講話」，配樂要壓低；切回原聲時 AI 片段靜音，不算
+describe("duckingCurve 與 AI 重配音", () => {
+  it("對白素材在 10～14 秒沒聲音，AI 聲音放在 10 秒：生效時壓低、切回原聲時不壓", () => {
+    let p = addMedia(project(), [{ id: "ai", kind: "audio", duration: 3, audio: true }]);
+    p = addVoiceover(p, { id: "v", start: 10, end: 14, text: "hi", mediaId: "ai" });
+    const env = new Map([["talk", envelope(20, 2, 4)], ["ai", envelope(3, 0, 3)]]);
+    expect(gainAt(duckingCurve(p, env), 11.5)).toBeCloseTo(0.3, 2);
+    expect(gainAt(duckingCurve(setVoiceoverActive(p, "v", false), env), 11.5)).toBe(1);
   });
 });

@@ -1,0 +1,18 @@
+[package]
+name = "mdx-rust"
+version = "0.1.0"
+edition = "2024"
+description = "MDX-Net 人聲分離推論的 Rust 移植 spike（對照 transcript-review/backend/stems/mdx.py）"
+publish = false
+default-run = "mdx-rust"
+
+# 獨立 crate：宣告空的 workspace，避免被上層（例如 src-tauri）當成成員；target 目錄也留在本資料夾。
+[workspace]
+
+[dependencies]
+ort = { version = "=2.0.0-rc.15", features = ["directml"] }
+realfft = "3.5.1"
+hound = "3.5.1"
+
+[profile.release]
+opt-level = 3

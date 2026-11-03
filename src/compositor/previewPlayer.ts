@@ -1,13 +1,15 @@
 // 預覽播放器（§5.13）：依 framePlan／audioPlan 讓每個片段的 <video>／<img>／<audio> 對準時間，再交給合成器畫。
 // 影像元素一律靜音，聲音由 A 軌片段各自的 <audio> 發出：Web Audio 混音圖建立後（第一次按播放）走 AudioGraph，
 // 片段增益＋配樂匯流排壓低；還沒建立或瀏覽器不支援時退回直接設 el.volume。
+import { offlineCard } from "./offlineCard";
 import { MaskLayer } from "../sam/maskLayer";
 import type { ThumbStore } from "../media/thumbStore";
 import type { EffectRenderer } from "../anim/effectRenderer";
 import { currentAudioGraph } from "../audio/audioGraph";
 import { gainAt, type DuckCurve } from "../audio/ducking";
 import type { Media, Project, Seconds } from "../core/model";
-import { audioPlan } from "./framePlan";
+import { audioPlan, type VideoLayer } from "./framePlan";
+import { isMonitorMuted } from "../audio/monitor";
 import { layerPlan } from "./layerPlan";
 import { GlCompositor } from "./glCompositor";
 import { CaptionLayer } from "../captions/captionLayer";
@@ -16,6 +18,13 @@ import type { Caption, TimelineWord } from "../core/captions";
 
 /** 播放中，元素時間和該有的素材時間差超過這個值（秒）才重新對齊，避免一直跳 */
 const PLAY_DRIFT: Seconds = 0.15;
+
+/** 圖層的框、透明度與色彩（併進下層狀態：轉場推移、淡化或調色改了，讀下層畫面的特效才會重畫） */
+function layerLook(layer: VideoLayer): string {
+  const r = layer.rect;
+  const g = layer.grade;
+  return `:${r.x.toFixed(3)},${r.y.toFixed(3)},${r.w.toFixed(3)},${r.h.toFixed(3)},${layer.opacity.toFixed(3)}${g ? `:g${g.brightness},${g.contrast},${g.saturation},${g.temperature}` : ""}`;
+}
 /** 暫停時差超過這個值（秒）就把元素拖到正確位置 */
 const SEEK_EPSILON: Seconds = 1 / 60;
 
@@ -172,6 +181,8 @@ export class PreviewPlayer {
     // 依 §5.10 的順序畫：V1 → 3D 場景 → V2 以上 → 2D／3D 插件（layerPlan）
     /** 到目前為止畫過的圖層狀態（特效的下層畫面換了沒，靠它判斷） */
     let below = "";
+    /** 這一格畫了幾個離線卡（e2e 讀 data-offline） */
+    let offline = 0;
     for (const item of layerPlan(project, t, this.fps)) {
       if (item.kind !== "video") {
         // 特效：畫格由沙盒非同步畫，拿不到這一格時先畫上一張；要下層畫面的在這一刻（只畫到這一層）截圖
@@ -184,8 +195,21 @@ export class PreviewPlayer {
         continue;
       }
       const layer = item.layer;
+      // 穿黑／白轉場的純色（§5.9）
+      if (layer.solid) {
+        this.compositor.drawSolid(layer.solid, layer.opacity);
+        below += `|${layer.clipId}:${layer.opacity.toFixed(3)}`;
+        continue;
+      }
       active.add(layer.clipId);
       const media = project.media.find((m) => m.id === layer.mediaId);
+      // 原檔找不到：畫「Media Offline」卡代替（不擋播放與剪輯）
+      if (media?.offline) {
+        this.compositor.draw(offlineCard(layer.rect.w * width, layer.rect.h * height), layer.rect, layer.opacity);
+        offline++;
+        below += `|${layer.clipId}:offline`;
+        continue;
+      }
       if (media?.kind === "image") {
         const img = this.element(this.images, layer.clipId, layer.mediaId, () => {
           const i = new Image();
@@ -194,8 +218,8 @@ export class PreviewPlayer {
           return i;
         });
         const ready = !!img?.complete && (img?.naturalWidth ?? 0) > 0;
-        if (ready) this.compositor.draw(img!, layer.rect, layer.opacity, layer.crop);
-        below += `|${layer.clipId}:${ready ? "1" : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
+        if (ready) this.compositor.draw(img!, layer.rect, layer.opacity, layer.crop, layer.grade);
+        below += `|${layer.clipId}:${ready ? "1" : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}${layerLook(layer)}`;
         continue;
       }
       const clip = project.clips.find((c) => c.id === layer.clipId)!;
@@ -224,20 +248,22 @@ export class PreviewPlayer {
         drawn = el;
       }
       if (drawn) {
-        this.compositor.draw(drawn, layer.rect, layer.opacity, layer.crop);
+        this.compositor.draw(drawn, layer.rect, layer.opacity, layer.crop, layer.grade);
         // SAM 遮罩疊在這個影像圖層上（素材時間）；狀態併進 below，讀下層畫面的 3D 場景才會跟著重畫
         below += this.masks.draw(this.compositor, project, layer, drawn, width, height);
       }
       // 下層狀態含放大範圍：改了放大，讀下層畫面的特效（3D 場景）才會重畫
-      below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : useThumb ? `t${thumb.time}` : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}`;
+      below += `|${layer.clipId}@${el.currentTime.toFixed(3)}:${ready ? "1" : useThumb ? `t${thumb.time}` : "0"}${layer.crop ? `:${JSON.stringify(layer.crop)}` : ""}${layerLook(layer)}`;
     }
 
+    this.canvas.dataset.offline = String(offline);
     // 字幕畫在最上層（預覽與匯出同一個 CaptionLayer）
     const captionCanvas = this.captionLayer.render(this.captions, this.captionWords, t, project.captionStyle ?? DEFAULT_CAPTION_STYLE, width, height);
     if (captionCanvas) this.compositor.draw(captionCanvas, { x: 0, y: 0, w: 1, h: 1 }, 1);
 
     const graph = currentAudioGraph();
     for (const voice of audioPlan(project, t)) {
+      if (project.media.find((m) => m.id === voice.mediaId)?.offline) continue;
       active.add(voice.clipId);
       const el = this.element(this.audios, voice.clipId, voice.mediaId, () => {
         const a = document.createElement("audio");
@@ -247,7 +273,9 @@ export class PreviewPlayer {
         return a;
       });
       if (!el) continue;
-      const gain = Math.max(0, voice.gain);
+      // 卡拉 OK 錄音時關掉原聲（只影響預覽）
+      const role = project.tracks.find((tr) => tr.id === project.clips.find((c) => c.id === voice.clipId)?.trackId)?.role;
+      const gain = isMonitorMuted(role) ? 0 : Math.max(0, voice.gain);
       if (graph) {
         const trackId = project.clips.find((c) => c.id === voice.clipId)!.trackId;
         graph.connect(voice.clipId, el, trackId);

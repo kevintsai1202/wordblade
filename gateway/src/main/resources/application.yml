@@ -41,6 +41,11 @@ wordblade:
   # AI 導演診斷記錄（規劃者與審查員每輪的輸入輸出）：設了目錄才記，GET /v1/ai/director/{id}/log 取回；Zeabur 不設
   director:
     log-dir: ${WORDBLADE_DIRECTOR_LOG_DIR:}
+  # Fish Audio（AI 重生語音，spec §5.6）：一律免費模型 s2.1-pro-free（D32）；金鑰 FISH_API_KEY
+  fish:
+    base-url: ${WORDBLADE_FISH_BASE_URL:https://api.fish.audio}
+    api-key: ${FISH_API_KEY:}
+    model: ${WORDBLADE_MODEL_FISH:s2.1-pro-free}
   # TypeSafe Jev：AI 導演判斷重講候選（docs/plan-10-31-director4.md）；沒設金鑰就不判斷，候選標成未確認
   typesafe:
     base-url: ${WORDBLADE_TYPESAFE_BASE_URL:https://api.typesafe.ai}

@@ -16,6 +16,8 @@ export interface Media {
   path?: string;
   /** 網頁版：指向 IndexedDB 裡 FileSystemHandle 的鍵 */
   handleKey?: string;
+  /** 原檔找不到（開專案時沒找回、還沒重新連結）：照樣留在專案，預覽與匯出畫「Media Offline」；只在執行中，不存進 project.json */
+  offline?: boolean;
   kind: "video" | "image" | "audio";
   duration: Seconds;
   fps?: number;
@@ -26,6 +28,10 @@ export interface Media {
   audio?: boolean;
   proxyPath?: string;
   mezzaninePath?: string;
+  /** 素材的用途：texture＝材質庫的圖（顏色圖或法線圖，P1-14）；素材庫頁籤不列，其餘照一般素材存進專案 */
+  role?: "texture";
+  /** 聲音分離（§5.14、P1-10）的結果：這支素材的人聲與背景音樂是素材庫裡的哪兩支；其他功能（ASR、重配音取樣）找人聲用它 */
+  stems?: { vocalsId: string; backgroundId: string };
 }
 
 /** 軌道（§4 Track）。V1 是主軌：片段首尾相接、漣漪剪輯 */
@@ -33,7 +39,7 @@ export interface Track {
   id: string;
   kind: "video" | "audio";
   /** 音軌的角色：配樂壓低看它（music 被 dialogue 壓） */
-  role?: "dialogue" | "music" | "sfx";
+  role?: "dialogue" | "music" | "sfx" | "voice";
   /** 同種軌道裡的順序；video 的 index 0 就是 V1 */
   index: number;
   muted: boolean;
@@ -129,6 +135,8 @@ export interface MaskObject {
   label: string;
   /** 取樣（依時間排序） */
   samples: MaskSample[];
+  /** 專案資料夾裡取樣存在 .data\ 的哪個檔（相對 .data，例如 masks/<id>.json）；只出現在 project.json，載入後換回 samples */
+  samplesRef?: string;
   /** 取樣間隔（秒；每秒 10 格就是 0.1）：最後一個取樣之後再撐這麼久 */
   interval: Seconds;
   /** 效果與強度（馬賽克方塊大小／模糊程度，以 1080p 為準的像素） */
@@ -225,7 +233,33 @@ export interface Synth {
   kind: "sound" | "music";
   spec: Record<string, unknown>;
   source: "builtin" | "ai";
+  /** 算成的素材（進素材庫後才有） */
   renderedMediaId?: string;
+  /** 顯示用的名字（範本名或描述） */
+  label?: string;
+  /** 配樂的原始描述（Regenerate 用它重來） */
+  prompt?: string;
+}
+
+/**
+ * AI 重配音（§5.6）：時間軸 [start, end] 這段對白換成 AI 用講者自己的聲音念 text。
+ * AI 的聲音是 clipId 這個片段（放在 role="voice" 的音軌）；active 為 true 時這段時間內原本的對白靜音，false 就聽原音（AI 片段靜音）。
+ */
+export interface Voiceover {
+  id: string;
+  /** 時間軸時間 */
+  start: Seconds;
+  end: Seconds;
+  /** 念的文字 */
+  text: string;
+  /** AI 聲音的素材（素材庫裡的 WAV） */
+  mediaId: string;
+  /** AI 聲音在時間軸上的片段 */
+  clipId: string;
+  /** true＝播 AI 的聲音（原音在這段靜音）；false＝播原音 */
+  active: boolean;
+  /** 聲音來源：ai＝Fish 克隆（預設）；recorded＝卡拉 OK 自己錄（P1-9） */
+  source?: "ai" | "recorded";
 }
 
 /** 聲音分離的結果 */
@@ -237,6 +271,63 @@ export interface Stem {
 }
 
 /** 整個專案（存成 .wordblade.json） */
+/** 材質庫的一筆（§5.12，P1-14）：顏色圖、法線圖都是素材庫裡 role="texture" 的圖片 */
+export interface TextureAsset {
+  id: string;
+  /** texture＝可平鋪的材質（有法線圖）；background＝3D 背景（16:9，不平鋪） */
+  kind: "texture" | "background";
+  /** 顯示用的名字（取自描述） */
+  name: string;
+  /** 產生時的描述（Regenerate 用） */
+  prompt: string;
+  /** 顏色圖的素材 id */
+  colorMediaId: string;
+  /** 法線圖的素材 id（背景沒有） */
+  normalMediaId?: string;
+  /** 法線強度（插件用 normalScale 套，不重算圖片） */
+  normalStrength: number;
+  /** 平鋪次數（預設值；套用時可覆寫） */
+  repeat: number;
+}
+
+/**
+ * 轉場種類（§5.9）：溶接、穿黑／白、推移（四向）、滑入（左右：後一段蓋上來）、擦除（四向：邊界往那個方向走）、推近、拉遠。
+ * 方向的意思一律是「畫面（或邊界）往哪邊走」。
+ */
+export type TransitionKind =
+  | "dissolve" | "dipBlack" | "dipWhite"
+  | "pushLeft" | "pushRight" | "pushUp" | "pushDown"
+  | "slideLeft" | "slideRight"
+  | "wipeLeft" | "wipeRight" | "wipeUp" | "wipeDown"
+  | "zoomIn" | "zoomOut";
+
+/**
+ * 轉場（§5.9，P2；2026-11-02）：放在 V1 片段 clipId 的起點（和前一段的接點）。不改長度：
+ * 接點前後各 duration/2，前一段往後延、後一段往前提早出現（沒有多餘畫面就停在最後／第一格）。
+ */
+export interface Transition {
+  id: string;
+  /** V1 上「後面那段」的片段 id */
+  clipId: string;
+  kind: TransitionKind;
+  /** 總長（秒） */
+  duration: Seconds;
+}
+
+/**
+ * 色彩調整（P3；2026-11-02）：時間軸範圍內的影像圖層（影片、圖片）一起調。值 −1～1，0 是不變。
+ * end 沒設＝一直到結尾（「整條」），之後加的片段也套得到；重疊時後加的蓋前面的。
+ */
+export interface ColorGrade {
+  id: string;
+  start: Seconds;
+  end?: Seconds;
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  temperature: number;
+}
+
 export interface Project {
   media: Media[];
   tracks: Track[];
@@ -250,6 +341,14 @@ export interface Project {
   plugins: Plugin[];
   synths: Synth[];
   stems: Stem[];
+  /** 材質庫（§5.12，P1-14；舊專案沒有這個欄位） */
+  textures?: TextureAsset[];
+  /** AI 重配音（§5.6；舊專案沒有這個欄位） */
+  voiceovers?: Voiceover[];
+  /** 轉場（§5.9；舊專案沒有這個欄位） */
+  transitions?: Transition[];
+  /** 色彩調整（P3；舊專案沒有這個欄位） */
+  colorGrades?: ColorGrade[];
   /** 局部放大（§5.19；舊專案沒有這個欄位） */
   zooms?: ZoomRegion[];
   /** 燒進畫面的字幕樣式（§5.4、§5.18；沒設就用預設：白字黑描邊） */

@@ -18,7 +18,7 @@ const ENVELOPE_RATE: u32 = 100;
 const ENVELOPE_SAMPLE_RATE: u32 = 8000;
 
 /// 重工作的排隊鎖：代理檔一次只轉一支（§5.21）
-static HEAVY: Mutex<()> = Mutex::new(());
+pub(crate) static HEAVY: Mutex<()> = Mutex::new(());
 /// 試編後選定的 H.264 編碼器（整個程式只試一次）
 static ENCODER: OnceLock<String> = OnceLock::new();
 
@@ -37,7 +37,7 @@ pub struct ProbeInfo {
 }
 
 /// 找 ffmpeg／ffprobe 的執行檔：打包的優先，否則用 PATH
-fn tool(app: &AppHandle, name: &str) -> PathBuf {
+pub(crate) fn tool(app: &AppHandle, name: &str) -> PathBuf {
     if let Ok(dir) = app.path().resource_dir() {
         let bundled = dir.join("ffmpeg").join("bin").join(format!("{name}.exe"));
         if bundled.exists() {
@@ -48,7 +48,7 @@ fn tool(app: &AppHandle, name: &str) -> PathBuf {
 }
 
 /// 建一個不跳視窗的指令
-fn command(program: &Path) -> Command {
+pub(crate) fn command(program: &Path) -> Command {
     #[allow(unused_mut)]
     let mut cmd = Command::new(program);
     #[cfg(windows)]
@@ -346,18 +346,22 @@ pub fn find_samples_dir(app: AppHandle) -> Option<String> {
     None
 }
 
-/// 範例專案（spec §5.22）的資料夾：安裝版在資源資料夾的 sample\，開發時往上找 repo 的 public\sample\；
-/// 找到就放行 asset 協定讀取（project.json 與素材都從這裡讀），找不到回 None
+/// 範例專案（spec §5.22）的資料夾，name 是 sample（導演範例）或 sample-effects（特效範例）：安裝版在資源資料夾的 <name>\，
+/// 開發時往上找 repo 的 public\<name>\；找到就放行 asset 協定讀取（project.json 與素材都從這裡讀），找不到回 None
 #[tauri::command]
-pub fn find_sample_dir(app: AppHandle) -> Option<String> {
+pub fn find_sample_dir(app: AppHandle, name: String) -> Option<String> {
+    // 只接受固定的範例名稱（導演範例、特效範例），不讓前端指到別的資料夾
+    if !["sample", "sample-effects"].contains(&name.as_str()) {
+        return None;
+    }
     let mut candidates: Vec<PathBuf> = Vec::new();
     if let Ok(dir) = app.path().resource_dir() {
-        candidates.push(dir.join("sample"));
+        candidates.push(dir.join(&name));
     }
     let starts = [std::env::current_exe().ok().and_then(|p| p.parent().map(Path::to_path_buf)), std::env::current_dir().ok()];
     for start in starts.into_iter().flatten() {
         for dir in start.ancestors() {
-            candidates.push(dir.join("public").join("sample"));
+            candidates.push(dir.join("public").join(&name));
         }
     }
     let found = candidates.into_iter().find(|d| d.join("project.json").exists())?;
@@ -436,7 +440,12 @@ pub async fn media_thumbnail(app: AppHandle, path: String, at: f64) -> Result<ta
     let ffmpeg = tool(&app, "ffmpeg");
     let bytes = tauri::async_runtime::spawn_blocking(move || {
         let mut cmd = command(&ffmpeg);
-        cmd.args(["-hide_banner", "-loglevel", "error", "-ss", &format!("{at:.3}"), "-i", &path])
+        // 圖片不能加 -ss：單張圖的 image2 解出 0 格（2026-11-01 JPG 縮圖全破圖）；at ≤ 0 就從頭取
+        cmd.args(["-hide_banner", "-loglevel", "error"]);
+        if at > 0.0 {
+            cmd.args(["-ss", &format!("{at:.3}")]);
+        }
+        cmd.args(["-i", &path])
             .args(["-frames:v", "1", "-vf", "scale=160:-2", "-f", "image2pipe", "-c:v", "mjpeg", "-"]);
         run(cmd)
     })

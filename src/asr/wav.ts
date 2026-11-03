@@ -57,3 +57,66 @@ export function encodeWav(samples: Float32Array, rate: number = ASR_RATE): Uint8
   }
   return bytes;
 }
+
+/** 解開的 WAV：格式與 PCM 資料（只支援 PCM；多聲道、16-bit 以外也照原樣帶著） */
+export interface WavPcm {
+  rate: number;
+  channels: number;
+  bits: number;
+  /** data 區塊的原始位元組 */
+  data: Uint8Array;
+}
+
+/** 解析 WAV 檔：找 fmt 與 data 區塊（容許中間有 LIST 等其他區塊）；不是 PCM WAV 就丟錯 */
+export function parseWav(wav: Uint8Array): WavPcm {
+  const view = new DataView(wav.buffer, wav.byteOffset, wav.byteLength);
+  const tag = (at: number) => String.fromCharCode(wav[at], wav[at + 1], wav[at + 2], wav[at + 3]);
+  if (wav.length < 12 || tag(0) !== "RIFF" || tag(8) !== "WAVE") throw new Error("Not a WAV file");
+  let fmt: { rate: number; channels: number; bits: number } | null = null;
+  for (let at = 12; at + 8 <= wav.length;) {
+    const size = view.getUint32(at + 4, true);
+    const body = at + 8;
+    if (tag(at) === "fmt ") {
+      if (view.getUint16(body, true) !== 1) throw new Error("Only PCM WAV is supported");
+      fmt = { channels: view.getUint16(body + 2, true), rate: view.getUint32(body + 4, true), bits: view.getUint16(body + 14, true) };
+    } else if (tag(at) === "data" && fmt) {
+      // 串流寫出的檔 data 長度可能是 0 或超出檔尾：夾在檔案實際長度內
+      const end = size === 0 || body + size > wav.length ? wav.length : body + size;
+      return { ...fmt, data: wav.subarray(body, end) };
+    }
+    at = body + size + (size & 1);
+  }
+  throw new Error("The WAV has no audio data");
+}
+
+/** 把多個 WAV 的 PCM 資料首尾相接成一個 WAV；格式（取樣率、聲道、位元數）必須相同，否則丟錯 */
+export function concatWav(wavs: Uint8Array[]): Uint8Array {
+  if (!wavs.length) throw new Error("Nothing to concatenate");
+  const parts = wavs.map(parseWav);
+  const first = parts[0];
+  for (const p of parts) if (p.rate !== first.rate || p.channels !== first.channels || p.bits !== first.bits) throw new Error("The WAV files have different formats");
+  const total = parts.reduce((n, p) => n + p.data.length, 0);
+  const out = new Uint8Array(44 + total);
+  const view = new DataView(out.buffer);
+  const ascii = (at: number, s: string) => { for (let i = 0; i < 4; i++) out[at + i] = s.charCodeAt(i); };
+  const align = first.channels * (first.bits >> 3);
+  ascii(0, "RIFF");
+  view.setUint32(4, 36 + total, true);
+  ascii(8, "WAVE");
+  ascii(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, first.channels, true);
+  view.setUint32(24, first.rate, true);
+  view.setUint32(28, first.rate * align, true);
+  view.setUint16(32, align, true);
+  view.setUint16(34, first.bits, true);
+  ascii(36, "data");
+  view.setUint32(40, total, true);
+  let at = 44;
+  for (const p of parts) {
+    out.set(p.data, at);
+    at += p.data.length;
+  }
+  return out;
+}

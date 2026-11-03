@@ -132,7 +132,8 @@ function rows(project: Project): Row[] {
   return [
     ...video.map((t) => ({ id: t.id, label: `V${t.index + 1}`, kind: "video" as const, track: t })),
     { id: "S1", label: "S1", kind: "subtitle" as const },
-    ...audio.map((t) => ({ id: t.id, label: `A${t.index + 1}`, kind: "audio" as const, track: t })),
+    // AI 重配音的軌標 Voice（2026-11-02），其他照 A1、A2…
+    ...audio.map((t) => ({ id: t.id, label: t.role === "voice" ? "Voice" : `A${t.index + 1}`, kind: "audio" as const, track: t })),
   ];
 }
 
@@ -154,7 +155,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
   captions: Caption[];
   library: Library;
   /** 範圍動作列的「放大」「特效」（照字導字演：先框選時間，再從範圍建立） */
-  onRangeAction?: (kind: "zoom" | "effect" | "mask") => void;
+  onRangeAction?: (kind: "zoom" | "effect" | "mask" | "revoice") => void;
   /** 局部放大：正在調的那一段（放大條標亮）與切換 */
   zoomEdit?: ZoomEdit | null;
   onZoomEdit?: (edit: ZoomEdit | null) => void;
@@ -389,7 +390,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
                   : project.clips.filter((c) => c.trackId === r.id).map((c) => (
                       <div
                         key={c.id}
-                        className={`clip ${r.kind}${state.selectedClipId === c.id ? " selected" : ""}${drag?.clipId === c.id ? " dragging" : ""}`}
+                        className={`clip ${r.kind}${state.selectedClipId === c.id ? " selected" : ""}${drag?.clipId === c.id ? " dragging" : ""}${state.history.present.media.find((m) => m.id === c.mediaId)?.offline ? " offline" : ""}`}
                         style={clipBox(c)}
                         onMouseDown={(e) => onClipDown(e, c)}
                         title={`${mediaName(c.mediaId)}  ${formatTimecode(c.start)} – ${formatTimecode(clipEnd(c))}`}
@@ -427,6 +428,7 @@ export function Timeline({ state, dispatch, captions, library, onRangeAction, zo
                   <button type="button" data-testid="range-zoom" title="Zoom into part of the frame for this range" onClick={() => onRangeAction?.("zoom")}>🔍 Zoom</button>
                   <button type="button" data-testid="range-effect" title="Add an effect for this range" onClick={() => onRangeAction?.("effect")}>✨ Effect</button>
                   <button type="button" data-testid="range-mask" title="Hide faces, plates or text in this range" onClick={() => onRangeAction?.("mask")}>🛡 Mask</button>
+                  <button type="button" data-testid="range-revoice" title="Re-voice this range with an AI copy of the speaker's voice" onClick={() => onRangeAction?.("revoice")}>🎙 Re-voice</button>
                   <button type="button" data-testid="range-delete" title="Cut this range (Delete)" onClick={() => dispatch({ type: "deleteRange" })}>✂ Delete</button>
                   <button type="button" data-testid="range-cancel" title="Clear the range (Esc)" onClick={() => dispatch({ type: "clearRange" })}>✕</button>
                   <span className="muted">{formatTimecode(state.range.end - state.range.start).slice(3)}</span>

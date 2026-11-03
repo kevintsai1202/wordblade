@@ -1,10 +1,11 @@
 // 素材頁籤（§5.13）：匯入、列出素材（縮圖、長度、準備狀態），拖到時間軸的某條軌道上，或雙擊加到 V1 結尾。
 // 拖曳用滑鼠事件自己做，不用 HTML5 拖放：Windows 上 Tauri 接管了 WebView2 的拖放，HTML5 drag 事件不可靠。
 import { useEffect, useState, type Dispatch } from "react";
-import type { Project } from "../core/model";
+import type { Media, Project } from "../core/model";
 import type { Engine } from "../engine/Engine";
 import { formatTimecode, projectDuration, v1Id, type Action } from "./state";
 import type { Library } from "./useMediaLibrary";
+import { separationLabel, type SeparationJob } from "./useSeparation";
 
 /** 拖曳中的素材與滑鼠位置 */
 interface MediaDrag {
@@ -21,12 +22,14 @@ export function dropTarget(x: number, y: number, pxPerSecond: number): { trackId
 }
 
 /** 素材頁籤 */
-export function MediaTab({ project, library, engine, pxPerSecond, onImport, dispatch }: {
+export function MediaTab({ project, library, engine, pxPerSecond, onImport, separation, dispatch }: {
   project: Project;
   library: Library;
   engine: Engine;
   pxPerSecond: number;
   onImport: () => void;
+  /** 聲音分離（§5.14）：各素材的狀態與開始、取消 */
+  separation: { jobs: Record<string, SeparationJob>; start: (media: Media) => void; cancel: (mediaId: string) => void; dismiss: (mediaId: string) => void };
   dispatch: Dispatch<Action>;
 }) {
   const [drag, setDrag] = useState<MediaDrag | null>(null);
@@ -56,6 +59,8 @@ export function MediaTab({ project, library, engine, pxPerSecond, onImport, disp
     dispatch({ type: "commit", edits: [{ kind: "place", mediaId, trackId, t: media.kind === "audio" ? 0 : projectDuration(project) }] });
   };
 
+  // 材質庫的圖（role="texture"，Textures 頁籤管）不列在素材庫
+  const listed = project.media.filter((m) => m.role !== "texture");
   const failed = [...library.items.entries()].filter(([id, item]) => item.status === "failed" && !project.media.some((m) => m.id === id));
   const target = drag ? dropTarget(drag.x, drag.y, pxPerSecond) : null;
 
@@ -65,14 +70,16 @@ export function MediaTab({ project, library, engine, pxPerSecond, onImport, disp
         <button onClick={onImport} data-testid="import-media">＋ Import media</button>
         <span className="muted">or drop files anywhere{engine.capabilities.anyFormatImport ? "" : " (H.264/AAC MP4, MOV, images, MP3/WAV/M4A)"}</span>
       </div>
-      {project.media.length === 0 && failed.length === 0 && <p className="muted placeholder">No media yet.</p>}
+      {listed.length === 0 && failed.length === 0 && <p className="muted placeholder">No media yet.</p>}
       <ul className="media-list">
-        {project.media.map((m) => {
+        {listed.map((m) => {
           const item = library.items.get(m.id);
+          const job = separation.jobs[m.id];
+          const separable = !m.offline && m.kind !== "image" && m.audio !== false;
           return (
             <li
               key={m.id}
-              className={`media-item ${m.kind}`}
+              className={`media-item ${m.kind}${m.offline ? " offline" : ""}`}
               data-media-id={m.id}
               onMouseDown={(e) => { e.preventDefault(); setDrag({ mediaId: m.id, x: e.clientX, y: e.clientY }); }}
               onDoubleClick={() => addToEnd(m.id)}
@@ -85,7 +92,41 @@ export function MediaTab({ project, library, engine, pxPerSecond, onImport, disp
                   {m.kind === "image" ? `${m.width}×${m.height}` : formatTimecode(m.duration).slice(3)}
                   {m.kind === "video" && m.height ? ` · ${m.height}p` : ""}
                 </span>
-                {item && item.status !== "ready" && (
+                {m.offline && (
+                  <span className="media-status offline" data-testid="media-offline" title={m.path ? `Original file: ${m.path}` : "The original file can't be found"}>
+                    Media offline{m.path ? ` · ${m.path}` : ""}
+                  </span>
+                )}
+                <button
+                  className={`media-remove${m.offline ? " visible" : ""}`} data-testid="media-remove" title="Remove from project (its clips too; the file on disk is kept). Ctrl+Z to undo."
+                  onMouseDown={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const used = project.clips.filter((c) => c.mediaId === m.id).length;
+                    if (used && !window.confirm(`Remove ${m.name ?? "this media"} and its ${used} clip${used > 1 ? "s" : ""} from the timeline?`)) return;
+                    dispatch({ type: "commit", edits: [{ kind: "removeMedia", mediaId: m.id }] });
+                  }}
+                >Remove</button>
+                {separable && (
+                  job?.running ? (
+                    <span className="media-separate-row" onMouseDown={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
+                      <span className="media-status" data-testid="media-separate-status">{separationLabel(job)}</span>
+                      <button data-testid="media-separate-cancel" onClick={(e) => { e.stopPropagation(); separation.cancel(m.id); }}>Cancel</button>
+                    </span>
+                  ) : (
+                    <button
+                      className="media-separate" data-testid="media-separate"
+                      disabled={!engine.capabilities.vocalSeparation || !!m.stems}
+                      title={!engine.capabilities.vocalSeparation ? "Available in the Windows app" : m.stems ? "Already separated into vocals and music" : "Split the audio into vocals and background music (runs on this PC; the first time downloads a 64 MB model)"}
+                      onMouseDown={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); separation.start(m); }}
+                    >Separate vocals/music</button>
+                  )
+                )}
+                {job && !job.running && (
+                  <span className="media-status failed" data-testid="media-separate-error" onMouseDown={(e) => e.stopPropagation()} onClick={() => separation.dismiss(m.id)} title="Click to dismiss">{job.error}</span>
+                )}
+                {!m.offline && item && item.status !== "ready" && (
                   <span className={`media-status ${item.status}`} data-testid="media-status">
                     {item.status === "failed" ? item.error : `Preparing ${Math.round(item.progress * 100)}%`}
                   </span>

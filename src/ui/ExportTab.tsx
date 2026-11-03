@@ -59,7 +59,7 @@ export function ExportTab({ project, captions, engine, plugins, envelopes, sugge
     setStatus({ kind: "running", frame: 0, total: plan.frames, startedAt });
     /** 匯出是重工作：期間背景縮圖排程停下來（§5.21） */
     const endBusy = beginBusy();
-    const images = createImageSource((m) => engine.mediaUrl(m), (id) => project.media.find((m) => m.id === id));
+    const images = createImageSource((m) => engine.mediaUrl(m), (id) => project.media.find((m) => m.id === id), (id) => !!project.textures?.some((t) => t.kind === "background" && t.colorMediaId === id));
     const effects = new EffectRenderer(plugins.host, plugins.three, () => undefined, images);
     try {
       await effects.syncPlugins(project.plugins);
@@ -91,6 +91,8 @@ export function ExportTab({ project, captions, engine, plugins, envelopes, sugge
     } finally {
       abortRef.current = null;
       images.dispose();
+      // 匯出用的特效畫格與音效網址也要釋放
+      effects.dispose();
       endBusy();
     }
   };

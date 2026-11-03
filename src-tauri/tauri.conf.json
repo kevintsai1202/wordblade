@@ -18,7 +18,8 @@
       }
     ],
     "security": {
-      "csp": null,
+      "csp": "default-src 'none'; script-src 'self' 'sha256-Njaup8T89NeVdMidvGr4UF6IXu2PfC3xFdt5XDdLQs4='; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: http://asset.localhost asset:; media-src 'self' blob: data: http://asset.localhost asset:; font-src 'self' data:; connect-src 'self' https: blob: data: http://localhost:* http://127.0.0.1:* http://asset.localhost asset: ipc: http://ipc.localhost; worker-src blob:; frame-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
+      "devCsp": "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: http://asset.localhost asset:; media-src 'self' blob: data: http://asset.localhost asset:; font-src 'self' data:; connect-src 'self' https: blob: data: http://localhost:* http://127.0.0.1:* http://asset.localhost asset: ipc: http://ipc.localhost ws://localhost:*; worker-src blob:; frame-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'",
       "assetProtocol": {
         "enable": true,
         "scope": [
@@ -45,7 +46,9 @@
     ],
     "resources": {
       "resources/ffmpeg/": "ffmpeg/",
-      "../public/sample/": "sample/"
+      "resources/directml/DirectML.dll": "DirectML.dll",
+      "../public/sample/": "sample/",
+      "../public/sample-effects/": "sample-effects/"
     }
   }
 }

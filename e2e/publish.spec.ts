@@ -7,7 +7,7 @@ import { openTab } from "./helpers/tabs";
 // 發佈包（spec §5.17、§5.12）的介面流程，閘道由 Playwright 攔截（不連真的 AI）：
 // talk.mp4 假轉錄 → Export › Publish Kit → 同意 → AI 寫好 3 個標題、說明、章節、標籤（4 秒的片章節不夠，提示沒有章節）→ 選第 2 個標題、
 // 複製說明 → 縮圖用這一格（1280×720）→ AI 改風格（假閘道回一張 PNG）→ 匯出 MP4，旁邊多了 .publish.md（選中的標題在最前）與 .thumbnail.png。
-const GATEWAY = "http://fake-gateway.test";
+const GATEWAY = "https://fake-gateway.test";
 const CARD = readFileSync(path.join(import.meta.dirname, "fixtures", "card.png")).toString("base64");
 
 /** 回應（帶 CORS 標頭） */

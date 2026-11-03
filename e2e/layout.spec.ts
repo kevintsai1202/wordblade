@@ -77,7 +77,7 @@ test("右側面板：大類別與子頁籤、記住上次的子頁籤", async ({
   await page.goto("/?demo=1");
   await expect(page.locator(".tabs [data-group]")).toHaveText(["Media", "Transcript", "Effects", "Inspector", "AI Director", "Export"]);
   await page.locator('[data-group="effects"]').click();
-  await expect(page.locator(".subtabs [data-tab]")).toHaveText(["2D", "3D", "Zoom", "Mask", "Sound", "Intro"]);
+  await expect(page.locator(".subtabs [data-tab]")).toHaveText(["2D", "3D", "Zoom", "Mask", "Textures", "Sound", "Intro", "Re-voice", "Color"]);
   // 2D 只有 2D 範本，3D 只有 3D 場景
   await expect(page.locator('[data-template="box-ding"]')).toBeVisible();
   await expect(page.locator('[data-template="desk-reveal"]')).toHaveCount(0);

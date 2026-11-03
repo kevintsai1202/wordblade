@@ -99,14 +99,64 @@ pub fn project_write(dir: String, text: String) -> Result<(), String> {
     write_atomic(&PathBuf::from(dir).join(PROJECT_FILE), &text)
 }
 
-/// 讀 project.json（dir 也可以直接給 project.json 的路徑）；回傳 [專案資料夾, 內容]
+/// 選到的資料夾 → 專案資料夾：給的是 project.json 就取上一層；資料夾裡沒有 project.json、但底下剛好有一個 .wordblade 就用它
+/// （使用者常選到專案的上一層，2026-11-01）
+pub fn resolve_project_dir(p: PathBuf) -> PathBuf {
+    if p.file_name().is_some_and(|n| n == PROJECT_FILE) {
+        return p.parent().map(Path::to_path_buf).unwrap_or(p);
+    }
+    if p.join(PROJECT_FILE).is_file() {
+        return p;
+    }
+    let children: Vec<PathBuf> = fs::read_dir(&p)
+        .map(|rd| rd.filter_map(|e| e.ok().map(|e| e.path())).filter(|c| c.is_dir() && c.to_string_lossy().ends_with(SUFFIX) && c.join(PROJECT_FILE).is_file()).collect())
+        .unwrap_or_default();
+    if children.len() == 1 { children.into_iter().next().unwrap() } else { p }
+}
+
+/// 讀 project.json（dir 也可以直接給 project.json 的路徑，或專案的上一層）；回傳 [專案資料夾, 內容]
 #[tauri::command]
 pub fn project_read(app: AppHandle, dir: String) -> Result<(String, String), String> {
-    let p = PathBuf::from(&dir);
-    let folder = if p.file_name().is_some_and(|n| n == PROJECT_FILE) { p.parent().map(Path::to_path_buf).unwrap_or(p.clone()) } else { p };
+    let folder = resolve_project_dir(PathBuf::from(&dir));
     let text = fs::read_to_string(folder.join(PROJECT_FILE)).map_err(|e| format!("無法讀取 {}：{e}", folder.display()))?;
     let _ = app.asset_protocol_scope().allow_directory(&folder, true);
     Ok((folder.to_string_lossy().to_string(), text))
+}
+
+/// .data 裡的相對路徑 → 絕對路徑；只允許英數、-、_、. 組成的段落（不能有 ..、絕對路徑），跳不出 .data
+pub fn data_path(dir: &Path, rel: &str) -> Result<PathBuf, String> {
+    let mut out = dir.join(DATA_DIR);
+    let mut any = false;
+    for seg in rel.split('/') {
+        let ok = !seg.is_empty() && seg != "." && seg != ".." && seg.chars().all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c));
+        if !ok {
+            return Err(format!("bad data path: {rel}"));
+        }
+        out.push(seg);
+        any = true;
+    }
+    if any { Ok(out) } else { Err("empty data path".into()) }
+}
+
+/// 寫 .data 裡的文字檔（遮罩取樣等；暫存檔＋改名）
+#[tauri::command]
+pub fn project_data_write(dir: String, rel: String, text: String) -> Result<(), String> {
+    let path = data_path(Path::new(&dir), &rel)?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    write_atomic(&path, &text)
+}
+
+/// 讀 .data 裡的文字檔；沒有回 None
+#[tauri::command]
+pub fn project_data_read(dir: String, rel: String) -> Result<Option<String>, String> {
+    let path = data_path(Path::new(&dir), &rel)?;
+    match fs::read_to_string(&path) {
+        Ok(t) => Ok(Some(t)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 /// 素材的內容指紋
@@ -135,6 +185,33 @@ pub async fn media_locate(app: AppHandle, candidates: Vec<String>, fingerprint: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn 選到專案的上一層_底下只有一個_wordblade_就用它() {
+        let root = std::env::temp_dir().join(format!("wb-resolve-test-{}", std::process::id()));
+        let proj = root.join("T.wordblade");
+        fs::create_dir_all(&proj).unwrap();
+        fs::write(proj.join(PROJECT_FILE), "{}").unwrap();
+        assert_eq!(resolve_project_dir(root.clone()), proj);
+        assert_eq!(resolve_project_dir(proj.clone()), proj);
+        assert_eq!(resolve_project_dir(proj.join(PROJECT_FILE)), proj);
+        // 兩個 .wordblade：不猜，照原樣（讀不到會回錯誤）
+        let other = root.join("U.wordblade");
+        fs::create_dir_all(&other).unwrap();
+        fs::write(other.join(PROJECT_FILE), "{}").unwrap();
+        assert_eq!(resolve_project_dir(root.clone()), root);
+        fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn data_路徑_跳不出_data() {
+        let dir = Path::new("D:\\p\\T.wordblade");
+        assert_eq!(data_path(dir, "masks/k1.json").unwrap(), dir.join(".data").join("masks").join("k1.json"));
+        assert!(data_path(dir, "../project.json").is_err());
+        assert!(data_path(dir, "masks/../../x").is_err());
+        assert!(data_path(dir, "C:\\x").is_err());
+        assert!(data_path(dir, "").is_err());
+    }
 
     #[test]
     fn 原子寫入_覆蓋舊內容_不留暫存檔() {

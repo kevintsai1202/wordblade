@@ -12,8 +12,8 @@ import { instanceOf } from "./anim/effectRenderer";
 import { TEMPLATES_3D, builtinPlugins3D } from "./three/builtins";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { Media, Project } from "./core/model";
-import { relinkMissing } from "./project/session";
-import { loadSample } from "./project/sample";
+import { loadProjectText, relinkMissing } from "./project/session";
+import { loadSample, type SampleId } from "./project/sample";
 import { emptyProject } from "./core/media";
 import { placeMedia } from "./core/timeline";
 import { mixAudio } from "./export/audioMix";
@@ -441,13 +441,44 @@ async function checkGenerated(): Promise<Record<string, unknown>> {
   }
 }
 
-/** 範例專案（§5.22）：找到打包（或 repo）的 sample 資料夾、讀 project.json、每個素材都讀得到（asset 協定） */
-async function checkSample(): Promise<Record<string, unknown>> {
+/**
+ * 聲音分離（§5.14、P1-10）：分離 talk.mp4（4 秒）——先刪掉快取，量第一次的耗時與用的執行提供者（directml 或 cpu），
+ * 讀回兩個 WAV 的長度（應與素材相同）；再分離一次，應直接回快取。模型從 WORDBLADE_MODEL_DIR（run.ps1 設）或 app 資料夾的 models\ 取得，沒有就會下載。
+ */
+async function checkStems(paths: string[]): Promise<Record<string, unknown>> {
+  const engine = createEngine();
+  const path = paths.find((p) => /talk.mp4$/i.test(p));
+  if (!path) return { skipped: "talk.mp4 not in the file list" };
+  try {
+    const media = await engine.probe({ kind: "path", path, name: "talk.mp4" }, "stems-selftest");
+    await invoke("separate_evict", { path, projectDir: null });
+    const stages = new Set<string>();
+    const t0 = performance.now();
+    const r = await engine.separateVocals(media, (p) => stages.add(p.stage));
+    const wallSeconds = Number(((performance.now() - t0) / 1000).toFixed(2));
+    const durations: Record<string, number> = {};
+    for (const [name, src] of [["vocals", r.vocals], ["background", r.background]] as const) {
+      if (src.kind === "path") durations[name] = Number((await invoke<{ duration: number }>("probe_media", { path: src.path })).duration.toFixed(3));
+    }
+    const t1 = performance.now();
+    const again = await engine.separateVocals(media, () => undefined);
+    return {
+      provider: r.provider, seconds: Number(r.seconds.toFixed(2)), wallSeconds, sourceDuration: Number(media.duration.toFixed(3)), durations, stages: [...stages],
+      cache: { provider: again.provider, ms: Math.round(performance.now() - t1), samePaths: JSON.stringify(again.vocals) === JSON.stringify(r.vocals) },
+      vocals: r.vocals.kind === "path" ? r.vocals.path : null,
+    };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
+/** 範例專案（§5.22）：找到打包（或 repo）的範例資料夾、讀 project.json、每個素材都讀得到（asset 協定） */
+async function checkSample(id: SampleId): Promise<Record<string, unknown>> {
   const engine = createEngine();
   try {
-    const opened = await engine.openSample();
+    const opened = await engine.openSample(id);
     if (!opened) return { found: false };
-    const project = loadSample(opened.text, opened.root);
+    const project = loadSample(opened.text, opened.root, id);
     if (!project) return { found: true, root: opened.root, parsed: false };
     const missing: string[] = [];
     for (const m of project.media) {
@@ -460,6 +491,25 @@ async function checkSample(): Promise<Record<string, unknown>> {
   }
 }
 
+/** 開指定的專案資料夾：回報素材、片段、特效、遮罩數，以及找到／找不到的素材 */
+async function checkOpenProject(dir: string) {
+  try {
+    const engine = createEngine();
+    const opened = await engine.reopenProject({ name: dir, dir });
+    if (!opened) return { error: "reopenProject returned null" };
+    const result = await loadProjectText(opened.text, opened.location, (m, c, fp) => engine.locateMedia(m, c, fp), (rel) => engine.readData(opened.location, rel));
+    if ("error" in result) return { error: result.error };
+    const p = result.project;
+    return {
+      dir: opened.location.dir, media: p.media.length, clips: p.clips.length, effects: p.effects.length, masks: p.masks.length,
+      found: p.media.filter((m) => !result.missing.some((x) => x.id === m.id)).map((m) => ({ name: m.name, path: m.path })),
+      missing: result.missing.map((m) => m.name),
+    };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
 /** 跑自我檢查：從回報伺服器拿要檢查的檔案清單，逐一檢查後把結果送回去 */
 export async function runSelftest(server: string) {
   const report: Record<string, unknown> = { origin: location.origin, userAgent: navigator.userAgent, startedAt: new Date().toISOString() };
@@ -467,7 +517,14 @@ export async function runSelftest(server: string) {
     report.isolation = { crossOriginIsolated: self.crossOriginIsolated, sharedArrayBuffer: typeof SharedArrayBuffer };
     report.samplesDir = await invoke("find_samples_dir");
     report.tools = await invoke("media_tools");
-    const { paths } = (await (await fetch(`${server}/config`)).json()) as { paths: string[] };
+    const { paths, openProject } = (await (await fetch(`${server}/config`)).json()) as { paths: string[]; openProject?: string | null };
+    // 只檢查開某個專案資料夾（-OpenProject）：和介面按 Open… 走同一條路（reopenProject → loadProjectText → locateMedia／readData）
+    if (openProject) {
+      report.openProject = await checkOpenProject(openProject);
+      report.finishedAt = new Date().toISOString();
+      await fetch(`${server}/report`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(report) });
+      return;
+    }
     const files: unknown[] = [];
     for (const [i, path] of paths.entries()) files.push(await checkFile(path, i));
     report.files = files;
@@ -482,7 +539,9 @@ export async function runSelftest(server: string) {
     report.directorClip = await checkDirectorClip(paths);
     report.grabJpegs = await checkGrabJpegs(paths);
     report.projectFolder = await checkProjectFolder(paths);
-    report.sample = await checkSample();
+    report.sample = await checkSample("sample");
+    report.sampleEffects = await checkSample("sample-effects");
+    report.stems = await checkStems(paths);
   } catch (e) {
     report.error = String(e);
   }

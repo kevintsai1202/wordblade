@@ -65,6 +65,20 @@ final class RestPublishModels {
             }, partHeaders));
             JsonNode res = json.readTree(rest.post().uri("/v1/images/edits").contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(form).retrieve().body(String.class));
+            return reply(res);
+        }
+
+        /** 產生新圖：/v1/images/generations（JSON：model、prompt、size）；回應格式和 edits 一樣 */
+        @Override
+        public PublishJobs.ImageReply generate(String prompt, String size) {
+            var body = json.createObjectNode().put("model", model).put("prompt", prompt).put("size", size);
+            JsonNode res = json.readTree(rest.post().uri("/v1/images/generations").contentType(MediaType.APPLICATION_JSON)
+                    .body(json.writeValueAsString(body)).retrieve().body(String.class));
+            return reply(res);
+        }
+
+        /** 回應 → 圖片位元組、格式、用量 */
+        private PublishJobs.ImageReply reply(JsonNode res) {
             String b64 = res.path("data").path(0).path("b64_json").asString("");
             String format = res.path("output_format").asString("png");
             JsonNode usage = res.path("usage");

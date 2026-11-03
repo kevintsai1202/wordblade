@@ -3,6 +3,7 @@
 import { current, produce, type Draft } from "immer";
 import type { Clip, Effect, Project, Seconds } from "./model";
 import { roundTime } from "./time";
+import { rippleGradesDelete, rippleGradesInsert } from "./colorGrade";
 
 /** 片段最短長度（秒）；修邊不會修到比這更短 */
 const MIN_CLIP: Seconds = 0.01;
@@ -44,6 +45,11 @@ export function layoutV1Draft(draft: Draft<Project>) {
   for (const clip of clips) {
     clip.start = cursor;
     cursor = roundTime(cursor + clipDuration(clip));
+  }
+  // 片段被刪掉後，掛在它上面的轉場一起拿掉（2026-11-02）
+  if (draft.transitions?.length) {
+    const ids = new Set(draft.clips.map((c) => c.id));
+    if (draft.transitions.some((tr) => !ids.has(tr.clipId))) draft.transitions = draft.transitions.filter((tr) => ids.has(tr.clipId));
   }
 }
 
@@ -172,6 +178,8 @@ export function rippleDelete(project: Project, a: Seconds, b: Seconds): Project 
     draft.effects = draft.effects.filter((e) => rippleEffect(e, a, b));
     draft.anchors = draft.anchors.filter((an) => an.time === undefined || an.time < a || an.time >= b);
     for (const anchor of draft.anchors) if (anchor.time !== undefined && anchor.time >= b) anchor.time = roundTime(anchor.time - d);
+    // 色彩調整的範圍跟著移（2026-11-02）
+    rippleGradesDelete(draft, a, b);
     layoutV1Draft(draft);
   });
 }
@@ -344,6 +352,33 @@ export function rippleInsertDraft(draft: Draft<Project>, p: Seconds, d: Seconds)
   }
   for (const effect of draft.effects) insertIntoEffect(effect, p, d);
   for (const anchor of draft.anchors) if (anchor.time !== undefined && anchor.time >= p) anchor.time = roundTime(anchor.time + d);
+  rippleGradesInsert(draft, p, d);
+}
+
+/** 定格預設長度（秒） */
+export const FREEZE_DEFAULT: Seconds = 2;
+
+/**
+ * 定格（§5.20，P2）：在時間軸時間 t 把 V1 那段的畫面凍結 hold 秒。漣漪插入 hold（V1 在 t 切開、後半段與其他未鎖定的軌往後推，
+ * 所以定格期間對白軌是空的＝沒聲音），中間放一段定格片段（同素材，素材時間停在 t 那一格）。
+ * t 不在 V1 片段上（或在片段起點以外的定格片段裡）就原樣回傳。
+ */
+export function insertFreeze(project: Project, t: Seconds, hold: Seconds = FREEZE_DEFAULT): Project {
+  const v1 = v1TrackId(project);
+  const at = roundTime(t);
+  const source = project.clips.find((c) => c.trackId === v1 && c.start <= at && at < clipEnd(c));
+  if (!source || hold <= 0 || project.tracks.find((tr) => tr.id === v1)?.locked) return project;
+  const frame = timelineToSource(source, at);
+  return produce(project, (draft) => {
+    rippleInsertDraft(draft, at, hold);
+    draft.clips.push({
+      id: newClipId(draft, `${source.id}-freeze`),
+      mediaId: source.mediaId, trackId: source.trackId, srcIn: frame, srcOut: frame, start: at,
+      speed: 1, opacity: source.opacity, ...(source.transform ? { transform: { ...source.transform } } : {}),
+      fadeIn: 0, fadeOut: 0, volume: 0, freeze: { at: frame, hold: roundTime(hold) },
+    });
+    layoutV1Draft(draft);
+  });
 }
 
 /** 依基底產生不重複的片段 id */
@@ -385,5 +420,29 @@ export function placeMedia(project: Project, mediaId: string, trackId: string, t
     if (target.kind === "video") add(trackId);
     if (audioTrack) add(audioTrack);
     layoutV1Draft(draft);
+  });
+}
+
+/**
+ * 配樂循環放滿範圍（spec §5.15）：從 t 起首尾相接放 media（一圈的尾巴已經疊回開頭，接起來無縫），放到 end 為止，
+ * 最後一段剪到範圍結束。end ≤ t（沒選範圍）就只放一整圈。只用在音軌（不是 V1，不會漣漪）。
+ */
+export function placeLoop(project: Project, mediaId: string, trackId: string, t: Seconds, end: Seconds): Project {
+  const media = project.media.find((m) => m.id === mediaId);
+  const target = project.tracks.find((tr) => tr.id === trackId);
+  if (!media || !target || target.kind !== "audio" || !(media.duration > 0)) return placeMedia(project, mediaId, trackId, t);
+  const start = roundTime(Math.max(0, t));
+  const total = end > start ? end - start : media.duration;
+  /** 最多幾段（防呆：極短的素材配超長範圍） */
+  const MAX_LOOPS = 200;
+  return produce(project, (draft) => {
+    for (let k = 0, at = start; k < MAX_LOOPS && at < start + total - 1e-6; k++, at = roundTime(at + media.duration)) {
+      const length = Math.min(media.duration, start + total - at);
+      draft.clips.push({
+        id: newClipId(draft, `${mediaId}@${trackId}`),
+        mediaId, trackId, srcIn: 0, srcOut: roundTime(length), start: at,
+        speed: 1, opacity: 1, fadeIn: 0, fadeOut: 0, volume: 1,
+      });
+    }
   });
 }

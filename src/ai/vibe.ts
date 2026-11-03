@@ -60,7 +60,7 @@ export function vibeEffect(result: VibeResult, newHashes: string[], builtinHash:
 }
 
 /** 進度（給介面顯示） */
-export type VibeProgress = { stage: "writing" | "checking"; round: number };
+export type VibeProgress = { stage: "writing" | "checking" | "textures"; round: number };
 
 /** 一次 Vibe特效的結果：成功（特效＋要加進專案的插件）或失敗（給使用者看的訊息） */
 export type VibeOutcome = { ok: true; effect: Effect; plugins: Plugin[] } | { ok: false; message: string };

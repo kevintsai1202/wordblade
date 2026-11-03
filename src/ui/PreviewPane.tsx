@@ -36,9 +36,11 @@ export function PreviewPane(props: {
   selectedEffectId: string | null;
   /** 疊在預覽上的調框層（局部放大的放大框；有它時不顯示特效的目標框） */
   overlay?: ReactNode;
+  /** 蓋在整個預覽區上的內容（歡迎畫面）；預覽照常掛著，之後的播放器不必重建 */
+  cover?: ReactNode;
   dispatch: Dispatch<Action>;
 }) {
-  const { project, playhead, playing, rate, playSeq, duration, captions, engine, library, plugins, thumbs, selectedEffectId, overlay, dispatch } = props;
+  const { project, playhead, playing, rate, playSeq, duration, captions, engine, library, plugins, thumbs, selectedEffectId, overlay, cover, dispatch } = props;
   const frameRef = useRef<HTMLDivElement>(null);
   // 有目標框的特效（2D 與疊加的 3D）才在預覽上顯示框
   const selectedEffect = project.effects.find((e) => e.id === selectedEffectId && (e.kind === "anim2d" || e.kind === "anim3d") && !!e.params.box);
@@ -61,7 +63,7 @@ export function PreviewPane(props: {
       if (!p) requestAnimationFrame(() => playerRef.current?.render(latest.current.playhead ?? t, false, r));
     };
     const player = new PreviewPlayer(canvasRef.current!, (m) => engine.mediaUrl(m), redraw);
-    const images = createImageSource((m) => engine.mediaUrl(m), (id) => projectRef.current.media.find((m) => m.id === id));
+    const images = createImageSource((m) => engine.mediaUrl(m), (id) => projectRef.current.media.find((m) => m.id === id), (id) => !!projectRef.current.textures?.some((t) => t.kind === "background" && t.colorMediaId === id));
     const effects = new EffectRenderer(plugins.host, plugins.three, redraw, images);
     player.setEffectRenderer(effects, FPS);
     if (thumbs) player.setThumbs(thumbs);
@@ -83,7 +85,11 @@ export function PreviewPane(props: {
         const sound = await effects.sound(e);
         if (sound) sounds.set(e.id, sound.url);
       }
-      if (effectsRef.current === effects) playerRef.current?.setEffectSounds(sounds);
+      if (effectsRef.current === effects) {
+        playerRef.current?.setEffectSounds(sounds);
+        // 播放器換掉舊的聲音元素後，才釋放不再用到的音效網址
+        void effects.pruneSounds(project);
+      }
       if (!latest.current.playing) playerRef.current?.render(latest.current.playhead, false, latest.current.rate);
     });
   }, [project]);
@@ -124,6 +130,7 @@ export function PreviewPane(props: {
   const caption = captions.find((c) => playhead >= c.start && playhead < c.end);
   return (
     <section className="preview">
+      {cover}
       <div className="viewer">
         <div className="frame" ref={frameRef}>
           <canvas ref={canvasRef} width={PREVIEW_WIDTH} height={PREVIEW_HEIGHT} data-testid="preview-canvas" data-caption={caption?.lines.join(" ") ?? ""} />

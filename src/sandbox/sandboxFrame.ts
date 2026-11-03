@@ -7,7 +7,7 @@
 const BOOT_TIMEOUT = 5000;
 
 /** 計算文字的 CSP sha256 來源表達式 */
-async function cspHash(text: string): Promise<string> {
+export async function cspHash(text: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return `'sha256-${btoa(String.fromCharCode(...new Uint8Array(digest)))}'`;
 }

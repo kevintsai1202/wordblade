@@ -764,8 +764,12 @@ const AnimRuntime = (() => {
       transform: {dx: nnum(tf.dx, -2000, 2000, 0), dy: nnum(tf.dy, -2000, 2000, 0), anchor: npick(tf.anchor, ANCHORS, 'center'), scale: nnum(tf.scale, 0.1, 10, 1), rotate: nnum(tf.rotate, -360, 360, 0)},
       opacity: nnum(l.opacity, 0, 1, 1),
       fade: {in: nnum(fd.in, 0, MAX_SECONDS, 0), out: nnum(fd.out, 0, MAX_SECONDS, 0), easeIn: npick(fd.easeIn, EASINGS, 'outCubic'), easeOut: npick(fd.easeOut, EASINGS, 'linear')},
-      path: null, shadow: null, outline: null, loop: null, enter: null, exit: null, emphasis: null,
+      path: null, shadow: null, outline: null, loop: null, enter: null, exit: null, emphasis: null, fill: null,
     };
+    // WordBlade（2026-11-02）：圖片填色——texture 是 drawFrame 的 textures 陣列索引，repeat 是畫面高度內平鋪幾次，mix 是蓋多少
+    if (isObj(l.fill) && Number.isInteger(l.fill.texture) && l.fill.texture >= 0 && l.fill.texture < 16) {
+      out.fill = {texture: l.fill.texture, repeat: nnum(l.fill.repeat, 0.25, 20, 2), mix: nnum(l.fill.mix, 0, 1, 1)};
+    }
     if (Array.isArray(l.path) && l.path.length) {
       const pts = []; let last = -1;
       for (const p of l.path.slice(0, MAX_PATH_POINTS)) {
@@ -850,13 +854,24 @@ const AnimRuntime = (() => {
   const DIRS8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7071, 0.7071], [-0.7071, 0.7071], [0.7071, -0.7071], [-0.7071, -0.7071]];
   /** 有陰影或描邊的圖層：先畫到離屏畫布，描邊＝把離屏圖染成描邊色（另一張離屏畫布上 source-in）後往 8 個方向偏移疊上，
    *  陰影＝最後畫本體時設 shadow*。全部在裝置像素下合成（寬度與偏移乘 scale）。canvasFactory(w, h, name) 給畫布（anim.js 會重用）。 */
-  function compositeLayer(ctx, layer, paint, canvasFactory, scale, alpha) {
+  function compositeLayer(ctx, layer, paint, canvasFactory, scale, alpha, textures) {
     const W = ctx.canvas.width, H = ctx.canvas.height;
     // WordBlade：沙盒 Worker 裡沒有 document，改用 OffscreenCanvas
     const factory = canvasFactory || ((w, h) => { if (typeof document === 'undefined') return new OffscreenCanvas(w, h); const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
     const off = factory(W, H, 'layer'), oc = off.getContext('2d');
     oc.save(); oc.setTransform(1, 0, 0, 1, 0, 0); oc.globalCompositeOperation = 'source-over'; oc.clearRect(0, 0, W, H); oc.restore();
     paint(oc);
+    // WordBlade：圖片填色——圖層形狀保留，顏色換成平鋪的材質圖（source-atop 只蓋在已經畫了的地方），在描邊與陰影之前
+    const img = layer.fill && textures ? textures[layer.fill.texture] : null;
+    if (img && img.width > 0 && img.height > 0) {
+      const pattern = oc.createPattern(img, 'repeat');
+      if (pattern) {
+        const tile = H / layer.fill.repeat / img.height;
+        if (pattern.setTransform && typeof DOMMatrix !== 'undefined') pattern.setTransform(new DOMMatrix().scale(tile, tile));
+        oc.save(); oc.setTransform(1, 0, 0, 1, 0, 0); oc.globalCompositeOperation = 'source-atop'; oc.globalAlpha = layer.fill.mix;
+        oc.fillStyle = pattern; oc.fillRect(0, 0, W, H); oc.restore();
+      }
+    }
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = alpha;  // 整層透明度在合成時套（插件內重疊的筆畫不會各自半透明）
     try {
       if (layer.outline && layer.outline.width > 0) {
@@ -881,7 +896,7 @@ const AnimRuntime = (() => {
   /** 畫一段動畫的某一格：ctx 的畫布尺寸是輸出或預覽尺寸，先縮放成 1080p 虛擬座標再依序畫各圖層。
    *  instance 是草稿的動畫；components 是 雜湊 → 元件；frame 是動畫開始後的第幾格；videoW／videoH 決定虛擬畫布寬度；
    *  background 是下層畫面（makeBackground 的 src，可省略）；onError(錯誤, 圖層序號) 給了就略過出錯的圖層繼續畫，否則丟出。 */
-  function drawFrame(ctx, instance, components, {frame, fps, duration, videoW, videoH, background, onError, canvasFactory}) {
+  function drawFrame(ctx, instance, components, {frame, fps, duration, videoW, videoH, background, onError, canvasFactory, textures}) {
     const scale = ctx.canvas.height / 1080, width = 1080 * videoW / videoH, height = 1080;
     const b = instance.box || {cx: 0.5, cy: 0.5, w: 0.3, h: 0.2};
     const baseBox = {x: (b.cx - b.w / 2) * width, y: (b.cy - b.h / 2) * height, w: b.w * width, h: b.h * height};
@@ -924,7 +939,7 @@ const AnimRuntime = (() => {
         const alpha = layer.opacity * m.alpha;
         if (alpha <= 0) continue;
         // 整層透明度、陰影、描邊都要先畫到離屏畫布再合成；都沒有就直接畫在主畫布（和以前一樣快）
-        if (alpha < 1 || layer.shadow || (layer.outline && layer.outline.width > 0)) compositeLayer(ctx, layer, paint, canvasFactory, scale, alpha);
+        if (alpha < 1 || layer.shadow || layer.fill || (layer.outline && layer.outline.width > 0)) compositeLayer(ctx, layer, paint, canvasFactory, scale, alpha, textures);
         else paint(ctx);
       } catch (e) {
         if (!onError) throw e;
