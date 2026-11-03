@@ -97,27 +97,11 @@ Then open Settings → Gateway in the app and enter the gateway URL and an invit
 
 ## Built during the hackathon
 
-This repository was started on Oct 26, 2026, at the hackathon kickoff. Almost all of it was written during the hackathon; a few parts were reused from the author's own earlier video-tool project (Apache-2.0), and they are listed here so that judges can tell them apart.
+Started on Oct 26, 2026, at the hackathon kickoff; the full specification and decision log are in [docs/spec.md](docs/spec.md) (Traditional Chinese).
 
-**Reused from the author's earlier project (not new work)**
+## Reused code
 
-| What | Where | Notes |
-| --- | --- | --- |
-| 2D animation interpreter (restricted JavaScript VM) and runtime | `src/anim/vendor/anim_vm.js`, `anim_runtime.js` | Copied as is; the runtime got a small change so it runs in a Worker (`OffscreenCanvas`). See [src/anim/vendor/ORIGIN.md](src/anim/vendor/ORIGIN.md) |
-| 2D component library (the built-in 2D templates) and its API manifest | `src/anim/anim-library*.json`, `anim_api_manifest.json` | Unchanged; English labels added |
-| Unit tests for the above | `src/anim/legacy/*.cjs` | Ported to Vitest |
-| Plane-to-3D pose math | `src/three/vendor/plane3d_math.js` | Copied as is; see [src/three/vendor/ORIGIN.md](src/three/vendor/ORIGIN.md) |
-| Ideas, not code | | The vocal-separation inference steps (re-implemented in Rust), the re-voice sample selection, and the floating-board pose format follow the earlier project's approach |
-
-**New during the hackathon** — everything else, including:
-
-- The whole app: Tauri desktop shell, web app, `Engine` layer, project files, media pool, multi-track timeline, word-based editing and word-level timing, subtitles, WebGL compositor and export.
-- The sandbox that runs AI-written 2D and 3D plugins, Vibe 2D and Vibe 3D (Muse Wonder writes the plugin), the three.js 3D plugin API, 3D scene templates and describing camera moves in words.
-- The AI director, SAM 3.1 privacy masks, proofreading, filler-word and silence removal, zoom and pan, speed changes, transitions, color grading, freeze frames.
-- AI sound effects and music, re-voicing with Fish Audio, karaoke re-recording, one-click intro, textures and backgrounds, publish kit, the sample projects.
-- The Spring AI gateway (prompts, structured output, usage logging) and its deployment.
-
-The demo video shows only the new work. The built-in 2D templates come from the reused library, so the video shows 2D effects that Muse Wonder writes from one sentence, not the templates. The full specification and decision log are in [docs/spec.md](docs/spec.md) (Traditional Chinese).
+Everything in this repository was written during the hackathon except a few files from the author's own earlier, private project (Apache-2.0), written before the hackathon (Oct 6–25, 2026): the 2D animation interpreter, runtime and built-in 2D template library with their tests (`src/anim/vendor/`, `src/anim/anim-library*.json`, `src/anim/legacy/`), and the plane-to-3D pose math (`src/three/vendor/plane3d_math.js`). Details are in the `ORIGIN.md` files next to them. The demo video does not feature the built-in 2D templates.
 
 ## License
 
