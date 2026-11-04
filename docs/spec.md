@@ -907,14 +907,16 @@ V1 主軌 → 3D 場景（把下面的合成當貼圖）→ V2、V3…疊加軌�
 
 ## 10. 提交清單
 
-- [ ] repo 公開，README（英文）：功能、使用的 Meta 模型與用法、架構圖、怎麼安裝與執行、黑客松期間做了什麼。
-- [ ] Windows 安裝檔（GitHub Releases）。
-- [ ] Demo 影片：WordBlade 剪自己的宣傳影片（§9 的結構），上傳 YouTube（不公開或公開）。
-- [ ] README 的「Meta models used」：每個模型用在哪個功能（Muse Voice Transcribe、Muse Spark 1.3、Muse Wonder、SAM 3.1、Muse Image；有做的話加 MusicGen、Demucs）。
-- [ ] README 的「Built during the hackathon」：說明這個 repo 從 10/26 開始寫，以及參考了作者先前做影片工具的經驗。
-- [ ] 第三方授權清單（§3）。
-- [ ] 網頁版網址＋「Try the sample project」（評審不用安裝、不用權杖）。
-- [ ] 評審試用的邀請權杖（想跑 AI 功能時用）：**只填在提交表**，README 寫「Judge token: see the submission form」。
+11/4 盤點：repo 公開；Release v0.1.0 安裝檔 11/3 13:42 建置、網頁版 11/3 13:26 部署，之後產品程式沒再改；demo 成片 `output/demo-cut/wordblade-demo.mp4`（2:44，11/4 03:19 匯出）。
+
+- [x] repo 公開，README（英文）：功能、使用的 Meta 模型與用法、架構圖、怎麼安裝與執行、黑客松期間做了什麼。
+- [x] Windows 安裝檔（GitHub Releases）。
+- [ ] Demo 影片：WordBlade 剪自己的宣傳影片（§9 的結構），上傳 YouTube（不公開或公開）。成片已匯出，待人工看過再上傳。
+- [x] README 的「Meta models used」：每個模型用在哪個功能（Muse Voice Transcribe、Muse Spark 1.3、Muse Wonder、SAM 3.1、Muse Image；MusicGen 放棄、Demucs 改用 Kim_Vocal_2，皆不列）。
+- [x] README 的「Built during the hackathon」：說明這個 repo 從 10/26 開始寫，沿用作者先前專案的部分另列「Reused code」。
+- [x] 第三方授權清單（§3）：`THIRD_PARTY_NOTICES.md`。
+- [x] 網頁版網址＋「Try the sample project」（評審不用安裝、不用權杖）。
+- [ ] 評審試用的邀請權杖（想跑 AI 功能時用）：**只填在提交表**，README 寫「Judge token: see the submission form」。README 已寫，權杖待填表。
 - [ ] 填 Cerebral Valley 提交表（`https://cerebralvalley.ai/e/meta-ai-developer-hackathon/hackathon/submit`）。
 
 ## 11. 風險

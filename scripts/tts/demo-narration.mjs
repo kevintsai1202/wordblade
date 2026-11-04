@@ -35,8 +35,8 @@ const LINES = [
   { id: "09", text: "[playful] Oops, that\"s my API key. [break] I just type what it is, and SAM 3.1 finds it and tracks it through the clip." },
   { id: "10", text: "[excited, leaning in] Now, the part I\"m most excited about. [break] I describe an effect, and Muse Wonder writes a brand new animation plugin. In 2D, [short pause] or in 3D with three.js." },
   { id: "11", text: "[amazed] It runs in a sandbox, and it can see the frame, the transcript, and everything SAM found." },
-  { id: "12", text: "[smooth, cinematic] 3D scenes put my video on a screen in a room. I describe the camera move in plain words, [break] and the camera follows." },
-  { id: "13", text: "[fast, upbeat] Karaoke captions. Sound effects and music written as code. Re-voicing a line in my own voice. A title and a thumbnail from Muse Image. [break] And export." },
+  { id: "12", text: "[smooth, cinematic] And 3D scenes put my video on a screen on a wooden desk, [short pause] with a little robot that walks in and waves." },
+  { id: "13", text: "[fast, upbeat] Sound effects written as code. A full publish kit: titles, description and chapters. [break] And export." },
   { id: "14", text: "[proud] Preview and export share the same compositor, so what I see is exactly what I get." },
   { id: "15", text: "[warm, confident] From a raw take to a publishable video, in minutes, not hours. [break] [inviting] Try it in your browser. No install needed." },
 ];
